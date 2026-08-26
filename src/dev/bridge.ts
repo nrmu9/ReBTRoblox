@@ -21,12 +21,18 @@ const bodyOf = (code: string): string => {
 	}
 }
 
-const findTab = async (): Promise<chrome.tabs.Tab | null> => {
-	const active = await chrome.tabs.query({ url: TAB_MATCHES, active: true })
-	if(active.length) { return active[0] }
+// Firefox MV2 exposes chrome.* as callback based, so do not await it directly.
+const call = <T>(fn: (...args: any[]) => void, ...args: any[]): Promise<T> =>
+	new Promise(resolve => fn(...args, resolve))
 
-	const any = await chrome.tabs.query({ url: TAB_MATCHES })
-	return any.length ? any[0] : null
+const findTab = async (): Promise<chrome.tabs.Tab | null> => {
+	const query = chrome.tabs.query.bind(chrome.tabs)
+
+	const active = await call<chrome.tabs.Tab[]>(query, { url: TAB_MATCHES, active: true })
+	if(active?.length) { return active[0] }
+
+	const any = await call<chrome.tabs.Tab[]>(query, { url: TAB_MATCHES })
+	return any?.length ? any[0] : null
 }
 
 const runInTab = async (code: string): Promise<Result> => {
@@ -44,13 +50,13 @@ const runInTab = async (code: string): Promise<Result> => {
 	})()`
 
 	const tabs = chrome.tabs as typeof chrome.tabs & {
-		executeScript?: (id: number, details: { code: string }) => Promise<(string | undefined)[]>
+		executeScript?: (id: number, details: { code: string }, cb?: any) => void
 	}
 
 	if(!tabs.executeScript) { return { ok: false, error: "tabs.executeScript unavailable (mv3?)" } }
 
 	try {
-		const results = await tabs.executeScript(tab.id, { code: wrapped })
+		const results = await call<(string | undefined)[]>(tabs.executeScript!.bind(chrome.tabs), tab.id, { code: wrapped })
 		const raw = results?.[0]
 
 		if(typeof raw !== "string") { return { ok: false, error: "no result from tab" } }
