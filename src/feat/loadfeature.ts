@@ -1,77 +1,37 @@
-import { IS_BACKGROUND_PAGE, IS_DEV_MODE } from "@/core/env"
-import { backgroundScript, contentScript } from "@/core/messaging"
+// Optional feature loading.
+//
+// The legacy version asked the background page to executeScript a list of raw
+// files, which then defined globals. Bundled modules have no such globals, so
+// each feature is a dynamic import instead. Execution stays deferred until a
+// page actually needs the feature, and the resolved namespace is cached.
 
-const optionalFeatures = {
-	previewer: {
-		assets: [
-			"lib/three.min.js",
-			"js/rbx/EventEmitter.js",
-			"js/rbx/Avatar/Animator.js",
-			"js/rbx/Avatar/AvatarRigs.js",
-			"js/rbx/Avatar/Composites.js",
-			"js/rbx/Avatar/Avatar.js",
-			"js/rbx/Scene.js",
-			"js/rbx/Preview.js"
-		]
-	},
-	explorer: {
-		assets: [
-			"js/rbx/ApiDump.js",
-			"js/rbx/Explorer.js"
-		]
-	},
-	sourceViewer: {
-		assets: [
-			"js/feat/sourceviewer.js",
-			"css/sourceviewer.css"
-		]
-	},
-	parser: {
-		assets: [
-			"lib/fzstd.min.js",
-			"js/rbx/Parser/ByteReader.js",
-			"js/rbx/Parser/ModelParser.js",
-			"js/rbx/Parser/DracoBitstream.js",
-			"js/rbx/Parser/MeshParser.js",
-			"js/rbx/Parser/AnimationParser.js"
-		]
-	}
+import { insertCSS } from "@/core/page"
+
+const loaders: Record<string, () => Promise<unknown>> = {
+	previewer: () => import("@/rbx/Preview"),
+	explorer: () => import("@/rbx/Explorer"),
+	sourceViewer: () => import("@/feat/sourceviewer"),
+	parser: () => import("@/rbx/Parser/ModelParser")
 }
 
-export function loadOptionalFeature(name: string) {
-	const feat = optionalFeatures[name]
-
-	if(!feat.promise) {
-		const cssAssets = feat.assets.filter(file => file.endsWith(".css"))
-		
-		if(cssAssets.length) {
-			insertCSS(...cssAssets)
-		}
-
-		feat.promise = new Promise(resolve => backgroundScript.send("loadFeature", name, resolve))
-	}
-
-	return feat.promise
+const styles: Record<string, string[]> = {
+	sourceViewer: ["css/sourceviewer.css"]
 }
 
-if(IS_BACKGROUND_PAGE) {
-	contentScript.listen({
-		loadFeature(name, respond, port) {
-			const feat = optionalFeatures[name]
-			
-			const scripts = feat.assets.filter(file => file.endsWith(".js"))
-			
-			if(IS_DEV_MODE) {
-				const index = scripts.indexOf("lib/three.min.js")
-				if(index !== -1) {
-					scripts[index] = "dev/three.js"
-				}
-			}
-			
-			chrome.scripting.executeScript({
-				target: { tabId: port.sender.tab.id, frameIds: [port.sender.frameId] },
-				files: scripts
-			}, () => respond())
-		},
-	})
+const pending: Record<string, Promise<unknown>> = {}
+
+export const loadOptionalFeature = (name: string): Promise<unknown> => {
+	const loader = loaders[name]
+
+	if(!loader) {
+		return Promise.reject(new Error(`Unknown optional feature "${name}"`))
+	}
+
+	if(!pending[name]) {
+		if(styles[name]) { insertCSS(...styles[name]) }
+
+		pending[name] = loader()
+	}
+
+	return pending[name]
 }
