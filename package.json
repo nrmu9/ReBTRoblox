@@ -1,0 +1,10 @@
+{
+	"name": "btroblox",
+	"version": "3.6.22",
+	"private": true,
+	"scripts": {
+		"build:dev": "node dev/build.js",
+		"bridge": "node dev/bridge.js",
+		"dev": "node dev/build.js && node dev/bridge.js"
+	}
+}
