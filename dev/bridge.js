@@ -27,7 +27,8 @@ const reply = (res, code, data) => {
 	res.writeHead(code, {
 		"content-type": "application/json",
 		"content-length": Buffer.byteLength(body),
-		"cache-control": "no-store"
+		"cache-control": "no-store",
+		"access-control-allow-origin": "*"
 	})
 
 	res.end(body)
@@ -150,6 +151,18 @@ const routes = {
 
 const server = http.createServer(async (req, res) => {
 	const url = new URL(req.url, `http://${HOST}:${PORT}`)
+
+	if(req.method === "OPTIONS") {
+		res.writeHead(204, {
+			"access-control-allow-origin": "*",
+			"access-control-allow-methods": "GET, POST, OPTIONS",
+			"access-control-allow-headers": "content-type",
+			"access-control-max-age": "86400"
+		})
+
+		return res.end()
+	}
+
 	const route = routes[`${req.method} ${url.pathname}`]
 
 	if(!route) { return reply(res, 404, { error: "unknown route", routes: Object.keys(routes) }) }
