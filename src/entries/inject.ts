@@ -2,7 +2,7 @@
 // content scripts and talks to them only over btroblox/* CustomEvents.
 
 document.addEventListener("btroblox/init", ev => {
-	const [settings, IS_DEV_MODE, selectedRobuxToCashOption] = ev.detail
+	const [settings, IS_DEV_MODE, selectedRobuxToCashOption] = (ev as CustomEvent).detail
 	
 	const BTRoblox: Record<string, any> = {}
 	let currentPage
@@ -247,7 +247,7 @@ document.addEventListener("btroblox/init", ev => {
 				listeners = this.messageListeners[action] = []
 				
 				document.addEventListener(`btroblox/inject/${action}`, ev => {
-					const args = Array.isArray(ev.detail) ? ev.detail : []
+					const args = Array.isArray((ev as CustomEvent).detail) ? (ev as CustomEvent).detail : []
 					
 					for(let i = listeners.length; i--;) {
 						try { listeners[i].apply(null, args) }
@@ -260,7 +260,7 @@ document.addEventListener("btroblox/init", ev => {
 		}
 	}
 	
-	const angularHook = {
+	const angularHook: Record<string, any> = {
 		templateListeners: {},
 		cachedTemplates: {},
 		templateCaches: [],
@@ -490,7 +490,7 @@ document.addEventListener("btroblox/init", ev => {
 		}
 	}
 	
-	const reactHook = {
+	const reactHook: Record<string, any> = {
 		cachedSelectors: {},
 		constructorProxies: new WeakMap(),
 		constructorReplaces: [],
@@ -670,7 +670,7 @@ document.addEventListener("btroblox/init", ev => {
 			if(!Array.isArray(targets)) { targets = [targets] }
 			if(!Array.isArray(queries)) { queries = [queries] }
 			
-			const temp = all ? [] : null
+			const temp: any[] = all ? [] : []
 			
 			for(const target of targets) {
 				if(!target?.props) {
@@ -724,7 +724,7 @@ document.addEventListener("btroblox/init", ev => {
 					
 					if(result) {
 						if(all) {
-							temp.push(...all)
+							temp.push(...result)
 						} else if(path) {
 							result.unshift(target)
 							return result
@@ -2149,7 +2149,7 @@ document.addEventListener("btroblox/init", ev => {
 									})
 									
 									for(const fn of list) {
-										try { fn(args[0]) }
+										try { fn(this) }
 										catch(ex) { console.error(ex) }
 									}
 								}
@@ -2568,7 +2568,7 @@ document.addEventListener("btroblox/init", ev => {
 			const largePageSize = 100
 			const pageSize = 12
 			
-			const btrPager = { currentPage: 1, targetPage: 1, maxPage: 1, loading: false }
+			const btrPager = <Record<string, any>>{ currentPage: 1, targetPage: 1, maxPage: 1, loading: false }
 			const promises: Record<string, any> = {}
 			const cursors: any[] = []
 			
