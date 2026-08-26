@@ -46,7 +46,7 @@ pageInit.create = () => {
 		const webpackHook = {
 			processedModules: new WeakSet(),
 			propertyHandlers: new Map(),
-			moduleHandlers: [],
+			moduleHandlers: [] as any[],
 			objects: {} as Record<string, any>,
 			
 			onModule(fn) {
@@ -94,7 +94,7 @@ pageInit.create = () => {
 							
 							Object.defineProperty = new Proxy(Object.defineProperty, {
 								apply(target, thisArg, args) {
-									const result = target.apply(thisArg, args)
+									const result = target.apply(thisArg, args as any)
 									
 									const list = propertyHandlers.get(args[1])
 									if(list) {
@@ -129,7 +129,7 @@ pageInit.create = () => {
 										this.processedModules.add(module)
 										
 										for(const fn of this.moduleHandlers) {
-											try { fn(module, target) }
+											try { (fn as any)(module, target) }
 											catch(ex) { console.error(ex) }
 										}
 									}

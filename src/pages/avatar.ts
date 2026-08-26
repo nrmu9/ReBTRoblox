@@ -178,7 +178,7 @@ pageInit.avatar = () => {
 										const wearableAssetType = avatarRules.wearableAssetTypes.find(x => x.name.replace(/\s/, "") === assetTypeName)
 										const assetBounds = $scope.btrBounds[wearableAssetType?.id] = {}
 										
-										for(const [category, values] of Object.entries(lowerBounds) as [string, any][]) {
+										for(const [category, values] of Object.entries(lowerBounds as Record<string, any>)) {
 											const bounds = assetBounds[category] = {}
 											
 											for(const [key, value] of Object.entries(values)) {

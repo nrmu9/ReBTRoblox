@@ -11,7 +11,7 @@ pageInit.create_store = () => {
 		return
 	}
 	
-	const addRipple = (elem, position) => {
+	const addRipple = (elem: any, position?: any) => {
 		elem?.$on("mousedown", event => {
 			const ripple = html`<div class=btr-replica-ripple></div>`
 			elem.append(ripple)
@@ -126,7 +126,7 @@ pageInit.create_store = () => {
 		let nextPageParams
 		let nextPage
 		
-		const assetId = Number.parseInt(location.pathname.match(/\/(?:marketplace|store)\/asset\/(\d+)/i)?.[1], 10)
+		const assetId = Number.parseInt(location.pathname.match(/\/(?:marketplace|store)\/asset\/(\d+)/i)?.[1] ?? "", 10)
 		if(assetId) {
 			nextPage = AssetDetailsPage
 			nextPageParams = [assetId]

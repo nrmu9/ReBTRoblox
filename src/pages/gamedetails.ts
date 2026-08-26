@@ -424,7 +424,7 @@ pageInit.gamedetails = () => {
 		contentScript.listen("setServerRegion", (jobId, details) => {
 			globalServerRegions[jobId] = details
 			
-			for(const fn of onRegionsChanged) {
+			for(const fn of Array.from(onRegionsChanged) as any[]) {
 				fn()
 			}
 		})
@@ -505,7 +505,7 @@ pageInit.gamedetails = () => {
 					// add region/ping label
 					const status = regionSetting !== "none" && reactHook.queryElement(result, x => x.props.className?.includes("rbx-game-status"))
 					if(status) {
-						let serverDetails
+
 						
 						if(regionSetting !== "region") {
 							status.props.children += `\nPing: ${props.ping ?? -1}ms`

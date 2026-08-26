@@ -392,10 +392,10 @@ pageInit.itemdetails = () => {
 				if(SETTINGS.get("itemdetails.showCreatedAndUpdated") && category !== "bundles") {
 					// remove old created/updated label
 					if(isReactItemDetails) {
-						const oldLabel = Array.from($.all("#item-details .wait-for-i18n-format-render")).find(x => !isNaN(Date.parse(x.textContent)))
+						const oldLabel = Array.from($.all("#item-details .wait-for-i18n-format-render")).find((x: any) => !isNaN(Date.parse(x.textContent)))
 						
 						if(oldLabel) {
-							oldLabel.parentNode.remove()
+							(oldLabel as any).parentNode.remove()
 						}
 					} else {
 						const oldLabel = $("#item-details .date-time-i18n")
@@ -415,11 +415,6 @@ pageInit.itemdetails = () => {
 						if(updated) { updatedContainer.$find(".btr-row-value").textContent = new Date(updated).$format("MMM DD, YYYY h:mm:ss A") }
 						createdContainer.style.display = ""
 						updatedContainer.style.display = ""
-					}
-					
-					const hide = () => {
-						createdContainer.style.display = "none"
-						updatedContainer.style.display = "none"
 					}
 					
 					show()
@@ -454,7 +449,7 @@ pageInit.itemdetails = () => {
 						if(!preview) { return } // preview didnt load
 						if(!document.contains(buttons)) { return } // already changed page
 						
-						const parent = document.querySelector(".item-thumbnail-container, #item-thumbnail-container-frontend").parentNode
+						const parent = document.querySelector(".item-thumbnail-container, #item-thumbnail-container-frontend")!.parentNode
 						preview.setParent(parent)
 					})
 					

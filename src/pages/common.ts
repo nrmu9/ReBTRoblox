@@ -883,7 +883,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 						bundlePromises.push(
 							AssetCache.resolveAsset(item.id).then(async assetRequest => {
 								const outfit = await outfitPromise
-								return addAsset(item.id, assetRequest.assetTypeId, item.name, outfit?.assets.find(x => x.id === item.id)?.meta)
+								return addAsset(item.id, assetRequest.assetTypeId, item.name, (outfit as any)?.assets.find(x => x.id === item.id)?.meta)
 							})
 						)
 					}
@@ -894,7 +894,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 		)
 	} else {
 		assetPromises.push(
-			addAsset(assetId, assetTypeId, $("#item-container")?.dataset.itemName || "Asset")
+			addAsset(assetId, assetTypeId, $("#item-container")?.dataset.itemName || "Asset", undefined)
 		)
 	}
 	
@@ -942,7 +942,7 @@ const canDownloadAsset = (assetId, assetTypeId) => canDownloadAssetCache[assetId
 	return true
 })()
 
-export const initExplorer = async (assetId, assetTypeId, isBundle) => {
+export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: any) => {
 	if(!SETTINGS.get("itemdetails.explorerButton") || !isBundle && InvalidExplorableAssetTypeIds.includes(assetTypeId)) {
 		return
 	}
@@ -1033,7 +1033,7 @@ export const initExplorer = async (assetId, assetTypeId, isBundle) => {
 	return btnCont
 }
 
-export const initDownloadButton = async (assetId, assetTypeId, isBundle) => {
+export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundle?: any) => {
 	if(isBundle) {
 		return
 	}
@@ -1232,7 +1232,7 @@ export const initDownloadButton = async (assetId, assetTypeId, isBundle) => {
 	return btnCont
 }
 
-export const initContentButton = async (assetId, assetTypeId) => {
+export const initContentButton = async (assetId: any, assetTypeId: any, isBundle?: any) => {
 	if(!SETTINGS.get("itemdetails.contentButton")) {
 		return
 	}
@@ -1343,7 +1343,7 @@ pageInit.www = () => {
 				
 				lastText = text
 
-				const amt = parseInt(text.replace(/\D/g, ""), 10)
+				const amt = parseInt((text ?? "").replace(/\D/g, ""), 10)
 				if(!Number.isSafeInteger(amt)) { return }
 
 				span.textContent = RobuxToCash.convert(amt)
@@ -1471,7 +1471,7 @@ pageInit.www = () => {
 					request.onResponse.push(json => {
 						if(json?.contentMetadata?.Game) {
 							for(const gameData of Object.values(json.contentMetadata.Game)) {
-								delete gameData.friendActivityTitle
+								delete (gameData as any).friendActivityTitle
 							}
 						}
 					})
@@ -1621,7 +1621,7 @@ pageInit.www = () => {
 			
 			if(saved) {
 				for(const [experiment, values] of Object.entries(saved)) {
-					for(const [key, value] of Object.entries(values)) {
+					for(const [key, value] of Object.entries(values as Record<string, any>)) {
 						modify(experiment, key, value)
 					}
 				}
