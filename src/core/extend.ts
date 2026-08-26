@@ -25,26 +25,31 @@ const define = (targets: any[], props: Record<string, unknown>): void => {
 }
 
 export const installExtensions = (): void => {
+	// Firefox content scripts see two views of the DOM constructors: the sandbox
+	// globals and the ones reachable through self. Xray wrappers only pick up the
+	// patch when both are extended, which is why document.$on needs self.EventTarget.
+	const scope = self as any
+
 	// A MV3 service worker has no DOM constructors to extend.
 	if(typeof Element === "undefined") { return }
 
-	define([EventTarget], {
+	define([scope.EventTarget, EventTarget], {
 		$on(this: EventTarget, ...args: any[]) { return (on as any)(this, ...args) },
 		$off(this: EventTarget, ...args: any[]) { return (off as any)(this, ...args) }
 	})
 
-	define([Element, Document, DocumentFragment], {
+	define([scope.Element, Element, scope.Document, Document, scope.DocumentFragment, DocumentFragment], {
 		$find(this: ParentNode, selector: string) { return find(this, selector) },
 		$findAll(this: ParentNode, selector: string) { return findAll(this, selector) },
 		$watch(this: ParentNode, ...args: any[]) { return (watch as any)(this, ...args) },
 		$watchAll(this: ParentNode, ...args: any[]) { return (watchAll as any)(this, ...args) }
 	})
 
-	define([Node], {
+	define([scope.Node, Node], {
 		$onRemove(this: Node, callback: () => void) { return onRemove(this, callback) }
 	})
 
-	define([Date], {
+	define([scope.Date, Date], {
 		$format(this: Date, format: string) { return dateFormat(this, format) },
 		$since(this: Date, relativeTo?: any, short?: boolean) { return dateSince(this, relativeTo, short) }
 	})

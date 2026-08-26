@@ -109,7 +109,7 @@ const run = async () => {
 	await tick()
 	const inner = document.createElement("div")
 	inner.className = "inner"
-	chain.append(inner)
+	outer.append(inner)
 	await tick()
 	check("$watch().$then().$watch() chains", chained === inner)
 
@@ -147,6 +147,35 @@ const run = async () => {
 	off(parity, "click", pf)
 	parity.dispatchEvent(new Event("click"))
 	check("module on/off parity", parityHits === 1, "hits=" + parityHits)
+
+
+	// Regression: delivery is synchronous when the element already exists, which
+	// previously hit a TDZ on the disposer and the timeout handle.
+	const pre = frag(`<div id="pre"><b class="already">x</b></div>`).$find("#pre")!
+	let syncHit: Element | null = null
+	pre.$watch(".already", (el: Element) => { syncHit = el })
+	await tick()
+	check("$watch delivers for nodes that already exist", syncHit !== null)
+
+	let syncChain = false
+	pre.$watch(".already").$then(() => { syncChain = true })
+	await tick()
+	check("$watch chain resolves for existing nodes", syncChain)
+
+	// Regression: > scoped selectors must not reach querySelectorAll unscoped.
+	const scoped = frag(`<div id="sc"><i class="kid">a</i><span><i class="kid">b</i></span></div>`).$find("#sc")!
+	let scopedHits = 0
+	scoped.$watch(">.kid", () => { scopedHits++ })
+	await tick()
+	check("$watch handles > scoped selectors", scopedHits === 1, "hits=" + scopedHits)
+
+	let lateScoped = 0
+	scoped.$watchAll(">.late", () => { lateScoped++ })
+	const lateKid = document.createElement("i")
+	lateKid.className = "late"
+	scoped.append(lateKid)
+	await tick()
+	check("$watchAll handles > scoped selectors", lateScoped === 1, "hits=" + lateScoped)
 
 	report()
 }

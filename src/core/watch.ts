@@ -93,12 +93,21 @@ export const watch = (
 		}, { root })
 	} else {
 		const promises = list.map(selector => new Promise<Element>(resolve => {
-			const stop = hookWatch(selector, element => {
+			// Delivery is synchronous for elements already in the document, so the
+			// disposer cannot be a const referenced from inside the handler.
+			let dispose: (() => void) | null = null
+			let settled = false
+
+			dispose = hookWatch(selector, element => {
+				if(settled) { return }
 				if(test && !test(element)) { return }
 
-				stop()
+				settled = true
+				dispose?.()
 				resolve(element)
 			}, { root })
+
+			if(settled) { dispose() }
 		}))
 
 		finishPromise = Promise.all(promises).then(elements => {
