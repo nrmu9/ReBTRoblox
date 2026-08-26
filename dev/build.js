@@ -16,8 +16,13 @@ const dev = args.includes("--dev")
 const watch = args.includes("--watch")
 const target = (args.find(arg => arg.startsWith("--target=")) || "--target=firefox").split("=")[1]
 
-const ENTRIES = ["background", "content", "inject"]
+// content is a classic-script loader that imports main; main is ESM so esbuild
+// can split the optional features, keeping three.js out of the initial download.
+const CLASSIC = ["background", "content", "inject"]
+const MODULE = ["main"]
 const ASSETS = ["css", "img", "res", "lib"]
+
+const entry = name => path.join(ROOT, "src/entries", `${name}.ts`)
 
 const copyAssets = () => {
 	for(const dir of ASSETS) {
@@ -52,11 +57,9 @@ const writeManifest = () => {
 	fs.writeFileSync(path.join(OUT, "manifest.json"), JSON.stringify(manifest, null, "\t") + "\n")
 }
 
-const options = {
-	entryPoints: ENTRIES.map(name => path.join(ROOT, "src/entries", `${name}.ts`)),
-	outdir: path.join(OUT, "js"),
+const shared = {
 	bundle: true,
-	format: "iife",
+	outdir: path.join(OUT, "js"),
 	target: "firefox128",
 	sourcemap: dev ? "inline" : false,
 	minify: !dev,
@@ -66,15 +69,22 @@ const options = {
 	define: { "process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production") }
 }
 
+const configs = [
+	{ ...shared, entryPoints: CLASSIC.map(entry), format: "iife" },
+	{ ...shared, entryPoints: MODULE.map(entry), format: "esm", splitting: true, chunkNames: "chunk-[hash]" }
+]
+
 const run = async () => {
 	fs.rmSync(OUT, { recursive: true, force: true })
 	fs.mkdirSync(path.join(OUT, "js"), { recursive: true })
 
 	if(watch) {
-		const ctx = await esbuild.context(options)
-		await ctx.watch()
+		for(const config of configs) {
+			const ctx = await esbuild.context(config)
+			await ctx.watch()
+		}
 	} else {
-		await esbuild.build(options)
+		await Promise.all(configs.map(config => esbuild.build(config)))
 	}
 
 	copyAssets()
