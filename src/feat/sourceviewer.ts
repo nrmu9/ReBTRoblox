@@ -1,9 +1,7 @@
 import { html } from "@/core/html"
-import { assert } from "@/core/util"
 import { ApiDump } from "@/rbx/ApiDump"
-import { BrickColor } from "@/rbx/Constants"
 
-const SourceViewer = (() => {
+export const SourceViewer = (() => {
 	const NumberRegex = /^(?:0_*x_*[0-9a-f][0-9a-f_]*|0_*b_*[01][01_]*|(?:\.?\d[\d_]*|\d[\d_]*\._*\d[\d_]*)(?:e[+-]?_*\d[\d_]*)?)$/i
 	const WhitespaceRegex = /^[^\n\S]+$/
 	const WordRegex = /^\w+$/
@@ -121,10 +119,10 @@ const SourceViewer = (() => {
 		version: true, wait: true, Wait: true, warn: true, workspace: true, Workspace: true, xpcall: true, ypcall: true, 
 	}
 	
-	for(const [name, enumItems] of Object.entries(ApiDump.getEnums())) {
+	for(const [name, enumItems] of Object.entries(ApiDump.getEnums()) as [string, any][]) {
 		const set = Globals.Enum[name] = new Set()
 		
-		for(const name of Object.values(enumItems)) {
+		for(const name of Object.values(enumItems) as any[]) {
 			set.add(name)
 		}
 	}
@@ -191,7 +189,7 @@ const SourceViewer = (() => {
 				startLine.elem.classList.add("open")
 				startLine.elem.classList.remove("closed")
 				
-				let closedDepth = null
+				let closedDepth: any = null
 				
 				for(let i = startLine.lineNumber + 1; i < endLineNumber; i++) {
 					const line = lineObjects[i]
@@ -314,7 +312,7 @@ const SourceViewer = (() => {
 			if(last && current.depth > last.depth) {
 				const scopeButton = document.createElement("div")
 				scopeButton.classList.add("btr-scope")
-				scopeButton.contentEditable = false
+				scopeButton.contentEditable = "false"
 				
 				last.elem.classList.add("open")
 				last.elem.append(scopeButton)
@@ -342,8 +340,8 @@ const SourceViewer = (() => {
 			
 			const ln = document.createElement("div")
 			ln.classList.add("btr-linenumber")
-			ln.contentEditable = false
-			ln.textContent = lineNumber
+			ln.contentEditable = "false"
+			ln.textContent = String(lineNumber)
 			
 			const list = document.createElement("span")
 			list.classList.add("btr-linetext")
@@ -353,7 +351,7 @@ const SourceViewer = (() => {
 			
 			elem.append(ln, templist)
 			
-			const line = lineObjects[lineNumber] = {
+			lineObjects[lineNumber] = {
 				lineNumber: lineNumber,
 				templist: templist,
 				list: list,
@@ -500,7 +498,7 @@ const SourceViewer = (() => {
 			
 			const textLines = text.split(/\n/)
 			
-			for(const [index, line] of Object.entries(textLines)) {
+			for(const [index, line] of textLines.entries()) {
 				if(index > 0) {
 					nextLine(depth)
 				}

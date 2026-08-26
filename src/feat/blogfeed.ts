@@ -5,8 +5,8 @@ import { SHARED_DATA } from "@/feat/shareddata"
 const BlogFeed = {
 	lastRequest: 0,
 	
-	fetching: null,
-	cached: null,
+	fetching: null as any,
+	cached: null as any,
 	
 	canRequest() {
 		return Date.now() > this.lastRequest + 15e3

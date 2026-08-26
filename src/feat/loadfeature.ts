@@ -1,6 +1,5 @@
 import { IS_BACKGROUND_PAGE, IS_DEV_MODE } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
-import { ApiDump } from "@/rbx/ApiDump"
 
 const optionalFeatures = {
 	previewer: {

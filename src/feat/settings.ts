@@ -1,3 +1,4 @@
+import { deferredPromise } from "@/core/deferred"
 import { IS_BACKGROUND_PAGE, STORAGE } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { SHARED_DATA } from "@/feat/shareddata"
@@ -97,9 +98,9 @@ export const DEFAULT_SETTINGS = {
 	},
 }
 
-for(const list of Object.values(DEFAULT_SETTINGS)) {
+for(const list of Object.values(DEFAULT_SETTINGS) as any[]) {
 	if(list instanceof Object) {
-		for(const setting of Object.values(list)) {
+		for(const setting of Object.values(list) as any[]) {
 			setting.default = true
 		}
 	}
@@ -107,7 +108,7 @@ for(const list of Object.values(DEFAULT_SETTINGS)) {
 
 export const SETTINGS: Record<string, any> = {
 	_onChangeListeners: [],
-	_loadPromise: new Promise(),
+	_loadPromise: deferredPromise(),
 	
 	firstLoad: false,
 	loaded: false,
@@ -125,10 +126,10 @@ export const SETTINGS: Record<string, any> = {
 	
 	_load(data) {
 		if(data && data._version === DEFAULT_SETTINGS._version) {
-			for(const [groupName, group] of Object.entries(data)) {
+			for(const [groupName, group] of Object.entries(data) as [string, any][]) {
 				if(!(group instanceof Object)) { continue }
 				
-				for(const [settingName, loadedSetting] of Object.entries(group)) {
+				for(const [settingName, loadedSetting] of Object.entries(group) as [string, any][]) {
 					const settingPath = `${groupName}.${settingName}`
 					const defaultSetting = this._getSetting(settingPath, DEFAULT_SETTINGS)
 					
@@ -171,8 +172,8 @@ export const SETTINGS: Record<string, any> = {
 		delete settings._version
 
 		// Change settings to be name: value
-		for(const group of Object.values(settings)) {
-			for(const [name, setting] of Object.entries(group)) {
+		for(const group of Object.values(settings) as any[]) {
+			for(const [name, setting] of Object.entries(group) as [string, any][]) {
 				group[name] = setting.value
 			}
 		}
@@ -307,10 +308,10 @@ export const SETTINGS: Record<string, any> = {
 	resetToDefault() {
 		if(!this.loaded) { throw new Error("Settings are not loaded") }
 
-		for(const [groupName, group] of Object.entries(DEFAULT_SETTINGS)) {
+		for(const [groupName, group] of Object.entries(DEFAULT_SETTINGS) as [string, any][]) {
 			if(!(group instanceof Object)) { continue }
 			
-			for(const [settingName, setting] of Object.entries(group)) {
+			for(const [settingName, setting] of Object.entries(group) as [string, any][]) {
 				this._set(`${groupName}.${settingName}`, setting.value, true, true)
 			}
 		}

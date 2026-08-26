@@ -1,8 +1,7 @@
 import { onDomChanged } from "@/core/dom"
 import { injectScript } from "@/core/messaging"
-import { ready } from "@/core/util"
 
-const btrAdblock = {
+export const btrAdblock = {
 	init() {
 		const iframeSelector = `.ads-container iframe,.abp iframe,.abp-spacer iframe,.abp-container iframe,.top-abp-container iframe,
 		#AdvertisingLeaderboard iframe,#AdvertisementRight iframe,#MessagesAdSkyscraper iframe,.Ads_WideSkyscraper iframe,

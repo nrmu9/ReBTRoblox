@@ -27,7 +27,7 @@ const wrapArgs = async args => {
 					const promises: Promise<unknown>[] = []
 					let newObject
 					
-					for(const [key, oldValue] of Object.entries(value)) {
+					for(const [key, oldValue] of Object.entries(value) as [string, any][]) {
 						promises.push(wrapValue(oldValue).then(newValue => {
 							if(newValue !== oldValue) {
 								if(!newObject) {
@@ -69,7 +69,7 @@ const unwrapArgs = async args => {
 			if(!didCheck.has(value)) {
 				didCheck.add(value)
 				
-				for(const [key, oldValue] of Object.entries(value)) {
+				for(const [key, oldValue] of Object.entries(value) as [string, any][]) {
 					const newValue = await unwrapValue(oldValue)
 					
 					if(oldValue !== newValue) {

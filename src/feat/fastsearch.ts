@@ -4,8 +4,8 @@ import { btrLocalStorage } from "@/core/storage"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 const btrFriends = { // TODO: Move this elsewhere
-	friendsPromise: null,
-	friendsCached: null,
+	friendsPromise: null as any,
+	friendsCached: null as any,
 	friendsLoaded: false,
 	
 	getFriends() {
@@ -16,7 +16,7 @@ const btrFriends = { // TODO: Move this elsewhere
 			const data = btrLocalStorage.getItem("fastsearchCache")
 			
 			if(data) {
-				for(const [id, friend] of Object.entries(data)) {
+				for(const [id, friend] of Object.entries(data) as [string, any][]) {
 					friends[id] = friend
 				}
 			}
@@ -65,7 +65,7 @@ const btrFriends = { // TODO: Move this elsewhere
 	},
 }
 
-const btrFastSearch = {
+export const btrFastSearch = {
 	friendsCached: undefined as any,
 	friendsPromise: undefined as any,
 	friendsLoaded: undefined as any,
@@ -81,12 +81,12 @@ const btrFastSearch = {
 		const presencesToRequest: any[] = []
 		const presenceCache: Record<string, any> = {}
 		let lastPresenceRequest = 0
-		let presencePromise = null
+		let presencePromise: any = null
 		
 		let shouldLoadFriends = !btrFriends.friendsLoaded
 		
 		try {
-			for(const [idString, entry] of Object.entries(btrFriends.getFriends())) {
+			for(const [idString, entry] of Object.entries(btrFriends.getFriends()) as [string, any][]) {
 				userCache[entry.name.toLowerCase()] = {
 					Username: entry.name,
 					DisplayName: entry.displayName ?? entry.name,
@@ -198,7 +198,7 @@ const btrFastSearch = {
 
 			// Move non-friend exacts to be last of the visible ones
 			if(matches.length && matches[0].name === search && !matches[0].user.IsFriend) {
-				matches.push(matches.shift())
+				matches.push(matches.shift()!)
 			}
 
 			return matches
@@ -246,7 +246,7 @@ const btrFastSearch = {
 				return clearResults()
 			}
 			
-			const searchResults = Array.from(container.$findAll(">li"))
+			const searchResults: any[] = Array.from(container.$findAll(">li"))
 			const preservedIndex = searchResults.findIndex(x => x.classList.contains(selectedClass))
 			const results: any[] = []
 
@@ -412,7 +412,7 @@ const btrFastSearch = {
 
 			if(search.length >= 3 && usernameRegex.test(search)) {
 				if(!userCache[search]) {
-					const temp = userCache[search] = {
+					const temp: Record<string, any> = userCache[search] = {
 						Temporary: true,
 						Hidden: search.length > 20 || search.includes(" "), // Uncommon parts of a name
 						Username: search
@@ -453,13 +453,13 @@ const btrFastSearch = {
 				shouldLoadFriends = false
 				
 				btrFriends.loadFriends().then(friends => {
-					for(const [name, entry] of Object.entries(userCache)) {
+					for(const [name, entry] of Object.entries(userCache) as [string, any][]) {
 						if(entry.IsFriend) {
 							delete userCache[name]
 						}
 					}
 					
-					for(const [idString, entry] of Object.entries(friends)) {
+					for(const [idString, entry] of Object.entries(friends) as [string, any][]) {
 						const user = userCache[entry.name.toLowerCase()] = {
 							Username: entry.name,
 							DisplayName: entry.displayName ?? entry.name,

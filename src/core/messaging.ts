@@ -172,7 +172,7 @@ export const contentScript: any = {
 	
 	listen(name, callback) {
 		if(typeof name === "object") {
-			for(const [key, fn] of Object.entries(name)) {
+			for(const [key, fn] of Object.entries(name) as [string, any][]) {
 				this.listen(key, fn)
 			}
 			return

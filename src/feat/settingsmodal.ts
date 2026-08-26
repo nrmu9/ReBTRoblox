@@ -72,7 +72,7 @@ export const SettingsModal: SettingsModalState = {
 		document.$on("click", ".btr-settings-toggle", () => this.toggle())
 		
 		// we only want to remember settings visibility when navigating same-origin or through history
-		if(sessionStorage.getItem("btr-settings-open") && performance.getEntriesByType("navigation")[0]?.type === "navigate") {
+		if(sessionStorage.getItem("btr-settings-open") && performance.getEntriesByType("navigation")[0]?.entryType === "navigate") {
 			let sameOrigin = false
 			
 			try { sameOrigin = new URL(document.referrer).host === location.host }
@@ -87,10 +87,10 @@ export const SettingsModal: SettingsModalState = {
 			const url = new URL(window.location.href)
 
 			if(url.searchParams.get("btr_settings_open")) {
-				sessionStorage.setItem("btr-settings-open", true)
+				sessionStorage.setItem("btr-settings-open", "true")
 
 				url.searchParams.delete("btr_settings_open")
-				window.history.replaceState(null, null, url.toString())
+				window.history.replaceState(null, "", url.toString())
 			}
 		} catch(ex) {}
 
@@ -320,7 +320,7 @@ export const SettingsModal: SettingsModalState = {
 				return { elem: checkbox, input, resetButton }
 			}
 			
-			for(const element of Object.values(Navigation.elements)) {
+			for(const element of Object.values(Navigation.elements) as any[]) {
 				if(element.parent) { continue }
 				
 				const checkbox = createCheckbox(element.label || element.name, enabled => {
@@ -336,7 +336,7 @@ export const SettingsModal: SettingsModalState = {
 				})
 				
 				if(element.settings) {
-					for(const setting of Object.values(element.settings)) {
+					for(const setting of Object.values(element.settings) as any[]) {
 						const settingCheckbox = createCheckbox(setting.label || setting.name, enabled => {
 							setting.setEnabled(enabled)
 						})
@@ -375,7 +375,7 @@ export const SettingsModal: SettingsModalState = {
 				currencySelect.append(html`<option>${currency.name}</option>`)
 			}
 			
-			for(const currency of currencies.filter(x => x.usdRate).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+			for(const currency of currencies.filter(x => x.usdRate).sort((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
 				currencySelect.append(html`<option title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}" value="${currency.name}">${currency.name}*</option>`)
 			}
 
@@ -657,8 +657,8 @@ export const SettingsModal: SettingsModalState = {
 
 		const wipGroup = this.settingsDiv.$find("#btr-settings-wip")
 		
-		for(const [groupPath, settingsGroup] of Object.entries(SETTINGS.loadedSettings)) {
-			for(const [settingName, settingValueInfo] of Object.entries(settingsGroup)) {
+		for(const [groupPath, settingsGroup] of Object.entries(SETTINGS.loadedSettings) as [string, any][]) {
+			for(const [settingName, settingValueInfo] of Object.entries(settingsGroup) as [string, any][]) {
 				const defaultValueInfo = DEFAULT_SETTINGS[groupPath][settingName]
 				const settingValue = settingValueInfo.value
 
@@ -774,8 +774,8 @@ export const SettingsModal: SettingsModalState = {
 	robloxExperimentsChanged() {
 		if(!this.settingsDiv) { return }
 		
-		const populate = (experiments, defaultToUndefined) => {
-			for(const [experiment, values] of Object.entries(experiments)) {
+		const populate = (experiments: any, defaultToUndefined?: any) => {
+			for(const [experiment, values] of Object.entries(experiments) as [string, any][]) {
 				let group = this.experiments[experiment]
 				
 				if(!group) {
@@ -798,7 +798,7 @@ export const SettingsModal: SettingsModalState = {
 					}
 				}
 				
-				for(const [key, value] of Object.entries(values)) {
+				for(const [key, value] of Object.entries(values) as [string, any][]) {
 					let entry = group.entries[key]
 					
 					if(!entry) {
@@ -806,10 +806,9 @@ export const SettingsModal: SettingsModalState = {
 						const resetButton = html`<span class=btr-setting-reset-button><span class=btr-cross></span></span>`
 						const input = html`<input class=value type=text>`
 						
-						const update = initial => {
+						const update = (initial?: any) => {
 							resetButton.style.display = input.value ? "" : "none"
 							
-							let parsedValue = undefined
 							let valid = true
 							
 							if(input.value) {

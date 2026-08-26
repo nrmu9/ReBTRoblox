@@ -1,3 +1,4 @@
+import { deferredPromise } from "@/core/deferred"
 import { setImmediate } from "@/core/dom"
 import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
@@ -7,10 +8,10 @@ export const SHARED_DATA = {
 	payloadScript: undefined as any,
 	syncLoadError: undefined as any,
 	payloadPromise: undefined as any,
-	_loadPromise: new Promise(),
+	_loadPromise: deferredPromise(),
 	_loaded: false,
 	
-	lastDataString: null,
+	lastDataString: null as any,
 	data: { version: 1 },
 	
 	updateData() {
@@ -39,7 +40,7 @@ export const SHARED_DATA = {
 				this.payloadScript = null
 			}
 			
-			const details = chrome.runtime.getManifest().content_scripts[0]
+			const details = chrome.runtime.getManifest().content_scripts![0]
 			
 			browser.contentScripts.register({
 				matches: details.matches,
@@ -89,7 +90,7 @@ export const SHARED_DATA = {
 		}
 		
 		if(IS_CHROME) {
-			let syncLoadErrorCounter = parseInt(sessionStorage.getItem("syncLoadError"), 10)
+			let syncLoadErrorCounter = parseInt(sessionStorage.getItem("syncLoadError") ?? "", 10)
 			let dataPayload
 			
 			if(!Number.isSafeInteger(syncLoadErrorCounter)) {
@@ -102,16 +103,16 @@ export const SHARED_DATA = {
 				
 				try {
 					request.send()
-					dataPayload = JSON.parse(new URL(request.responseURL).searchParams.get("data"))
+					dataPayload = JSON.parse(new URL(request.responseURL).searchParams.get("data") ?? "null")
 				} catch(ex) {}
 			}
 			
 			if(dataPayload instanceof Object) {
 				sessionStorage.removeItem("syncLoadError")
 			} else {
-				sessionStorage.setItem("syncLoadError", syncLoadErrorCounter + 1)
+				sessionStorage.setItem("syncLoadError", String(syncLoadErrorCounter + 1))
 				
-				this.syncLoadError = typeof navigator.brave === "undefined"
+				this.syncLoadError = typeof (navigator as any).brave === "undefined"
 					? `BTRoblox failed to initialize properly for an unknown reason.\nSome features may not work properly for the time being.`
 					: `BTRoblox is currently experiencing issues on the Brave browser.\nSome features may not work properly for the time being.`
 				
@@ -121,7 +122,7 @@ export const SHARED_DATA = {
 			Object.assign(this.data, dataPayload)
 		} else {
 			if(typeof SHARED_DATA_PAYLOAD === "undefined") {
-				this.payloadPromise = new Promise()
+				this.payloadPromise = deferredPromise()
 				await this.payloadPromise
 			}
 			

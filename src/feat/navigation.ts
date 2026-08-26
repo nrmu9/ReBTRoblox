@@ -98,7 +98,7 @@ export const Navigation = {
 				this.nodeAdded?.(node)
 				this.update?.(node)
 				
-				for(const setting of Object.values(this.settings)) {
+				for(const setting of Object.values(this.settings) as any[]) {
 					if(setting.nodeSelector === this.nodeSelector) {
 						setting.addNode?.(node)
 					}
@@ -117,7 +117,7 @@ export const Navigation = {
 		}
 		
 		if(elementInfo.settings) {
-			for(const [name, setting] of Object.entries(elementInfo.settings)) {
+			for(const [name, setting] of Object.entries(elementInfo.settings) as [string, any][]) {
 				setting.nodeSelector = element.nodeSelector
 				setting.parent = element
 				setting.class ??= name

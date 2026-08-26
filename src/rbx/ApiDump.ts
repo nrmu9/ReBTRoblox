@@ -60,7 +60,7 @@ export const ApiDump = (() => {
 			if(members) {
 				resolved = {}
 
-				for(const [prop, value] of Object.entries(members as Record<string, RawMember>)) {
+				for(const [prop, value] of Object.entries(members as Record<string, RawMember>) as [string, any][]) {
 					if(typeof value === "number") {
 						resolved[prop] = { Group: groupOf(value) }
 					} else {

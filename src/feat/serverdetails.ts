@@ -444,7 +444,7 @@ const resolveServerDetails = details => {
 	}
 }
 
-const getServerDetails = (placeId, jobId, callback) => {
+export const getServerDetails = (placeId, jobId, callback) => {
 	const cached = btrLocalStorage.getItem(`serverDetailsV2-${jobId}`)
 	
 	if(cached) {

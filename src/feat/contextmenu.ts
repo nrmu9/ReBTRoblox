@@ -156,7 +156,7 @@ if(IS_BACKGROUND_PAGE) {
 			const linkUrl = info.linkUrl ?? info.pageUrl
 			
 			let menuId = info.menuItemId
-			let data = null
+			let data: any = null
 			
 			if(info.menuItemId.startsWith("custom!")) {
 				const [_, _menuId, _data] = info.menuItemId.match(/^custom!([^!]+)!(.*)$/)
@@ -292,11 +292,11 @@ if(IS_BACKGROUND_PAGE) {
 							const item = enabledItems[i]
 							const lastItem = lastEnabledItems[i]
 							
-							for(const [key, value] of Object.entries(item)) {
+							for(const [key, value] of Object.entries(item) as [string, any][]) {
 								const lastValue = lastItem[key]
 								
 								if(Array.isArray(value) && Array.isArray(lastValue) && value.length === lastValue.length) {
-									for(const [index, value2] of Object.entries(value)) {
+									for(const [index, value2] of Object.entries(value) as [string, any][]) {
 										if(lastValue[index] !== value2) {
 											identical = false
 											break outer
@@ -380,7 +380,7 @@ if(IS_BACKGROUND_PAGE) {
 		
 		update() {
 			this.needsUpdate = false
-			let menuItems = null
+			let menuItems: any = null
 			
 			if(this.activeContextMenus.size > 0) {
 				const targets: Record<string, any> = {}
@@ -400,12 +400,12 @@ if(IS_BACKGROUND_PAGE) {
 					items: {}
 				}
 				
-				for(const entry of Object.values(targets)) {
+				for(const entry of Object.values(targets) as any[]) {
 					menuItems.types.push(entry.type)
 					
 					const suffix = entry.type === "page" ? "_page" : ""
 					
-					for(const [key, value] of Object.entries(entry.items)) {
+					for(const [key, value] of Object.entries(entry.items) as [string, any][]) {
 						menuItems.items[key + suffix] = value
 					}
 				}

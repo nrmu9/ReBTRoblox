@@ -364,7 +364,7 @@ export const RobuxToCash = {
 		]
 	},
 
-	Options: {},
+	Options: {} as Record<string, any>,
 	
 	isEnabled() {
 		return this.getSelectedOption() !== this.Options.none
@@ -395,7 +395,7 @@ export const RobuxToCash = {
 }
 
 
-for(const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
+for(const [name, currency] of Object.entries(RobuxToCash.Currencies) as [string, any][]) {
 	currency.name = name
 	currency.numFractions = 2
 	
@@ -411,7 +411,7 @@ for(const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 	const options = RobuxToCash.OptionLists[name] = RobuxToCash.OptionLists[name] || []
 	const refCurrency = currency.usdRate ? RobuxToCash.Currencies.USD : currency
 	
-	for(const [index, rate] of Object.entries(refCurrency.robuxRates)) {
+	for(const [index, rate] of Object.entries(refCurrency.robuxRates) as [string, any][]) {
 		const option: Record<string, any> = { name: `${name.toLowerCase()}Regular${index}`, cash: rate[0], robux: rate[1] }
 		
 		if(currency.usdRate) {
@@ -422,8 +422,8 @@ for(const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 		options.push(option)
 	}
 	
-	for(const [index, rate] of Object.entries(refCurrency.robuxRatesPremium)) {
-		const option = { name: `${name.toLowerCase()}Premium${index}`, cash: rate[0], robux: rate[1] }
+	for(const [index, rate] of Object.entries(refCurrency.robuxRatesPremium) as [string, any][]) {
+		const option: Record<string, any> = { name: `${name.toLowerCase()}Premium${index}`, cash: rate[0], robux: rate[1] }
 		
 		if(currency.usdRate) {
 			option.usdCash = option.cash
@@ -433,8 +433,8 @@ for(const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 		options.push(option)
 	}
 	
-	for(const [index, rate] of Object.entries(refCurrency.subscriptionRates)) {
-		const option = { name: `${name.toLowerCase()}Subscription${index}`, cash: rate[0], robux: rate[1] }
+	for(const [index, rate] of Object.entries(refCurrency.subscriptionRates) as [string, any][]) {
+		const option: Record<string, any> = { name: `${name.toLowerCase()}Subscription${index}`, cash: rate[0], robux: rate[1] }
 		
 		if(currency.usdRate) {
 			option.usdCash = option.cash
@@ -445,7 +445,7 @@ for(const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 	}
 }
 
-for(const [name, options] of Object.entries(RobuxToCash.OptionLists)) {
+for(const [name, options] of Object.entries(RobuxToCash.OptionLists) as [string, any][]) {
 	const currency = RobuxToCash.Currencies[name]
 	
 	for(const option of options) {
