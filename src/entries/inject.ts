@@ -1048,7 +1048,21 @@ document.addEventListener("btroblox/init", ev => {
 					continue
 				}
 				
-				if(info.filter(args[0])) {
+				// React can invoke a component with no props. Every filter uses the `in`
+				// operator, which throws on a non object, and a throw here unmounts whatever
+				// React was rendering.
+				const props = args[0]
+				if(props === null || typeof props !== "object") { continue }
+
+				let matches = false
+
+				try { matches = info.filter(props) }
+				catch(err) {
+					console.error("[btr] constructor filter failed", err)
+					continue
+				}
+
+				if(matches) {
 					return info.handler(function(this: any, ...args: any[]) {
 						return reactHook.nextConstructorReplace(render, index + 1, this as any, args)
 					}, thisArg, args)
