@@ -318,7 +318,12 @@ export const redirectEvents = (from, to) => {
 			"getModifierState", "composedPath",
 		]
 		
+		const redirected = new WeakSet()
+
 		const callback = event => {
+			// dispatchEvent runs a capture phase, so a clone can re-enter this
+			// capture listener if `to` is inside `from`. Never redirect twice.
+			if(redirected.has(event)) { return }
 			const clone = new event.constructor(event.type, new Proxy(event, {
 				get(target, prop) {
 					return prop === "bubbles" ? false : target[prop]
@@ -345,7 +350,9 @@ export const redirectEvents = (from, to) => {
 				}
 			}
 			
-			if(!to.dispatchEvent(clone)) {
+			redirected.add(clone)
+
+				if(!to.dispatchEvent(clone)) {
 				event.preventDefault()
 			}
 		}
