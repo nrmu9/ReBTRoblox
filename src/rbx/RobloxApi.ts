@@ -1,7 +1,7 @@
 import { IS_BACKGROUND_PAGE } from "@/core/env"
 
-const invalidXsrfTokens = {}
-let cachedXsrfToken = null
+const invalidXsrfTokens: Record<string, boolean> = {}
+let cachedXsrfToken: string | null = null
 
 let backgroundCallCounter = 0
 
@@ -23,7 +23,7 @@ const wrapArgs = async args => {
 				if(valuePromises.has(value)) { return valuePromises.get(value) }
 				
 				const valuePromise = Promise.resolve().then(async () => {
-					const promises = []
+					const promises: Promise<unknown>[] = []
 					let newObject
 					
 					for(const [key, oldValue] of Object.entries(value)) {
@@ -91,7 +91,7 @@ const cacheResult = (duration, fn) => {
 		duration = Infinity
 	}
 	
-	const cache = {}
+	const cache: Record<string, any> = {}
 	
 	const cachedFn = (...args) => {
 		let cached = cache[args[0]]
@@ -135,7 +135,7 @@ const backgroundCall = callback => {
 	
 	return (...args) => new Promise(async (resolve, reject) => {
 		if(!cachedXsrfToken) {
-			cachedXsrfToken = document.querySelector("meta[name='csrf-token']")?.dataset.token ?? null
+			cachedXsrfToken = document.querySelector<HTMLMetaElement>("meta[name='csrf-token']")?.dataset.token ?? null
 		}
 
 		backgroundScript.send(messageId, { args: await wrapArgs(args), xsrf: cachedXsrfToken }, async result => {
@@ -148,7 +148,9 @@ const backgroundCall = callback => {
 	})
 }
 
-const xsrfFetch = (url, init = {}) => {
+interface XsrfInit extends RequestInit { xsrf?: boolean }
+
+const xsrfFetch = (url: string, init: XsrfInit = {}) => {
 	init = { ...init }
 	
 	const usingXsrf = init.xsrf
@@ -161,19 +163,19 @@ const xsrfFetch = (url, init = {}) => {
 		}
 		
 		if(!cachedXsrfToken) {
-			cachedXsrfToken = document.querySelector("meta[name='csrf-token']")?.dataset.token ?? null
+			cachedXsrfToken = document.querySelector<HTMLMetaElement>("meta[name='csrf-token']")?.dataset.token ?? null
 		}
 		
-		init.headers["X-CSRF-TOKEN"] = cachedXsrfToken
+		(init.headers as Record<string, string>)["X-CSRF-TOKEN"] = cachedXsrfToken ?? ""
 	}
 	
 	return fetch(url, init).then(res => {
 		if(usingXsrf && !res.ok && res.status === 403 && res.headers.get("X-CSRF-TOKEN")) {
-			if(init.headers["X-CSRF-TOKEN"]) {
-				invalidXsrfTokens[init.headers["X-CSRF-TOKEN"]] = true
+			if((init.headers as Record<string, string>)["X-CSRF-TOKEN"]) {
+				invalidXsrfTokens[(init.headers as Record<string, string>)["X-CSRF-TOKEN"]] = true
 			}
 			
-			cachedXsrfToken = init.headers["X-CSRF-TOKEN"] = res.headers.get("X-CSRF-TOKEN")
+			cachedXsrfToken = (init.headers as Record<string, string>)["X-CSRF-TOKEN"] = res.headers.get("X-CSRF-TOKEN") ?? ""
 			return fetch(url, init)
 		}
 		
@@ -182,7 +184,7 @@ const xsrfFetch = (url, init = {}) => {
 }
 
 const batchable = (limit, callback) => {
-	const batches = []
+	const batches: any[] = []
 	
 	callback.batch = (list, ...args) => {
 		if(!Array.isArray(list)) { list = [list] }
@@ -199,7 +201,7 @@ const batchable = (limit, callback) => {
 		})
 		
 		if(!batching) {
-			const batch = [...list]
+			const batch: any[] & { args?: any, promise?: Promise<any> } = [...list]
 			
 			batch.args = args
 			
@@ -241,7 +243,7 @@ export const RobloxApi = {
 			if(typeof urlParams === "string" || typeof urlParams === "number") { urlParams = { id: urlParams } }
 			if(!(urlParams instanceof URLSearchParams)) { urlParams = new URLSearchParams(urlParams) }
 			
-			const headers = {}
+			const headers: Record<string, string> = {}
 			if(params?.format) { headers["Roblox-AssetFormat"] = params.format }
 			if(params?.browserAssetRequest) { headers["Roblox-Browser-Asset-Request"] = "true" }
 			
@@ -251,7 +253,7 @@ export const RobloxApi = {
 			}).then(res => res.json())
 		},
 		
-		requestAssetV2_bg: backgroundCall((...args) => RobloxApi.assetdelivery.requestAssetV2(...args))
+		requestAssetV2_bg: backgroundCall((...args: any[]) => (RobloxApi.assetdelivery.requestAssetV2 as any)(...args))
 	},
 	avatar: {
 		getAvatarRules: () =>
@@ -577,7 +579,7 @@ export const RobloxApi = {
 			xsrfFetch(`https://www.roblox.com/games/shutdown-all-instances`, {
 				method: "POST",
 				credentials: "include",
-				body: new URLSearchParams({ placeId, replaceInstances: !!replaceInstances }),
+				body: new URLSearchParams({ placeId: String(placeId), replaceInstances: String(!!replaceInstances) }),
 				xsrf: true
 			}).then(res => !!res.ok),
 		

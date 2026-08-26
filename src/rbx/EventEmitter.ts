@@ -1,5 +1,5 @@
 const EventMap = new WeakMap()
-const GetEventProps = (item, init) => {
+const GetEventProps = (item: any, init?: boolean) => {
 	if(EventMap.has(item)) { return EventMap.get(item) }
 
 	if(init) {
@@ -24,7 +24,7 @@ class EventEmitter {
 		return this
 	}
 
-	once(eventName, fn, opt = {}) {
+	once(eventName: string, fn: (...args: any[]) => void, opt: Record<string, any> = {}) {
 		opt.once = true
 		return this.on(eventName, fn, opt)
 	}

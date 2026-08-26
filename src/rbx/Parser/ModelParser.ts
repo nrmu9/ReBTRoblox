@@ -1,5 +1,4 @@
 import { assert, assertWarn, bufferToString } from "@/core/util"
-import { BrickColor } from "@/rbx/Constants"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
 
 const RBXDataTypes = [
@@ -77,6 +76,29 @@ export interface RBXProperty {
 	value: any
 }
 
+
+export interface BinaryParserState {
+	instances: any[]
+	types: any[]
+	sharedStrings: any[]
+	arrays: any[]
+	arrayIndex: number
+	result: RBXInstance[]
+	meta: Record<string, any>
+	promise?: Promise<unknown>
+	[key: string]: any
+}
+
+export interface XmlParserState {
+	sharedStrings: Record<string, any>
+	refWait: any[]
+	refs: Record<string, any>
+	result: RBXInstance[]
+	meta: Record<string, any>
+	promise?: Promise<unknown>
+	[key: string]: any
+}
+
 export class RBXInstance {
 	// setProperty mirrors properties onto the instance under their real names.
 	// Must lead the class body: a line starting with [ continues the previous one.
@@ -121,7 +143,7 @@ const RBXBinaryParser = {
 	HeaderBytes: [0x3C, 0x72, 0x6F, 0x62, 0x6C, 0x6F, 0x78, 0x21, 0x89, 0xFF, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00],
 	Faces: [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, 0, 0], [0, -1, 0], [0, 0, -1]],
 	
-	parse(buffer, params) {
+	parse(buffer: any, params?: any) {
 		const reader = new ByteReader(buffer)
 		
 		assert(reader.Match("<roblox"), "[RBXBinaryParser] Not a valid RBXM file")
@@ -131,7 +153,7 @@ const RBXBinaryParser = {
 		const instanceCount = reader.UInt32LE()
 		reader.Jump(8)
 
-		const parser = {
+		const parser: BinaryParserState = {
 			// parser internal data
 			instances: new Array(instanceCount),
 			types: new Array(typeCount),
@@ -151,7 +173,7 @@ const RBXBinaryParser = {
 		}
 		
 		// preallocate a buffer that fits the biggest decompressed chunk
-		const chunks = []
+		const chunks: any[] = []
 		let maxChunkSize = 0
 		
 		while(true) {
@@ -292,7 +314,7 @@ const RBXBinaryParser = {
 
 		const type = {
 			className: className,
-			instances: []
+			instances: [] as any[]
 		}
 		
 		parser.types[typeId] = type
@@ -526,7 +548,7 @@ const RBXBinaryParser = {
 			case "NumberSequence": {
 				for(let i = 0; i < count; i++) {
 					const length = chunk.UInt32LE()
-					const sequence = []
+					const sequence: any[] = []
 	
 					for(let j = 0; j < length; j++) {
 						sequence.push({
@@ -543,7 +565,7 @@ const RBXBinaryParser = {
 			case "ColorSequence":
 				for(let i = 0; i < count; i++) {
 					const length = chunk.UInt32LE()
-					const sequence = []
+					const sequence: any[] = []
 	
 					for(let j = 0; j < length; j++) {
 						sequence.push({
@@ -600,7 +622,7 @@ const RBXBinaryParser = {
 				const rgbs = chunk.Array(count * 3)
 	
 				for(let i = 0; i < count; i++) {
-					const rgb = values[i]
+					values[i]
 					values[i] = [rgbs[i] / 255, rgbs[i + count] / 255, rgbs[i + count * 2] / 255]
 				}
 				
@@ -702,7 +724,7 @@ const RBXBinaryParser = {
 				const objects = chunk.RBXInterleavedInt32(numObjects, parser.arrays[parser.arrayIndex++])
 				
 				const numObjectsExternal = chunk.UInt32LE()
-				const objectsExternal = chunk.RBXInterleavedInt32(numObjectsExternal, parser.arrays[parser.arrayIndex++])
+				chunk.RBXInterleavedInt32(numObjectsExternal, parser.arrays[parser.arrayIndex++])
 				
 				let uriCounter = 0
 				let objectCounter = 0
@@ -854,10 +876,10 @@ const RBXXmlParser = {
 			.replace(/&&/g, "&")
 	},
 
-	parse(buffer, params) {
+	parse(buffer: any, params?: any) {
 		const xml = new DOMParser().parseFromString(this.escapeXml(bufferToString(buffer)), "text/xml").documentElement
 
-		const parser = {
+		const parser: XmlParserState = {
 			// parser internal data
 			sharedStrings: {},
 			refWait: [],
@@ -878,7 +900,7 @@ const RBXXmlParser = {
 					this.parseSharedStrings(parser, child)
 					break
 				case "Meta":
-					parser.meta[child.attributes.name.value] = child.textContent
+					parser.meta[child.attributes.getNamedItem("name")?.value ?? ""] = child.textContent
 					break
 				case "External":
 					// Do nothing, we don't care about these
@@ -897,7 +919,7 @@ const RBXXmlParser = {
 	parseSharedStrings(parser, sharedStrings) {
 		for(const child of Object.values(sharedStrings.children) as any[]) {
 			if(child.nodeName !== "SharedString") { continue }
-			const md5 = child.getAttribute("md5")
+			const md5 = child.getAttribute("md5") ?? ""
 			let value
 
 			try { value = window.atob(child.textContent.trim()) }
@@ -953,10 +975,10 @@ const RBXXmlParser = {
 			return children
 		}
 		
-		const getValue = (node, def) => ((node ? (node instanceof Node ? node : node._node).childNodes[0]?.nodeValue : null) ?? def)
+		const getValue = (node: any, def?: any) => ((node ? (node instanceof Node ? node : node._node).childNodes[0]?.nodeValue : null) ?? def)
 		
 		for(const propNode of targetNode.children) {
-			const name = propNode.attributes.name.value
+			const name = propNode.attributes.getNamedItem("name")?.value
 			
 			const children = getChildren(propNode)
 			let value = getValue(propNode, "")
@@ -1112,7 +1134,7 @@ const RBXXmlParser = {
 }
 
 export const RBXModelParser = {
-	parse(buffer, params) {
+	parse(buffer: any, params?: any) {
 		const reader = new ByteReader(buffer)
 		assert(reader.String(7) === "<roblox", "Not a valid RBXM file")
 

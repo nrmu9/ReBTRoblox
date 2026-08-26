@@ -66,13 +66,13 @@ export const RBXAnimationParser = {
 		return [qx, qy, qz, qw]
 	},
 
-	parse(sequence) {
+	parse(sequence: any) {
 		if(Array.isArray(sequence)) { sequence = sequence[0] }
 		assert(sequence instanceof RBXInstance, "sequence is not an Instance")
 		
 		const priority = sequence.Priority ?? 1000 // 1000 is Core, the lowest priority
 			
-		const result = {
+		const result: Record<string, any> = {
 			priority: (priority === 1000 ? -1 : priority) + 1,
 			loop: !!sequence.Loop,
 			length: 0,
@@ -97,7 +97,7 @@ export const RBXAnimationParser = {
 			}
 			
 			for(const keyframes of Object.values(result.keyframes)) {
-				keyframes.sort((a, b) => a.time - b.time)
+				(keyframes as any[]).sort((a, b) => a.time - b.time)
 			}
 		} else if(sequence.ClassName === "CurveAnimation") {
 			result.isCurveAnimation = true
@@ -122,7 +122,7 @@ export const RBXAnimationParser = {
 				const curveType = child.Name.toLowerCase()
 				
 				const keyframeName = `${target.Parent.Name}.${target.Name}`
-				const keyframes = result.keyframes[keyframeName] = result.keyframes[keyframeName] ?? {}
+				const keyframes: Record<string, any> = result.keyframes[keyframeName] = result.keyframes[keyframeName] ?? {}
 
 				if(curveType === "position") {
 					keyframes.position = { x: [], y: [], z: [] }

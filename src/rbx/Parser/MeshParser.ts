@@ -434,27 +434,27 @@ export const RBXMeshParser = {
 					for(const attribute of data.attributes) {
 						switch(attribute.uniqueId) {
 						case 0: // Position
-							mesh.vertices = Float32Array.from(attribute.output)
+							mesh.vertices = Float32Array.from(attribute.output as ArrayLike<number>)
 							break
 						case 1: // Normals
-							mesh.normals = Float32Array.from(attribute.output)
+							mesh.normals = Float32Array.from(attribute.output as ArrayLike<number>)
 							break
 						case 2: // UVs
-							const uvs = mesh.uvs = Float32Array.from(attribute.output)
+							const uvs = mesh.uvs = Float32Array.from(attribute.output as ArrayLike<number>)
 							
 							for(let i = 1; i < uvs.length; i += 2) {
 								uvs[i] = 1 - uvs[i]
 							}
 							break
 						case 3: // Tangents?
-							const tangents = mesh.tangents = Float32Array.from(attribute.output)
+							const tangents = mesh.tangents = Float32Array.from(attribute.output as ArrayLike<number>)
 							
 							for(let i = 0; i < tangents.length; i++) {
 								tangents[i] = tangents[i] / 127 - 1
 							}
 							break
 						case 4: // Colors
-							mesh.vertexColors = Uint8Array.from(attribute.output)
+							mesh.vertexColors = Uint8Array.from(attribute.output as ArrayLike<number>)
 							break
 						default:
 							console.warn("[BTRoblox] Unknown draco attribute", attribute)
@@ -482,7 +482,7 @@ export const RBXMeshParser = {
 				switch(chunkVersion) {
 				case 1: {
 					chunk.UInt16LE() // lodType
-					const numHighQualityLODs = chunk.UInt8()
+					chunk.UInt8() // numHighQualityLODs
 					
 					const numLods = chunk.UInt32LE()
 					
@@ -493,7 +493,7 @@ export const RBXMeshParser = {
 						
 						chunk.Jump(numLods * 4)
 					} else {
-						const lods = mesh.lods = []
+						const lods: number[] = mesh.lods = []
 						
 						for(let i = 0; i < numLods; i++) {
 							lods.push(chunk.UInt32LE())
@@ -561,7 +561,7 @@ export const RBXMeshParser = {
 					chunk.Jump(nameTableSize)
 					
 					const numSubsets = chunk.UInt32LE()
-					const boneIndices = []
+					const boneIndices: any[] = []
 					
 					for(let i = 0; i < numSubsets; i++) {
 						chunk.UInt32LE() // facesBegin

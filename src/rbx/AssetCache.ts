@@ -71,7 +71,7 @@ const AssetCache = (() => {
 			let resolvePromise
 			
 			if(!strict && typeof request === "string" && /^https?:\/\/[^\/]+\.rbxcdn\.com\/*[0-9a-fA-F]{32}/i.test(request)) {
-				const assetRequest = {
+				const assetRequest: Record<string, any> = {
 					strict, request, params,
 					cacheKey: request,
 					location: request
@@ -134,7 +134,7 @@ const AssetCache = (() => {
 			let resolvePromise = resolveCache[cacheKey]
 				
 			if(!resolvePromise) {
-				const assetRequest = {
+				const assetRequest: Record<string, any> = {
 					strict, request, params, cacheKey,
 					urlParams: urlParams.toString()
 				}
@@ -205,7 +205,7 @@ const AssetCache = (() => {
 			if(assetRequest.params?.async) {
 				return RBXModelParser.parse(
 					buffer, { async: true, onProgress: assetRequest.params?.onProgress }
-				).promise.then(parser => RBXAnimationParser.parse(findSequence(parser.result)))
+				).promise!.then((parser: any) => RBXAnimationParser.parse(findSequence(parser.result)))
 			}
 			
 			return RBXAnimationParser.parse(findSequence(RBXModelParser.parse(buffer).result))
@@ -216,7 +216,7 @@ const AssetCache = (() => {
 			if(assetRequest.params?.async) {
 				return RBXModelParser.parse(
 					buffer, { async: true, onProgress: assetRequest.params?.onProgress }
-				).promise.then(parser => parser.result)
+				).promise!.then((parser: any) => parser.result)
 			}
 			
 			return RBXModelParser.parse(buffer).result
