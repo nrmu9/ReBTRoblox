@@ -56,7 +56,8 @@ export const RBXAvatar = (() => {
 			if(mesh.bones) {
 				const bones: any[] = []
 				
-				(obj as any).isSkinnedMesh = true
+				const skinned = obj as any
+				skinned.isSkinnedMesh = true
 				obj.rbxBones = bones
 				
 				geom.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(mesh.skinIndices, 4))
@@ -92,7 +93,8 @@ export const RBXAvatar = (() => {
 				obj.bind(obj.skeleton, new THREE.Matrix4())
 				
 			} else {
-				(obj as any).isSkinnedMesh = false
+				const unskinned = obj as any
+				unskinned.isSkinnedMesh = false
 				delete obj.rbxBones
 				
 				geom.deleteAttribute("skinIndex")
@@ -166,7 +168,8 @@ export const RBXAvatar = (() => {
 		const img = new Image()
 		img.src = src
 		img.crossOrigin = "anonymous"
-		(img as any).updateListeners = []
+		const tracked = img as any
+		tracked.updateListeners = []
 
 		return img
 	}
@@ -1412,7 +1415,8 @@ export const RBXAvatar = (() => {
 				
 				if(tree.name !== "HumanoidRootPart") {
 					obj = new THREE.SkinnedMesh(undefined, new THREE.MeshStandardMaterial({ map: this.textures[tree.name], transparent: false }))
-					(obj as any).isSkinnedMesh = false
+					const skinned = obj as any
+					skinned.isSkinnedMesh = false
 					obj.bindMode = "detached"
 					obj.frustumCulled = false
 					obj.castShadow = true
@@ -1943,7 +1947,8 @@ export const RBXAvatar = (() => {
 					}
 					
 					const obj = acc.obj = new THREE.SkinnedMesh(undefined, material)
-					(obj as any).isSkinnedMesh = false
+					const skinned = obj as any
+					skinned.isSkinnedMesh = false
 					obj.bindMode = "detached"
 					obj.matrixAutoUpdate = false
 					obj.frustumCulled = false

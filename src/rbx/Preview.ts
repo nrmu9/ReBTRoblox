@@ -279,7 +279,7 @@ class AvatarPreviewer extends EventEmitter {
 			return Promise.resolve()
 		}
 
-		return new Promise(resolve => this.once("appearanceLoaded", () => resolve()))
+		return new Promise<void>(resolve => this.once("appearanceLoaded", () => resolve()))
 	}
 	
 	waitForAppearance() {
@@ -301,7 +301,7 @@ class AvatarPreviewer extends EventEmitter {
 		}
 
 		if(!this.playingAnim && this.loadingAnim) {
-			promises.push(new Promise(resolve => this.once("animationPlayed", () => resolve())))
+			promises.push(new Promise<void>(resolve => this.once("animationPlayed", () => resolve())))
 		}
 
 		return Promise.all(promises)
