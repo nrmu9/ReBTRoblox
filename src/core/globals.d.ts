@@ -1,59 +1,64 @@
-// Ambient names that are not ES modules.
-//
-// Page world: provided by Roblox itself or by inject.js, and reached from
-// stringified closures passed to injectScript.call.
-declare const Roblox: any
-declare const util: any
-declare const cloneInto: any
-declare const SHARED_DATA_PAYLOAD: any
-declare const browser: any
+import type { Watcher, WatchProps } from "@/core/watch"
 
-// Still in legacy js/. Each entry goes away as its module ports.
-declare const reactHook: any
-declare const insertCSS: any
-declare const removeCSS: any
-declare const formatNumber: any
-declare const loggedInUser: any
-declare const loggedInUserPromise: any
-declare const robloxExperiments: any
+declare global {
+	// Page world: provided by Roblox itself or by inject.js, and reached from
+	// stringified closures passed to injectScript.call. $ there is Roblox's
+	// jQuery, not BTRoblox's.
+	const Roblox: any
+	const util: any
+	const cloneInto: any
+	const SHARED_DATA_PAYLOAD: any
+	const browser: any
+	const $: any
 
-// The $ DOM-extension layer, still implemented in js/utility.js. These prototype
-// extensions have ~500 call sites across feat/ and pages/, so they are declared
-// here until that layer ports onto core/hook.ts.
-interface BtrWatcher {
-	$watch(selector: string, callback?: (...nodes: any[]) => void, props?: any): BtrWatcher
-	$watchAll(selector: string, callback?: (node: any) => void, props?: any): BtrWatcher
-	$then(): BtrWatcher
-	$promise(): Promise<any>
-	$resolve(value?: any): any
-	$digest(): void
-}
+	// Still in legacy js/. Each entry goes away as its module ports.
+	const reactHook: any
+	const insertCSS: any
+	const removeCSS: any
+	const formatNumber: any
+	const loggedInUser: any
+	const loggedInUserPromise: any
+	const robloxExperiments: any
 
-interface Element extends BtrWatcher {
-	$find(selector: string): any
-	$findAll(selector: string): any[]
-	$on(events: string, selectorOrHandler?: any, handler?: any): Element
-	$off(events: string, handler?: any): Element
-}
+	interface Window {
+		Roblox?: any
+		jQuery?: any
+		angular?: any
+	}
 
-interface Document extends BtrWatcher {
-	$find(selector: string): any
-	$findAll(selector: string): any[]
-	$on(events: string, selectorOrHandler?: any, handler?: any): Document
-	$off(events: string, handler?: any): Document
-}
+	// The $ prototype extensions, implemented in core/extend.ts and installed by
+	// each entry point. Declared globally because call sites reach them off DOM
+	// objects rather than by import.
+	interface Element {
+		$find<T extends Element = Element>(selector: string): T | null
+		$findAll<T extends Element = Element>(selector: string): NodeListOf<T>
+		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
+		$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
+	}
 
-interface Date {
-	$format(format?: string): string
-	$since(relativeTo?: any, short?: boolean): string
-}
+	interface Document {
+		$find<T extends Element = Element>(selector: string): T | null
+		$findAll<T extends Element = Element>(selector: string): NodeListOf<T>
+		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
+		$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
+	}
 
-// Page world only: Roblox's own jQuery, reached from stringified injectScript
-// closures. Not BTRoblox's $.
-declare const $: any
+	interface DocumentFragment {
+		$find<T extends Element = Element>(selector: string): T | null
+		$findAll<T extends Element = Element>(selector: string): NodeListOf<T>
+	}
 
-interface Window {
-	Roblox?: any
-	jQuery?: any
-	angular?: any
+	interface EventTarget {
+		$on(eventType: string, selector?: any, callback?: any, options?: any): this
+		$off(eventType: string, selector?: any, callback?: any, options?: any): this
+	}
+
+	interface Node {
+		$onRemove(callback: () => void): any
+	}
+
+	interface Date {
+		$format(format: string): string
+		$since(relativeTo?: any, short?: boolean): string
+	}
 }

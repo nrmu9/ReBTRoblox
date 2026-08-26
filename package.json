@@ -10,7 +10,8 @@
 		"bridge": "node dev/bridge.js",
 		"typecheck": "tsc --noEmit",
 		"dev": "node dev/dev.js",
-		"test:hook": "node test/serve.js"
+		"test:hook": "node test/serve.js",
+		"test:dollar": "node test/serve.js dollar"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.1.34",

@@ -13,7 +13,7 @@ const page = `<!doctype html><meta charset="utf-8"><title>running</title><body>`
 
 const run = async () => {
 	const built = await esbuild.build({
-		entryPoints: [path.join(__dirname, "hook.test.ts")],
+		entryPoints: [path.join(__dirname, process.argv[2] === "dollar" ? "dollar.test.ts" : "hook.test.ts")],
 		bundle: true,
 		write: false,
 		format: "iife",
