@@ -4,7 +4,7 @@ import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
 import { loadOptionalFeature } from "@/feat/loadfeature"
 import { SETTINGS } from "@/feat/settings"
-import { loggedInUser, pageInit } from "@/pages/common"
+import { loggedInUser } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 const OwnerAssetCache = {
@@ -124,7 +124,7 @@ const OwnerAssetCache = {
 		
 		this.data.lastUserId = loggedInUser
 
-		const list = Object.values(this.data.types)
+		const list: any[] = Object.values(this.data.types)
 		const promises: any[] = []
 		
 		for(const next of list) {

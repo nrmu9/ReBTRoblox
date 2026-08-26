@@ -11,9 +11,9 @@ import { SettingsModal } from "@/feat/settingsmodal"
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { pageInit, pageReset } from "@C:/Program Files/Git/core/page"
-import { btrFastSearch } from "@C:/Program Files/Git/feat/fastsearch"
-import { btrAdblock } from "@C:/Program Files/Git/feat/adblock"
+import { pageInit, pageReset } from "@/core/page"
+import { btrFastSearch } from "@/feat/fastsearch"
+import { btrAdblock } from "@/feat/adblock"
 
 
 

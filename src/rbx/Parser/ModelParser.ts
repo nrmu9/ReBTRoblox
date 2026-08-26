@@ -67,6 +67,8 @@ const RBXInstanceUtils = {
 }
 
 class RBXInstanceArray extends Array {
+	[key: string]: any
+
 	findFirstChild(...args: any[]) { return (RBXInstanceUtils.findFirstChild as any)(this, ...args) }
 	findFirstChildOfClass(...args: any[]) { return (RBXInstanceUtils.findFirstChildOfClass as any)(this, ...args) }
 }
@@ -100,6 +102,8 @@ export interface XmlParserState {
 }
 
 export class RBXInstance {
+	[key: string]: any
+
 	// setProperty mirrors properties onto the instance under their real names.
 	// Must lead the class body: a line starting with [ continues the previous one.
 	[key: string]: any

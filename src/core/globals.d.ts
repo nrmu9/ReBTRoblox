@@ -18,6 +18,8 @@ declare global {
 	const angular: any
 	const hijackFunction: any
 	const hijackXHR: any
+	const onSet: any
+	const settings: any
 	const HoverPreview: any
 	const insertCSS: any
 	const removeCSS: any

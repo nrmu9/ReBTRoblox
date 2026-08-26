@@ -3,7 +3,7 @@ import { pageInit } from "@/core/page"
 import { Navigation } from "@/feat/navigation"
 import { SETTINGS } from "@/feat/settings"
 import { SettingsModal } from "@/feat/settingsmodal"
-import { loggedInUser, loggedInUserPromise, pageInit } from "@/pages/common"
+import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 
 pageInit.create = () => {
 	// Init global features

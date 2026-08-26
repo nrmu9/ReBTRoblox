@@ -3,7 +3,7 @@ import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
-import { initContentButton, initDownloadButton, initExplorer, pageInit } from "@/pages/common"
+import { initContentButton, initDownloadButton, initExplorer } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 pageInit.create_store = () => {
@@ -35,6 +35,8 @@ pageInit.create_store = () => {
 	})
 	
 	class AssetDetailsPage {
+		[key: string]: any
+
 		constructor(assetId) {
 			this.assetId = assetId
 			this.buttons = {}

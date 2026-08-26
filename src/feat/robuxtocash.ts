@@ -10,7 +10,7 @@ export interface CurrencyInfo {
 }
 
 import { SETTINGS } from "@/feat/settings"
-import { formatNumber } from "@C:/Program Files/Git/pages/common"
+import { formatNumber } from "@/pages/common"
 
 export const RobuxToCash = {
 	// cash is in cents

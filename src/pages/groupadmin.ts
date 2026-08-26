@@ -2,7 +2,7 @@ import { THROW_DEV_WARNING } from "@/core/env"
 import { html } from "@/core/html"
 import { pageInit } from "@/core/page"
 import { RobuxToCash } from "@/feat/robuxtocash"
-import { modifyAngularTemplate, pageInit } from "@/pages/common"
+import { modifyAngularTemplate } from "@/pages/common"
 
 pageInit.groupadmin = () => {
 	const groupId = +new URLSearchParams(window.location.search).get("id")

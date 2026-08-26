@@ -2,6 +2,8 @@ import { assert, bufferToString } from "@/core/util"
 import * as fzstd from "fzstd"
 
 export class ByteReader extends Uint8Array {
+	[key: string]: any
+
 	static Converter = new DataView(new ArrayBuffer(8))
 	
 	index = 0

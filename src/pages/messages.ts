@@ -3,10 +3,12 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
-import { modifyAngularTemplate, onPageLoad, onPageReset, pageInit } from "@/pages/common"
+import { modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 class MarkAllAsReadAction {
+	[key: string]: any
+
 	constructor() {
 		this.messagesPerReadRequest = 20 // more than this errors
 		this.threadCount = 5

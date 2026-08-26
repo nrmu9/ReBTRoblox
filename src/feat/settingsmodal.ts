@@ -369,7 +369,7 @@ export const SettingsModal: SettingsModalState = {
 			currencySelect.replaceChildren()
 			rateSelect.replaceChildren()
 
-			const currencies = Object.values(RobuxToCash.Currencies)
+			const currencies: any[] = Object.values(RobuxToCash.Currencies)
 			
 			for(const currency of currencies.filter(x => !x.usdRate))  {
 				currencySelect.append(html`<option>${currency.name}</option>`)

@@ -3,7 +3,7 @@ import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
-import { modifyAngularTemplate, onPageLoad, onPageReset, pageInit } from "@/pages/common"
+import { modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 pageInit.avatar = () => {

@@ -1,7 +1,7 @@
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
-import { pageInit, startDownload } from "@/pages/common"
+import { startDownload } from "@/pages/common"
 import { AssetCache } from "@/rbx/AssetCache"
 
 pageInit.create_dashboard = () => {

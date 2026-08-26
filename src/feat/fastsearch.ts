@@ -2,7 +2,7 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { loggedInUserPromise } from "@C:/Program Files/Git/pages/common"
+import { loggedInUserPromise } from "@/pages/common"
 
 const btrFriends = { // TODO: Move this elsewhere
 	friendsPromise: null as any,
@@ -161,7 +161,7 @@ export const btrFastSearch = {
 		//
 		
 		const getMatches = search => {
-			const matches = Object.entries(userCache)
+			const matches: [string, any][] = Object.entries(userCache)
 				.map(([name, user]) => {
 					const x: Record<string, any> = {
 						name,

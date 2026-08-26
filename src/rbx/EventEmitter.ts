@@ -15,6 +15,8 @@ const GetEventProps = (item: any, init?: boolean) => {
 }
 
 class EventEmitter {
+	[key: string]: any
+
 	on(eventName, fn, opt = {}) {
 		const props = GetEventProps(this, true)
 

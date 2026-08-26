@@ -4,7 +4,7 @@ import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadfeature"
 import { RobuxToCash } from "@/feat/robuxtocash"
 import { SETTINGS } from "@/feat/settings"
-import { formatNumber, initContentButton, initDownloadButton, initExplorer, initPreview, modifyAngularTemplate, onPageLoad, onPageReset, pageInit } from "@/pages/common"
+import { formatNumber, initContentButton, initDownloadButton, initExplorer, initPreview, modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 pageInit.itemdetails = () => {

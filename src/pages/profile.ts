@@ -4,7 +4,7 @@ import { contentScript, injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { SETTINGS } from "@/feat/settings"
-import { createPager, formatNumber, formatUrlName, loggedInUserPromise, onPageLoad, onPageReset, pageInit } from "@/pages/common"
+import { createPager, formatNumber, formatUrlName, loggedInUserPromise, onPageLoad, onPageReset } from "@/pages/common"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 

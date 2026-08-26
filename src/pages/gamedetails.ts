@@ -5,11 +5,11 @@ import { pageInit } from "@/core/page"
 import { ContextMenu } from "@/feat/contextmenu"
 import { RobuxToCash } from "@/feat/robuxtocash"
 import { SETTINGS } from "@/feat/settings"
-import { formatUrlName, getAssetFileType, initExplorer, loggedInUserPromise, onMouseEnter, onPageLoad, onPageReset, pageInit, redirectEvents, startDownload } from "@/pages/common"
+import { formatUrlName, getAssetFileType, initExplorer, loggedInUserPromise, onMouseEnter, onPageLoad, onPageReset, redirectEvents, startDownload } from "@/pages/common"
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { getServerDetails } from "@C:/Program Files/Git/feat/serverdetails"
+import { getServerDetails } from "@/feat/serverdetails"
 
 pageInit.gamedetails = () => {
 	onPageLoad(placeIdString => {

@@ -6,7 +6,7 @@ import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadfeature"
 import { SETTINGS } from "@/feat/settings"
-import { modifyAngularTemplate, pageInit } from "@/pages/common"
+import { modifyAngularTemplate } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 pageInit.inventory = () => {

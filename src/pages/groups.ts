@@ -2,7 +2,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadfeature"
 import { SETTINGS } from "@/feat/settings"
-import { modifyAngularTemplate, onPageLoad, onPageReset, pageInit } from "@/pages/common"
+import { modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 
 pageInit.groups = () => {
 	if(SETTINGS.get("general.hoverPreview")) {
@@ -35,7 +35,7 @@ pageInit.groups = () => {
 						hijackFunction($scope, "groupDetailsTabs", (target, thisArg, args) => {
 							let result = target.apply(thisArg, args)
 							
-							const entries = Object.entries(result)
+							const entries: [string, any][] = Object.entries(result)
 							
 							if($scope.isAuthenticatedUser && $scope.layout?.btrPayoutsEnabled) {
 								entries.push(["payouts", groupDetailsConstants.tabs.payouts])

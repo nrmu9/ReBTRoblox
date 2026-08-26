@@ -3,7 +3,7 @@ import { html } from "@/core/html"
 import { backgroundScript, injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/shareddata"
-import { loggedInUser, loggedInUserPromise } from "@C:/Program Files/Git/pages/common"
+import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 
 
 "use strict"

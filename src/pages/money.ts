@@ -1,7 +1,6 @@
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { RobuxToCash } from "@/feat/robuxtocash"
-import { pageInit } from "@/pages/common"
 
 pageInit.money = () => {
 	if(RobuxToCash.isEnabled()) {
