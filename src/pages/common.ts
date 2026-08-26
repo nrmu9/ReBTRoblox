@@ -172,7 +172,7 @@ export function createPager(noSelect, hideWhenEmpty) {
 	const next = pager.$find(".btr-pager-next")
 	const cur = pager.$find(".btr-pager-cur")
 
-	Object.assign(pager, {
+	Object.assign(pager as any, <Record<string, any>>{
 		curPage: 1,
 
 		setPage(page) {
@@ -844,7 +844,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 	}
 	
 	if(document.visibilityState === "hidden") {
-		await new Promise(resolve => document.$on("visibilitychange", () => resolve(), { once: true }))
+		await new Promise<void>(resolve => document.$on("visibilitychange", () => resolve(), { once: true }))
 	}
 	
 	if(isBundle) {
@@ -871,7 +871,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 				const bundlePromises: any[] = []
 				
 				bundlePromises.push(
-					outfitPromise.then(outfit => {
+					outfitPromise.then((outfit: any) => {
 						if(outfit) {
 							setOutfit(outfit.id)
 						}

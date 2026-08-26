@@ -32,6 +32,7 @@ declare global {
 	const RBXAvatar: any
 
 	interface Window {
+		next?: any
 		Roblox?: any
 		jQuery?: any
 		angular?: any

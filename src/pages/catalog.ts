@@ -51,7 +51,7 @@ const OwnerAssetCache = {
 		this.assetMap = {}
 	},
 	
-	markAsset(next, id, owned, copyTo) {
+	markAsset(next: any, id: any, owned: any, copyTo?: any) {
 		if(next.type === "bundles") {
 			id = "b" + id
 		}
@@ -127,7 +127,7 @@ const OwnerAssetCache = {
 		const list: any[] = Object.values(this.data.types)
 		const promises: any[] = []
 		
-		for(const next of list) {
+		for(const next of list as any[]) {
 			let operation = next.currentOperation
 
 			if(!operation) {
@@ -247,7 +247,7 @@ const OwnerAssetCache = {
 			
 			if(savedCache) {
 				if(savedCache.types) {
-					for(const [type, next] of Object.entries(this.data.types)) {
+					for(const [type, next] of Object.entries(this.data.types) as [string, any][]) {
 						const savedNext = savedCache.types[type]
 						if(!savedNext) { continue }
 
