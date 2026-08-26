@@ -6,7 +6,7 @@ import { RobuxToCash } from "@/feat/robuxtocash"
 import { SETTINGS } from "@/feat/settings"
 import { formatNumber, initContentButton, initDownloadButton, initExplorer, initPreview, modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { query } from "@/core/query"
+import { query, queryAll } from "@/core/query"
 
 pageInit.itemdetails = () => {
 	if(RobuxToCash.isEnabled()) {
@@ -393,7 +393,7 @@ pageInit.itemdetails = () => {
 				if(SETTINGS.get("itemdetails.showCreatedAndUpdated") && category !== "bundles") {
 					// remove old created/updated label
 					if(isReactItemDetails) {
-						const oldLabel = Array.from($.all("#item-details .wait-for-i18n-format-render")).find((x: any) => !isNaN(Date.parse(x.textContent)))
+						const oldLabel = Array.from(queryAll("#item-details .wait-for-i18n-format-render")).find((x: any) => !isNaN(Date.parse(x.textContent)))
 						
 						if(oldLabel) {
 							(oldLabel as any).parentNode.remove()

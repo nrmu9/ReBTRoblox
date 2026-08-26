@@ -16,6 +16,7 @@ import { pageInit, pageReset } from "@/core/page"
 import { btrFastSearch } from "@/feat/fastsearch"
 import { btrAdblock } from "@/feat/adblock"
 import { query } from "@/core/query"
+import { onceFn } from "@/core/util"
 
 
 
@@ -709,8 +710,8 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 		}
 	}
 	
-	const loadPreview = $.onceFn(async () => {
-		await loadOptionalFeature("previewer")
+	const loadPreview = onceFn(async () => {
+		const { ItemPreviewer } = await loadOptionalFeature("previewer") as any
 		preview = new ItemPreviewer()
 		
 		if(currentOutfitId) {
@@ -963,8 +964,8 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 		</div>
 	</div>`
 
-	loadOptionalFeature("explorer").then(() => {
-		const explorer = new Explorer()
+	loadOptionalFeature("explorer").then((mod: any) => {
+		const explorer = new mod.Explorer()
 		let explorerInitialized = false
 		
 		const popover = btnCont.$find(".btr-explorer-popover")

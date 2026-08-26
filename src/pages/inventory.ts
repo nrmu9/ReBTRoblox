@@ -8,7 +8,7 @@ import { loadOptionalFeature } from "@/feat/loadfeature"
 import { SETTINGS } from "@/feat/settings"
 import { modifyAngularTemplate } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { query } from "@/core/query"
+import { query, queryAll } from "@/core/query"
 
 pageInit.inventory = () => {
 	if(window.parent !== window) {
@@ -180,13 +180,13 @@ pageInit.inventory = () => {
 			.$on("click", ".btr-it-remove", () => {
 				if(isRemoving) { return }
 
-				const checked = $.all(".btr-it-box:checked")
+				const checked = queryAll(".btr-it-box:checked")
 				if(!checked.length) { return }
 
 				isRemoving = true
 				const items: any[] = []
 				for(let i = 0; i < checked.length; i++) {
-					const self = checked[i].closest(".item-card")
+					const self: any = checked[i].closest(".item-card")
 					const matches = self.$find(".item-card-link").href.match(/(?:\/(catalog|library|game-pass|badges)\/|[?&]id=)(\d+)/)
 
 					if(matches && Number.isSafeInteger(+matches[2])) {
