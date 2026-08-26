@@ -5,7 +5,7 @@ import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
 import { RBXModelParser } from "@/rbx/Parser/ModelParser"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
-const AssetCache = (() => {
+export const AssetCache = (() => {
 	const resolveCache = {}
 	const cdnCache = {}
 
@@ -53,10 +53,10 @@ const AssetCache = (() => {
 		return urlParams
 	}
 	
-	function createMethod(constructor) {
+	function createMethod(constructor: any) {
 		const methodCache = {}
 
-		return (strict, request, params, cb) => {
+		return (strict?: any, request?: any, params?: any, cb?: any) => {
 			if(typeof strict !== "boolean") {
 				cb = params
 				params = request

@@ -161,7 +161,7 @@ export const btrFastSearch = {
 		//
 		
 		const getMatches = search => {
-			const matches: [string, any][] = Object.entries(userCache)
+			const matches: Record<string, any>[] = Object.entries(userCache)
 				.map(([name, user]) => {
 					const x: Record<string, any> = {
 						name,

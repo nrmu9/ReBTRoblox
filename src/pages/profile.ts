@@ -1,3 +1,4 @@
+import { deferredPromise } from "@/core/deferred"
 import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
@@ -58,7 +59,7 @@ pageInit.profile = () => {
 	const profileDataPromises: Record<string, any> = {}
 	
 	injectScript.listen("profileData", json => {
-		const promise = profileDataPromises[json.profileId] ??= new Promise(() => {})
+		const promise = profileDataPromises[json.profileId] ??= deferredPromise()
 		promise.$resolve(json)
 	})
 	
@@ -166,7 +167,7 @@ pageInit.profile = () => {
 			</div>`
 			
 			// const presencePromise = new Promise(resolve => resolve(RobloxApi.presence.getPresence([userId]).then(json => json?.userPresences?.[0])))
-			const profileDataPromise = profileDataPromises[userIdString] ??= new Promise(() => {})
+			const profileDataPromise = profileDataPromises[userIdString] ??= deferredPromise()
 			
 			profileContainer
 				.$watch(".profile-tabs", tabs => {

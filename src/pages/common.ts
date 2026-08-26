@@ -1,3 +1,4 @@
+import { deferredPromise } from "@/core/deferred"
 import { IS_DEV_MODE, THROW_DEV_WARNING } from "@/core/env"
 import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
@@ -36,7 +37,7 @@ export const onPageReset = fn => {
 	pageReset[pageName].push(fn)
 }
 
-export let loggedInUserPromise = new Promise(() => {})
+export let loggedInUserPromise = deferredPromise()
 export let loggedInUser = -1
 
 const InvalidExplorableAssetTypeIds = [1, 3, 4, 5, 6, 7, 16, 21, 22, 32, 33, 34, 35, 37, 63]
@@ -204,7 +205,7 @@ export function createPager(noSelect, hideWhenEmpty) {
 		const tot = pager.$find(".btr-pager-total")
 		pager.maxPage = 1
 
-		Object.assign(pager, {
+		Object.assign(pager as any, <Record<string, any>>{
 			onprevpage() { if(this.curPage > 1 && this.onsetpage) { this.onsetpage(this.curPage - 1) } },
 			onnextpage() { if(this.curPage < this.maxPage && this.onsetpage) { this.onsetpage(this.curPage + 1) } },
 
@@ -233,7 +234,7 @@ export function createPager(noSelect, hideWhenEmpty) {
 			input.addEventListener("input", updateInputWidth)
 			input.addEventListener("change", updateInputWidth)
 			
-			const descriptor = {
+			const descriptor = <Record<string, any>>{
 				configurable: true,
 				
 				get() {
@@ -690,7 +691,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 	let bundleType
 	let preview
 	
-	let previewPromise = new Promise(resolve => {})
+	let previewPromise = deferredPromise()
 	
 	const setOutfit = outfitId => {
 		if(!preview) {
