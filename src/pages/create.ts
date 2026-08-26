@@ -4,6 +4,7 @@ import { Navigation } from "@/feat/navigation"
 import { SETTINGS } from "@/feat/settings"
 import { SettingsModal } from "@/feat/settingsmodal"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
+import { setLoggedInUser } from "@/pages/common"
 
 pageInit.create = () => {
 	// Init global features
@@ -31,7 +32,7 @@ pageInit.create = () => {
 	injectScript.listen("onFirstAuth", json => {
 		const userId = json?.id ?? -1
 		
-		loggedInUser = Number.isSafeInteger(userId) ? userId : -1
+		setLoggedInUser(Number.isSafeInteger(userId) ? userId : -1)
 		loggedInUserPromise.$resolve(loggedInUser)
 	}, { once: true })
 	
@@ -46,7 +47,7 @@ pageInit.create = () => {
 			processedModules: new WeakSet(),
 			propertyHandlers: new Map(),
 			moduleHandlers: [],
-			objects: {},
+			objects: {} as Record<string, any>,
 			
 			onModule(fn) {
 				this.moduleHandlers.push(fn)

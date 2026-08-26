@@ -40,6 +40,8 @@ export const onPageReset = fn => {
 export let loggedInUserPromise = deferredPromise()
 export let loggedInUser = -1
 
+export const setLoggedInUser = (userId: number): void => { loggedInUser = userId }
+
 const InvalidExplorableAssetTypeIds = [1, 3, 4, 5, 6, 7, 16, 21, 22, 32, 33, 34, 35, 37, 63]
 const InvalidDownloadableAssetTypeIds = [21, 32, 34]
 
@@ -360,7 +362,7 @@ const initReactFriends = () => {
 			props => "profileUserId" in props && "carouselName" in props, 
 			(target, thisArg, args) => {
 				const props = args[0]
-				const carouselName = props.carouselName
+				props.carouselName
 				
 				// disable MustHideConnections so that friends load in faster
 				reactHook.hijackUseState(

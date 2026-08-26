@@ -76,7 +76,7 @@ pageInit.gamedetails = () => {
 		const largePageSize = 100
 		const pageSize = 12
 		
-		const btrPager = { currentPage: 1, targetPage: 1, maxPage: 1, loading: false }
+		const btrPager: Record<string, any> = { currentPage: 1, targetPage: 1, maxPage: 1, loading: false }
 		const promises: Record<string, any> = {}
 		const cursors: any[] = []
 		

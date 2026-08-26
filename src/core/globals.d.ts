@@ -20,11 +20,16 @@ declare global {
 	const hijackXHR: any
 	const onSet: any
 	const settings: any
+	const BTRoblox: any
+	const Mui: any
 	const HoverPreview: any
 	const insertCSS: any
 	const removeCSS: any
 	const robloxExperiments: any
 	const ItemPreviewer: any
+	const Explorer: any
+	const RBXScene: any
+	const RBXAvatar: any
 
 	interface Window {
 		Roblox?: any
