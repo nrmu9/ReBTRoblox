@@ -867,7 +867,6 @@ export const RBXAvatar = (() => {
 	const invalidLayeredAssetIds: Record<string, any> = {}
 	
 	const skinnedWorld = new THREE.Matrix4()
-	const skinnedInverse = new THREE.Matrix4()
 	
 	const objCache: Record<string, any> = {}
 	
@@ -997,7 +996,7 @@ export const RBXAvatar = (() => {
 			}
 
 			for(const name of R15BodyPartNames) {
-				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, (x: string) => ({ Hand: "Arm", Foot: "Leg" })[x]).replace(/^./, x => x.toLowerCase())
+				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, (x: string): string => ({ Hand: "Arm", Foot: "Leg" })[x] ?? x ?? x).replace(/^./, x => x.toLowerCase())
 				const composite = composites[limb]
 				
 				sources[name] = new MergeSource()
@@ -1005,7 +1004,7 @@ export const RBXAvatar = (() => {
 			}
 			
 			for(const name of ["Head", ...R6BodyPartNames, ...R15BodyPartNames]) {
-				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, (x: string) => ({ Hand: "Arm", Foot: "Leg" })[x]).replace(/^./, x => x.toLowerCase())
+				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, (x: string): string => ({ Hand: "Arm", Foot: "Leg" })[x] ?? x ?? x).replace(/^./, x => x.toLowerCase())
 				
 				sources.pbr[name] = new MergeSource()
 				textures.pbr[name] = new MergeTexture(1024, 1024, sources.bodyColors[limb], sources.pbr[name])
@@ -1931,7 +1930,7 @@ export const RBXAvatar = (() => {
 						material = new THREE.MeshStandardMaterial({
 							transparent: opacity < 1,
 							opacity: opacity,
-							map: MergeSource.fromRGB(...acc.baseColor).toTexture()
+							map: MergeSource.fromRGB(...<[number, number, number]>acc.baseColor).toTexture()
 						})
 						
 						if(acc.texId) {

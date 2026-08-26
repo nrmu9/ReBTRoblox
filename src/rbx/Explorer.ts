@@ -8,7 +8,7 @@ import { AssetCache } from "@/rbx/AssetCache"
 import { BrickColor } from "@/rbx/Constants"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
 
-const Explorer = (() => {
+export const Explorer = (() => {
 	const GroupOrders = [
 		"Appearance", "Data", "Transform", "Pivot", "Behavior", "Collision", "Part"
 	]
@@ -908,7 +908,7 @@ const Explorer = (() => {
 			}
 		}
 		
-		createItem(children, open) {
+		createItem(children?: any, open?: any) {
 			const item: Record<string, any> = {
 				numDescendants: 0,
 				children: []

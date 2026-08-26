@@ -45,7 +45,7 @@ export const RBXScene = (() => {
 			height: 100% !important;`
 
 			const scene = this.scene = new THREE.Scene()
-			const camera = this.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100)
+			this.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100)
 			
 			const ambientLight = new THREE.AmbientLight(0x7F7F7F)
 			scene.add(ambientLight)
@@ -82,7 +82,7 @@ export const RBXScene = (() => {
 							}
 
 							if(document.activeElement) {
-								document.activeElement.blur()
+								(document.activeElement as HTMLElement | null)?.blur()
 							}
 
 							event.preventDefault()

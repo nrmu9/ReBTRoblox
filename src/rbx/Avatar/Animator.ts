@@ -356,7 +356,7 @@ export const RBXAnimator = (() => {
 							const theta = easing((info.timePosition - prev.time) / (next.time - prev.time))
 							
 							tempPos.set(...<[number, number, number]>prev.pos).lerp(tempPos2.set(...<[number, number, number]>next.pos), theta)
-							tempQuat.set(...<[number, number, number, number]>prev.rot).slerp(tempQuat2.set(...next.rot), theta)
+							tempQuat.set(...<[number, number, number, number]>prev.rot).slerp(tempQuat2.set(...<[number, number, number, number]>next.rot), theta)
 						}
 					}
 					

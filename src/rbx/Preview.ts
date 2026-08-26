@@ -114,7 +114,7 @@ class AvatarPreviewer extends EventEmitter {
 		this.previewAssets = new Set()
 		
 		this.autoLoadPlayerType = "autoLoadPlayerType" in opts ? !!opts.autoLoadPlayerType : true
-		this.defaultAnimationsDisabled = !!opts.defaultAnimationsDisabled
+		this.defaultAnimationsDisabled = !!(opts as any).defaultAnimationsDisabled
 		this.initPlayerTypeFromPlayingAnimation = false
 		this.outfitAccessoriesVisible = true
 
@@ -163,7 +163,7 @@ class AvatarPreviewer extends EventEmitter {
 			}
 			
 			if(!this.outfitLoaded) {
-				this._loadOutfit(...(this.shouldLoadOutfit ?? []))
+				this._loadOutfit(...<any[]><any[]>(this.shouldLoadOutfit ?? []))
 			}
 
 			if(!this.playingAnim) {
@@ -388,7 +388,7 @@ class AvatarPreviewer extends EventEmitter {
 
 			if(this.currentAnim && this.initPlayerTypeFromPlayingAnimation) {
 				this.initPlayerTypeFromPlayingAnimation = false
-				this.setPlayerType(R6AnimParts.some(x => x in data.keyframes) ? "R6" : "R15")
+				this.setPlayerType(R6AnimParts.some((x: any) => x in data.keyframes) ? "R6" : "R15")
 			}
 
 			this.trigger("animationPlayed", assetId)
@@ -432,7 +432,7 @@ class AvatarPreviewer extends EventEmitter {
 	}
 }
 
-class ItemPreviewer extends AvatarPreviewer {
+export class ItemPreviewer extends AvatarPreviewer {
 	[key: string]: any
 
 	constructor() {
@@ -441,7 +441,7 @@ class ItemPreviewer extends AvatarPreviewer {
 		window.scene = this.scene
 		this.currentOutfit = "current"
 		this.isVisible = false
-		this.animMap = {}
+		this.animMap = {} as Record<string, any>
 
 		const container = html`<div class=btr-preview-container-itempage></div>`
 		container.append(this.container)
@@ -802,14 +802,14 @@ class ItemPreviewer extends AvatarPreviewer {
 
 	updateAnimButtons() {
 		let numDropdownAnims = this.dropdownMenu.children.length
-		let numBundleAnims = Object.values(this.animMap).filter(x => x.isBundleAnim && x.assetId !== 0).length
+		let numBundleAnims = Object.values(this.animMap).filter((x: any) => x.isBundleAnim && x.assetId !== 0).length
 		
 		if((numDropdownAnims + numBundleAnims) >= 2) {
 			if(!this.hasBundleAnims && numBundleAnims > 0) {
 				this.hasBundleAnims = true
 				
 				this.bundleAnims.style.display = ""
-				this.animNameLabel.textContent = Object.values(this.animMap).find(x => x.assetId === this.currentAnim)?.name || ""
+				this.animNameLabel.textContent = Object.values(this.animMap).find((x: any) => x.assetId === this.currentAnim)?.name || ""
 
 				// Move camera down
 				this.scene.cameraOffset.y -= 1
@@ -838,7 +838,7 @@ class ItemPreviewer extends AvatarPreviewer {
 	}
 	
 	addAnimation(assetId, name) {
-		const anims = Object.values(this.animMap).map(x => x.name)
+		const anims = Object.values(this.animMap).map((x: any) => x.name)
 		
 		if(anims.includes(name)) {
 			for(let i = 2; i < Infinity; i++) {
@@ -864,7 +864,7 @@ class ItemPreviewer extends AvatarPreviewer {
 	}
 	
 	removeBundleAnimations(animType) {
-		for(const anim of Object.values(this.animMap).filter(x => x.animType === animType) as any[]) {
+		for(const anim of Object.values(this.animMap).filter((x: any) => x.animType === animType) as any[]) {
 			delete this.animMap[anim.assetId]
 			
 			if(anim.isAlt) {
@@ -960,7 +960,7 @@ class ItemPreviewer extends AvatarPreviewer {
 	}
 }
 
-const HoverPreview = (() => {
+export const HoverPreview = (() => {
 	const invalidThumbnails = [
 		`https://t1.rbxcdn.com/2a8edb4fb90f669af867371f927e4b46`,
 		`https://t4.rbxcdn.com/6aa6eb3c8680be7c47f1122f4fb9ebf2`
@@ -1103,7 +1103,7 @@ const HoverPreview = (() => {
 	}
 
 	const initPreview = () => {
-		preview = this.preview = new AvatarPreviewer()
+		preview = this.preview! = new AvatarPreviewer() as any
 
 		preview.avatar.on("layeredRequestStateChanged", () => {
 			if(preview.container.parentNode) {
@@ -1261,7 +1261,7 @@ const HoverPreview = (() => {
 					})
 				}
 
-				const addAssetPreview = (assetId, assetTypeId, meta) => {
+				const addAssetPreview = (assetId: any, assetTypeId?: any, meta?: any) => {
 					if(!preview) { initPreview() }
 
 					if(assetTypeId === 24) {
@@ -1283,7 +1283,7 @@ const HoverPreview = (() => {
 				const addItems = async items => {
 					if(debounceCounter !== debounce) { return }
 
-					const outfit = items.find(x => x?.outfitType === "Avatar")
+					const outfit = items.find((x: any) => x?.outfitType === "Avatar")
 					if(outfit) {
 						targetOutfitId = outfit.id
 					}
@@ -1293,7 +1293,7 @@ const HoverPreview = (() => {
 						if(!item || item.outfitType) { continue }
 						
 						if(WearableAssetTypeIds.includes(item.AssetTypeId)) {
-							addAssetPreview(item.AssetId, item.AssetTypeId, outfit?.assets.find(x => x.id === item.AssetId)?.meta)
+							addAssetPreview(item.AssetId, item.AssetTypeId, outfit?.assets.find((x: any) => x.id === item.AssetId)?.meta)
 							
 						} else if(AnimationPreviewAssetTypeIds.includes(item.AssetTypeId)) {
 							if(!curAnim || item.AssetTypeId === 61 || item.AssetTypeId === 51 && curAnim.AssetTypeId !== 61) {
@@ -1310,7 +1310,7 @@ const HoverPreview = (() => {
 							const model = await AssetCache.loadModel(curAnim.AssetId)
 							if(debounceCounter !== debounce) { return }
 
-							const anim = model.find(x => x.ClassName === "Animation")
+							const anim = model.find((x: any) => x.ClassName === "Animation")
 							const animId = anim && AssetCache.getAssetIdFromUrl(anim.AnimationId)
 
 							if(animId) {
@@ -1321,11 +1321,11 @@ const HoverPreview = (() => {
 							const model = await AssetCache.loadModel(curAnim.AssetId)
 							if(debounceCounter !== debounce) { return }
 
-							const folder = model.find(x => x.Name === "R15Anim" && x.ClassName === "Folder")
-							const group = folder && (folder.Children.find(x => x.Name.toLowerCase().includes("idle")) || folder.Children[0])
+							const folder = model.find((x: any) => x.Name === "R15Anim" && x.ClassName === "Folder")
+							const group = folder && (folder.Children.find((x: any) => x.Name.toLowerCase().includes("idle")) || folder.Children[0])
 							const anim = group && group.Children
-								.map(x => ({ id: AssetCache.getAssetIdFromUrl(x.AnimationId), weight: x.Children.length && x.Children[0].Value || 0 }))
-								.filter(x => x.id)
+								.map((x: any) => ({ id: AssetCache.getAssetIdFromUrl(x.AnimationId), weight: x.Children.length && x.Children[0].Value || 0 }))
+								.filter((x: any) => x.id)
 								.reduce((prev, cur) => ((!prev || cur.weight > prev.weight) ? cur : prev))
 							
 							if(anim) {

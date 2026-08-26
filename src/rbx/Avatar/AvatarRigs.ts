@@ -79,7 +79,7 @@ export const RBXAvatarRigs = (() => {
 				return this.loadPromise
 			}
 
-			return this.loadPromise = this.loadPromise || new Promise(resolve => {
+			return this.loadPromise = this.loadPromise || new Promise<void>(resolve => {
 				const path = RBXAvatar.LocalAssets["res/previewer/characterModels.rbxm"]
 
 				AssetCache.loadModel(true, path, model => {
