@@ -1,3 +1,4 @@
+import { backgroundScript, contentScript } from "@/core/messaging"
 import { IS_BACKGROUND_PAGE } from "@/core/env"
 
 const invalidXsrfTokens: Record<string, boolean> = {}

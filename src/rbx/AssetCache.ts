@@ -1,3 +1,4 @@
+import { loadOptionalFeature } from "@/feat/loadfeature"
 import { bufferToString } from "@/core/util"
 import { RBXAnimationParser } from "@/rbx/Parser/AnimationParser"
 import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
