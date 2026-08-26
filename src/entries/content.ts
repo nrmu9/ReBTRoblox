@@ -44,7 +44,7 @@ installExtensions()
 
 // The background page reaches these through chrome.scripting.executeScript,
 // which cannot see module scope.
-window.BTRoblox = { SETTINGS, SettingsModal }
+window.BTRoblox = Object.assign(window.BTRoblox ?? {}, { SETTINGS, SettingsModal })
 
 if(IS_DEV_MODE) {
 	void import("@/dev/probe").then(({ startDevProbe }) => startDevProbe())
