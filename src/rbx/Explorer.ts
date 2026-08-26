@@ -65,6 +65,8 @@ const Explorer = (() => {
 	}
 	
 	return class {
+		[key: string]: any
+
 		constructor() {
 			this.models = []
 			this.selection = []

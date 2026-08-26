@@ -313,7 +313,7 @@ pageInit.profile = () => {
 				
 				const socialLinks = json?.components?.About?.socialLinks
 				if(socialLinks) {
-					for(const [key, entry] of Object.entries(socialLinks)) {
+					for(const [key, entry] of Object.entries(socialLinks) as [string, any][]) {
 						if(!entry) { continue }
 						
 						const link = html`<a class=btr-social-link href=${(entry as any)?.url}><span class="icon icon-regular-${key === "x" ? "twitter" : key}"></span></a>`

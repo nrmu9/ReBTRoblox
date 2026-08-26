@@ -69,7 +69,7 @@ export const RBXAvatar = (() => {
 					}
 				}
 				
-				for(const [i, meshBone] of Object.entries(mesh.bones)) {
+				for(const [i, meshBone] of Object.entries(mesh.bones) as [string, any][]) {
 					const bone = {
 						name: meshBone.name,
 						cframe: CFrameToMatrix4(...meshBone.cframe),
@@ -407,7 +407,7 @@ export const RBXAvatar = (() => {
 		}
 
 		isEmpty() {
-			for(const state of Object.values(this.states)) {
+			for(const state of Object.values(this.states) as any[]) {
 				if(state.accessories.length || state.bodyparts.length || state.clothing.length) {
 					return false
 				}
@@ -1014,7 +1014,7 @@ export const RBXAvatar = (() => {
 				})
 			)
 			
-			for(const composite of Object.values(this.composites)) {
+			for(const composite of Object.values(this.composites) as any[]) {
 				loaders.push(...composite.loaders)
 			}
 			
@@ -1190,7 +1190,7 @@ export const RBXAvatar = (() => {
 			}
 			
 			// Update parts
-			for(const part of Object.values(this.parts)) {
+			for(const part of Object.values(this.parts) as any[]) {
 				part.matrix.copy(part.matrixNoScale).scale(part.scale)
 				part.matrixWorldNeedsUpdate = true
 			}
@@ -1233,7 +1233,7 @@ export const RBXAvatar = (() => {
 			}
 			
 			// Update bones
-			for(const part of Object.values(this.parts)) {
+			for(const part of Object.values(this.parts) as any[]) {
 				if(part.rbxBones) {
 					this.updateBones(part)
 					part.skeleton.btr_apply()
@@ -1308,7 +1308,7 @@ export const RBXAvatar = (() => {
 			
 			this.sources?.bodyColors.R6.update()
 			
-			for(const [key, value] of Object.entries(this.bodyColors)) {
+			for(const [key, value] of Object.entries(this.bodyColors) as [string, any][]) {
 				this.sources?.bodyColors[key].setHex(value)
 			}
 		}
@@ -1438,7 +1438,7 @@ export const RBXAvatar = (() => {
 				this.root.add(obj)
 				parts[tree.name] = obj
 				
-				for(const [name, cframe] of Object.entries(tree.attachments)) {
+				for(const [name, cframe] of Object.entries(tree.attachments) as [string, any][]) {
 					attachments[name] = {
 						origCFrame: cframe,
 						cframe: cframe.clone(),
@@ -1558,7 +1558,7 @@ export const RBXAvatar = (() => {
 			
 			// Update attachments
 			if(this.playerType === "R15") {
-				for(const bodypart of Object.values(bodypartOverride)) {
+				for(const bodypart of Object.values(bodypartOverride) as any[]) {
 					for(const att of bodypart.attachments) {
 						const override = attachmentOverride[att.part] = attachmentOverride[att.part] || {}
 						override[att.target] = att
@@ -1566,7 +1566,7 @@ export const RBXAvatar = (() => {
 				}
 			}
 			
-			for(const [attName, att] of Object.entries(this.attachments)) {
+			for(const [attName, att] of Object.entries(this.attachments) as [string, any][]) {
 				const override = attachmentOverride[att.parent.name]?.[attName]
 				att.cframe.copy(override?.cframe || att.origCFrame)
 			}
@@ -1581,7 +1581,7 @@ export const RBXAvatar = (() => {
 			}
 			
 			// Update parts
-			for(const part of Object.values(this.parts)) {
+			for(const part of Object.values(this.parts) as any[]) {
 				const bodypart = bodypartOverride[part.name] || part.rbxDefaultBodypart
 				
 				if(part.rbxBodypart !== bodypart) {
@@ -1720,7 +1720,7 @@ export const RBXAvatar = (() => {
 			// Humanoid scaling
 			const updateSizes = () => {
 				// Scale parts
-				for(const part of Object.values(this.parts)) {
+				for(const part of Object.values(this.parts) as any[]) {
 					const scaleMod = part.rbxScaleMod
 					
 					part.rbxSize = part.rbxBodypart.size || part.rbxOrigSize
@@ -1746,13 +1746,13 @@ export const RBXAvatar = (() => {
 				}
 				
 				// Scale joints
-				for(const joint of Object.values(this.joints)) {
+				for(const joint of Object.values(this.joints) as any[]) {
 					scalePosition(joint.bakedC0.copy(joint.C0), joint.part0.rbxScaleMod)
 					scalePosition(joint.bakedC1Inverse.copy(joint.C1Inverse), joint.part1.rbxScaleMod)
 				}
 				
 				// Scale attachments
-				for(const att of Object.values(this.attachments)) {
+				for(const att of Object.values(this.attachments) as any[]) {
 					scalePosition(att.bakedCFrame.copy(att.cframe), att.parent.rbxScaleMod)
 				}
 				
@@ -1837,7 +1837,7 @@ export const RBXAvatar = (() => {
 				}
 			}
 			
-			for(const acc of Object.values(accessories)) {
+			for(const acc of Object.values(accessories) as any[]) {
 				const meta = acc.asset.meta
 				
 				if(acc.wrapLayer) {
@@ -2096,7 +2096,7 @@ export const RBXAvatar = (() => {
 			
 			const bodyparts: any[] = []
 		
-			for(const part of Object.values(this.parts)) {
+			for(const part of Object.values(this.parts) as any[]) {
 				const bodypart = part.rbxBodypart
 				
 				if(bodypart.asset) {
@@ -2141,7 +2141,7 @@ export const RBXAvatar = (() => {
 					this.layeredCurrentRequest = null
 					
 					// reset bodyparts
-					for(const part of Object.values(this.parts)) {
+					for(const part of Object.values(this.parts) as any[]) {
 						if(part.rbxLayered) {
 							applyMesh(part, part.rbxMesh)
 						}
@@ -2167,7 +2167,7 @@ export const RBXAvatar = (() => {
 			this.layeredCurrentRequest = request
 			
 			// reset bodyparts
-			for(const part of Object.values(this.parts)) {
+			for(const part of Object.values(this.parts) as any[]) {
 				if(part.rbxLayered) {
 					applyMesh(part, part.rbxMesh)
 				}
@@ -2445,7 +2445,7 @@ export const RBXAvatar = (() => {
 			const playerGroups = groups.filter(x => x.name.startsWith("Player"))
 			let numEmptyPartsAccepted = 15 - playerGroups.length
 			
-			for(const part of Object.values(this.parts)) {
+			for(const part of Object.values(this.parts) as any[]) {
 				const mesh = part.rbxMesh
 				if(!mesh) { continue }
 				

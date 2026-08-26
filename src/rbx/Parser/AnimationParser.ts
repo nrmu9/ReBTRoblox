@@ -96,7 +96,7 @@ export const RBXAnimationParser = {
 				}
 			}
 			
-			for(const keyframes of Object.values(result.keyframes)) {
+			for(const keyframes of Object.values(result.keyframes) as any[]) {
 				(keyframes as any[]).sort((a, b) => a.time - b.time)
 			}
 		} else if(sequence.ClassName === "CurveAnimation") {

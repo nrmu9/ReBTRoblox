@@ -749,7 +749,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 			const applyAnimation = () => {
 				const anims = preview.playerType === "R6" ? defaultAnimsR6 : defaultAnimsR15
 				
-				for(const [category, assetIds] of Object.entries(anims)) {
+				for(const [category, assetIds] of Object.entries(anims) as [string, any][]) {
 					preview.removeBundleAnimations(category)
 					
 					for(const assetId of assetIds) {
@@ -1470,7 +1470,7 @@ pageInit.www = () => {
 				if(request.method === "POST" && request.url.match(/^https:\/\/apis\.roblox\.com\/discovery-api\/omni-recommendation(-metadata)?$/i)) {
 					request.onResponse.push(json => {
 						if(json?.contentMetadata?.Game) {
-							for(const gameData of Object.values(json.contentMetadata.Game)) {
+							for(const gameData of Object.values(json.contentMetadata.Game) as any[]) {
 								delete (gameData as any).friendActivityTitle
 							}
 						}
@@ -1620,8 +1620,8 @@ pageInit.www = () => {
 			const saved = JSON.parse(settings.general.experiments || "{}")
 			
 			if(saved) {
-				for(const [experiment, values] of Object.entries(saved)) {
-					for(const [key, value] of Object.entries(values as Record<string, any>)) {
+				for(const [experiment, values] of Object.entries(saved) as [string, any][]) {
+					for(const [key, value] of Object.entries(values as Record<string, any>) as [string, any][]) {
 						modify(experiment, key, value)
 					}
 				}
@@ -1650,7 +1650,7 @@ pageInit.www = () => {
 						
 						result = result.then(layer => {
 							try {
-								for(const [key, value] of Object.entries(layer)) {
+								for(const [key, value] of Object.entries(layer) as [string, any][]) {
 									populate(experiment, key, value)
 								}
 								
@@ -1658,7 +1658,7 @@ pageInit.www = () => {
 								layers[experiment].push(layer)
 								
 								if(modified[experiment]) {
-									for(const [key, modifiedValue] of Object.entries(modified[experiment])) {
+									for(const [key, modifiedValue] of Object.entries(modified[experiment]) as [string, any][]) {
 										layer[key] = modifiedValue
 									}
 								}

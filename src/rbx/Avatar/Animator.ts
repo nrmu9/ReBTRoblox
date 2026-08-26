@@ -241,7 +241,7 @@ export const RBXAnimator = (() => {
 					continue
 				}
 				
-				for(const [name, keyframes] of Object.entries(info.anim.keyframes)) {
+				for(const [name, keyframes] of Object.entries(info.anim.keyframes) as [string, any][]) {
 					let transform = transforms[name]
 					
 					if(transform && (transform.weight >= 1 || transform.working.weight >= 1 && transform.working.priority !== info.priority)) {
@@ -295,7 +295,7 @@ export const RBXAnimator = (() => {
 						const rot = { x: 0, y: 0, z: 0 }
 						
 						const set = (input, output) => {
-							for(const [key, keyframes] of Object.entries(input)) {
+							for(const [key, keyframes] of Object.entries(input) as [string, any][]) {
 								const index = keyframes.findIndex(x => x.time > info.timePosition)
 								
 								if(index === 0 || keyframes.length === 0) {
@@ -371,7 +371,7 @@ export const RBXAnimator = (() => {
 			
 			this.transforms.clear()
 			
-			for(const [name, transform] of Object.entries(transforms)) {
+			for(const [name, transform] of Object.entries(transforms) as [string, any][]) {
 				if(transform.working.weight > 0) {
 					const newWeight = 1 - (1 - transform.weight) * (1 - Math.min(1, transform.working.weight))
 					const theta = (newWeight - transform.weight) / newWeight

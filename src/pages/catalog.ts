@@ -93,7 +93,7 @@ const OwnerAssetCache = {
 			newItems = []
 			nextPageCursor = []
 			
-			for(const [index, assetTypes] of Object.entries(this.requestedAssetTypes)) {
+			for(const [index, assetTypes] of Object.entries(this.requestedAssetTypes) as [string, any][]) {
 				if(cursor && !cursor[index]) { continue }
 				
 				const json = await RobloxApi.inventory.getUserInventory(this.data.lastUserId, {
@@ -319,7 +319,7 @@ pageInit.catalog = () => {
 			const ownedAssets: Record<string, any> = {}
 			
 			contentScript.listen("updateOwnedAssets", changes => {
-				for(const [assetId, isOwned] of Object.entries(changes)) {
+				for(const [assetId, isOwned] of Object.entries(changes) as [string, any][]) {
 					ownedAssets[+assetId]?.set(isOwned)
 				 }
 			})

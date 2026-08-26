@@ -172,16 +172,16 @@ pageInit.avatar = () => {
 									$scope.btrAvatarRules = avatarRules = rules
 									$scope.btrBounds = {}
 									
-									for(const [assetTypeName, lowerBounds] of Object.entries(avatarRules.accessoryRefinementLowerBounds)) {
+									for(const [assetTypeName, lowerBounds] of Object.entries(avatarRules.accessoryRefinementLowerBounds) as [string, any][]) {
 										const upperBounds = avatarRules.accessoryRefinementUpperBounds[assetTypeName]
 										
 										const wearableAssetType = avatarRules.wearableAssetTypes.find(x => x.name.replace(/\s/, "") === assetTypeName)
 										const assetBounds = $scope.btrBounds[wearableAssetType?.id] = {}
 										
-										for(const [category, values] of Object.entries(lowerBounds as Record<string, any>)) {
+										for(const [category, values] of Object.entries(lowerBounds as Record<string, any>) as [string, any][]) {
 											const bounds = assetBounds[category] = {}
 											
-											for(const [key, value] of Object.entries(values)) {
+											for(const [key, value] of Object.entries(values) as [string, any][]) {
 												bounds[key.slice(0, 1).toUpperCase()] = {
 													min: value,
 													max: upperBounds[category][key]
