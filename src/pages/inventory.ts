@@ -11,7 +11,7 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 
 pageInit.inventory = () => {
 	if(window.parent !== window) {
-		const iframe = window.top.document.querySelector("#btr-injected-inventory")
+		const iframe = window.top!.document.querySelector("#btr-injected-inventory") as HTMLIFrameElement | null
 
 		if(iframe.contentWindow === window) {
 			document
