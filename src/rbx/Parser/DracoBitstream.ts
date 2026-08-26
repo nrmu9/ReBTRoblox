@@ -1,9 +1,68 @@
+import { IS_DEV_MODE } from "@/core/env"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
+
+export interface DracoAttribute {
+	attributeType: number
+	dataType: number
+	numComponents: number
+	normalized: number
+	uniqueId: number
+	decoderType: number | null
+	values?: ArrayLike<number>
+	[key: string]: unknown
+}
+
+export interface DracoDecoder {
+	attributes: DracoAttribute[] | null
+	pointIds: number[] | null
+	index: number
+	[key: string]: unknown
+}
+
+export interface DracoHeader {
+	majorVersion: number
+	minorVersion: number
+	encoderType: number
+	encoderMethod: number
+	flags: number
+}
+
+// Low level rANS state machine. Fields are assigned by _start/init_* before use.
+export interface Rans {
+	buffer: Uint8Array
+	startIndex: number
+	offset: number
+	base: number
+	state: number
+	precision: number
+	prob_zero: number
+	probabilityTable: { prob: number, cum_prob: number }[]
+	lookupTable: number[]
+	decodeTables(stream: ByteReader, expected_cum_prob: number): void
+	_start(buffer: Uint8Array, startIndex: number, offset: number, base: number, precision: number): void
+	read_symbol(): number
+	init_symbols(stream: ByteReader, bitLength: number): void
+	read_bit(): number
+	init_bits(stream: ByteReader): void
+}
+
+export interface DracoParser {
+	header: DracoHeader
+	rans: Rans
+	decoders: DracoDecoder[]
+	attributes: DracoAttribute[]
+	faces: number[]
+	numFaces: number
+	numPoints: number
+	connectivityMethod: number
+	bits_value: number
+	bits_length: number
+}
 
 const METADATA_FLAG_MASK = 32768
 
 // encoderType
-const POINT_CLOUD = 0 // not supported
+export const POINT_CLOUD = 0 // not supported
 const TRIANGULAR_MESH = 1
 
 // encoderMethod
@@ -16,7 +75,7 @@ const SEQUENTIAL_UNCOMPRESSED_INDICES = 1
 
 // encoderType
 const SEQUENTIAL_ATTRIBUTE_ENCODER_GENERIC = 0
-const SEQUENTIAL_ATTRIBUTE_ENCODER_INTEGER = 1
+export const SEQUENTIAL_ATTRIBUTE_ENCODER_INTEGER = 1
 const SEQUENTIAL_ATTRIBUTE_ENCODER_QUANTIZATION = 2
 const SEQUENTIAL_ATTRIBUTE_ENCODER_NORMALS = 3
 
@@ -29,12 +88,12 @@ const MESH_PREDICTION_TEX_COORDS_PORTABLE = 5 // not supported (requires edgebre
 const MESH_PREDICTION_GEOMETRIC_NORMAL = 6 // not supported (requires edgebreaker)
 
 // predictionTransformType
-const PREDICTION_TRANSFORM_NONE = -1
-const PREDICTION_TRANSFORM_DELTA = 0
+export const PREDICTION_TRANSFORM_NONE = -1
+export const PREDICTION_TRANSFORM_DELTA = 0
 const PREDICTION_TRANSFORM_WRAP = 1
 const PREDICTION_TRANSFORM_NORMAL_OCTAHEDRON_CANONICALIZED = 3
 
-const DRACO_DATA_TYPES = [
+export const DRACO_DATA_TYPES = [
 	null,
 	"DT_INT8", "DT_UINT8", "DT_INT16", "DT_UINT16",
 	"DT_INT32", "DT_UINT32", "DT_INT64", "DT_UINT64",
@@ -48,18 +107,18 @@ const DRACO_DATA_TYPE_SIZES = [
 	4, 8, 1
 ]
 
-const DRACO_ATTR_TYPES = [
+export const DRACO_ATTR_TYPES = [
 	"POSITION", "NORMAL", "COLOR", "TEX_COORD", "GENERIC"
 ]
 
 export const DracoBitstream = {
-	parse(stream) {
-		const parser = {}
+	parse(stream: any): DracoParser {
+		const parser = {} as DracoParser
 		
 		// DecodeHeader
 		const { majorVersion, minorVersion, encoderType, encoderMethod, flags } = parser.header = this.parseHeader(stream)
 		
-		console.log(`DRACO ${majorVersion}.${minorVersion} | encoderType: ${encoderType}, encoderMethod: ${encoderMethod}, flags: ${flags}`)
+		if(IS_DEV_MODE) { console.log(`DRACO ${majorVersion}.${minorVersion} | encoderType: ${encoderType}, encoderMethod: ${encoderMethod}, flags: ${flags}`) }
 		
 		if(encoderType !== TRIANGULAR_MESH) {
 			throw "draco encoderType not implemented"
@@ -84,7 +143,7 @@ export const DracoBitstream = {
 		
 		//
 		
-		parser.attributes = parser.decoders.at(-1).attributes
+		parser.attributes = parser.decoders.at(-1)?.attributes ?? []
 		
 		return parser
 	},
@@ -162,10 +221,10 @@ export const DracoBitstream = {
 	decodeAttributeData(stream, parser, encoderMethod) {
 		// DecodeAttributeData
 		const numAttributeDecoders = stream.UInt8()
-		const decoders = parser.decoders = []
+		const decoders: DracoDecoder[] = parser.decoders = []
 		
 		for(let i = 0; i < numAttributeDecoders; i++) {
-			const decoder = decoders[i] = {
+			decoders[i] = {
 				attributes: null,
 				pointIds: null,
 				index: i,
@@ -276,7 +335,7 @@ export const DracoBitstream = {
 		const numComponents = attribute.numComponents
 		const numValues = numEntries * numComponents
 		
-		const output = []
+		const output: number[] = []
 		
 		switch(DRACO_DATA_TYPE_SIZES[attribute.dataType]) {
 		case 1:
@@ -448,7 +507,7 @@ export const DracoBitstream = {
 			attribute.wrapMax = stream.Int32LE()
 		} else if(predictionTransformType === PREDICTION_TRANSFORM_NORMAL_OCTAHEDRON_CANONICALIZED) {
 			attribute.octaMaxQ = stream.Int32LE()
-			let octaUnused = stream.Int32LE()
+			stream.Int32LE() // octaUnused
 		}
 		
 		// DecodePredictionData
@@ -658,7 +717,7 @@ export const DracoBitstream = {
 		const numValues = decoder.pointIds.length * numComponents
 		
 		const output = attribute.output
-		const minValues = []
+		const minValues: number[] = []
 		
 		for(let i = 0; i < numComponents; i++) {
 			minValues[i] = stream.FloatLE()
@@ -681,7 +740,7 @@ export const DracoBitstream = {
 		const numValues = decoder.pointIds.length * 2
 		const input = attribute.output
 		
-		const output = attribute.output = []
+		const output: number[] = attribute.output = []
 		
 		const quantizationBits = stream.UInt8()
 		
@@ -750,13 +809,23 @@ export const DracoBitstream = {
 		return result
 	},
 	
-	createRans() {
+	createRans(): Rans {
 		return {
+			buffer: new Uint8Array(0),
+			startIndex: 0,
+			offset: 0,
+			base: 0,
+			state: 0,
+			precision: 0,
+			prob_zero: 0,
+			probabilityTable: [],
+			lookupTable: [],
+
 			decodeTables(stream, expected_cum_prob) {
 				const numSymbols = DracoBitstream.LEB128(stream)
 				
-				const probabilityTable = []
-				const lookupTable = []
+				const probabilityTable: { prob: number, cum_prob: number }[] = []
+				const lookupTable: number[] = []
 				
 				let cum_prob = 0
 				let act_prob = 0
