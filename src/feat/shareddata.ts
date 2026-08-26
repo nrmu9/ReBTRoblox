@@ -46,7 +46,7 @@ export const SHARED_DATA = {
 				matches: details.matches,
 				excludeMatches: details.exclude_matches,
 				js: [{
-					code: `const SHARED_DATA_PAYLOAD = ${dataString}; if(typeof SHARED_DATA !== "undefined" && SHARED_DATA.payloadPromise) { SHARED_DATA.payloadPromise.$resolve() }`
+					code: `const SHARED_DATA_PAYLOAD = ${dataString}; window.BTRoblox?.SHARED_DATA?.payloadPromise?.$resolve()`
 				}],
 				allFrames: details.all_frames,
 				runAt: details.run_at
@@ -132,6 +132,12 @@ export const SHARED_DATA = {
 		this._loaded = true
 		this._loadPromise.$resolve()
 	}
+}
+
+// Published so the registered payload script, which cannot see module scope,
+// can resolve payloadPromise once it defines SHARED_DATA_PAYLOAD.
+if(!IS_BACKGROUND_PAGE) {
+	window.BTRoblox = Object.assign(window.BTRoblox ?? {}, { SHARED_DATA })
 }
 
 if(IS_BACKGROUND_PAGE) {
