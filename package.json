@@ -8,7 +8,9 @@
 		"build:chrome": "node dev/build.js --target=chrome",
 		"watch": "node dev/build.js --dev --watch",
 		"bridge": "node dev/bridge.js",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"dev": "node dev/dev.js",
+		"test:hook": "node test/serve.js"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.1.34",
