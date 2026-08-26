@@ -19,7 +19,7 @@ import { btrAdblock } from "@/feat/adblock"
 
 
 
-const pageLoad: Record<string, any> = {}
+export const pageLoad: Record<string, any> = {}
 
 export const onPageLoad = fn => {
 	const pageName = currentPage?.name

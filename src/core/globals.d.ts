@@ -35,6 +35,7 @@ declare global {
 		next?: any
 		explorer?: any
 		preview?: any
+		BTRoblox?: any
 		scene?: any
 		Roblox?: any
 		jQuery?: any
