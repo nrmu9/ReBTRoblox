@@ -110,7 +110,7 @@ export const AssetCache = (() => {
 	}
 
 	return {
-		resolveAsset: (strict, request, params) => {
+		resolveAsset: (strict?: any, request?: any, params?: any) => {
 			if(typeof strict !== "boolean") {
 				params = request
 				request = strict

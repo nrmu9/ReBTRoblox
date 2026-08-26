@@ -78,7 +78,7 @@ const OwnerAssetCache = {
 		}
 	},
 
-	async request(next, populate = false, cursor) {
+	async request(next: any, populate = false, cursor?: any) {
 		let nextPageCursor
 		let newItems
 		

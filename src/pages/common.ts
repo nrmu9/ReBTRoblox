@@ -1054,7 +1054,7 @@ export const initDownloadButton = async (assetId, assetTypeId, isBundle) => {
 	
 	const downloadButton = btnCont.$find("a")
 
-	const download = (data, fileType) => {
+	const download = (data: any, fileType?: any) => {
 		const title = $("#item-container .item-name-container h2")
 		const fileName = `${title && formatUrlName(title.textContent, "") || assetId.toString()}.${fileType || getAssetFileType(assetTypeId, data)}`
 

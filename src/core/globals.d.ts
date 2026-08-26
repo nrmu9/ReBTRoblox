@@ -41,22 +41,22 @@ declare global {
 	// each entry point. Declared globally because call sites reach them off DOM
 	// objects rather than by import.
 	interface Element {
-		$find<T extends Element = Element>(selector: string): T | null
-		$findAll<T extends Element = Element>(selector: string): NodeListOf<T>
+		$find<T extends Element = HTMLElement>(selector: string): T | null
+		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
 		$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
 	}
 
 	interface Document {
-		$find<T extends Element = Element>(selector: string): T | null
-		$findAll<T extends Element = Element>(selector: string): NodeListOf<T>
+		$find<T extends Element = HTMLElement>(selector: string): T | null
+		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
 		$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
 	}
 
 	interface DocumentFragment {
-		$find<T extends Element = Element>(selector: string): T | null
-		$findAll<T extends Element = Element>(selector: string): NodeListOf<T>
+		$find<T extends Element = HTMLElement>(selector: string): T | null
+		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 	}
 
 	interface EventTarget {

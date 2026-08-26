@@ -337,7 +337,7 @@ pageInit.itemdetails = () => {
 					
 					typeField.parentNode.after(salesContainer)
 					
-					const show = sales => {
+					const show = (sales?: any) => {
 						if(typeof sales === "number") { salesContainer.$find(".btr-row-value").textContent = formatNumber(sales) }
 						salesContainer.style.display = ""
 					}
@@ -410,7 +410,7 @@ pageInit.itemdetails = () => {
 					
 					typeField.parentNode.after(createdContainer, updatedContainer)
 					
-					const show = (created, updated) => {
+					const show = (created?: any, updated?: any) => {
 						if(created) { createdContainer.$find(".btr-row-value").textContent = new Date(created).$format("MMM DD, YYYY h:mm:ss A") }
 						if(updated) { updatedContainer.$find(".btr-row-value").textContent = new Date(updated).$format("MMM DD, YYYY h:mm:ss A") }
 						createdContainer.style.display = ""
