@@ -5,7 +5,8 @@ document.addEventListener("btroblox/init", ev => {
 	const [settings, IS_DEV_MODE, selectedRobuxToCashOption] = (ev as CustomEvent).detail
 	
 	const BTRoblox: Record<string, any> = {}
-	let currentPage
+	let currentPage: any = null
+	void currentPage
 	
 	const util = {
 		ready(fn) {
@@ -96,7 +97,7 @@ document.addEventListener("btroblox/init", ev => {
 							
 							return promise.then(json => {
 								for(const fn of request.onResponse) {
-									try { fn(json, request) }
+									try { (fn as any)(json, request) }
 									catch(ex) { console.error(ex) }
 								}
 								
@@ -112,7 +113,7 @@ document.addEventListener("btroblox/init", ev => {
 									const json = JSON.parse(text)
 									
 									for(const fn of request.onResponse) {
-										try { fn(json, request) }
+										try { (fn as any)(json, request) }
 										catch(ex) { console.error(ex) }
 									}
 									
@@ -165,7 +166,7 @@ document.addEventListener("btroblox/init", ev => {
 									const json = JSON.parse(text)
 									
 									for(const fn of request.onResponse) {
-										try { fn(json, request) }
+										try { (fn as any)(json, request) }
 										catch(ex) { console.error(ex) }
 									}
 									
@@ -664,7 +665,7 @@ document.addEventListener("btroblox/init", ev => {
 			return false
 		},
 		
-		queryElement(targets, queries, depth = 5, mustMatchRoot = false, all = false, path = false) {
+		queryElement(targets: any, queries: any, depth: any = 5, mustMatchRoot: any = false, all: any = false, path: any = false) {
 			if(all && path) { throw Error("Can't do both all and path") }
 			
 			if(!Array.isArray(targets)) { targets = [targets] }
@@ -742,7 +743,7 @@ document.addEventListener("btroblox/init", ev => {
 			return null
 		},
 		
-		_queryList(list, selectors, depth, all = false, path = false) {
+		_queryList(list: any, selectors: any, depth?: any, all: any = false, path: any = false) {
 			for(const child of list) {
 				if(Array.isArray(child)) {
 					const result = this._queryList(child, selectors, depth, all, path)
@@ -979,7 +980,7 @@ document.addEventListener("btroblox/init", ev => {
 					this.counter++
 					
 					for(const setValue of this.listeners.values()) {
-						setValue(this.counter)
+						(setValue as any)(this.counter)
 					}
 				}
 			}
@@ -1006,7 +1007,7 @@ document.addEventListener("btroblox/init", ev => {
 				filter, handler,
 				
 				remove() {
-					this.removed = true
+					(this as any).removed = true
 				}
 			}
 			
@@ -1038,7 +1039,7 @@ document.addEventListener("btroblox/init", ev => {
 		
 		//
 		
-		nextConstructorReplace(render, index, thisArg, args) {
+		nextConstructorReplace(render: any, index: any, thisArg?: any, args?: any) {
 			for(; index < reactHook.constructorReplaces.length; index++) {
 				const info = reactHook.constructorReplaces[index]
 				
@@ -1048,8 +1049,8 @@ document.addEventListener("btroblox/init", ev => {
 				}
 				
 				if(info.filter(args[0])) {
-					return info.handler(function(...args) {
-						return reactHook.nextConstructorReplace(render, index + 1, this, args)
+					return info.handler(function(this: any, ...args: any[]) {
+						return reactHook.nextConstructorReplace(render, index + 1, this as any, args)
 					}, thisArg, args)
 				}
 			}
@@ -1159,7 +1160,7 @@ document.addEventListener("btroblox/init", ev => {
 			const stateIndex = renderTarget.state.length
 			const matching: any[] = []
 			
-			const run = (list, canResolve) => {
+			const run = (list: any, canResolve?: any) => {
 				for(const filter of list) {
 					if(!filter.resolved && filter.filter(args[0], stateIndex)) {
 						if(canResolve) {
@@ -1572,7 +1573,7 @@ document.addEventListener("btroblox/init", ev => {
 				props => "profileUserId" in props && "carouselName" in props, 
 				(target, thisArg, args) => {
 					const props = args[0]
-					const carouselName = props.carouselName
+					props.carouselName
 					
 					// disable MustHideConnections so that friends load in faster
 					reactHook.hijackUseState(
@@ -2112,7 +2113,7 @@ document.addEventListener("btroblox/init", ev => {
 			const webpackHook = {
 				processedModules: new WeakSet(),
 				propertyHandlers: new Map(),
-				moduleHandlers: [],
+				moduleHandlers: [] as any[],
 				objects: {},
 				
 				onModule(fn) {
@@ -2160,7 +2161,7 @@ document.addEventListener("btroblox/init", ev => {
 								
 								Object.defineProperty = new Proxy(Object.defineProperty, {
 									apply(target, thisArg, args) {
-										const result = target.apply(thisArg, args)
+										const result = target.apply(thisArg, args as any)
 										
 										const list = propertyHandlers.get(args[1])
 										if(list) {
@@ -2195,7 +2196,7 @@ document.addEventListener("btroblox/init", ev => {
 											this.processedModules.add(module)
 											
 											for(const fn of this.moduleHandlers) {
-												try { fn(module, target) }
+												try { (fn as any)(module, target) }
 												catch(ex) { console.error(ex) }
 											}
 										}
@@ -2236,7 +2237,7 @@ document.addEventListener("btroblox/init", ev => {
 				}
 			}
 			
-			const { objects } = webpackHook
+			const objects: Record<string, any> = webpackHook.objects
 			
 			objects.Mui = {}
 			
@@ -2269,7 +2270,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"createAddBTRSettings": () => {
 			const { webpackHook } = BTRoblox
-			const { objects } = webpackHook
+			const objects: Record<string, any> = webpackHook.objects
 			
 			reactHook.hijackConstructor(
 				props => props.settingsHref,
@@ -2297,7 +2298,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"createAssetOptions": () => {
 			const { webpackHook } = BTRoblox
-			const { objects } = webpackHook
+			const objects: Record<string, any> = webpackHook.objects
 			
 			const Link = (url, entry) => objects.jsx("a", {
 				href: url,
@@ -2308,12 +2309,12 @@ document.addEventListener("btroblox/init", ev => {
 			})
 			
 			document.addEventListener("click", ev => {
-				const anchor = ev.target.nodeName === "A" ? ev.target : ev.target.closest("a")
+				const anchor = (ev.target as HTMLElement).nodeName === "A" ? ev.target : (ev.target as HTMLElement).closest("a")
 				
-				if(anchor?.classList.contains("btr-next-anchor")) {
+				if((anchor as HTMLElement | null)?.classList.contains("btr-next-anchor")) {
 					if(!ev.shiftKey && !ev.ctrlKey && window.next?.router) {
 						ev.preventDefault()
-						window.next?.router.push(anchor.href)
+						window.next?.router.push((anchor as HTMLAnchorElement).href)
 					}
 				}
 			})
@@ -2475,7 +2476,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"createDownloadVersion": () => {
 			const { webpackHook } = BTRoblox
-			const { objects } = webpackHook 
+			const objects: Record<string, any> = webpackHook.objects 
 			
 			reactHook.hijackConstructor(
 				props => "version" in props,
@@ -2917,7 +2918,7 @@ document.addEventListener("btroblox/init", ev => {
 				globalServerRegions[jobId] = details
 				
 				for(const fn of onRegionsChanged) {
-					fn()
+					(fn as any)()
 				}
 			})
 			
@@ -2997,8 +2998,7 @@ document.addEventListener("btroblox/init", ev => {
 						// add region/ping label
 						const status = regionSetting !== "none" && reactHook.queryElement(result, x => x.props.className?.includes("rbx-game-status"))
 						if(status) {
-							let serverDetails
-							
+														
 							if(regionSetting !== "region") {
 								status.props.children += `\nPing: ${props.ping ?? -1}ms`
 							}
