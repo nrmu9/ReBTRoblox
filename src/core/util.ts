@@ -47,3 +47,18 @@ export const ready = (fn: () => void): void => {
 		document.addEventListener("DOMContentLoaded", fn, { once: true })
 	}
 }
+
+/** Runs fn at most once, returning the cached result thereafter. */
+export const onceFn = <T extends (...args: any[]) => any>(fn: T): T => {
+	let called = false
+	let result: any
+
+	return function(this: any, ...args: any[]) {
+		if(!called) {
+			called = true
+			result = fn.apply(this, args)
+		}
+
+		return result
+	} as T
+}

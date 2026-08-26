@@ -13,7 +13,7 @@ const define = (targets: any[], props: Record<string, unknown>): void => {
 	for(const target of targets) {
 		if(!target?.prototype) { continue }
 
-		for(const [name, value] of Object.entries(props)) {
+		for(const [name, value] of Object.entries(props) as [string, any][]) {
 			Object.defineProperty(target.prototype, name, {
 				value,
 				writable: true,

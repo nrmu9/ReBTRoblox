@@ -10,3 +10,7 @@ export const find = <T extends Element = Element>(self: ParentNode, selector: st
 
 export const findAll = <T extends Element = Element>(self: ParentNode, selector: string): NodeListOf<T> =>
 	self.querySelectorAll<T>(scopeSelector(selector))
+
+/** Document-wide query, the bare $(selector) / $.all(selector) of the legacy API. */
+export const query = <T extends Element = Element>(selector: string): T | null => find<T>(document, selector)
+export const queryAll = <T extends Element = Element>(selector: string): NodeListOf<T> => findAll<T>(document, selector)

@@ -13,12 +13,16 @@ declare global {
 
 	// Still in legacy js/. Each entry goes away as its module ports.
 	const reactHook: any
+	const angularHook: any
+	const React: any
+	const angular: any
+	const hijackFunction: any
+	const hijackXHR: any
+	const HoverPreview: any
 	const insertCSS: any
 	const removeCSS: any
-	const formatNumber: any
-	const loggedInUser: any
-	const loggedInUserPromise: any
 	const robloxExperiments: any
+	const ItemPreviewer: any
 
 	interface Window {
 		Roblox?: any

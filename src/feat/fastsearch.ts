@@ -2,6 +2,7 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { loggedInUserPromise } from "@C:/Program Files/Git/pages/common"
 
 const btrFriends = { // TODO: Move this elsewhere
 	friendsPromise: null as any,
