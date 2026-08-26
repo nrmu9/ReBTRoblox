@@ -20,7 +20,7 @@ const BlogFeed = {
 
 			this.fetching = fetch(feedUrl).then(async res => {
 				const json = await res.json()
-				const posts = []
+				const posts: any[] = []
 				
 				for(let i = 0; i < 3; i++) {
 					const post = json.data[i]

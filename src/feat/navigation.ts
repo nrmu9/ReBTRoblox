@@ -8,11 +8,15 @@ import { SHARED_DATA } from "@/feat/shareddata"
 "use strict"
 
 export const Navigation = {
-	elements: {},
+	enabled: undefined as any,
+	isDefault: undefined as any,
+	replacedTitle: undefined as any,
+	loadedFeed: undefined as any,
+	elements: {} as Record<string, any>,
 
 	getElementStates() {
 		const data = SETTINGS.get("navigation.elements")
-		let elements = {}
+		let elements: Record<string, any> = {}
 		
 		try { elements = JSON.parse(data || "[]") }
 		catch(ex) { console.error(ex) }

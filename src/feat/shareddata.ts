@@ -3,6 +3,10 @@ import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 
 export const SHARED_DATA = {
+	payloadIndex: undefined as any,
+	payloadScript: undefined as any,
+	syncLoadError: undefined as any,
+	payloadPromise: undefined as any,
 	_loadPromise: new Promise(),
 	_loaded: false,
 	

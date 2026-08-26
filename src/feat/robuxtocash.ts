@@ -1,3 +1,14 @@
+export interface CurrencyInfo {
+	symbol: string
+	name?: string
+	usdRate?: number
+	fixed?: boolean
+	robuxRates?: number[][]
+	robuxRatesPremium?: number[][]
+	subscriptionRates?: number[][]
+	numFractions?: number
+}
+
 import { SETTINGS } from "@/feat/settings"
 
 export const RobuxToCash = {
@@ -5,7 +16,7 @@ export const RobuxToCash = {
 	
 	UpdateDate: "November 17, 2025",
 	
-	Currencies: {
+	Currencies: <Record<string, CurrencyInfo>>{
 		None: { symbol: "" },
 		
 		USD: {
@@ -401,7 +412,7 @@ for(const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 	const refCurrency = currency.usdRate ? RobuxToCash.Currencies.USD : currency
 	
 	for(const [index, rate] of Object.entries(refCurrency.robuxRates)) {
-		const option = { name: `${name.toLowerCase()}Regular${index}`, cash: rate[0], robux: rate[1] }
+		const option: Record<string, any> = { name: `${name.toLowerCase()}Regular${index}`, cash: rate[0], robux: rate[1] }
 		
 		if(currency.usdRate) {
 			option.usdCash = option.cash

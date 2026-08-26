@@ -143,7 +143,7 @@ const SourceViewer = (() => {
 		const ParseRegex = new RegExp(_ParseRegex)
 		const allLines = source.split("\n")
 		
-		const lineObjects = []
+		const lineObjects: any[] = []
 		let lineNumber = 0
 		let current
 
@@ -368,8 +368,8 @@ const SourceViewer = (() => {
 		
 		//
 		
-		const indexState = []
-		const stack = []
+		const indexState: any[] = []
+		const stack: any[] = []
 		
 		let nextYield = performance.now() + 10
 		let parented = false

@@ -10,7 +10,7 @@ const btrFriends = { // TODO: Move this elsewhere
 	
 	getFriends() {
 		if(this.friendsCached) { return this.friendsCached }
-		const friends = {}
+		const friends: Record<string, any> = {}
 		
 		try {
 			const data = btrLocalStorage.getItem("fastsearchCache")
@@ -32,7 +32,7 @@ const btrFriends = { // TODO: Move this elsewhere
 		if(!this.friendsPromise) {
 			this.friendsPromise = loggedInUserPromise.then(userId => {
 				return RobloxApi.friends.getFriends(userId).then(async json => {
-					const friendsCached = {}
+					const friendsCached: Record<string, any> = {}
 					
 					if(json.data.length > 0) {
 						const profiles = await RobloxApi.userProfiles.getProfiles(json.data.map(x => x.id), ["isVerified", "names.username", "names.displayName"])
@@ -66,17 +66,20 @@ const btrFriends = { // TODO: Move this elsewhere
 }
 
 const btrFastSearch = {
+	friendsCached: undefined as any,
+	friendsPromise: undefined as any,
+	friendsLoaded: undefined as any,
 	init() {
 		const usernameRegex = /^[a-zA-Z0-9]+(?:[ _.]?[a-zA-Z0-9]+)?$/
-		const userCache = {}
+		const userCache: Record<string, any> = {}
 		
 		let currentSearchText = ""
 		let lastResultsLoaded = 0
 		
-		const thumbnailCache = {}
+		const thumbnailCache: Record<string, any> = {}
 
-		const presencesToRequest = []
-		const presenceCache = {}
+		const presencesToRequest: any[] = []
+		const presenceCache: Record<string, any> = {}
 		let lastPresenceRequest = 0
 		let presencePromise = null
 		
@@ -139,7 +142,7 @@ const btrFastSearch = {
 						lastPresenceRequest = Date.now()
 						
 						RobloxApi.presence.getPresence(userIds).then(json => {
-							const result = {}
+							const result: Record<string, any> = {}
 							
 							for(const info of json.userPresences) {
 								result[info.userId] = info
@@ -159,7 +162,7 @@ const btrFastSearch = {
 		const getMatches = search => {
 			const matches = Object.entries(userCache)
 				.map(([name, user]) => {
-					const x = {
+					const x: Record<string, any> = {
 						name,
 						user,
 						isAlias: name !== user.Username.toLowerCase()
@@ -245,7 +248,7 @@ const btrFastSearch = {
 			
 			const searchResults = Array.from(container.$findAll(">li"))
 			const preservedIndex = searchResults.findIndex(x => x.classList.contains(selectedClass))
-			const results = []
+			const results: any[] = []
 
 			clearResults()
 

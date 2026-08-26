@@ -8,7 +8,17 @@ import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/shareddata"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
-const SettingsModal = {
+interface SettingsModalState {
+	enabled: boolean
+	visible?: boolean
+	settingsDiv?: any
+	contentDivs?: any
+	currentContent?: any
+	themeObserver?: any
+	[key: string]: any
+}
+
+export const SettingsModal: SettingsModalState = {
 	enabled: false,
 	
 	toggle(force) {
@@ -291,7 +301,7 @@ const SettingsModal = {
 			const header = navButtons.$find(`group[label="Header"]`)
 			const sidebar = navButtons.$find(`group[label="Sidebar"]`)
 			
-			const onUpdate = []
+			const onUpdate: any[] = []
 			
 			const createCheckbox = (labelText, callback) => {
 				const checkbox = html`<checkbox></checkbox>`
@@ -468,7 +478,7 @@ const SettingsModal = {
 
 		// Settings 
 
-		const settingsDone = {}
+		const settingsDone: Record<string, any> = {}
 		const joinPaths = (group, path) => (!group || path.includes(".") ? path : `${group}.${path}`)
 
 		for(const group of this.settingsDiv.$findAll("group")) {

@@ -229,8 +229,8 @@ if(IS_BACKGROUND_PAGE) {
 					
 					// Figure out which entries to enable
 					
-					const enabledItemsById = {}
-					const enabledItems = []
+					const enabledItemsById: Record<string, any> = {}
+					const enabledItems: any[] = []
 					
 					for(const menu of this.items) {
 						const params = { ...menu, menu: menu }
@@ -383,7 +383,7 @@ if(IS_BACKGROUND_PAGE) {
 			let menuItems = null
 			
 			if(this.activeContextMenus.size > 0) {
-				const targets = {}
+				const targets: Record<string, any> = {}
 				
 				for(const entry of this.activeContextMenus) {
 					const lastEntry = targets[entry.type]

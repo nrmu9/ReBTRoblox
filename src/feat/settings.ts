@@ -3,6 +3,9 @@ import { backgroundScript, contentScript } from "@/core/messaging"
 import { SHARED_DATA } from "@/feat/shareddata"
 
 export const DEFAULT_SETTINGS = {
+	loaded: undefined as any,
+	firstLoad: undefined as any,
+	loadError: undefined as any,
 	_version: 2,
 	general: {
 		theme: { value: "default", validValues: ["default", "simblk", "sky", "red"] },
@@ -102,7 +105,7 @@ for(const list of Object.values(DEFAULT_SETTINGS)) {
 	}
 }
 
-export const SETTINGS = {
+export const SETTINGS: Record<string, any> = {
 	_onChangeListeners: [],
 	_loadPromise: new Promise(),
 	
