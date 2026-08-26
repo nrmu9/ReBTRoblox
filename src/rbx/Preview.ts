@@ -163,7 +163,7 @@ class AvatarPreviewer extends EventEmitter {
 			}
 			
 			if(!this.outfitLoaded) {
-				this._loadOutfit(...<any[]><any[]>(this.shouldLoadOutfit ?? []))
+				this._loadOutfit(...<any[]>(this.shouldLoadOutfit ?? []))
 			}
 
 			if(!this.playingAnim) {
@@ -223,7 +223,8 @@ class AvatarPreviewer extends EventEmitter {
 		}
 	}
 
-	_loadOutfit(outfitId, outfitType) {
+	_loadOutfit(...args: any[]) {
+		const [outfitId, outfitType] = args
 		const debounce = performance.now()
 		let outfitPromise
 		
@@ -809,7 +810,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 				this.hasBundleAnims = true
 				
 				this.bundleAnims.style.display = ""
-				this.animNameLabel.textContent = Object.values(this.animMap).find((x: any) => x.assetId === this.currentAnim)?.name || ""
+				this.animNameLabel.textContent = (Object.values(this.animMap) as any[]).find((x: any) => x.assetId === this.currentAnim)?.name || ""
 
 				// Move camera down
 				this.scene.cameraOffset.y -= 1
@@ -851,7 +852,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 			}
 		}
 
-		const anim = this.animMap[assetId] = { assetId }
+		const anim: Record<string, any> = this.animMap[assetId] = { assetId }
 		anim.name = name
 		
 		const btn = html`<li><a title="${anim.name}" style="text-overflow:ellipsis;overflow:hidden">${anim.name}</a></li>`
@@ -876,7 +877,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 	}
 
-	addBundleAnimation(assetId, animType, assetName) {
+	addBundleAnimation(assetId: any, animType?: any, assetName?: any) {
 		let bundleType = animType
 		let isAlt = false
 		let altText
@@ -1103,7 +1104,7 @@ export const HoverPreview = (() => {
 	}
 
 	const initPreview = () => {
-		preview = this.preview! = new AvatarPreviewer() as any
+		preview = window.preview = new AvatarPreviewer() as any
 
 		preview.avatar.on("layeredRequestStateChanged", () => {
 			if(preview.container.parentNode) {

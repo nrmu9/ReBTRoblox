@@ -452,12 +452,12 @@ export const Explorer = (() => {
 				Tags: {
 					Name: "Tags",
 					Order: 1001,
-					Properties: []
+					Properties: [] as any[]
 				},
 				Attributes: {
 					Name: "Attributes",
 					Order: 1002,
-					Properties: []
+					Properties: [] as any[]
 				}
 			}
 			
@@ -953,7 +953,7 @@ export const Explorer = (() => {
 			const btn = html`<li btr-model-id="${modelId}"><a title="${title}">${title}</a></li>`
 			const didModelLoad = Array.isArray(modelContents)
 			
-			const model = this.createItem(didModelLoad ? modelContents : [], params?.open ?? true)
+			const model = this.createItem(didModelLoad ? modelContents : [], (params as any)?.open ?? true)
 			model.id = modelId
 			model.didLoad = didModelLoad
 			model.isRoot = true
@@ -1021,7 +1021,7 @@ export const Explorer = (() => {
 						btn: elem.$find(".btr-explorer-item"),
 						icon: elem.$find(".btr-explorer-icon"),
 						nameLabel: elem.$find(".btr-explorer-item-name"),
-						item: null
+						item: null as any
 					}
 					
 					let lastClick = 0
