@@ -6,8 +6,8 @@ import { RBXModelParser } from "@/rbx/Parser/ModelParser"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 export const AssetCache = (() => {
-	const resolveCache = {}
-	const cdnCache = {}
+	const resolveCache: Record<string, any> = {}
+	const cdnCache: Record<string, any> = {}
 
 	function resolveAssetUrlParams(request, strict=false) {
 		let url = request.trim()
@@ -54,7 +54,7 @@ export const AssetCache = (() => {
 	}
 	
 	function createMethod(constructor: any) {
-		const methodCache = {}
+		const methodCache: Record<string, any> = {}
 
 		return (strict?: any, request?: any, params?: any, cb?: any) => {
 			if(typeof strict !== "boolean") {

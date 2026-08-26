@@ -225,8 +225,8 @@ export const DracoBitstream = {
 		
 		for(let i = 0; i < numAttributeDecoders; i++) {
 			decoders[i] = {
-				attributes: null,
-				pointIds: null,
+				attributes: null as any,
+				pointIds: null as any,
 				index: i,
 			}
 		}
