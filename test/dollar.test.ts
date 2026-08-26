@@ -177,6 +177,27 @@ const run = async () => {
 	await tick()
 	check("$watchAll handles > scoped selectors", lateScoped === 1, "hits=" + lateScoped)
 
+
+	// Regression: the continuous path delivers synchronously for existing nodes,
+	// and the callback receives its own stop function. Both hit a TDZ before.
+	const cont = frag(`<div id="cont"><u class="pre">a</u><u class="pre">b</u></div>`).$find("#cont")!
+	let contHits = 0
+	let stopFn: any = null
+	cont.$watchAll(".pre", (el: Element, stop: any) => { contHits++; stopFn = stop })
+	check("$watchAll delivers for existing nodes", contHits === 2, "hits=" + contHits)
+	check("$watchAll passes a usable stop", typeof stopFn === "function")
+
+	// calling the provided stop must halt further delivery
+	let stopped = 0
+	cont.$watchAll(".later", (el: Element, stop: any) => { stopped++; stop() })
+	for(let i = 0; i < 3; i++) {
+		const u = document.createElement("u")
+		u.className = "later"
+		cont.append(u)
+	}
+	await tick()
+	check("stop halts continuous delivery", stopped === 1, "hits=" + stopped)
+
 	report()
 }
 

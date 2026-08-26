@@ -49,14 +49,14 @@ declare global {
 		$find<T extends Element = HTMLElement>(selector: string): T | null
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
-		$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
+		$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
 	}
 
 	interface Document {
 		$find<T extends Element = HTMLElement>(selector: string): T | null
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
-		$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
+		$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
 	}
 
 	interface DocumentFragment {

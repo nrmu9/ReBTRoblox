@@ -287,7 +287,7 @@ export const Navigation = {
 				const notif = node.$find(".btr-nav-notif")
 				const link = node.$find("a")
 				
-				link.href = orig.href
+				if(orig) { link.href = orig.href }
 				notif.textContent = origNotif ? origNotif.textContent.trim() : ""
 				notif.style.display = origNotif ? "" : "none"
 			}
@@ -319,7 +319,7 @@ export const Navigation = {
 				const notif = node.$find(".btr-nav-notif")
 				const link = node.$find("a")
 				
-				link.href = orig.href
+				if(orig) { link.href = orig.href }
 				notif.textContent = origNotif ? origNotif.textContent.trim() : ""
 				notif.style.display = origNotif ? "" : "none"
 			}

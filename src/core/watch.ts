@@ -20,7 +20,7 @@ export interface Watcher {
 	parent: Watcher | null
 
 	$watch(selector: string | string[], filter?: Filter | Callback, callback?: Callback | WatchProps, props?: WatchProps): Watcher
-	$watchAll(selector: string, callback: (element: Element) => void, props?: WatchProps): Watcher
+	$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
 	$then(callback?: (target: any) => void): Watcher
 	$back(): Watcher
 	$promise(): Promise<any>
@@ -85,7 +85,13 @@ export const watch = (
 	if(props?.continuous) {
 		if(list.length !== 1) { throw new TypeError("Multiple selectors with continuous watch") }
 
-		const stop = hookWatch(list[0], element => {
+		// Delivery is synchronous for elements already present, so the disposer
+		// cannot be a const referenced from inside the handler.
+		let dispose: (() => void) | null = null
+
+		const stop = (): void => dispose?.()
+
+		dispose = hookWatch(list[0], element => {
 			if(test && !test(element)) { return }
 
 			try { done?.(element, stop) }
