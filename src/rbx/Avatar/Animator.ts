@@ -349,13 +349,13 @@ export const RBXAnimator = (() => {
 						const next = index === -1 ? null : keyframes[index]
 						
 						if(!next || info.timePosition === prev.time) {
-							tempPos.set(...prev.pos)
+							tempPos.set(...<[number, number, number]>prev.pos)
 							tempQuat.set(...<[number, number, number, number]>prev.rot)
 						} else {
 							const easing = (EasingStyles[prev.easingstyle] || EasingStyles[0])[prev.easingdir || 0]
 							const theta = easing((info.timePosition - prev.time) / (next.time - prev.time))
 							
-							tempPos.set(...prev.pos).lerp(tempPos2.set(...next.pos), theta)
+							tempPos.set(...<[number, number, number]>prev.pos).lerp(tempPos2.set(...<[number, number, number]>next.pos), theta)
 							tempQuat.set(...<[number, number, number, number]>prev.rot).slerp(tempQuat2.set(...next.rot), theta)
 						}
 					}

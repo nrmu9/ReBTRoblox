@@ -59,10 +59,10 @@ const Explorer = (() => {
 	
 	const widthCalcCanvas = document.createElement("canvas")
 	const ctx = widthCalcCanvas.getContext("2d")
-	ctx.font = `300 12px "Source Sans Pro", Arial, Helvetica, sans-serif`
+	ctx!.font = `300 12px "Source Sans Pro", Arial, Helvetica, sans-serif`
 	
 	const getLineWidth = (text, depth) => {
-		return ctx.measureText(text).width + 47 + depth * 20
+		return ctx!.measureText(text).width + 47 + depth * 20
 	}
 	
 	return class {
@@ -274,7 +274,7 @@ const Explorer = (() => {
 					console.error(ex)
 				}
 				
-				const update = () => {
+				const update = (setting?: any) => {
 					btrLocalStorage.setItem("svSettings", svSettings)
 					
 					this.sourceViewerModal.$find(".btr-sourceviewer-content").style = `
@@ -494,7 +494,7 @@ const Explorer = (() => {
 			
 			if("Tags" in target.Properties && target.Properties.Tags.value.length > 0) {
 				for(const tag of target.Properties.Tags.value.split("\0")) {
-					groups.Tags.Properties.push([tag])
+					groups.Tags.Properties.push([tag] as any)
 				}
 			}
 			
@@ -613,7 +613,7 @@ const Explorer = (() => {
 						break outer
 					}
 					
-					groups.Attributes.Properties.push([name, value])
+					groups.Attributes.Properties.push([name, value] as any)
 				}
 			}
 

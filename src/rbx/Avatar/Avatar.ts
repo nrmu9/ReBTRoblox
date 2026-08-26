@@ -50,7 +50,7 @@ export const RBXAvatar = (() => {
 		if(obj instanceof THREE.SkinnedMesh) {
 			if(obj.skeleton) {
 				obj.skeleton.dispose()
-				delete obj.skeleton
+				delete (obj as any).skeleton
 			}
 			
 			if(mesh.bones) {
@@ -120,7 +120,7 @@ export const RBXAvatar = (() => {
 		if(obj instanceof THREE.SkinnedMesh) {
 			if(obj.skeleton) {
 				obj.skeleton.dispose()
-				delete obj.skeleton
+				delete (obj as any).skeleton
 			}
 			
 			(obj as any).isSkinnedMesh = false
@@ -997,7 +997,7 @@ export const RBXAvatar = (() => {
 			}
 
 			for(const name of R15BodyPartNames) {
-				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, x => ({ Hand: "Arm", Foot: "Leg" })[x]).replace(/^./, x => x.toLowerCase())
+				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, (x: string) => ({ Hand: "Arm", Foot: "Leg" })[x]).replace(/^./, x => x.toLowerCase())
 				const composite = composites[limb]
 				
 				sources[name] = new MergeSource()
@@ -1005,7 +1005,7 @@ export const RBXAvatar = (() => {
 			}
 			
 			for(const name of ["Head", ...R6BodyPartNames, ...R15BodyPartNames]) {
-				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, x => ({ Hand: "Arm", Foot: "Leg" })[x]).replace(/^./, x => x.toLowerCase())
+				const limb = name.replace(/\s|Lower|Upper/g, "").replace(/Hand|Foot/, (x: string) => ({ Hand: "Arm", Foot: "Leg" })[x]).replace(/^./, x => x.toLowerCase())
 				
 				sources.pbr[name] = new MergeSource()
 				textures.pbr[name] = new MergeTexture(1024, 1024, sources.bodyColors[limb], sources.pbr[name])
@@ -1086,7 +1086,7 @@ export const RBXAvatar = (() => {
 			return asset
 		}
 		
-		updateBones(obj, acc) {
+		updateBones(obj: any, acc?: any) {
 			const isLayeredAccessory = obj.rbxLayered?.wrapLayer
 			
 			for(const joint of this.sortedJointsArray) {
@@ -1326,7 +1326,7 @@ export const RBXAvatar = (() => {
 			this.shouldRefreshRig = true
 		}
 
-		getScaleMod(partName, scaleType, partScaleType, result) { // Only use partScaleType with accessories! C:
+		getScaleMod(partName: any, scaleType?: any, partScaleType?: any, result?: any) { // Only use partScaleType with accessories! C:
 			if(!result) { result = new THREE.Vector3() }
 			
 			if(this.playerType !== "R15") {
@@ -1410,7 +1410,7 @@ export const RBXAvatar = (() => {
 			const joints = this.joints = {}
 			const parts = this.parts = {}
 
-			const CreateModel = (tree, parentJoint) => {
+			const CreateModel = (tree: any, parentJoint?: any) => {
 				let obj
 				
 				if(tree.name !== "HumanoidRootPart") {
@@ -2123,7 +2123,7 @@ export const RBXAvatar = (() => {
 			
 			const scales = { ...this.scales }
 			
-			const request = { scales, accessories, bodyparts }
+			const request: Record<string, any> = { scales, accessories, bodyparts }
 			
 			// sort assets by id for hashing
 			accessories.sort((a, b) => b.id - a.id)
