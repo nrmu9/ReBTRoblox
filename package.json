@@ -3,8 +3,16 @@
 	"version": "3.6.22",
 	"private": true,
 	"scripts": {
-		"build:dev": "node dev/build.js",
+		"build": "node dev/build.js",
+		"build:dev": "node dev/build.js --dev",
+		"build:chrome": "node dev/build.js --target=chrome",
+		"watch": "node dev/build.js --dev --watch",
 		"bridge": "node dev/bridge.js",
-		"dev": "node dev/build.js && node dev/bridge.js"
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/chrome": "^0.1.34",
+		"esbuild": "^0.28.2",
+		"typescript": "^7.0.2"
 	}
 }
