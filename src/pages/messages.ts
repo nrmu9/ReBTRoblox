@@ -127,7 +127,7 @@ pageInit.messages = () => {
 			curPage.removeAttribute("ng-bind")
 			curPage.textContent = ""
 
-			const pageInput = html`<input type=text ng-keydown="$event.which===13&&$event.target.blur()" ng-blur="btr_setPage($event)">`
+			const pageInput = html`<input type=text ng-keydown="$event!.which===13&&$(event!.target as HTMLElement).blur()" ng-blur="btr_setPage($event)">`
 			pageInput.setAttribute("ng-value", bindAttr)
 			curPage.append(pageInput)
 		} else {
@@ -184,13 +184,13 @@ pageInit.messages = () => {
 							const [$state] = args
 							
 							$state.btr_setPage = $event => {
-								const value = +$event.target.value
+								const value = +$(event!.target as HTMLElement).value
 
 								if(!Number.isNaN(value)) {
 									$location.search({ page: value })
-									$event.target.value = value
+									$(event!.target as HTMLElement).value = value
 								} else {
-									$event.target.value = $state.currentStatus.currentPage
+									$(event!.target as HTMLElement).value = $state.currentStatus.currentPage
 								}
 							}
 						} catch(ex) {

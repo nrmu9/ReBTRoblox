@@ -24,7 +24,7 @@ pageInit.create_dashboard = () => {
 			})
 			
 			document.addEventListener("click", ev => {
-				const anchor = ev.target.nodeName === "A" ? ev.target : ev.target.closest("a")
+				const anchor = (ev.target as HTMLElement).nodeName === "A" ? ev.target : (ev.target as HTMLElement).closest("a")
 				
 				if(anchor?.classList.contains("btr-next-anchor")) {
 					if(!ev.shiftKey && !ev.ctrlKey && window.next?.router) {

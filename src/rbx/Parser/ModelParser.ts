@@ -102,8 +102,6 @@ export interface XmlParserState {
 }
 
 export class RBXInstance {
-	[key: string]: any
-
 	// setProperty mirrors properties onto the instance under their real names.
 	// Must lead the class body: a line starting with [ continues the previous one.
 	[key: string]: any

@@ -316,7 +316,7 @@ pageInit.profile = () => {
 					for(const [key, entry] of Object.entries(socialLinks)) {
 						if(!entry) { continue }
 						
-						const link = html`<a class=btr-social-link href=${entry?.url}><span class="icon icon-regular-${key === "x" ? "twitter" : key}"></span></a>`
+						const link = html`<a class=btr-social-link href=${(entry as any)?.url}><span class="icon icon-regular-${key === "x" ? "twitter" : key}"></span></a>`
 						newCont.$find(".btr-profile-social-links").append(link)
 					}
 				}
@@ -347,7 +347,7 @@ pageInit.profile = () => {
 				// }
 				
 				const list = newCont.$find(".btr-profile-playerbadges .btr-card-list")
-				const pager = createPager(true)
+				const pager = createPager(true, undefined)
 
 				const thumbClasses = {
 					Error: "icon-broken",
@@ -472,8 +472,8 @@ pageInit.profile = () => {
 				function loadPage(page) {
 					pager.setPage(page)
 					
-					for(const [index, obj] of Object.entries(list.children)) {
-						obj.style.display = Math.floor(index / pageSize) + 1 === page ? "" : "none"
+					for(const [index, obj] of Array.from(list.children).entries()) {
+						(obj as HTMLElement).style.display = Math.floor(index / pageSize) + 1 === page ? "" : "none"
 					}
 				}
 
@@ -494,7 +494,7 @@ pageInit.profile = () => {
 						const thumbs: Record<string, any> = {}
 						const groups = json.data.sort((a, b) => (a.isPrimaryGroup ? -1 : b.isPrimaryGroup ? 1 : 0))
 						
-						for(const [index, { group, role }] of Object.entries(groups)) {
+						for(const [index, { group, role }] of (groups as any[]).entries()) {
 							const parent = html`
 							<div class=card>
 								<a class=card-link href="/communities/${group.id}/${formatUrlName(group.name)}" title="${group.name}">
@@ -819,8 +819,8 @@ pageInit.profile = () => {
 				function loadPage(page) {
 					pager.setPage(page)
 					
-					for(const [index, obj] of Object.entries(items)) {
-						obj.style.display = Math.floor(index / pageSize) + 1 === page ? "" : "none"
+					for(const [index, obj] of Array.from(items as any).entries()) {
+						(obj as HTMLElement).style.display = Math.floor(index / pageSize) + 1 === page ? "" : "none"
 					}
 					
 					select(items[(page - 1) * pageSize], true)

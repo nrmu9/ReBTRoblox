@@ -3,7 +3,7 @@ import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 
-let ContextMenu
+export let ContextMenu: any
 
 if(IS_BACKGROUND_PAGE) {
 	ContextMenu = {

@@ -5,7 +5,6 @@ import { RobuxToCash } from "@/feat/robuxtocash"
 import { modifyAngularTemplate } from "@/pages/common"
 
 pageInit.groupadmin = () => {
-	const groupId = +new URLSearchParams(window.location.search).get("id")
 	
 	if(RobuxToCash.isEnabled()) {
 		modifyAngularTemplate("configure-group-page", template => {

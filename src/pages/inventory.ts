@@ -13,7 +13,7 @@ pageInit.inventory = () => {
 	if(window.parent !== window) {
 		const iframe = window.top!.document.querySelector("#btr-injected-inventory") as HTMLIFrameElement | null
 
-		if(iframe.contentWindow === window) {
+		if(iframe?.contentWindow === window) {
 			document
 				.$watch("head", head => head.append(html`<base target="_top"></base>`))
 				.$watch("body", body => {
@@ -29,7 +29,7 @@ pageInit.inventory = () => {
 							setImmediate(() => {
 								const height = `${body.clientHeight}px`
 								if(lastHeight !== height) {
-									lastHeight = iframe.style.height = height
+									lastHeight = iframe!.style.height = height
 								}
 
 								requested = false
