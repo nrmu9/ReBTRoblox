@@ -68,21 +68,30 @@ const RBXInstanceUtils = {
 }
 
 class RBXInstanceArray extends Array {
-	findFirstChild(...args) { return RBXInstanceUtils.findFirstChild(this, ...args) }
-	findFirstChildOfClass(...args) { return RBXInstanceUtils.findFirstChildOfClass(this, ...args) }
+	findFirstChild(...args: any[]) { return (RBXInstanceUtils.findFirstChild as any)(this, ...args) }
+	findFirstChildOfClass(...args: any[]) { return (RBXInstanceUtils.findFirstChildOfClass as any)(this, ...args) }
+}
+
+export interface RBXProperty {
+	type: string
+	value: any
 }
 
 export class RBXInstance {
-	constructor(className) {
+	// setProperty mirrors properties onto the instance under their real names.
+	// Must lead the class body: a line starting with [ continues the previous one.
+	[key: string]: any
+
+	Children: RBXInstance[] = []
+	Properties: Record<string, RBXProperty> = {}
+
+	constructor(className: string) {
 		assert(typeof className === "string", "className is not a string")
 		
-		this.Children = []
-		this.Properties = {}
-
 		this.setProperty("ClassName", className, "string")
 	}
 
-	setProperty(name, value, type) {
+	setProperty(name: string, value: any, type: string | null) {
 		assert(type != null || value == null, "type cant be null")
 		assert(type == null || RBXDataTypes.includes(type), `invalid type ${type}`)
 		
@@ -97,13 +106,13 @@ export class RBXInstance {
 		}
 	}
 	
-	getProperty(name, caseInsensitive = false) {
+	getProperty(name: string, caseInsensitive = false) {
 		const property = this.Properties[name] || caseInsensitive && Object.entries(this.Properties).find(x => x[0].toLowerCase() === name.toLowerCase())?.[1]
 		return property ? property.value : undefined
 	}
 	
-	findFirstChild(...args) { return RBXInstanceUtils.findFirstChild(this, ...args) }
-	findFirstChildOfClass(...args) { return RBXInstanceUtils.findFirstChildOfClass(this, ...args) }
+	findFirstChild(...args: any[]) { return (RBXInstanceUtils.findFirstChild as any)(this, ...args) }
+	findFirstChildOfClass(...args: any[]) { return (RBXInstanceUtils.findFirstChildOfClass as any)(this, ...args) }
 }
 
 // http://www.classy-studios.com/Downloads/RobloxFileSpec.pdf
@@ -727,7 +736,7 @@ const RBXBinaryParser = {
 			case "Quaternion": // Not used anywhere?
 			default:
 				if(!typeName) {
-					console.warn(`[RBXBinaryParser] Unknown dataType 0x${dataType.toString(16).toUpperCase()} (${dataType}) for ${type.className}.${name}`)
+					console.warn(`[RBXBinaryParser] Unknown dataType 0x${typeIndex.toString(16).toUpperCase()} (${typeIndex}) for ${type.className}.${name}`)
 				} else {
 					console.warn(`[RBXBinaryParser] Unimplemented dataType ${typeIndex} '${typeName}' for ${type.className}.${name}`)
 				}
@@ -886,7 +895,7 @@ const RBXXmlParser = {
 	},
 	
 	parseSharedStrings(parser, sharedStrings) {
-		for(const child of Object.values(child.children)) {
+		for(const child of Object.values(sharedStrings.children) as any[]) {
 			if(child.nodeName !== "SharedString") { continue }
 			const md5 = child.getAttribute("md5")
 			let value
@@ -934,7 +943,7 @@ const RBXXmlParser = {
 	
 	parseProperties(parser, inst, targetNode) {
 		const getChildren = node => {
-			const children = {}
+			const children: Record<string, any> = {}
 			
 			for(const child of node.children) {
 				const descendants = children[child.nodeName] = getChildren(child)

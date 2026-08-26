@@ -59,6 +59,7 @@ export class ByteReader extends Uint8Array {
 	UInt16LE() { return this.view.getUint16((this.index += 2) - 2, true) }
 	UInt16BE() { return this.view.getUint16((this.index += 2) - 2, false) }
 	UInt32LE() { return this.view.getUint32((this.index += 4) - 4, true) }
+	PeekUInt32LE() { return this.view.getUint32(this.index, true) }
 	UInt32BE() { return this.view.getUint32((this.index += 4) - 4, false) }
 	UInt64LE() { return this.view.getBigUint64((this.index += 8) - 8, true) }
 	UInt64BE() { return this.view.getBigUint64((this.index += 8) - 8, false) }
