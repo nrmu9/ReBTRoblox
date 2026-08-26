@@ -33,6 +33,8 @@ declare global {
 
 	interface Window {
 		next?: any
+		explorer?: any
+		scene?: any
 		Roblox?: any
 		jQuery?: any
 		angular?: any

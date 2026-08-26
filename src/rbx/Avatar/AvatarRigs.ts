@@ -8,7 +8,7 @@ export const RBXAvatarRigs = (() => {
 		const recursePart = part => {
 			if(part.Name in parts) { return parts[part.Name] }
 			
-			const partData = {
+			const partData = <Record<string, any>>{
 				name: part.Name,
 				children: [],
 				attachments: {},
@@ -19,12 +19,12 @@ export const RBXAvatarRigs = (() => {
 			
 			for(const item of part.Children) {
 				if(item.ClassName === "Attachment" && !item.Name.endsWith("RigAttachment")) {
-					partData.attachments[item.Name] = RBXAvatar.CFrameToMatrix4(...item.CFrame)
+					partData.attachments[item.Name] = RBXAvatar.CFrameToMatrix4(...<any[]>item.CFrame)
 					
 				} else if(item.ClassName === "WrapTarget") {
 					partData.wrapTarget = {
 						cageMeshId: item.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...item.CageOrigin),
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...<any[]>item.CageOrigin),
 						stiffness: item.Stiffness ?? 0
 					}
 					
@@ -33,15 +33,15 @@ export const RBXAvatarRigs = (() => {
 					const part1Data = recursePart(item.Part1)
 
 					part1Data.JointName = item.Name
-					part1Data.C0 = RBXAvatar.CFrameToMatrix4(...item.C0)
-					part1Data.C1 = RBXAvatar.CFrameToMatrix4(...item.C1)
+					part1Data.C0 = RBXAvatar.CFrameToMatrix4(...<any[]>item.C0)
+					part1Data.C1 = RBXAvatar.CFrameToMatrix4(...<any[]>item.C1)
 
 					part0Data.children.push(part1Data)
 
 					if(item.Name === "Root" || item.Name === "Neck") {
-						part0Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(...item.C0)
+						part0Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(...<any[]>item.C0)
 					} else {
-						part1Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(...item.C1)
+						part1Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(...<any[]>item.C1)
 					}
 				}
 			}

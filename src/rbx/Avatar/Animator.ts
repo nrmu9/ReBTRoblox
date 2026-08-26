@@ -145,7 +145,7 @@ export const RBXAnimator = (() => {
 				params = { fadeIn: params }
 			}
 			
-			const info = {
+			const info = <Record<string, any>>{
 				playing: true,
 				anim: anim,
 				
@@ -337,7 +337,7 @@ export const RBXAnimator = (() => {
 						set(keyframes.rotation, rot)
 						
 						tempPos.set(pos.x, pos.y, pos.z)
-						tempQuat.set(...eulerToQuat(rot.x, rot.y, rot.z, keyframes.rotationOrder))
+						tempQuat.set(...<[number, number, number, number]>eulerToQuat(rot.x, rot.y, rot.z, keyframes.rotationOrder))
 					} else {
 						const index = keyframes.findIndex(x => x.time > info.timePosition)
 						
@@ -350,13 +350,13 @@ export const RBXAnimator = (() => {
 						
 						if(!next || info.timePosition === prev.time) {
 							tempPos.set(...prev.pos)
-							tempQuat.set(...prev.rot)
+							tempQuat.set(...<[number, number, number, number]>prev.rot)
 						} else {
 							const easing = (EasingStyles[prev.easingstyle] || EasingStyles[0])[prev.easingdir || 0]
 							const theta = easing((info.timePosition - prev.time) / (next.time - prev.time))
 							
 							tempPos.set(...prev.pos).lerp(tempPos2.set(...next.pos), theta)
-							tempQuat.set(...prev.rot).slerp(tempQuat2.set(...next.rot), theta)
+							tempQuat.set(...<[number, number, number, number]>prev.rot).slerp(tempQuat2.set(...next.rot), theta)
 						}
 					}
 					

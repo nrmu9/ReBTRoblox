@@ -9,6 +9,7 @@ import { RBXAvatarRigs } from "@/rbx/Avatar/AvatarRigs"
 import { RBXComposites } from "@/rbx/Avatar/Composites"
 import { AssetType, BrickColor } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { AccessoryAssetTypeIds } from "@/pages/common"
 
 export const RBXAvatar = (() => {
 	function getFirstLod(mesh) {
@@ -54,7 +55,7 @@ export const RBXAvatar = (() => {
 			if(mesh.bones) {
 				const bones: any[] = []
 				
-				obj.isSkinnedMesh = true
+				(obj as any).isSkinnedMesh = true
 				obj.rbxBones = bones
 				
 				geom.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(mesh.skinIndices, 4))
@@ -72,7 +73,7 @@ export const RBXAvatar = (() => {
 				for(const [i, meshBone] of Object.entries(mesh.bones) as [string, any][]) {
 					const bone = {
 						name: meshBone.name,
-						cframe: CFrameToMatrix4(...meshBone.cframe),
+						cframe: CFrameToMatrix4(...<any[]>meshBone.cframe),
 						count: boneCount[i] ?? 0,
 						
 						matrixWorld: new THREE.Matrix4(),
@@ -90,7 +91,7 @@ export const RBXAvatar = (() => {
 				obj.bind(obj.skeleton, new THREE.Matrix4())
 				
 			} else {
-				obj.isSkinnedMesh = false
+				(obj as any).isSkinnedMesh = false
 				delete obj.rbxBones
 				
 				geom.deleteAttribute("skinIndex")
@@ -119,7 +120,7 @@ export const RBXAvatar = (() => {
 				delete obj.skeleton
 			}
 			
-			obj.isSkinnedMesh = false
+			(obj as any).isSkinnedMesh = false
 			delete obj.rbxBones
 			
 			geom.deleteAttribute("skinIndex")
@@ -138,7 +139,8 @@ export const RBXAvatar = (() => {
 		obj.visible = false
 	}
 
-	function CFrameToMatrix4(x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22) {
+	function CFrameToMatrix4(...cf: any[]) {
+		const [x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22] = cf
 		return new THREE.Matrix4().fromArray([
 			r00, r10, r20, 0,
 			r01, r11, r21, 0,
@@ -416,7 +418,8 @@ export const RBXAvatar = (() => {
 			return true
 		}
 		
-		get(requestedPlayerType) {
+		get(...args: any[]) {
+			const [requestedPlayerType] = args
 			let playerType
 			
 			const request: Record<string, any> = {}
@@ -452,7 +455,7 @@ export const RBXAvatar = (() => {
 		}
 
 		load(...loadParams) {
-			const state = this.get(...loadParams)
+			const state = this.get(...<any[]>loadParams)
 			if(!state) { return null }
 			
 			if(state.loaded || state.loading) { return state }
@@ -474,28 +477,28 @@ export const RBXAvatar = (() => {
 				
 				switch(this.assetTypeId) {
 				case AssetType.TShirt:
-					state.clothing.push({
+					state.clothing.push(<Record<string, any>>{
 						asset: this,
 						target: "tshirt",
 						texId: this.validateAndPreload("Image", model[0].Graphic)
 					})
 					break
 				case AssetType.Shirt:
-					state.clothing.push({
+					state.clothing.push(<Record<string, any>>{
 						asset: this,
 						target: "shirt",
 						texId: this.validateAndPreload("Image", model[0].ShirtTemplate)
 					})
 					break
 				case AssetType.Pants:
-					state.clothing.push({
+					state.clothing.push(<Record<string, any>>{
 						asset: this,
 						target: "pants",
 						texId: this.validateAndPreload("Image", model[0].PantsTemplate)
 					})
 					break
 				case AssetType.Face:
-					state.clothing.push({
+					state.clothing.push(<Record<string, any>>{
 						asset: this,
 						target: "face",
 						texId: this.validateAndPreload("Image", model[0].Texture)
@@ -594,7 +597,7 @@ export const RBXAvatar = (() => {
 			const scaleTypeValue = mesh.Children.find(x => x.Name === "AvatarPartScaleType")
 			const scaleType = scaleTypeValue ? scaleTypeValue.Value : null
 			
-			const bp = {
+			const bp = <Record<string, any>>{
 				asset: this,
 				attachments: [],
 				target: "Head",
@@ -613,7 +616,7 @@ export const RBXAvatar = (() => {
 				
 				bp.attachments.push({
 					target: inst.Name,
-					cframe: new THREE.Matrix4().setPosition(...inst.Value),
+					cframe: new THREE.Matrix4().setPosition(...<[number, number, number]>inst.Value),
 
 					part: "Head",
 					scaleType: scaleType
@@ -628,7 +631,7 @@ export const RBXAvatar = (() => {
 				const target = BodyPartEnum[charmesh.BodyPart]
 				if(!target) { continue }
 				
-				state.bodyparts.push({
+				state.bodyparts.push(<Record<string, any>>{
 					asset: this,
 					attachments: [],
 					target: target,
@@ -651,7 +654,7 @@ export const RBXAvatar = (() => {
 				const size = part.Size || part.size
 				const initialSize = part.InitialSize
 				
-				const bp = {
+				const bp = <Record<string, any>>{
 					asset: this,
 					attachments: [],
 					target: part.Name,
@@ -688,7 +691,7 @@ export const RBXAvatar = (() => {
 				if(wrapTarget) {
 					bp.wrapTarget = {
 						cageMeshId: wrapTarget.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...wrapTarget.CageOrigin),
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...<any[]>wrapTarget.CageOrigin),
 						stiffness: wrapTarget.Stiffness ?? 0
 					}
 				}
@@ -698,7 +701,7 @@ export const RBXAvatar = (() => {
 					
 					bp.attachments.push({
 						target: inst.Name,
-						cframe: RBXAvatar.CFrameToMatrix4(...inst.CFrame),
+						cframe: RBXAvatar.CFrameToMatrix4(...<any[]>inst.CFrame),
 
 						part: part.Name,
 						scaleType: scaleType
@@ -722,14 +725,14 @@ export const RBXAvatar = (() => {
 				baseColor = brickColor.color.map(x => x / 255)
 			}
 			
-			const acc = {
+			const acc = <Record<string, any>>{
 				asset: this,
 				attachments: [],
 				
 				baseColor: [...baseColor],
 				opacity: 1 - (hanInst.Transparency || 0),
 				
-				legacyHatCFrame: accInst.AttachmentPoint ? RBXAvatar.CFrameToMatrix4(...accInst.AttachmentPoint).invert() : new THREE.Matrix4(),
+				legacyHatCFrame: accInst.AttachmentPoint ? RBXAvatar.CFrameToMatrix4(...<any[]>accInst.AttachmentPoint).invert() : new THREE.Matrix4(),
 				scaleType: scaleType
 			}
 			
@@ -737,7 +740,7 @@ export const RBXAvatar = (() => {
 				if(att.ClassName === "Attachment") {
 					acc.attachments.push({
 						name: att.Name,
-						cframe: RBXAvatar.CFrameToMatrix4(...att.CFrame).invert()
+						cframe: RBXAvatar.CFrameToMatrix4(...<any[]>att.CFrame).invert()
 					})
 				}
 			}
@@ -766,9 +769,9 @@ export const RBXAvatar = (() => {
 				if(wrapLayer && wrapLayer.Enabled !== false) { // Enabled defaults to true for some ungodly reason
 					acc.wrapLayer = {
 						cageMeshId: wrapLayer.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...wrapLayer.CageOrigin),
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...<any[]>wrapLayer.CageOrigin),
 						refMeshId: wrapLayer.ReferenceMeshId ?? "",
-						refOrigin: RBXAvatar.CFrameToMatrix4(...wrapLayer.ReferenceOrigin),
+						refOrigin: RBXAvatar.CFrameToMatrix4(...<any[]>wrapLayer.ReferenceOrigin),
 						puffiness: wrapLayer.Puffiness ?? 0,
 						order: wrapLayer.Order ?? 0,
 						autoSkin: wrapLayer.AutoSkin ?? 0
@@ -1408,7 +1411,7 @@ export const RBXAvatar = (() => {
 				
 				if(tree.name !== "HumanoidRootPart") {
 					obj = new THREE.SkinnedMesh(undefined, new THREE.MeshStandardMaterial({ map: this.textures[tree.name], transparent: false }))
-					obj.isSkinnedMesh = false
+					(obj as any).isSkinnedMesh = false
 					obj.bindMode = "detached"
 					obj.frustumCulled = false
 					obj.castShadow = true
@@ -1449,7 +1452,7 @@ export const RBXAvatar = (() => {
 				}
 
 				for(const child of tree.children) {
-					const joint = joints[child.name] = {
+					const joint = joints[child.name] = <Record<string, any>>{
 						origC0: child.C0,
 						origC1: child.C1,
 						
@@ -1884,7 +1887,7 @@ export const RBXAvatar = (() => {
 						const texture = new MergeSource()
 						
 						if(acc.pbrAlphaMode === 0) {
-							background.setRGB(...acc.baseColor)
+							background.setRGB(...<[number, number, number]>acc.baseColor)
 						}
 						
 						material = new THREE.MeshStandardMaterial({
@@ -1939,7 +1942,7 @@ export const RBXAvatar = (() => {
 					}
 					
 					const obj = acc.obj = new THREE.SkinnedMesh(undefined, material)
-					obj.isSkinnedMesh = false
+					(obj as any).isSkinnedMesh = false
 					obj.bindMode = "detached"
 					obj.matrixAutoUpdate = false
 					obj.frustumCulled = false
@@ -2027,7 +2030,7 @@ export const RBXAvatar = (() => {
 				
 				// Mesh offset (not scaled)
 				if(acc.offset) {
-					acc.bakedCFrame.multiply(tempMatrix.makeTranslation(...acc.offset))
+					acc.bakedCFrame.multiply(tempMatrix.makeTranslation(...<[number, number, number]>acc.offset))
 				}
 				
 				//

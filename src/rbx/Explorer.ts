@@ -6,6 +6,7 @@ import { SourceViewer } from "@/feat/sourceviewer"
 import { ApiDump } from "@/rbx/ApiDump"
 import { AssetCache } from "@/rbx/AssetCache"
 import { BrickColor } from "@/rbx/Constants"
+import { ByteReader } from "@/rbx/Parser/ByteReader"
 
 const Explorer = (() => {
 	const GroupOrders = [
@@ -396,7 +397,7 @@ const Explorer = (() => {
 			const target = this.selection[0].inst
 			header.textContent = `Properties - ${target.ClassName} "${target.Name}"`
 
-			const hidden = {
+			const hidden = <Record<string, any>>{
 				AttributesSerialize: true,
 				Tags: true
 			}
@@ -908,7 +909,7 @@ const Explorer = (() => {
 		}
 		
 		createItem(children, open) {
-			const item = {
+			const item: Record<string, any> = {
 				numDescendants: 0,
 				children: []
 			}
@@ -1043,7 +1044,7 @@ const Explorer = (() => {
 									this.openSourceViewer(line.item.inst, "Source")
 									break
 								default:
-									item.classList.toggle("closed")
+									line.btn.classList.toggle("closed")
 								}
 							} else {
 								lastClick = Date.now()

@@ -59,12 +59,12 @@ const ContainerAssetTypeIds = {
 	[AssetType.Face]: x => x.findFirstChildOfClass("Decal")?.getProperty("Texture"),
 }
 
-const WearableAssetTypeIds = [
+export const WearableAssetTypeIds = [
 	2, 8, 11, 12, 17, 18, 27, 28, 29, 30, 31, 41, 42, 43, 44, 45, 46, 47, 64, 65,
 	66, 67, 68, 69, 70, 71, 72, 76, 77, 79
 ]
-const AnimationPreviewAssetTypeIds = [24, 48, 49, 50, 51, 52, 53, 54, 55, 56, 61]
-const AccessoryAssetTypeIds = [8, 41, 42, 43, 44, 45, 46, 47, 57, 58, 64, 65, 66, 67, 68, 69, 70, 71, 72]
+export const AnimationPreviewAssetTypeIds = [24, 48, 49, 50, 51, 52, 53, 54, 55, 56, 61]
+export const AccessoryAssetTypeIds = [8, 41, 42, 43, 44, 45, 46, 47, 57, 58, 64, 65, 66, 67, 68, 69, 70, 71, 72]
 
 //
 

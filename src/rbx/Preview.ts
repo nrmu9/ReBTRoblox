@@ -6,6 +6,7 @@ import { SETTINGS } from "@/feat/settings"
 import { AssetCache } from "@/rbx/AssetCache"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { RBXScene } from "@/rbx/Scene"
+import { AccessoryAssetTypeIds, AnimationPreviewAssetTypeIds, WearableAssetTypeIds, loggedInUserPromise } from "@/pages/common"
 
 const outfitCache: Record<string, any> = {}
 let avatarRulePromise
@@ -907,7 +908,7 @@ class ItemPreviewer extends AvatarPreviewer {
 			altText = "ALT"
 		}
 		
-		const anim = {
+		const anim = <Record<string, any>>{
 			assetId: assetId,
 			name: assetName,
 			animType: animType,
