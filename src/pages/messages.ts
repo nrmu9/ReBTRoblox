@@ -5,6 +5,7 @@ import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
 import { modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { query } from "@/core/query"
 
 class MarkAllAsReadAction {
 	[key: string]: any
@@ -22,7 +23,7 @@ class MarkAllAsReadAction {
 	}
 	
 	setButtonText(text) {
-		const elem = $(".btr-markAllAsReadInbox")
+		const elem = (query(".btr-markAllAsReadInbox") as any)
 		
 		if(elem) {
 			elem.textContent = text
@@ -127,7 +128,7 @@ pageInit.messages = () => {
 			curPage.removeAttribute("ng-bind")
 			curPage.textContent = ""
 
-			const pageInput = html`<input type=text ng-keydown="$event!.which===13&&$(event!.target as HTMLElement).blur()" ng-blur="btr_setPage($event)">`
+			const pageInput = html`<input type=text ng-keydown="$event.which===13&&$event.target.blur()" ng-blur="btr_setPage($event)">`
 			pageInput.setAttribute("ng-value", bindAttr)
 			curPage.append(pageInput)
 		} else {
@@ -184,13 +185,13 @@ pageInit.messages = () => {
 							const [$state] = args
 							
 							$state.btr_setPage = $event => {
-								const value = +$(event!.target as HTMLElement).value
+								const value = +$event.target.value
 
 								if(!Number.isNaN(value)) {
 									$location.search({ page: value })
-									$(event!.target as HTMLElement).value = value
+									$event.target.value = value
 								} else {
-									$(event!.target as HTMLElement).value = $state.currentStatus.currentPage
+									$event.target.value = $state.currentStatus.currentPage
 								}
 							}
 						} catch(ex) {

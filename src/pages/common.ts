@@ -15,6 +15,7 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 import { pageInit, pageReset } from "@/core/page"
 import { btrFastSearch } from "@/feat/fastsearch"
 import { btrAdblock } from "@/feat/adblock"
+import { query } from "@/core/query"
 
 
 
@@ -894,7 +895,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 		)
 	} else {
 		assetPromises.push(
-			addAsset(assetId, assetTypeId, $("#item-container")?.dataset.itemName || "Asset", undefined)
+			addAsset(assetId, assetTypeId, (query("#item-container") as any)?.dataset.itemName || "Asset", undefined)
 		)
 	}
 	
@@ -1055,7 +1056,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 	const downloadButton = btnCont.$find("a")
 
 	const download = (data: any, fileType?: any) => {
-		const title = $("#item-container .item-name-container h2")
+		const title = (query("#item-container .item-name-container h2") as any)
 		const fileName = `${title && formatUrlName(title.textContent, "") || assetId.toString()}.${fileType || getAssetFileType(assetTypeId, data)}`
 
 		const blobUrl = URL.createObjectURL(new Blob([data], { type: "binary/octet-stream" }))
@@ -1267,7 +1268,7 @@ export const initContentButton = async (assetId: any, assetTypeId: any, isBundle
 
 //
 
-const robloxExperiments: Record<string, any> = {}
+export const robloxExperiments: Record<string, any> = {}
 
 pageInit.www = () => {
 	// Init global features

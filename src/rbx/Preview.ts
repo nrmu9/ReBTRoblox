@@ -7,6 +7,7 @@ import { AssetCache } from "@/rbx/AssetCache"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { RBXScene } from "@/rbx/Scene"
 import { AccessoryAssetTypeIds, AnimationPreviewAssetTypeIds, WearableAssetTypeIds, loggedInUserPromise } from "@/pages/common"
+import { query } from "@/core/query"
 
 const outfitCache: Record<string, any> = {}
 let avatarRulePromise
@@ -637,7 +638,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		const disableOrigThumbs = () => {
 			setTimeout(() => {
 				if(this.enabled) {
-					const btn = $("#AssetThumbnail .three-dee-animated-icon")
+					const btn = (query("#AssetThumbnail .three-dee-animated-icon") as any)
 					if(btn && btn.$find(".icon-pause-fill, .icon-bigstop-fill")) {
 						btn.click()
 					}

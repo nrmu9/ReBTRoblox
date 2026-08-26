@@ -3,6 +3,7 @@ import { injectScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { loggedInUserPromise } from "@/pages/common"
+import { query } from "@/core/query"
 
 const btrFriends = { // TODO: Move this elsewhere
 	friendsPromise: null as any,
@@ -206,7 +207,7 @@ export const btrFastSearch = {
 		}
 
 		const getInfo = () => {
-			const search = $("#navbar-universal-search, .navbar-search")
+			const search = (query("#navbar-universal-search, .navbar-search") as any)
 			if(!search) { return {} }
 			
 			const input = search.$find("input")

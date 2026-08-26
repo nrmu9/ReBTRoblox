@@ -7,6 +7,7 @@ import { RobuxToCash } from "@/feat/robuxtocash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/shareddata"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { robloxExperiments } from "@/pages/common"
 
 interface SettingsModalState {
 	enabled: boolean

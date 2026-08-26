@@ -4,6 +4,7 @@ import { backgroundScript, injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/shareddata"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
+import { query } from "@/core/query"
 
 
 "use strict"
@@ -280,7 +281,7 @@ export const Navigation = {
 				node.style.display = this.enabled ? "" : "none"
 				if(!this.enabled) { return }
 				
-				const orig = $("#nav-friends")
+				const orig = (query("#nav-friends") as any)
 				const origNotif = orig?.$find(".notification")
 				
 				const notif = node.$find(".btr-nav-notif")
@@ -312,7 +313,7 @@ export const Navigation = {
 				node.style.display = this.enabled ? "" : "none"
 				if(!this.enabled) { return }
 				
-				const orig = $("#nav-message")
+				const orig = (query("#nav-message") as any)
 				const origNotif = orig?.$find(".notification")
 				
 				const notif = node.$find(".btr-nav-notif")

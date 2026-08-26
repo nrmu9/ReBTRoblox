@@ -10,6 +10,7 @@ import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { getServerDetails } from "@/feat/serverdetails"
+import { query } from "@/core/query"
 
 pageInit.gamedetails = () => {
 	onPageLoad(placeIdString => {
@@ -33,7 +34,7 @@ pageInit.gamedetails = () => {
 					html`<li><a class=btr-download-place><div>Download</div></a></li>`
 				)
 				
-				const target = $("#game-context-menu")
+				const target = (query("#game-context-menu") as any)
 				
 				target.$on("click", ".btr-download-place", () => {
 					AssetCache.loadBuffer(placeId, ab => {
@@ -690,7 +691,7 @@ pageInit.gamedetails = () => {
 							})
 							
 							parent.$watch("#btr-recommendations-wrapper", recCont => {
-								$("#about").append(recCont)
+								(query("#about") as any).append(recCont)
 								redirectEvents(recCont, parent)
 							})
 						})

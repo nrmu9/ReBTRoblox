@@ -6,6 +6,7 @@ import { RobuxToCash } from "@/feat/robuxtocash"
 import { SETTINGS } from "@/feat/settings"
 import { formatNumber, initContentButton, initDownloadButton, initExplorer, initPreview, modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { query } from "@/core/query"
 
 pageInit.itemdetails = () => {
 	if(RobuxToCash.isEnabled()) {
@@ -398,7 +399,7 @@ pageInit.itemdetails = () => {
 							(oldLabel as any).parentNode.remove()
 						}
 					} else {
-						const oldLabel = $("#item-details .date-time-i18n")
+						const oldLabel = (query("#item-details .date-time-i18n") as any)
 						
 						if(oldLabel) {
 							oldLabel.closest(".field-content")?.parentNode.remove()

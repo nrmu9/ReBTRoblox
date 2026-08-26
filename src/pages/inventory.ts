@@ -8,6 +8,7 @@ import { loadOptionalFeature } from "@/feat/loadfeature"
 import { SETTINGS } from "@/feat/settings"
 import { modifyAngularTemplate } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { query } from "@/core/query"
 
 pageInit.inventory = () => {
 	if(window.parent !== window) {
@@ -124,7 +125,7 @@ pageInit.inventory = () => {
 		let lastPressed: any = null
 
 		const updateButtons = function() {
-			$(".btr-it-btn")?.classList.toggle("disabled", !$(".btr-it-box:checked"))
+			(query(".btr-it-btn") as any)?.classList.toggle("disabled", !(query(".btr-it-box:checked") as any))
 		}
 
 		injectScript.listen("inventoryUpdateEnd", updateButtons)
@@ -163,7 +164,7 @@ pageInit.inventory = () => {
 					const value = !checkbox.checked
 
 					for(let i = from; i <= to; i++) {
-						const box = $(`#btr-it-box${i}`)
+						const box = (query(`#btr-it-box${i}`) as any)
 						if(box) { box.checked = value }
 					}
 					
@@ -174,7 +175,7 @@ pageInit.inventory = () => {
 				lastPressed = id
 			})
 			.$on("click", ".item-card-link", () => {
-				if($(".btr-it-box:checked") != null) { return false }
+				if((query(".btr-it-box:checked") as any) != null) { return false }
 			})
 			.$on("click", ".btr-it-remove", () => {
 				if(isRemoving) { return }
