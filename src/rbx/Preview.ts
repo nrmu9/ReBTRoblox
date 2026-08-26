@@ -213,7 +213,7 @@ class AvatarPreviewer extends EventEmitter {
 
 	//
 
-	setOutfit(outfitId, outfitType) {
+	setOutfit(outfitId: any, outfitType?: any) {
 		this.outfitLoaded = false
 
 		if(this.enabled) {
@@ -347,7 +347,7 @@ class AvatarPreviewer extends EventEmitter {
 
 	//
 
-	loadAnimation(assetId, fadeIn) {
+	loadAnimation(assetId: any, fadeIn?: any) {
 		this.loadingAnim = assetId
 		
 		AssetCache.loadAnimation(assetId, data => {

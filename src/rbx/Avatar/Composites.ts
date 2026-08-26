@@ -14,7 +14,7 @@ export const RBXComposites = (() => {
 	class CompositeTexture {
 		[key: string]: any
 
-		constructor(width, height) {
+		constructor(width?: any, height?: any) {
 			this.canvas = document.createElement("canvas")
 			this.context = this.canvas.getContext("2d")
 			

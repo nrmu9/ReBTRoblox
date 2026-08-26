@@ -1,3 +1,4 @@
+import { deferredPromise } from "@/core/deferred"
 import * as THREE from "three"
 import { IS_DEV_MODE } from "@/core/env"
 import { btrLocalStorage } from "@/core/storage"
@@ -165,7 +166,7 @@ export const RBXAvatar = (() => {
 		const img = new Image()
 		img.src = src
 		img.crossOrigin = "anonymous"
-		img.updateListeners = []
+		(img as any).updateListeners = []
 
 		return img
 	}
@@ -183,15 +184,15 @@ export const RBXAvatar = (() => {
 	class MergeSource {
 		[key: string]: any
 
-		static fromRGB(r, g, b) {
+		static fromRGB(r: any, g?: any, b?: any) {
 			return (new MergeSource()).setRGB(r, g, b)
 		}
 		
-		static fromHex(hex) {
+		static fromHex(hex?: any) {
 			return (new MergeSource()).setHex(hex)
 		}
 		
-		constructor(value) {
+		constructor(value?: any) {
 			this._value = value || null
 			this.listeners = []
 		}
@@ -443,7 +444,7 @@ export const RBXAvatar = (() => {
 					
 					loaded: false,
 					loading: false,
-					loadPromise: new Promise(),
+					loadPromise: deferredPromise(),
 					
 					accessories: [],
 					bodyparts: [],
@@ -876,7 +877,7 @@ export const RBXAvatar = (() => {
 			this.animator = new RBXAnimator()
 			this.assets = []
 
-			this.baseLoadedPromise = new Promise()
+			this.baseLoadedPromise = deferredPromise()
 			
 			this.activeMaterials = []
 			this.sortedJointsArray = []
