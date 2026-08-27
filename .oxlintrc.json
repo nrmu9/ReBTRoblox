@@ -8,7 +8,10 @@
 	},
 	"env": { "browser": true, "es2024": true, "webextensions": true },
 	"rules": {
-		"eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "caughtErrors": "none" }],
+		"eslint/no-unused-vars": [
+			"warn",
+			{ "argsIgnorePattern": "^_", "caughtErrors": "none", "ignoreRestSiblings": true }
+		],
 		"eslint/eqeqeq": ["error", "always", { "null": "ignore" }],
 		"eslint/no-empty": ["error", { "allowEmptyCatch": true }],
 
@@ -20,6 +23,12 @@
 		"unicorn/no-useless-fallback-in-spread": "off",
 		"unicorn/consistent-function-scoping": "off",
 		"unicorn/prefer-add-event-listener": "off",
+		// Every array it flags here is a short literal of asset type ids, where a
+		// Set buys nothing, and two of them are mirrored into the injected script,
+		// where the copies silently diverging costs more than the lookup saves.
+		"unicorn/prefer-set-has": "off",
+		// Only Port.postMessage is used, which takes no target origin.
+		"unicorn/require-post-message-target-origin": "off",
 
 		"eslint/no-underscore-dangle": "off",
 		"eslint/no-shadow": "off",
