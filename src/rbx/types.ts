@@ -304,21 +304,31 @@ export interface Conversation {
 
 //
 
-/** Protobuf duration, so the fields are capitalised and Seconds is a string. */
-export interface VoiceBanDuration {
+/**
+ * Google.Protobuf.WellKnownTypes.Timestamp, so the fields are capitalised.
+ * Seconds is an int64 and arrives as a string.
+ */
+export interface VoiceTimestamp {
 	Seconds: string | number
 	Nanos?: string | number
 }
 
+/** Roblox.Voice.Api.Models.VoiceSettingsResponse, an internal api. */
 export interface VoiceSettingsResponse {
+	/** Whether the user can use voice chat, weighing every other field. */
 	isVoiceEnabled: boolean
 	isUserOptIn: boolean
 	isUserEligible: boolean
-	isBanned: boolean
-	banReason?: number
-	bannedUntil: VoiceBanDuration | null
+	/** Only worth offering the opt in when this is true. */
 	isVerifiedForVoice?: boolean
+	/** Whether verifying would actually grant voice, so worth prompting for. */
 	canVerifyAgeForVoice?: boolean
+	isBanned: boolean
+	bannedUntil: VoiceTimestamp | null
+	/** Undocumented, and absent from the published schema. */
+	banReason?: number
+	/** Roblox.Platform.Voice.UserPermissionDenialReasons, 0 when enabled. */
+	denialReason?: number
 	isOptInDisabled?: boolean
 	hasEverOpted?: boolean
 }

@@ -22,14 +22,14 @@ interface VoiceState {
 }
 
 /**
- * Eligibility is checked before the opt in and before the platform flag: a
- * user who cannot use voice at all should be told that rather than that they
- * have it switched off.
+ * isVoiceEnabled is the answer, not a reason: it already folds in eligibility,
+ * the opt in and whatever else. So the narrower fields are read first to say
+ * why voice is off, and it only speaks for itself when none of them explain it.
  */
 const readState = (settings: VoiceSettingsResponse): VoiceState => {
 	if (settings.isBanned) {
-		// Seconds comes back as a string, and Nanos is the sub second remainder,
-		// which is far below anything a countdown shows.
+		// A protobuf timestamp, so Seconds is a string and Nanos is the sub
+		// second remainder, far below anything a countdown shows.
 		const seconds = Number(settings.bannedUntil?.Seconds ?? 0)
 
 		return {
@@ -37,6 +37,14 @@ const readState = (settings: VoiceSettingsResponse): VoiceState => {
 			label: "Voice chat banned",
 			until: Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
 		}
+	}
+
+	// Roblox only prompts for age verification when it would actually grant
+	// voice, so an unverified user is told to verify only when it would help.
+	if (settings.isVerifiedForVoice === false) {
+		return settings.canVerifyAgeForVoice
+			? { kind: "ineligible", label: "Verify your age to use voice chat" }
+			: { kind: "ineligible", label: "Not eligible for voice chat" }
 	}
 
 	if (settings.isUserEligible === false) {
