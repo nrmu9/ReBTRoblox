@@ -14,8 +14,13 @@ const path = require("node:path")
 const zlib = require("node:zlib")
 
 const ROOT = path.join(__dirname, "..")
-const DIST = path.join(ROOT, "dist")
 const OUT = path.join(ROOT, "artifacts")
+
+// Built here rather than in dist/, so packaging never replaces the build the
+// developer has loaded in their browser. Both targets share an output
+// directory, so whichever ran last used to win, and packaging always ended on
+// chrome: loading dist/ in firefox afterwards failed on background.service_worker.
+const STAGE = "artifacts/.build"
 
 // Firefox wants the .xpi extension; a chrome upload is a plain zip. Both are
 // the same container.
@@ -25,9 +30,11 @@ const EXTENSIONS = { firefox: "xpi", chrome: "zip" }
 const DOS_DATE = 0x21
 const DOS_TIME = 0
 
-const build = (target) =>
+const build = (target, out) =>
 	new Promise((resolve, reject) => {
-		const child = fork(path.join(__dirname, "build.js"), [`--target=${target}`], { stdio: "inherit" })
+		const child = fork(path.join(__dirname, "build.js"), [`--target=${target}`, `--out=${out}`], {
+			stdio: "inherit",
+		})
 
 		child.on("exit", (code) => {
 			if (code) {
@@ -144,10 +151,10 @@ const run = async () => {
 	const written = []
 
 	for (const target of targets) {
-		await build(target)
+		await build(target, STAGE)
 
 		const name = `${pkgName}-${version}-${target}.${EXTENSIONS[target]}`
-		const archive = zip(collect(DIST))
+		const archive = zip(collect(path.join(ROOT, STAGE)))
 
 		fs.writeFileSync(path.join(OUT, name), archive)
 		written.push(name)
@@ -168,6 +175,8 @@ const run = async () => {
 		.join("\n")
 
 	fs.writeFileSync(path.join(OUT, "SHA256SUMS"), sums + "\n")
+
+	fs.rmSync(path.join(ROOT, STAGE), { recursive: true, force: true })
 }
 
 run().catch((err) => {

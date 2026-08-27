@@ -8,13 +8,17 @@ const fs = require("node:fs")
 const path = require("node:path")
 
 const ROOT = path.join(__dirname, "..")
-const OUT = path.join(ROOT, "dist")
 const BRIDGE_ORIGIN = "http://127.0.0.1:8787/*"
 
 const args = process.argv.slice(2)
 const dev = args.includes("--dev")
 const watch = args.includes("--watch")
 const target = (args.find((arg) => arg.startsWith("--target=")) || "--target=firefox").split("=")[1]
+
+// Both targets used to write to dist/, so building one after the other left
+// dist/ holding whichever ran last. Packaging does exactly that, and the loser
+// was whatever the developer had loaded in their browser.
+const OUT = path.join(ROOT, (args.find((arg) => arg.startsWith("--out=")) || "--out=dist").split("=")[1])
 
 // content is a classic-script loader that imports main; main is ESM so esbuild
 // can split the optional features, keeping three.js out of the initial download.
@@ -180,7 +184,7 @@ const run = async () => {
 	copyAssets()
 	writeManifest()
 
-	console.log(`built dist/ (${target}${dev ? ", dev" : ""})`)
+	console.log(`built ${path.relative(ROOT, OUT)}/ (${target}${dev ? ", dev" : ""})`)
 }
 
 run().catch((err) => {
