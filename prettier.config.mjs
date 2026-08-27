@@ -34,4 +34,14 @@ export default {
 	// Git already normalises on commit; this keeps the working tree consistent
 	// for anyone not relying on autocrlf.
 	endOfLine: "lf",
+
+	overrides: [
+		{
+			// Yaml cannot be tab indented, so prettier falls back to spaces and
+			// would use tabWidth above. Two is what .editorconfig asks for and
+			// what workflow files are written with everywhere else.
+			files: ["*.yml", "*.yaml"],
+			options: { tabWidth: 2 },
+		},
+	],
 }
