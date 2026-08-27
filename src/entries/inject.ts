@@ -2280,7 +2280,10 @@ const startInject = () => {
 							//
 							// Read the setting per call: the hook installs before init has
 							// delivered settings, so it cannot be gated at registration.
-							if (args.length === 1 && settings.general.higherRobuxPrecision) {
+							// Optional: the hook installs at document_start, before init has
+							// delivered settings, and reading through the proxy would throw
+							// until then. Defaults on, which matches the setting.
+							if (args.length === 1 && settings.general?.higherRobuxPrecision !== false) {
 								try {
 									return target.apply(thisArg, [args[0], 100_000, null, 2])
 								} catch (ex) {
@@ -2337,8 +2340,7 @@ const startInject = () => {
 				// module private with no export to reach it. So let the original run and
 				// put back what it dropped, which is what the hook below does for the
 				// global copy.
-				const keepDroppedAssets =
-					(original: any) =>
+				const keepDroppedAssets = (original: any) =>
 					function (this: any, ...args: any[]) {
 						const result = original.apply(this, args)
 						const assets = [args[0], ...args[1]]
@@ -2428,7 +2430,6 @@ const startInject = () => {
 						(key === LIMIT_KEY || key === LAYERED_KEY || key === TYPE_KEY || key === ADD_KEY) &&
 						typeof args[2]?.get === "function"
 					) {
-
 						const descriptor = args[2]
 						const readOriginal = descriptor.get
 						let replacement: any
@@ -4366,12 +4367,7 @@ const startInject = () => {
 		]
 
 		// These read settings, so they cannot run until init has delivered them.
-		const SETTINGS_HOOKS = [
-			"initReactFriends",
-			"experiments",
-			"pagedServers",
-			"favoritesAtTop",
-		]
+		const SETTINGS_HOOKS = ["initReactFriends", "experiments", "pagedServers", "favoritesAtTop"]
 
 		const registered = new Set<string>()
 
