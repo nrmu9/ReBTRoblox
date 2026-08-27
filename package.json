@@ -22,7 +22,7 @@
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.2.7",
-		"@types/three": "^0.147.0",
+		"@types/three": "^0.185.4",
 		"esbuild": "^0.28.2",
 		"oxlint": "^1.80.0",
 		"prettier": "^3.9.6",
@@ -30,6 +30,6 @@
 	},
 	"dependencies": {
 		"fzstd": "^0.1.1",
-		"three": "^0.145.0"
+		"three": "^0.185.1"
 	}
 }

@@ -1,6 +1,16 @@
 import * as THREE from "three"
 import { RBXAvatar } from "@/rbx/Avatar/Avatar"
 import { EventEmitter } from "@/rbx/EventEmitter"
+import { IS_DEV_MODE } from "@/core/env"
+
+/**
+ * three r155 reinterpreted light intensity in physical units and r165 removed
+ * the useLegacyLights escape hatch, so the intensities have to be restated.
+ * PI is the compensation three documents for the change. Raise this to brighten
+ * the previewer overall; it scales every light in the scene together, so the
+ * balance between them is preserved.
+ */
+const LIGHT_COMPENSATION = Math.PI
 
 export const RBXScene = (() => {
 	class Scene extends EventEmitter {
@@ -28,6 +38,10 @@ export const RBXScene = (() => {
 				alpha: true,
 			}))
 
+			// r145 rendered with LinearEncoding output; r152 changed the default to
+			// sRGB, which washes the avatar out because the colours and textures are
+			// already in the space this previewer expects.
+			renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 			renderer.setClearAlpha(0)
 			renderer.shadowMap.enabled = true
 			renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -48,10 +62,10 @@ export const RBXScene = (() => {
 			const scene = (this.scene = new THREE.Scene())
 			this.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100)
 
-			const ambientLight = new THREE.AmbientLight(0x7f7f7f)
+			const ambientLight = new THREE.AmbientLight(0x7f7f7f, LIGHT_COMPENSATION)
 			scene.add(ambientLight)
 
-			const sunLight = new THREE.DirectionalLight(0xacacac)
+			const sunLight = new THREE.DirectionalLight(0xacacac, LIGHT_COMPENSATION)
 			sunLight.position.set(-0.474891931, 0.822536945, 0.312906593).multiplyScalar(15)
 			sunLight.castShadow = true
 			sunLight.shadow.mapSize.width = 256
@@ -64,7 +78,7 @@ export const RBXScene = (() => {
 			sunLight.shadow.camera.far = 22
 			scene.add(sunLight)
 
-			const light2 = new THREE.DirectionalLight(0x444444)
+			const light2 = new THREE.DirectionalLight(0x444444, LIGHT_COMPENSATION)
 			light2.position.copy(sunLight.position).negate()
 			light2.castShadow = false
 			scene.add(light2)
@@ -222,6 +236,14 @@ export const RBXScene = (() => {
 			this.renderer.render(this.scene, this.camera)
 		}
 
+		/** Dev only handle, so the previewer can be inspected from the bridge. */
+		exposeForDebug() {
+			if (!IS_DEV_MODE) {
+				return
+			}
+			;(window as any).__btrScene = this
+		}
+
 		remove() {
 			if (this.started) {
 				this.stop()
@@ -248,6 +270,7 @@ export const RBXScene = (() => {
 			}
 
 			this._afId = requestAnimationFrame(innerUpdate)
+			this.exposeForDebug()
 		}
 
 		stop() {

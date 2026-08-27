@@ -1,5 +1,12 @@
 import { deferredPromise } from "@/core/deferred"
 import * as THREE from "three"
+
+// three r152 turned colour management on by default, which reinterprets every
+// hardcoded colour and texture as sRGB and renders the avatar noticeably
+// darker and desaturated. Roblox supplies its colours in the space this
+// previewer was built against, so opt out rather than restate every colour.
+// Revisit only as a deliberate visual change.
+THREE.ColorManagement.enabled = false
 import { IS_DEV_MODE } from "@/core/env"
 import { btrLocalStorage } from "@/core/storage"
 import { assert, hashString } from "@/core/util"
@@ -43,6 +50,48 @@ export const RBXAvatar = (() => {
 		}
 
 		return mesh.firstLod ?? mesh
+	}
+
+	/**
+	 * Roblox body parts are rigid: each one is moved by its bone rather than
+	 * skinned per vertex, so they are SkinnedMesh instances with isSkinnedMesh
+	 * toggled off and no skinIndex/skinWeight attributes.
+	 *
+	 * three computes SkinnedMesh bounds by walking those attributes through
+	 * applyBoneTransform, and does so from the render loop regardless of the
+	 * isSkinnedMesh flag. With no skinning data that throws, which aborts the
+	 * scene traversal and drops every object after it. Fall back to plain
+	 * geometry bounds in exactly the case the flag already describes.
+	 */
+	function useGeometryBoundsWhenUnskinned(obj: THREE.SkinnedMesh) {
+		const self = obj as any
+		const base = THREE.SkinnedMesh.prototype as any
+
+		self.computeBoundingBox = function () {
+			if (this.isSkinnedMesh && base.computeBoundingBox) {
+				base.computeBoundingBox.call(this)
+				return
+			}
+
+			const geometry = this.geometry
+			if (!geometry.boundingBox) {
+				geometry.computeBoundingBox()
+			}
+			this.boundingBox = (this.boundingBox ?? new THREE.Box3()).copy(geometry.boundingBox)
+		}
+
+		self.computeBoundingSphere = function () {
+			if (this.isSkinnedMesh && base.computeBoundingSphere) {
+				base.computeBoundingSphere.call(this)
+				return
+			}
+
+			const geometry = this.geometry
+			if (!geometry.boundingSphere) {
+				geometry.computeBoundingSphere()
+			}
+			this.boundingSphere = (this.boundingSphere ?? new THREE.Sphere()).copy(geometry.boundingSphere)
+		}
 	}
 
 	function applyMesh(obj, mesh) {
@@ -112,7 +161,20 @@ export const RBXAvatar = (() => {
 		geom.setAttribute("uv", new THREE.BufferAttribute(mesh.uvs, 2))
 		geom.setIndex(new THREE.BufferAttribute(mesh.faces, 1))
 
-		// geom.computeBoundingSphere()
+		// Geometry is swapped in place, so any cached bounds are stale from here.
+		geom.boundingBox = null
+		geom.boundingSphere = null
+
+		// Only SkinnedMesh carries object level bounds. Setting them on a plain
+		// Mesh makes three take the skinned branch and call a method it does not
+		// have, which throws inside the render loop and kills it.
+		// The types declare these non null, but three initialises them to null and
+		// checks for it, which is how a recompute is requested.
+		if (obj instanceof THREE.SkinnedMesh) {
+			const bounded = obj as any
+			bounded.boundingBox = null
+			bounded.boundingSphere = null
+		}
 
 		obj.visible = true
 	}
@@ -1016,6 +1078,9 @@ export const RBXAvatar = (() => {
 
 			if (!compositeRenderer) {
 				compositeRenderer = new THREE.WebGLRenderer({ alpha: true })
+				// Body textures are baked through this renderer, so it has to write
+				// them back in the same space the previewer reads them in.
+				compositeRenderer.outputColorSpace = THREE.LinearSRGBColorSpace
 			}
 		}
 
@@ -1615,6 +1680,7 @@ export const RBXAvatar = (() => {
 					const skinned = obj as any
 					skinned.isSkinnedMesh = false
 					obj.bindMode = "detached"
+					useGeometryBoundsWhenUnskinned(obj)
 					obj.frustumCulled = false
 					obj.castShadow = true
 				} else {
@@ -2168,6 +2234,7 @@ export const RBXAvatar = (() => {
 					const skinned = obj as any
 					skinned.isSkinnedMesh = false
 					obj.bindMode = "detached"
+					useGeometryBoundsWhenUnskinned(obj)
 					obj.matrixAutoUpdate = false
 					obj.frustumCulled = false
 					obj.visible = false

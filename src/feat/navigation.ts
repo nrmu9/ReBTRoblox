@@ -498,10 +498,10 @@ export const Navigation = {
 									</div>
 									<div class="btr-feeddesc">
 										${parser
-									.parseFromString(item.desc, "text/html")
-									.documentElement.textContent.replace(/\s+/g, " ")
-									.trim()
-									.slice(0, 220)}
+											.parseFromString(item.desc, "text/html")
+											.documentElement.textContent.replace(/\s+/g, " ")
+											.trim()
+											.slice(0, 220)}
 									</div>
 								</a>`,
 							)
