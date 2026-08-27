@@ -41,11 +41,19 @@ const TARGETS = {
 		manifest_version: 2,
 		apply(manifest, shared) {
 			manifest.browser_action = { default_title: shared.action_title }
+			// data_collection_permissions landed in 140 on desktop and 142 on
+			// android, and AMO warns when the floor predates the keys in the
+			// manifest. 128 was the previous esr and went end of life in
+			// September 2025, so nothing is lost by moving up to where the
+			// manifest is actually understood.
 			manifest.browser_specific_settings = {
 				gecko: {
 					id: "btroblox@nrmu.eu",
-					strict_min_version: "128.0",
+					strict_min_version: "140.0",
 					data_collection_permissions: { required: ["none"] },
+				},
+				gecko_android: {
+					strict_min_version: "142.0",
 				},
 			}
 			// MV2 has no host_permissions: hosts go in permissions.
@@ -102,8 +110,8 @@ const writeManifest = () => {
 	if (dev) {
 		const hosts = target === "chrome" ? "host_permissions" : "permissions"
 
-		manifest.name = "BTRoblox DEV"
-		manifest.short_name = "BTRoblox_DEV"
+		manifest.name = "ReBTRoblox DEV"
+		manifest.short_name = "ReBTRoblox_DEV"
 		manifest[hosts] = [...manifest[hosts], BRIDGE_ORIGIN]
 		manifest.permissions = [...new Set([...manifest.permissions, "tabs"])]
 
@@ -118,7 +126,9 @@ const writeManifest = () => {
 const shared = {
 	bundle: true,
 	outdir: path.join(OUT, "js"),
-	target: "firefox128",
+	// Matches strict_min_version above: there is no point emitting syntax for
+	// a firefox the manifest refuses to install on.
+	target: "firefox140",
 	// Dev builds are minified too, with sourcemaps in separate files rather than
 	// inlined. An unminified eager bundle was roughly seven times the size, which
 	// delayed the content script past the point where Roblox has already rendered,
