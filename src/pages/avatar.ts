@@ -48,7 +48,7 @@ pageInit.avatar = () => {
 		})
 
 		modifyAngularTemplate("avatar-base", (template) => {
-			template.$find(".redraw-avatar").after(
+			template.$req(".redraw-avatar").after(
 				html` <div class="btr-avatar-refinement-container">
 					<div
 						ng-repeat="item in btrWearingAssets"

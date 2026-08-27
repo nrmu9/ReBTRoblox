@@ -21,12 +21,12 @@ let cachedXsrfToken: string | null = null
 
 let backgroundCallCounter = 0
 
-const wrapArgs = async (args) => {
+const wrapArgs = async (args: unknown[]) => {
 	// Chrome can only send json-able data, so we need to strip out
 	// everything else, I guess?
 	const valuePromises = new Map()
 
-	const wrapValue = async (value) => {
+	const wrapValue = async (value: any): Promise<any> => {
 		if (typeof value === "object" && value !== null) {
 			if (value instanceof URLSearchParams) {
 				return {
@@ -42,17 +42,20 @@ const wrapArgs = async (args) => {
 
 				const valuePromise = Promise.resolve().then(async () => {
 					const promises: Promise<unknown>[] = []
-					let newObject
+					let newObject: any[] | Record<string, any> | undefined
 
 					for (const [key, oldValue] of Object.entries(value) as [string, any][]) {
 						promises.push(
 							wrapValue(oldValue).then((newValue) => {
 								if (newValue !== oldValue) {
-									if (!newObject) {
-										newObject = Array.isArray(value) ? [...value] : { ...value }
-									}
+									// Clone lazily, on the first value that actually changed. The cast is
+									// because Object.entries gives string keys either way, including for
+									// the array branch.
+									const target = (newObject ??= Array.isArray(value)
+										? [...value]
+										: { ...value }) as Record<string, any>
 
-									newObject[key] = newValue
+									target[key] = newValue
 								}
 							}),
 						)
@@ -82,10 +85,10 @@ const wrapArgs = async (args) => {
 	return await wrapValue(args)
 }
 
-const unwrapArgs = async (args) => {
+const unwrapArgs = async (args: unknown[]) => {
 	const didCheck = new Set()
 
-	const unwrapValue = async (value) => {
+	const unwrapValue = async (value: any): Promise<any> => {
 		if (typeof value === "object" && value !== null) {
 			if (value.__btrType === "URLSearchParams") {
 				return new URLSearchParams(value.body)
@@ -110,7 +113,7 @@ const unwrapArgs = async (args) => {
 	return await unwrapValue(args)
 }
 
-const cacheResult = (duration, fn) => {
+const cacheResult = (duration: number, fn: (...args: any[]) => any) => {
 	if (typeof duration === "function") {
 		fn = duration
 		duration = Infinity
@@ -118,7 +121,7 @@ const cacheResult = (duration, fn) => {
 
 	const cache: Record<string, any> = {}
 
-	const cachedFn = (...args) => {
+	const cachedFn = (...args: any[]) => {
 		let cached = cache[args[0]]
 		if (cached && Date.now() < cached.expires) {
 			return cached.result
@@ -137,13 +140,13 @@ const cacheResult = (duration, fn) => {
 	return cachedFn
 }
 
-const backgroundCall = (callback) => {
+const backgroundCall = (callback: (...args: any[]) => any) => {
 	const messageId = `RobloxApi.${backgroundCallCounter}`
 	backgroundCallCounter++
 
 	if (IS_BACKGROUND_PAGE) {
 		contentScript.listen({
-			[messageId]({ args, xsrf }, respond) {
+			[messageId]({ args, xsrf }: { args: unknown[]; xsrf?: string }, respond: (value: any) => void) {
 				if (
 					xsrf &&
 					(!cachedXsrfToken || invalidXsrfTokens[cachedXsrfToken]) &&
@@ -167,7 +170,7 @@ const backgroundCall = (callback) => {
 	// The awaits used to sit inside the Promise executor, so anything they threw
 	// was swallowed and the promise never settled. Resolve the arguments first,
 	// and route an unwrap failure to reject rather than leaving the caller hanging.
-	return async (...args) => {
+	return async (...args: unknown[]) => {
 		if (!cachedXsrfToken) {
 			cachedXsrfToken =
 				document.querySelector<HTMLMetaElement>("meta[name='csrf-token']")?.dataset.token ?? null
@@ -176,7 +179,7 @@ const backgroundCall = (callback) => {
 		const wrapped = await wrapArgs(args)
 
 		return new Promise((resolve, reject) => {
-			backgroundScript.send(messageId, { args: wrapped, xsrf: cachedXsrfToken }, (result) => {
+			backgroundScript.send(messageId, { args: wrapped, xsrf: cachedXsrfToken }, (result: any) => {
 				if (result.success) {
 					Promise.resolve(unwrapArgs(result.result)).then(resolve, reject)
 				} else {
@@ -226,10 +229,10 @@ const xsrfFetch = (url: string, init: XsrfInit = {}) => {
 	})
 }
 
-const batchable = (limit, callback) => {
+const batchable = (limit: number, callback: any) => {
 	const batches: any[] = []
 
-	callback.batch = (list, ...args) => {
+	callback.batch = (list: any, ...args: any[]) => {
 		if (!Array.isArray(list)) {
 			list = [list]
 		}
@@ -307,7 +310,7 @@ export const RobloxApi = {
 			}).then((res) => res.json()),
 	},
 	assetdelivery: {
-		requestAssetV2: (urlParams, params) => {
+		requestAssetV2: (urlParams: UrlParams, params?: any) => {
 			if (!IS_BACKGROUND_PAGE && params?.browserAssetRequest) {
 				return RobloxApi.assetdelivery.requestAssetV2_bg(urlParams, params)
 			}
@@ -626,7 +629,7 @@ export const RobloxApi = {
 
 		getGameThumbnails: batchable(
 			100,
-			(gameIds, size = "768x432", countPerUniverse = 1, defaults = true) =>
+			(gameIds: UniverseId[], size = "768x432", countPerUniverse = 1, defaults = true) =>
 				xsrfFetch(
 					`https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=${gameIds.join(",")}&size=${size}&countPerUniverse=${countPerUniverse}&defaults=${defaults}&format=Png`,
 					{

@@ -110,7 +110,7 @@ pageInit.groups = () => {
 		})
 
 		modifyAngularTemplate(["group-base", "group-about"], (baseTemplate, aboutTemplate) => {
-			const tabs = baseTemplate.$find(".rbx-tabs-horizontal")
+			const tabs = baseTemplate.$req(".rbx-tabs-horizontal")
 
 			// move most things out of about and into the main container
 			const hoist = [
@@ -146,25 +146,25 @@ pageInit.groups = () => {
 			if (discovery) {
 				discovery.removeAttribute("ng-switch-when")
 				discovery.setAttribute("ng-show", "layout.activeTab !== groupDetailsConstants.tabs.forums")
-				tabs.parentNode.append(discovery)
+				tabs.parentElement!.append(discovery)
 			}
 
 			const wall = aboutTemplate.$find("group-wall")
 			if (wall) {
 				wall.removeAttribute("ng-switch-when")
 				wall.setAttribute("ng-show", "layout.activeTab !== groupDetailsConstants.tabs.forums")
-				tabs.parentNode.append(wall)
+				tabs.parentElement!.append(wall)
 			}
 		})
 
 		modifyAngularTemplate("group-tab", (template) => {
-			const tab = template.$find(".rbx-tab")
+			const tab = template.$req(".rbx-tab")
 
 			tab.setAttribute("btr-custom-tab", "btrCustomTab")
 			tab.setAttribute(
 				"ng-class",
 				tab
-					.getAttribute("ng-class")
+					.getAttribute("ng-class")!
 					.replace(
 						/activeTab === tab/,
 						"activeTab.state === tab.state && btrCustomTab.name == tab.btrCustomTab",

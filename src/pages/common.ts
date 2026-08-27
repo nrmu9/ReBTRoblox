@@ -796,7 +796,10 @@ const initReactRobuxToCash = () => {
 
 const angularTemplateCache: Record<string, any> = {}
 
-export const modifyAngularTemplate = (keyArray, callback) => {
+export const modifyAngularTemplate = (
+	keyArray: string | string[],
+	callback: (...templates: HTMLElement[]) => void,
+) => {
 	if (typeof keyArray === "string") {
 		keyArray = [keyArray]
 	}

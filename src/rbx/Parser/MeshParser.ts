@@ -158,6 +158,10 @@ export const RBXMeshParser = {
 			facsDataSize = reader.UInt32LE()
 
 			vertexSize = 40
+		} else {
+			// The caller switches on version before dispatching here, so this only
+			// fires if the two ever drift apart.
+			throw new Error(`Unsupported mesh version ${version}`)
 		}
 
 		reader.SetIndex(begin + headerSize)

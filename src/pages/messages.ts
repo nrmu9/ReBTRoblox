@@ -132,7 +132,7 @@ pageInit.messages = () => {
 		if (curPage) {
 			curPage.classList.add("btr-currentPage")
 
-			const bindAttr = curPage.getAttribute("ng-bind")
+			const bindAttr = curPage.getAttribute("ng-bind") ?? ""
 			curPage.removeAttribute("ng-bind")
 			curPage.textContent = ""
 

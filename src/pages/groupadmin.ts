@@ -18,14 +18,14 @@ pageInit.groupadmin = () => {
 
 		modifyAngularTemplate("revenue-summary", (template) => {
 			for (const elem of template.$findAll(`.icon-robux-container > span[ng-bind*="$ctrl"]`)) {
-				const cashText = ` (${RobuxToCash.convertAngular(elem.getAttribute("ng-bind").replace(/\|.*$/, ""))})`
+				const cashText = ` (${RobuxToCash.convertAngular((elem.getAttribute("ng-bind") ?? "").replace(/\|.*$/, ""))})`
 				elem.after(html`<span class="btr-robuxToCash">${cashText}</span>`)
 			}
 		})
 
 		modifyAngularTemplate("transactions", (template) => {
 			for (const elem of template.$findAll(`.icon-robux-container > span[ng-bind*="transaction"]`)) {
-				const cashText = ` (${RobuxToCash.convertAngular(elem.getAttribute("ng-bind").replace(/\|.*$/, ""))})`
+				const cashText = ` (${RobuxToCash.convertAngular((elem.getAttribute("ng-bind") ?? "").replace(/\|.*$/, ""))})`
 				elem.after(
 					html`<span class="btr-robuxToCash" title="${cashText.replace(/{{/g, "")}"
 						>${cashText}</span

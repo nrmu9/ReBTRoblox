@@ -23,7 +23,7 @@ pageInit.itemdetails = () => {
 			for (const elem of template.$findAll(`.text-robux`)) {
 				const cashText = ` (${RobuxToCash.convertAngular(
 					elem
-						.getAttribute("ng-bind")
+						.getAttribute("ng-bind")!
 						.replace(/\|.*$/, "")
 						.replace(/^.*formatNumber\((.*)\)[^)]*$/, "$1"),
 				)})`
@@ -35,7 +35,7 @@ pageInit.itemdetails = () => {
 			for (const elem of template.$findAll(`.text-robux`)) {
 				const cashText = ` (${RobuxToCash.convertAngular(
 					elem
-						.getAttribute("ng-bind")
+						.getAttribute("ng-bind")!
 						.replace(/\|.*$/, "")
 						.replace(/^.*formatNumber\((.*)\)[^)]*$/, "$1"),
 				)})`

@@ -1,9 +1,28 @@
 import * as THREE from "three"
 import { AssetCache } from "@/rbx/AssetCache"
 import { RBXAvatar } from "@/rbx/Avatar/Avatar"
+import type { Mesh } from "@/rbx/Parser/MeshParser"
+
+/** A texture producer that can tell its consumers when it has changed. */
+interface CompositeSource {
+	toTexture(): THREE.Texture
+	onUpdate(fn: () => void): void
+	[key: string]: any
+}
+
+/**
+ * What an avatar hands its composites. Deliberately loose: the slots are not
+ * uniform, some hold a texture source and others a nested group of them, so
+ * naming them all would claim a shape the avatar does not actually keep.
+ * The precision that matters is on applySourceToMaterial below.
+ */
+type CompositeSources = Record<string, any>
+
+/** The subset of a three material these composites actually touch. */
+type TexturedMaterial = THREE.Material & { map: THREE.Texture | null }
 
 export const RBXComposites = (() => {
-	const applySourceToMaterial = (source, material) => {
+	const applySourceToMaterial = (source: CompositeSource, material: TexturedMaterial) => {
 		material.map = source.toTexture()
 
 		source.onUpdate(() => {
@@ -39,7 +58,7 @@ export const RBXComposites = (() => {
 			this.needsUpdate = true
 		}
 
-		update(renderer) {
+		update(renderer: THREE.WebGLRenderer) {
 			this.needsUpdate = false
 
 			this.context.clearRect(0, 0, this.width, this.height)
@@ -67,11 +86,11 @@ export const RBXComposites = (() => {
 			}
 		}
 
-		drawImage(ctx, canvas) {
+		drawImage(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 			ctx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, canvas.width, canvas.height)
 		}
 
-		onUpdate(fn) {
+		onUpdate(fn: () => void) {
 			this.updateListeners.push(fn)
 		}
 	}
@@ -79,7 +98,7 @@ export const RBXComposites = (() => {
 	class R6Composite extends CompositeTexture {
 		[key: string]: any
 
-		constructor(sources) {
+		constructor(sources: CompositeSources) {
 			super(1024, 512)
 			this.sources = sources
 
@@ -131,17 +150,17 @@ export const RBXComposites = (() => {
 
 			let meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/CompositShirtTemplate.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh) => RBXAvatar.applyMesh(shirtmesh, mesh)),
+				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(shirtmesh, mesh)),
 			)
 
 			meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/CompositPantsTemplate.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh) => RBXAvatar.applyMesh(pantsmesh, mesh)),
+				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(pantsmesh, mesh)),
 			)
 
 			meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/CompositTShirt.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh) => RBXAvatar.applyMesh(tshirtmesh, mesh)),
+				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(tshirtmesh, mesh)),
 			)
 		}
 	}
@@ -149,7 +168,7 @@ export const RBXComposites = (() => {
 	class R15TorsoComposite extends CompositeTexture {
 		[key: string]: any
 
-		constructor(sources) {
+		constructor(sources: CompositeSources) {
 			super(388, 272)
 			this.sources = sources
 
@@ -194,7 +213,7 @@ export const RBXComposites = (() => {
 
 			const meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/R15CompositTorsoBase.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh) => {
+				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => {
 					RBXAvatar.applyMesh(shirtmesh, mesh)
 					RBXAvatar.applyMesh(pantsmesh, mesh)
 				}),
@@ -209,7 +228,7 @@ export const RBXComposites = (() => {
 	class R15LimbComposite extends CompositeTexture {
 		[key: string]: any
 
-		constructor(source, meshUrl) {
+		constructor(source: CompositeSource, meshUrl: string) {
 			super(264, 284)
 
 			this.camera = new THREE.OrthographicCamera(
@@ -236,14 +255,16 @@ export const RBXComposites = (() => {
 			applySourceToMaterial(source, obj.material)
 			source.onUpdate(() => this.requestUpdate())
 
-			this.loaders.push(AssetCache.loadMesh(true, meshUrl, (mesh) => RBXAvatar.applyMesh(obj, mesh)))
+			this.loaders.push(
+				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(obj, mesh)),
+			)
 		}
 	}
 
 	class R15LeftArmComposite extends R15LimbComposite {
 		[key: string]: any
 
-		constructor(sources) {
+		constructor(sources: CompositeSources) {
 			super(
 				sources.shirt,
 				RBXAvatar.LocalAssets["res/previewer/compositing/R15CompositLeftArmBase.mesh"],
@@ -253,7 +274,7 @@ export const RBXComposites = (() => {
 	class R15RightArmComposite extends R15LimbComposite {
 		[key: string]: any
 
-		constructor(sources) {
+		constructor(sources: CompositeSources) {
 			super(
 				sources.shirt,
 				RBXAvatar.LocalAssets["res/previewer/compositing/R15CompositRightArmBase.mesh"],
@@ -263,7 +284,7 @@ export const RBXComposites = (() => {
 	class R15LeftLegComposite extends R15LimbComposite {
 		[key: string]: any
 
-		constructor(sources) {
+		constructor(sources: CompositeSources) {
 			super(
 				sources.pants,
 				RBXAvatar.LocalAssets["res/previewer/compositing/R15CompositLeftArmBase.mesh"],
@@ -273,7 +294,7 @@ export const RBXComposites = (() => {
 	class R15RightLegComposite extends R15LimbComposite {
 		[key: string]: any
 
-		constructor(sources) {
+		constructor(sources: CompositeSources) {
 			super(
 				sources.pants,
 				RBXAvatar.LocalAssets["res/previewer/compositing/R15CompositRightArmBase.mesh"],
