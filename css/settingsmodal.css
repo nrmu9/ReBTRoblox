@@ -1002,3 +1002,126 @@
 .btr-settings-reload[hidden] {
 	display: none;
 }
+
+/* Corrections after moving the panel onto Roblox's scale. The rules above were
+   written against the old 8/14px padding, so anything positioned against the
+   group box needed re-anchoring. */
+
+/* The group header spans the card, so its hover has to line up with the card's
+   padding rather than the old values, which is what put it in the wrong place. */
+.btr-settings-content group .btr-setting-group-title-container {
+	padding-top: var(--btr-space-lg);
+}
+
+.btr-settings-content group[minimizable] .btr-setting-group-title-container h4 {
+	margin: calc(-1 * var(--btr-space-lg)) calc(-1 * var(--btr-space-lg)) 0;
+	padding: var(--btr-space-md) var(--btr-space-lg);
+	border-radius: var(--btr-radius) var(--btr-radius) 0 0;
+}
+
+.btr-settings-content group[minimizable] .btr-setting-group-title-container h4:hover,
+.btr-dark-theme .btr-settings-content group[minimizable] .btr-setting-group-title-container h4:hover {
+	background: var(--btr-state-hover);
+}
+
+.btr-settings-content group[minimizable] .btr-setting-group-title-container h4:after {
+	top: 50%;
+	right: var(--btr-space-lg);
+	margin-top: -6px;
+	border-color: var(--btr-content-muted);
+}
+
+/* Roblox's switch: a plain pill in the action colour, no ON/OFF lettering. */
+.btr-settings .btr-settings-enabled-toggle {
+	top: var(--btr-space-md);
+	right: var(--btr-space-lg);
+	width: 44px;
+	height: 24px;
+	padding: 0;
+	background: var(--btr-surface-sunken);
+	border: 1px solid var(--btr-stroke-emphasis);
+	border-radius: var(--radius-circle, 9999px);
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease;
+}
+
+.btr-settings .btr-settings-enabled-toggle.checked {
+	background: var(--btr-accent);
+	border-color: var(--btr-accent);
+}
+
+.btr-settings .btr-settings-enabled-toggle:before {
+	top: 50%;
+	left: 2px;
+	right: auto;
+	width: 18px;
+	height: 18px;
+	margin-top: -9px;
+	background: #fff;
+	border-radius: var(--radius-circle, 9999px);
+	transition: transform 140ms cubic-bezier(0.2, 0, 0.2, 1);
+	transform: none;
+}
+
+.btr-settings .btr-settings-enabled-toggle.checked:before {
+	left: 2px;
+	right: auto;
+	transform: translateX(20px);
+}
+
+.btr-settings .btr-settings-enabled-toggle:after,
+.btr-settings .btr-settings-enabled-toggle.checked:after {
+	content: "";
+	display: none;
+}
+
+/* The two conversion dropdowns sat on different baselines. */
+.btr-settings-content select {
+	vertical-align: middle;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.btr-settings-content label + span {
+	align-items: center;
+}
+
+/* Rows breathe on the 4px scale instead of the assorted old values. */
+.btr-settings-content checkbox {
+	display: block;
+	margin: var(--btr-space-sm) 0;
+}
+
+.btr-settings-content group > div {
+	margin-bottom: var(--btr-space-sm);
+}
+
+/* Sub pages cannot cross fade while the inactive one is display:none, so the
+   incoming page animates in on its own. */
+.btr-settings-content.selected {
+	animation: btr-settings-page-in 170ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@keyframes btr-settings-page-in {
+	from {
+		opacity: 0;
+		transform: translateX(10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-settings-content.selected {
+		animation: none;
+	}
+
+	.btr-settings .btr-settings-enabled-toggle,
+	.btr-settings .btr-settings-enabled-toggle:before {
+		transition: none;
+	}
+}
