@@ -152,7 +152,7 @@ function render(): void {
 	}
 
 	if (!SETTINGS.get(SETTING) || !state) {
-		item.style.display = "none"
+		item.classList.remove("btr-voice-shown")
 		setTicking(false)
 		return
 	}
@@ -163,7 +163,7 @@ function render(): void {
 	const remaining = state.until ? state.until - Date.now() : 0
 	const countdown = state.kind === "banned" && remaining > 0 ? formatRemaining(remaining) : ""
 
-	item.style.display = ""
+	item.classList.add("btr-voice-shown")
 
 	timer.textContent = countdown
 	timer.style.display = countdown ? "" : "none"

@@ -114,6 +114,28 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 
 /* Voice chat status */
 
+/* Hidden until a poll says what to show, so there is no flash of a state we do
+   not know yet. */
+#btr-navbar-voice {
+	display: none;
+}
+
+#btr-navbar-voice.btr-voice-shown {
+	display: block;
+}
+
+/* The bell owns a 10px left margin that separates the icon group from the
+   search box, and nothing else in the row has one. Standing in front of it
+   means taking that margin over, so the pair sits flush like every other pair
+   and the group still starts where it always did. */
+#btr-navbar-voice.btr-voice-shown {
+	margin-left: 10px;
+}
+
+#btr-navbar-voice.btr-voice-shown + #navbar-stream {
+	margin-left: 0;
+}
+
 /* Padding and icon size follow the other navbar items, so the row lines up. */
 #btr-navbar-voice .btr-voice-status {
 	display: flex;
