@@ -49,7 +49,14 @@ for (const file of walk("src")) {
 		continue
 	}
 
-	const src = fs.readFileSync(file, "utf8")
+	// Comments are blanked rather than removed so line numbers still line up.
+	// Angular's own $watch takes an expression, not a selector.
+	const blank = (m) => " ".repeat(m.length)
+	const src = fs
+		.readFileSync(file, "utf8")
+		.replace(/\/\*[^]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+		.replace(/\/\/[^\n]*/g, blank)
+		.replace(/\$scope\s*\.\s*\$watch/g, "$scope.__ngwatch")
 	const rel = file.split(path.sep).join("/").replace("src/", "")
 
 	for (const re of [CALL_RE, ON_RE]) {
