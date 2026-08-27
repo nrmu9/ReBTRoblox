@@ -4,15 +4,31 @@
 	"description": "A fork of BTRoblox that continues the original after it was abandoned, fixing the features that had stopped working.",
 	"author": "nrmu9, AntiBoomz",
 	"icons": {
+		"48": "res/icon_48.png",
+		"96": "res/icon_96.png",
 		"128": "res/icon_128.png"
 	},
 	"action_title": "Open ReBTRoblox Settings",
-	"permissions": ["contextMenus", "scripting", "storage"],
-	"host_permissions": ["*://*.roblox.com/", "*://*.rbxcdn.com/"],
-	"web_accessible_resources": ["/res/*", "/css/*"],
+	"permissions": [
+		"contextMenus",
+		"scripting",
+		"storage"
+	],
+	"host_permissions": [
+		"*://*.roblox.com/",
+		"*://*.rbxcdn.com/"
+	],
+	"web_accessible_resources": [
+		"/res/*",
+		"/css/*"
+	],
 	"content_scripts": [
 		{
-			"matches": ["*://www.roblox.com/*", "*://web.roblox.com/*", "*://create.roblox.com/*"],
+			"matches": [
+				"*://www.roblox.com/*",
+				"*://web.roblox.com/*",
+				"*://create.roblox.com/*"
+			],
 			"exclude_matches": [
 				"*://*/userads/*",
 				"*://*/user-sponsorship/*",
@@ -24,7 +40,10 @@
 			"world": "MAIN"
 		},
 		{
-			"matches": ["*://www.roblox.com/*", "*://web.roblox.com/*"],
+			"matches": [
+				"*://www.roblox.com/*",
+				"*://web.roblox.com/*"
+			],
 			"exclude_matches": [
 				"*://*/userads/*",
 				"*://*/user-sponsorship/*",
@@ -35,7 +54,9 @@
 			"all_frames": true
 		},
 		{
-			"matches": ["*://create.roblox.com/*"],
+			"matches": [
+				"*://create.roblox.com/*"
+			],
 			"run_at": "document_start",
 			"all_frames": true
 		}

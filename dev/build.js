@@ -40,7 +40,7 @@ const TARGETS = {
 	firefox: {
 		manifest_version: 2,
 		apply(manifest, shared) {
-			manifest.browser_action = { default_title: shared.action_title }
+			manifest.browser_action = { default_title: shared.action_title, default_icon: shared.icons }
 			// data_collection_permissions landed in 140 on desktop and 142 on
 			// android, and AMO warns when the floor predates the keys in the
 			// manifest. 128 was the previous esr and went end of life in
@@ -67,7 +67,7 @@ const TARGETS = {
 		apply(manifest, shared) {
 			manifest.minimum_chrome_version = "111"
 			manifest.incognito = "split"
-			manifest.action = { default_title: shared.action_title }
+			manifest.action = { default_title: shared.action_title, default_icon: shared.icons }
 			// Chrome blocks ads through declarativeNetRequest rather than webRequest.
 			manifest.permissions = ["declarativeNetRequestWithHostAccess", ...shared.permissions]
 			manifest.host_permissions = shared.host_permissions
