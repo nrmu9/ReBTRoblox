@@ -44,11 +44,11 @@ export const RBXScene = (() => {
 			renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 			renderer.setClearAlpha(0)
 			renderer.shadowMap.enabled = true
-			// three removed PCFSoftShadowMap: WebGLShadowMap warns and silently swaps
-			// in PCFShadowMap, so this is what has actually been rendering. The soft
-			// variant now lives behind VSMShadowMap, which needs its own blur tuning
-			// and looks different, so switching to it should be a deliberate change.
-			renderer.shadowMap.type = THREE.PCFShadowMap
+			// PCFSoftShadowMap is deprecated: WebGLShadowMap warns and silently swaps
+			// in PCFShadowMap, whose edges alias badly here. VSM is the only soft
+			// path left, and it blurs the shadow map rather than the lookup, so the
+			// penumbra stays smooth at any zoom.
+			renderer.shadowMap.type = THREE.VSMShadowMap
 
 			const canvas = (this.canvas = renderer.domElement)
 			canvas.style = `
@@ -72,8 +72,15 @@ export const RBXScene = (() => {
 			const sunLight = new THREE.DirectionalLight(0xacacac, LIGHT_COMPENSATION)
 			sunLight.position.set(-0.474891931, 0.822536945, 0.312906593).multiplyScalar(15)
 			sunLight.castShadow = true
-			sunLight.shadow.mapSize.width = 256
-			sunLight.shadow.mapSize.height = 256
+			// The shadow camera spans 16 units, so 256 gave a texel every 0.06 units
+			// and the avatar cast a shapeless blob. 1024 resolves the silhouette;
+			// 2048 was indistinguishable at the sizes this canvas is displayed at.
+			sunLight.shadow.mapSize.width = 1024
+			sunLight.shadow.mapSize.height = 1024
+			sunLight.shadow.radius = 2
+			// VSM also renders receiveShadow objects into the depth map, so the
+			// ground plane shadows itself into acne without this.
+			sunLight.shadow.normalBias = 0.05
 			sunLight.shadow.camera.left = -8
 			sunLight.shadow.camera.right = 8
 			sunLight.shadow.camera.bottom = -8
