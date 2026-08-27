@@ -7,8 +7,8 @@ import { query } from "@/core/query"
 
 const btrFriends = {
 	// TODO: Move this elsewhere
-	friendsPromise: null as any,
-	friendsCached: null as any,
+	friendsPromise: null as Promise<Record<string, any>> | null,
+	friendsCached: null as Record<string, any> | null,
 	friendsLoaded: false,
 
 	getFriends() {
@@ -78,9 +78,6 @@ const btrFriends = {
 }
 
 export const btrFastSearch = {
-	friendsCached: undefined as any,
-	friendsPromise: undefined as any,
-	friendsLoaded: undefined as any,
 	init() {
 		const usernameRegex = /^[a-zA-Z0-9]+(?:[ _.]?[a-zA-Z0-9]+)?$/
 		const userCache: Record<string, any> = {}

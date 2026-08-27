@@ -48,7 +48,7 @@ const OwnerAssetCache = {
 
 	resetData() {
 		this.data = {
-			lastUserId: null as any,
+			lastUserId: null as number | null,
 			types: {},
 		}
 

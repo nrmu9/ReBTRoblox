@@ -48,10 +48,6 @@ const InvalidExplorableAssetTypeIds = [1, 3, 4, 5, 6, 7, 16, 21, 22, 32, 33, 34,
 const InvalidDownloadableAssetTypeIds = [21, 32, 34]
 
 const ContainerAssetTypeIds = {
-	curPage: undefined as any,
-	maxPage: undefined as any,
-	value: undefined as any,
-	finished: undefined as any,
 	[AssetType.EmoteAnimation]: (x: any) => x.findFirstChildOfClass("Animation")?.getProperty("AnimationId"),
 	[AssetType.MeshPart]: (x: any) => x.findFirstChildOfClass("MeshPart")?.getProperty("MeshID", true),
 	[AssetType.TShirt]: (x: any) => x.findFirstChildOfClass("ShirtGraphic")?.getProperty("Graphic"),

@@ -5,8 +5,8 @@ import { SHARED_DATA } from "@/feat/shareddata"
 const BlogFeed = {
 	lastRequest: 0,
 
-	fetching: null as any,
-	cached: null as any,
+	fetching: null as Promise<any[]> | null,
+	cached: null as any[] | null,
 
 	canRequest() {
 		return Date.now() > this.lastRequest + 15e3
@@ -59,7 +59,7 @@ const BlogFeed = {
 
 STORAGE.get(["cachedBlogFeedV2"], (data) => {
 	if (data.cachedBlogFeedV2 && !BlogFeed.cached) {
-		BlogFeed.cached = data.cachedBlogFeedV2
+		BlogFeed.cached = data.cachedBlogFeedV2 as any[]
 		SHARED_DATA.set("blogfeed", BlogFeed.cached)
 	}
 })
