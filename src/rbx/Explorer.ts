@@ -39,7 +39,7 @@ export const Explorer = (() => {
 	}
 	*/
 
-	const RenamedProperties = {
+	const RenamedProperties: Record<string, string> = {
 		Color3uint8: "Color",
 		formFactorRaw: "FormFactor",
 		Health_XML: "Health",
@@ -54,14 +54,14 @@ export const Explorer = (() => {
 		DefinesCapabilities: "Sandboxed",
 	}
 
-	const fixNum = (v) => {
+	const fixNum = (v: number) => {
 		return Math.round(v * 1e3) / 1e3
 	}
-	const fixNums = (arr) => arr.map((x) => fixNum(x))
+	const fixNums = (arr: number[]) => arr.map((x: any) => fixNum(x))
 
-	const sortPropertyGroups = (a, b) =>
+	const sortPropertyGroups = (a: any, b: any) =>
 		a.Order === b.Order ? (a.Name < b.Name ? -1 : 1) : a.Order - b.Order
-	const sortChildren = (a, b) => {
+	const sortChildren = (a: any, b: any) => {
 		const ao = ApiDump.getExplorerOrder(a.inst.ClassName)
 		const bo = ApiDump.getExplorerOrder(b.inst.ClassName)
 		return ao !== bo ? ao - bo : a.inst.Name < b.inst.Name ? -1 : 1
@@ -71,7 +71,7 @@ export const Explorer = (() => {
 	const ctx = widthCalcCanvas.getContext("2d")
 	ctx!.font = `300 12px "Source Sans Pro", Arial, Helvetica, sans-serif`
 
-	const getLineWidth = (text, depth) => {
+	const getLineWidth = (text: string, depth: number) => {
 		return ctx!.measureText(text).width + 47 + depth * 20
 	}
 
@@ -154,7 +154,7 @@ export const Explorer = (() => {
 				this.select([])
 			})
 
-			element.$on("click", (ev) => {
+			element.$on("click", (ev: Event) => {
 				ev.stopPropagation()
 			})
 
@@ -164,7 +164,7 @@ export const Explorer = (() => {
 				this.setFilter(this.filterInput.value)
 			})
 
-			dropdownBtn.$on("click", (ev) => {
+			dropdownBtn.$on("click", (ev: Event) => {
 				ev.stopPropagation()
 				dropdownMenu.style.display = dropdownMenu.style.display === "none" ? "block" : "none"
 			})
@@ -189,7 +189,7 @@ export const Explorer = (() => {
 			return this.sourceViewerModal || this.element
 		}
 
-		setLoadingText(newText) {
+		setLoadingText(newText: string) {
 			this.loadingText = newText
 			this.element.$find(".btr-explorer-loading").textContent = newText
 		}
@@ -223,7 +223,7 @@ export const Explorer = (() => {
 			this.element.$find(".btr-properties").classList.remove("keepopen")
 		}
 
-		async openSourceViewer(inst, propName) {
+		async openSourceViewer(inst: any, propName: string) {
 			if (!this.sourceViewerLoadPromise) {
 				this.sourceViewerLoadPromise = loadOptionalFeature("sourceViewer").then(async () => {
 					await new Promise((resolve) => setTimeout(resolve, 16)) // wait for styles to load in
@@ -252,28 +252,30 @@ export const Explorer = (() => {
 				</div>`
 
 				this.sourceViewerModal
-					.$on("mousedown", (ev) => {
+					.$on("mousedown", (ev: Event) => {
 						ev.preventDefault()
 						ev.stopImmediatePropagation()
 
 						this.closeSourceViewer()
 					})
-					.$on("click", (ev) => {
+					.$on("click", (ev: Event) => {
 						ev.stopImmediatePropagation()
 					})
 
-				this.sourceViewerModal.$find(".btr-sourceviewer-container").$on("mousedown", (ev) => {
+				this.sourceViewerModal.$find(".btr-sourceviewer-container").$on("mousedown", (ev: Event) => {
 					ev.stopImmediatePropagation()
 				})
 
-				this.sourceViewerModal.$find(".btr-sourceviewer-settings-button").$on("click", (ev) => {
-					ev.preventDefault()
-					ev.stopImmediatePropagation()
+				this.sourceViewerModal
+					.$find(".btr-sourceviewer-settings-button")
+					.$on("click", (ev: Event) => {
+						ev.preventDefault()
+						ev.stopImmediatePropagation()
 
-					ev.target.classList.toggle("active")
-				})
+						;(ev.target as HTMLElement).classList.toggle("active")
+					})
 
-				const svSettings = {
+				const svSettings: Record<string, any> = {
 					tabwidth: 4,
 					wrapping: true,
 					whitespace: true,
@@ -346,7 +348,7 @@ export const Explorer = (() => {
 				list1.scrollTop = top1
 			}
 
-			let tab = this.sourceViewerTabs.find((x) => x.inst === inst && x.propName === propName)
+			let tab = this.sourceViewerTabs.find((x: any) => x.inst === inst && x.propName === propName)
 
 			if (!tab) {
 				const btn = html`<div class="btr-sourceviewer-tab">
@@ -474,7 +476,7 @@ export const Explorer = (() => {
 				}
 			}
 
-			const groups = {
+			const groups: Record<string, any> = {
 				Tags: {
 					Name: "Tags",
 					Order: 1001,
@@ -640,7 +642,7 @@ export const Explorer = (() => {
 							}
 							break
 						case 0x17:
-							value = { type: "NumberSequence", value: [] }
+							value = { type: "NumberSequence", value: [] as any[] }
 
 							const numberSequenceLength = reader.UInt32LE()
 
@@ -653,7 +655,7 @@ export const Explorer = (() => {
 							}
 							break
 						case 0x19:
-							value = { type: "ColorSequence", value: [] }
+							value = { type: "ColorSequence", value: [] as any[] }
 
 							const colorSequenceLength = reader.UInt32LE()
 
@@ -705,7 +707,7 @@ export const Explorer = (() => {
 				const propertiesList = html`<div class="btr-properties-list"></div>`
 				propertyContainer.append(titleButton, propertiesList)
 
-				let lastClick
+				let lastClick = 0
 
 				titleButton.$req(".btr-property-group-more").$on("click", (ev) => {
 					titleButton.classList.toggle("closed")
@@ -714,7 +716,7 @@ export const Explorer = (() => {
 
 				titleButton.$on("click", () => {
 					if (lastClick && Date.now() - lastClick < 500) {
-						lastClick = null
+						lastClick = 0
 						titleButton.classList.toggle("closed")
 					} else {
 						lastClick = Date.now()
@@ -722,9 +724,11 @@ export const Explorer = (() => {
 				})
 
 				if (group.Name === "Attributes") {
-					group.Properties.sort((a, b) => (a[0].toLowerCase() < b[0].toLowerCase() ? -1 : 1))
+					group.Properties.sort((a: any, b: any) =>
+						a[0].toLowerCase() < b[0].toLowerCase() ? -1 : 1,
+					)
 				} else {
-					group.Properties.sort((a, b) => (a[0] < b[0] ? -1 : 1))
+					group.Properties.sort((a: any, b: any) => (a[0] < b[0] ? -1 : 1))
 				}
 
 				if (group.Properties.length === 0) {
@@ -835,7 +839,7 @@ export const Explorer = (() => {
 							valueItem.textContent = fixNums(value).join(", ")
 							break
 						case "Color3": {
-							const rgb = value.map((x) => Math.round(x * 255))
+							const rgb = value.map((x: any) => Math.round(x * 255))
 							valueItem.textContent = `[${rgb.join(", ")}]`
 							valueItem.prepend(
 								html`<span
@@ -889,7 +893,7 @@ export const Explorer = (() => {
 							break
 						case "NumberSequence":
 							valueItem.textContent = value
-								.map((x) => `(${fixNums([x.Time, x.Value]).join(", ")})`)
+								.map((x: any) => `(${fixNums([x.Time, x.Value]).join(", ")})`)
 								.join(", ")
 							break
 						case "NumberRange":
@@ -898,7 +902,7 @@ export const Explorer = (() => {
 						case "ColorSequence":
 							valueItem.textContent = value
 								.map(
-									(x) =>
+									(x: any) =>
 										`(${fixNums([x.Time])[0]}, (${fixNums(x.Value)
 											.map((num) => Math.round(num * 255))
 											.join(", ")}))`,
@@ -952,7 +956,7 @@ export const Explorer = (() => {
 			}
 		}
 
-		select(items) {
+		select(items: any[]) {
 			this.selection.splice(0, this.selection.length)
 
 			for (const item of items) {
@@ -962,12 +966,12 @@ export const Explorer = (() => {
 			this.updateProperties()
 		}
 
-		setFilter(filter) {
+		setFilter(filter: any) {
 			this.filterInput.value = filter // we want leading spaces here so writing isnt jank
 			this.currentFilter = filter.trim()
 		}
 
-		selectModel(model) {
+		selectModel(model: any) {
 			this.selectedModel = model
 
 			this.dropdown.$find(".btr-dropdown-menu").style.display = "none"
@@ -984,7 +988,7 @@ export const Explorer = (() => {
 			this.select([])
 		}
 
-		isItemVisible(item, view) {
+		isItemVisible(item: any, view: any) {
 			if (view === this.defaultView) {
 				return true
 			}
@@ -992,7 +996,7 @@ export const Explorer = (() => {
 			return view.visible.has(item)
 		}
 
-		bubbleItem(item, view, canBubble = true) {
+		bubbleItem(item: any, view: any, canBubble = true) {
 			if (!this.isItemVisible(item, view)) {
 				return
 			}
@@ -1065,7 +1069,7 @@ export const Explorer = (() => {
 			return item
 		}
 
-		setIsItemOpen(item, bool, view) {
+		setIsItemOpen(item: any, bool: boolean, view: any) {
 			if (view.open.has(item) === !!bool) {
 				return
 			}
@@ -1079,7 +1083,7 @@ export const Explorer = (() => {
 			this.bubbleItem(item, view)
 		}
 
-		addModel(title, modelContents, params = {}) {
+		addModel(title: string, modelContents: any, params = {}) {
 			const modelId = this.modelCounter++
 
 			const btn = html`<li btr-model-id="${modelId}"><a title="${title}">${title}</a></li>`
@@ -1226,8 +1230,8 @@ export const Explorer = (() => {
 					filterView.running = {
 						words: filterView.query
 							.split(" ")
-							.filter((x) => x)
-							.map((x) => x.toLowerCase()),
+							.filter((x: any) => x)
+							.map((x: any) => x.toLowerCase()),
 						current: model,
 						stack: [],
 						index: 0,
@@ -1368,7 +1372,7 @@ export const Explorer = (() => {
 
 			//
 
-			const setLineItem = (line, item, depth = 0) => {
+			const setLineItem = (line: any, item: any, depth = 0) => {
 				if (item !== line.item) {
 					line.item = item
 
@@ -1448,7 +1452,7 @@ export const Explorer = (() => {
 			}
 		}
 
-		setActive(bool) {
+		setActive(bool: boolean) {
 			if (this.active !== !!bool) {
 				this.active = !!bool
 

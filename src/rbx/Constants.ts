@@ -60,7 +60,7 @@ export const AssetType = {
 	DynamicHead: 79,
 }
 
-export const BrickColor = {
+export const BrickColor: Record<number, { name: string; color: number[] }> = {
 	1: { name: "White", color: [242, 243, 243] },
 	2: { name: "Grey", color: [161, 165, 162] },
 	3: { name: "Light yellow", color: [249, 233, 153] },
