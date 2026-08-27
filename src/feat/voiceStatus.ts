@@ -12,9 +12,6 @@ const RETRY_INTERVAL = 60 * 1000
 /** How stale the last poll has to be before returning to the tab refetches. */
 const STALE_AFTER = 60 * 1000
 
-/** Where the voice toggle actually lives, so the icon is worth clicking. */
-const SETTINGS_URL = "https://www.roblox.com/my/account#!/privacy"
-
 type VoiceStateKind = "enabled" | "off" | "ineligible" | "unavailable" | "banned"
 
 interface VoiceState {
@@ -77,8 +74,10 @@ const formatRemaining = (ms: number): string => {
 	return `${seconds}s`
 }
 
+// A status readout rather than a control, so it is not a link and carries none
+// of the navbar's clickable styling.
 const buildItem = () => html` <li id="btr-navbar-voice" class="navbar-icon-item">
-	<a class="rbx-menu-item btr-voice-status" href="${SETTINGS_URL}">
+	<span class="btr-voice-status">
 		<svg class="btr-voice-icon" viewBox="0 0 24 24" aria-hidden="true">
 			<path d="M12 3a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0v-5A2.5 2.5 0 0 1 12 3Z"></path>
 			<path
@@ -88,7 +87,7 @@ const buildItem = () => html` <li id="btr-navbar-voice" class="navbar-icon-item"
 			<path class="btr-voice-stroke btr-voice-slash" d="M4.5 4.5 19.5 19.5"></path>
 		</svg>
 		<span class="btr-voice-timer"></span>
-	</a>
+	</span>
 </li>`
 
 let item: HTMLElement | null = null
@@ -150,7 +149,7 @@ function render(): void {
 		return
 	}
 
-	const link = item.$req<HTMLAnchorElement>("a")
+	const status = item.$req<HTMLElement>(".btr-voice-status")
 	const timer = item.$req<HTMLElement>(".btr-voice-timer")
 
 	const remaining = state.until ? state.until - Date.now() : 0
@@ -161,10 +160,10 @@ function render(): void {
 	timer.textContent = countdown
 	timer.style.display = countdown ? "" : "none"
 
-	link.classList.toggle("btr-voice-banned", state.kind === "banned")
-	link.classList.toggle("btr-voice-muted", state.kind !== "enabled" && state.kind !== "banned")
+	status.classList.toggle("btr-voice-banned", state.kind === "banned")
+	status.classList.toggle("btr-voice-muted", state.kind !== "enabled" && state.kind !== "banned")
 
-	link.title =
+	status.title =
 		state.kind === "banned" && state.until
 			? `Voice chat banned until ${new Date(state.until).toLocaleString()}`
 			: state.label
