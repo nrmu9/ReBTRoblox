@@ -96,7 +96,7 @@ jobs:
           # reviewer builds from, taken straight from the tag being released.
           args=()
           if [ "$AMO_CHANNEL" = "listed" ]; then
-            git archive --format=zip --prefix="btroblox/" "$GITHUB_REF_NAME" -o source.zip
+            git archive --format=zip --prefix="rebtroblox/" "$GITHUB_REF_NAME" -o source.zip
             args+=(--upload-source-code source.zip)
 
             # AMO needs summary, categories and a license before it will create
@@ -104,6 +104,11 @@ jobs:
             if [ -f amo-metadata.json ]; then
               args+=(--amo-metadata amo-metadata.json)
             fi
+
+            # A listed version is signed only once a human has reviewed it,
+            # which is days, not minutes. Waiting for that just times out and
+            # fails a release whose upload already succeeded.
+            args+=(--approval-timeout 0)
           fi
 
           npx --yes web-ext sign \
@@ -114,18 +119,24 @@ jobs:
             --artifacts-dir amo \
             "${args[@]}"
 
-          # The signed build has to land on top of the unsigned one, so the name
-          # is read from the same place packaging reads it. Hardcoding it once
-          # shipped an unsigned .xpi beside the signed one under a stale name.
-          unsigned="$(ls artifacts/*-firefox.xpi)"
-          mv "$(find amo -name '*.xpi' | head -n1)" "$unsigned"
-
-          echo "signed $unsigned through AMO on the $AMO_CHANNEL channel"
+          if [ "$AMO_CHANNEL" = "listed" ]; then
+            # Nothing comes back to attach: the store is the download for
+            # firefox, so the release carries only what the store does not.
+            rm -f artifacts/*-firefox.xpi
+            echo "submitted to the add-ons store for review"
+          else
+            # The signed build lands on top of the unsigned one. The name is
+            # read from where packaging wrote it: hardcoding it once shipped an
+            # unsigned .xpi beside the signed one under a stale name.
+            unsigned="$(ls artifacts/*-firefox.xpi)"
+            mv "$(find amo -name '*.xpi' | head -n1)" "$unsigned"
+            echo "signed $unsigned for self distribution"
+          fi
 
       # Shipping an unsigned .xpi that looks signed is worse than not signing
       # at all, so this refuses to publish one.
       - name: Verify the .xpi carries Mozilla's signature
-        if: env.AMO_JWT_ISSUER != ''
+        if: env.AMO_JWT_ISSUER != '' && env.AMO_CHANNEL != 'listed'
         run: |
           xpi="$(ls artifacts/*-firefox.xpi)"
 
