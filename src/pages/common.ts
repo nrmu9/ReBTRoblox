@@ -1703,55 +1703,6 @@ pageInit.www = () => {
 		}
 	}
 
-	if (SETTINGS.get("general.fixFirefoxLocalStorageIssue")) {
-		injectScript.call("fixFirefoxLocalStorageIssue", () => {
-			onSet(window, "CoreRobloxUtilities", (CoreRobloxUtilities: any) => {
-				if (!CoreRobloxUtilities?.localStorageService?.saveDataByTimeStamp) {
-					return
-				}
-
-				const lss = CoreRobloxUtilities.localStorageService
-				const localCache: Record<string, any> = {}
-
-				hijackFunction(lss, "storage", () => true)
-
-				hijackFunction(
-					lss,
-					"removeLocalStorage",
-					(fn: (...args: any[]) => void, thisArg: any, args: any[]) => {
-						delete localCache[args[0]]
-						return fn.apply(thisArg, args)
-					},
-				)
-
-				hijackFunction(
-					lss,
-					"getLocalStorage",
-					(fn: (...args: any[]) => void, thisArg: any, args: any[]) => {
-						if (args[0] in localCache) {
-							return JSON.parse(localCache[args[0]])
-						}
-
-						return fn.apply(thisArg, args)
-					},
-				)
-
-				hijackFunction(
-					lss,
-					"setLocalStorage",
-					(fn: (...args: any[]) => void, thisArg: any, args: any[]) => {
-						try {
-							delete localCache[args[0]]
-							return fn.apply(thisArg, args)
-						} catch (ex) {
-							localCache[args[0]] = JSON.stringify(args[1])
-							console.error(ex)
-						}
-					},
-				)
-			})
-		})
-	}
 
 	if (SETTINGS.get("general.cacheRobuxAmount")) {
 		injectScript.call("cacheRobuxAmount", () => {

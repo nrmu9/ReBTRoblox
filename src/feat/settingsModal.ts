@@ -225,8 +225,12 @@ export const SettingsModal: SettingsModalState = {
 						></checkbox>
 						<checkbox label="Full Range Body Colors" path=fullRangeBodyColors></checkbox>
 						<checkbox label="Refine Asset Layout" path=assetRefinement></checkbox>
+						<checkbox label="Skip R6 Switch Warning" path=ignoreR6Warning></checkbox>
 					</group>
-					<group label=Messages path=messages toggleable></group>
+					<group label=Messages path=messages toggleable>
+						<checkbox label="Mark All As Read Button" path=markAllAsRead></checkbox>
+						<checkbox label="Jump To Page" path=pageJump></checkbox>
+					</group>
 					<group label=Profile path=profile toggleable>
 						<checkbox label="Embed Inventory" path=embedInventoryEnabled></checkbox>
 					</group>
@@ -259,10 +263,6 @@ export const SettingsModal: SettingsModalState = {
 						<checkbox label="Modify Asset Options" path=assetOptions></checkbox>
 					</group>
 					<group label="Advanced" minimizable minimized>
-						<checkbox
-							label="Fix Firefox Local Storage"
-							path=general.fixFirefoxLocalStorageIssue
-						></checkbox>
 						<div id=btr-settings-wip>
 						</div>
 						<details id=btr-settings-experiments>

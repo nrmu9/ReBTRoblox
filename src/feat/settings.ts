@@ -46,7 +46,6 @@ export const DEFAULT_SETTINGS = {
 		higherRobuxPrecision: { value: true },
 		enableContextMenus: { value: true },
 
-		fixFirefoxLocalStorageIssue: { value: false },
 		experiments: { value: "", hidden: true },
 	},
 	create: {
@@ -65,6 +64,8 @@ export const DEFAULT_SETTINGS = {
 	},
 	messages: {
 		enabled: { value: true },
+		markAllAsRead: { value: true },
+		pageJump: { value: true },
 	},
 	navigation: {
 		enabled: { value: true },
@@ -77,6 +78,7 @@ export const DEFAULT_SETTINGS = {
 		removeLayeredLimits: { value: true },
 		fullRangeBodyColors: { value: true },
 		assetRefinement: { value: false },
+		ignoreR6Warning: { value: false },
 	},
 	catalog: {
 		enabled: { value: true },

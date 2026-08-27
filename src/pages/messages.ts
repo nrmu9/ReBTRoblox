@@ -185,42 +185,61 @@ pageInit.messages = () => {
 		// and the markAsUnread button it hung off are both gone. Anchor to the live
 		// action bar instead. Roblox only marks the current page, so marking every
 		// page in one go is still worth having.
-		document.$watchAll(
-			".private-message-action-buttons",
-			(bar: HTMLElement) => {
-				if (bar.$find(".btr-markAllAsReadInbox")) {
-					return
-				}
+		//
+		// Kept as a named function so the settings listener below can apply it to
+		// what is already on screen, rather than waiting for a rerender.
+		const applyMarkAllButton = (bar: HTMLElement) => {
+			const existing = bar.$find(".btr-markAllAsReadInbox")
 
-				// Clone a native button so the styling follows whatever Roblox ships.
-				// The clone carries no React fiber, so React ignores clicks on it and
-				// the delegated handler above is the only listener.
-				const native = bar.$find<HTMLButtonElement>("button")
-				if (!native) {
-					return
-				}
+			if (!SETTINGS.get("messages.markAllAsRead")) {
+				existing?.remove()
+				return
+			}
 
-				const button = native.cloneNode(true) as HTMLButtonElement
-				button.classList.add("btr-markAllAsReadInbox")
-				button.removeAttribute("disabled")
-				setButtonLabel(button, "Mark All As Read")
+			if (existing) {
+				return
+			}
 
-				bar.append(button)
-			},
-			{ continuous: true },
-		)
+			// Clone a native button so the styling follows whatever Roblox ships.
+			// The clone carries no React fiber, so React ignores clicks on it and
+			// the delegated handler above is the only listener.
+			const native = bar.$find<HTMLButtonElement>("button")
+			if (!native) {
+				return
+			}
+
+			const button = native.cloneNode(true) as HTMLButtonElement
+			button.classList.add("btr-markAllAsReadInbox")
+			button.removeAttribute("disabled")
+			setButtonLabel(button, "Mark All As Read")
+
+			bar.append(button)
+		}
+
+		document.$watchAll(".private-message-action-buttons", applyMarkAllButton, { continuous: true })
+
+		SETTINGS.onChange("messages.markAllAsRead", () => {
+			for (const bar of document.querySelectorAll<HTMLElement>(".private-message-action-buttons")) {
+				applyMarkAllButton(bar)
+			}
+		})
 
 		// The pager only steps one page at a time, so put back a way to jump. The
 		// React app drives paging off the hash, so setting it is enough; nothing
 		// here touches a node React owns.
-		document.$watchAll<HTMLElement>(
-			".private-message-page .icon-filled-chevron-large-right-to-line",
-			(icon: HTMLElement) => {
-				const pager = icon.closest("button")?.parentElement
-				if (!pager || pager.$find(".btr-page-jump")) {
-					return
-				}
+		const applyPageJump = (pager: HTMLElement) => {
+			const existing = pager.$find(".btr-page-jump")
 
+			if (!SETTINGS.get("messages.pageJump")) {
+				existing?.remove()
+				return
+			}
+
+			if (existing) {
+				return
+			}
+
+			{
 				const input = html<HTMLInputElement>`<input class="btr-page-jump" type="text" size="2" />`
 				const total = readTotalPages(pager)
 
@@ -245,8 +264,31 @@ pageInit.messages = () => {
 				})
 
 				pager.append(input)
+			}
+		}
+
+		document.$watchAll<HTMLElement>(
+			".private-message-page .icon-filled-chevron-large-right-to-line",
+			(icon: HTMLElement) => {
+				const pager = icon.closest("button")?.parentElement
+
+				if (pager) {
+					applyPageJump(pager)
+				}
 			},
 			{ continuous: true },
 		)
+
+		SETTINGS.onChange("messages.pageJump", () => {
+			for (const icon of document.querySelectorAll(
+				".private-message-page .icon-filled-chevron-large-right-to-line",
+			)) {
+				const pager = icon.closest("button")?.parentElement
+
+				if (pager) {
+					applyPageJump(pager)
+				}
+			}
+		})
 	})
 }

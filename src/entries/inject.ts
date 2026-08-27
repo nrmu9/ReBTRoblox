@@ -2190,53 +2190,6 @@ const startInject = () => {
 					)
 				})
 			},
-			fixFirefoxLocalStorageIssue: () => {
-				onSet(window, "CoreRobloxUtilities", (CoreRobloxUtilities: any) => {
-					if (!CoreRobloxUtilities?.localStorageService?.saveDataByTimeStamp) {
-						return
-					}
-
-					const lss = CoreRobloxUtilities.localStorageService
-					const localCache: Record<string, any> = {}
-
-					hijackFunction(lss, "storage", () => true)
-
-					hijackFunction(
-						lss,
-						"removeLocalStorage",
-						(fn: (...args: any[]) => any, thisArg: any, args: any[]) => {
-							delete localCache[args[0]]
-							return fn.apply(thisArg, args)
-						},
-					)
-
-					hijackFunction(
-						lss,
-						"getLocalStorage",
-						(fn: (...args: any[]) => any, thisArg: any, args: any[]) => {
-							if (args[0] in localCache) {
-								return JSON.parse(localCache[args[0]])
-							}
-
-							return fn.apply(thisArg, args)
-						},
-					)
-
-					hijackFunction(
-						lss,
-						"setLocalStorage",
-						(fn: (...args: any[]) => any, thisArg: any, args: any[]) => {
-							try {
-								delete localCache[args[0]]
-								return fn.apply(thisArg, args)
-							} catch (ex) {
-								localCache[args[0]] = JSON.stringify(args[1])
-								console.error(ex)
-							}
-						},
-					)
-				})
-			},
 			cacheRobuxAmount: () => {
 				reactHook.hijackConstructor(
 					(props: any) =>
@@ -2566,6 +2519,49 @@ const startInject = () => {
 						)
 					})
 				})
+			},
+			ignoreR6Warning: () => {
+				let confirming = false
+
+				reactHook.hijackConstructor(
+					// The R6 downgrade dialog is rendered as jsx(ps, { closeDialog, isOpen })
+					// and takes nothing else. The outfit delete dialog reuses the same
+					// confirm button id, so the prop count is what keeps this away from
+					// the destructive ones.
+					(props: any) =>
+						"closeDialog" in props && "isOpen" in props && Object.keys(props).length === 2,
+					(target: any, thisArg: any, args: any[]) => {
+						const result = target.apply(thisArg, args)
+
+						if (confirming || !args[0]?.isOpen || !settings.avatar?.ignoreR6Warning) {
+							return result
+						}
+
+						const action = reactHook.queryElement(
+							result,
+							(elem: any) =>
+								elem.props?.variant === "Emphasis" && typeof elem.props?.onClick === "function",
+						)
+
+						if (action) {
+							confirming = true
+
+							// Never during render: the click switches the avatar type and
+							// strips layered clothing, both of which set state.
+							setTimeout(() => {
+								try {
+									action.props.onClick()
+								} catch (ex) {
+									console.error(ex)
+								} finally {
+									confirming = false
+								}
+							}, 0)
+						}
+
+						return result
+					},
+				)
 			},
 			smallChatButton: () => {
 				angularHook.hijackModule("chat", {
@@ -4351,10 +4347,10 @@ const startInject = () => {
 			"showOwnedAssets",
 			"initReactRobuxToCash",
 			"addBTRSettings",
-			"fixFirefoxLocalStorageIssue",
 			"cacheRobuxAmount",
 			"higherRobuxPrecision",
 			"hideFriendActivity",
+			"ignoreR6Warning",
 			"smallChatButton",
 			"hijackAuth",
 			"webpackHook",
