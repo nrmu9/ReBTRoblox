@@ -242,7 +242,7 @@ export const RBXScene = (() => {
 
 		/** Dev only handle, so the previewer can be inspected from the bridge. */
 		exposeForDebug() {
-			if (!IS_DEV_MODE) {
+			if (!__DEV__ || !IS_DEV_MODE) {
 				return
 			}
 			;(window as any).__btrScene = this

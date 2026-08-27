@@ -128,7 +128,13 @@ const shared = {
 	legalComments: "none",
 	logLevel: "info",
 	alias: { "@": path.join(ROOT, "src") },
-	define: { "process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production") },
+	// __DEV__ is folded at build time so esbuild can drop dev-only branches and the
+	// modules they import. IS_DEV_MODE is read from the manifest at runtime and can
+	// never be eliminated, so it alone would ship the dev bridge in production.
+	define: {
+		"process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production"),
+		__DEV__: JSON.stringify(dev),
+	},
 }
 
 const configs = [

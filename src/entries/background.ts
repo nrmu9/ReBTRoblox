@@ -82,6 +82,8 @@ contentScript.listen({
 		chrome.permissions.request(getRequiredPermissions(), respond)
 	},
 })
-if (IS_DEV_MODE) {
+// __DEV__ is a build time literal, so production drops this branch and the
+// bridge module with it. IS_DEV_MODE alone is a runtime check and would not.
+if (__DEV__ && IS_DEV_MODE) {
 	void import("@/dev/bridge").then(({ startDevBridge }) => startDevBridge())
 }
