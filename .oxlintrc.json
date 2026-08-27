@@ -26,5 +26,5 @@
 		"eslint/no-await-in-loop": "off",
 		"eslint/no-extend-native": "off"
 	},
-	"ignorePatterns": ["dist/", "js/", "lib/", "res/", "node_modules/"]
+	"ignorePatterns": ["dist/", "lib/", "res/", "node_modules/"]
 }

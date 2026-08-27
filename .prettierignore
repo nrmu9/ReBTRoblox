@@ -1,9 +1,6 @@
 node_modules/
 dist/
 
-# Legacy pre-TypeScript source, kept only until the port is trusted. Not built,
-# not worth reformatting.
-js/
 
 # Vendored third party code.
 res/
