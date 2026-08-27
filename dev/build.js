@@ -20,7 +20,7 @@ const target = (args.find((arg) => arg.startsWith("--target=")) || "--target=fir
 // can split the optional features, keeping three.js out of the initial download.
 const CLASSIC = ["background", "content", "inject"]
 const MODULE = ["main"]
-const ASSETS = ["css", "img", "res"]
+const ASSETS = ["css", "res"]
 
 const entry = (name) => path.join(ROOT, "src/entries", `${name}.ts`)
 
