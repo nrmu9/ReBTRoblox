@@ -5,12 +5,12 @@
 // kept so existing call sites read the same.
 
 export type DeferredPromise<T = void> = Promise<T> & {
-	$resolve: (value?: T | PromiseLike<T>) => void
+	$resolve: (value: T | PromiseLike<T>) => void
 	$reject: (reason?: unknown) => void
 }
 
 export const deferredPromise = <T = void>(): DeferredPromise<T> => {
 	const { promise, resolve, reject } = Promise.withResolvers<T>()
 
-	return Object.assign(promise, { $resolve: resolve as any, $reject: reject })
+	return Object.assign(promise, { $resolve: resolve, $reject: reject })
 }

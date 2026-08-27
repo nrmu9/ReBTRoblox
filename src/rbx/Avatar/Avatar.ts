@@ -64,8 +64,37 @@ export const RBXAvatar = (() => {
 	 * scene traversal and drops every object after it. Fall back to plain
 	 * geometry bounds in exactly the case the flag already describes.
 	 */
+	/**
+	 * A rig part as the avatar actually uses it: a three SkinnedMesh plus the
+	 * bookkeeping attached to it, and with isSkinnedMesh writable because Roblox
+	 * parts are rigid and get the flag toggled off. Omit is needed because three
+	 * declares that flag readonly true.
+	 */
+	type RigMesh = Omit<THREE.SkinnedMesh, "isSkinnedMesh" | "boundingBox" | "boundingSphere"> & {
+		isSkinnedMesh: boolean
+		boundingBox: THREE.Box3 | null
+		boundingSphere: THREE.Sphere | null
+		rbxBodypart?: any
+		rbxBones?: any[]
+		rbxDefaultBodypart?: any
+		rbxLayered?: any
+		rbxMesh?: any
+		rbxMeshId?: any
+		rbxMeshLoading?: any
+		rbxOrigSize?: any
+		rbxScale?: any
+		rbxScaleMod?: any
+		rbxScaleType?: any
+		rbxSize?: any
+		layeredMatrix?: any
+		matrixNoScale?: any
+		skinnedNoScale?: any
+		skinnedPoseMatrix?: any
+		[key: string]: any
+	}
+
 	function useGeometryBoundsWhenUnskinned(obj: THREE.SkinnedMesh) {
-		const self = obj as any
+		const self = obj as unknown as RigMesh
 		const base = THREE.SkinnedMesh.prototype as any
 
 		self.computeBoundingBox = function () {
@@ -78,7 +107,7 @@ export const RBXAvatar = (() => {
 			if (!geometry.boundingBox) {
 				geometry.computeBoundingBox()
 			}
-			this.boundingBox = (this.boundingBox ?? new THREE.Box3()).copy(geometry.boundingBox)
+			this.boundingBox = (this.boundingBox ?? new THREE.Box3()).copy(geometry.boundingBox!)
 		}
 
 		self.computeBoundingSphere = function () {
@@ -91,7 +120,7 @@ export const RBXAvatar = (() => {
 			if (!geometry.boundingSphere) {
 				geometry.computeBoundingSphere()
 			}
-			this.boundingSphere = (this.boundingSphere ?? new THREE.Sphere()).copy(geometry.boundingSphere)
+			this.boundingSphere = (this.boundingSphere ?? new THREE.Sphere()).copy(geometry.boundingSphere!)
 		}
 	}
 
@@ -107,7 +136,7 @@ export const RBXAvatar = (() => {
 			if (mesh.bones && mesh.skinIndices && mesh.skinWeights) {
 				const bones: any[] = []
 
-				const skinned = obj as any
+				const skinned = obj as unknown as RigMesh
 				skinned.isSkinnedMesh = true
 				obj.rbxBones = bones
 
@@ -146,7 +175,7 @@ export const RBXAvatar = (() => {
 
 				obj.bind(obj.skeleton, new THREE.Matrix4())
 			} else {
-				const unskinned = obj as any
+				const unskinned = obj as unknown as RigMesh
 				unskinned.isSkinnedMesh = false
 				delete obj.rbxBones
 
@@ -172,7 +201,7 @@ export const RBXAvatar = (() => {
 		// The types declare these non null, but three initialises them to null and
 		// checks for it, which is how a recompute is requested.
 		if (obj instanceof THREE.SkinnedMesh) {
-			const bounded = obj as any
+			const bounded = obj as unknown as RigMesh
 			bounded.boundingBox = null
 			bounded.boundingSphere = null
 		}
@@ -1680,7 +1709,7 @@ export const RBXAvatar = (() => {
 						undefined,
 						new THREE.MeshStandardMaterial({ map: this.textures[tree.name], transparent: false }),
 					)
-					const skinned = obj as any
+					const skinned = obj as unknown as RigMesh
 					skinned.isSkinnedMesh = false
 					obj.bindMode = "detached"
 					useGeometryBoundsWhenUnskinned(obj)
@@ -2234,7 +2263,7 @@ export const RBXAvatar = (() => {
 					}
 
 					const obj = (acc.obj = new THREE.SkinnedMesh(undefined, material))
-					const skinned = obj as any
+					const skinned = obj as unknown as RigMesh
 					skinned.isSkinnedMesh = false
 					obj.bindMode = "detached"
 					useGeometryBoundsWhenUnskinned(obj)

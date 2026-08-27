@@ -4,9 +4,9 @@ import { backgroundScript, contentScript } from "@/core/messaging"
 import { SHARED_DATA } from "@/feat/shareddata"
 
 export const DEFAULT_SETTINGS = {
-	loaded: undefined as any,
-	firstLoad: undefined as any,
-	loadError: undefined as any,
+	loaded: undefined as boolean | undefined,
+	firstLoad: undefined as boolean | undefined,
+	loadError: undefined as unknown,
 	_version: 2,
 	general: {
 		theme: { value: "default", validValues: ["default", "simblk", "sky", "red"] },

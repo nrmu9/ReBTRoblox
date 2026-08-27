@@ -1,17 +1,18 @@
 import { deferredPromise } from "@/core/deferred"
+import type { DeferredPromise } from "@/core/deferred"
 import { setImmediate } from "@/core/dom"
 import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 
 export const SHARED_DATA = {
-	payloadIndex: undefined as any,
-	payloadScript: undefined as any,
-	syncLoadError: undefined as any,
-	payloadPromise: undefined as any,
+	payloadIndex: undefined as number | undefined,
+	payloadScript: undefined as { unregister: () => void } | null | undefined,
+	syncLoadError: undefined as string | undefined,
+	payloadPromise: undefined as DeferredPromise | undefined,
 	_loadPromise: deferredPromise(),
 	_loaded: false,
 
-	lastDataString: null as any,
+	lastDataString: null as string | null,
 	data: { version: 1 },
 
 	updateData() {
