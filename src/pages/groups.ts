@@ -182,8 +182,14 @@ pageInit.groups = () => {
 	})
 
 	onPageLoad(() => {
-		document.$watch("body", (body: HTMLElement) => {
-			document.body.classList.toggle("btr-redesign", SETTINGS.get("groups.modifyLayout"))
-		})
+		// The class half of this is reversible, so it reapplies on change. The
+		// template rewriting above still needs a reload, which is why the setting
+		// is not listed as fully live.
+		const applyLayoutClass = () => {
+			document.body?.classList.toggle("btr-redesign", SETTINGS.get("groups.modifyLayout"))
+		}
+
+		document.$watch("body", applyLayoutClass)
+		SETTINGS.onChange("groups.modifyLayout", applyLayoutClass)
 	})
 }

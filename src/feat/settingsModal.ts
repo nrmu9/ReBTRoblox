@@ -365,10 +365,20 @@ export const SettingsModal: SettingsModalState = {
 			// Settings that already re-read their value do not need a reload, so the
 			// prompt stays hidden for those. Everything else is applied at page init,
 			// which is why the modal used to carry a standing refresh note.
+			// Settings whose feature reapplies itself on change, so no reload is
+			// needed. Anything added here must genuinely handle being switched off
+			// again, not just on, or the prompt will lie about it.
 			const APPLIES_LIVE = new Set([
 				"general.theme",
 				"general.enableContextMenus",
 				"general.robuxToUSDRate",
+				"navigation.noHamburger",
+				"navigation.elements",
+				"messages.markAllAsRead",
+				"messages.pageJump",
+				"itemdetails.explorerButton",
+				"itemdetails.downloadButton",
+				"itemdetails.contentButton",
 			])
 
 			const reloadButton: HTMLButtonElement | null = this.settingsDiv.$find(".btr-settings-reload")

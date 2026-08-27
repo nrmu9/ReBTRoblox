@@ -1594,12 +1594,23 @@ pageInit.www = () => {
 	//
 
 	const headWatcher = document.$watch(">head").$then()
-	const bodyWatcher = document
-		.$watch(">body", (body: HTMLElement) => {
-			body.classList.toggle("btr-no-hamburger", SETTINGS.get("navigation.noHamburger"))
-			body.classList.toggle("btr-hide-ads", SETTINGS.get("general.hideAds"))
+
+	// Pulled out so the listeners below can reapply it to the body that is
+	// already there; a class toggle is fully reversible, so these need no reload.
+	const applyBodyClasses = (body: HTMLElement) => {
+		body.classList.toggle("btr-no-hamburger", SETTINGS.get("navigation.noHamburger"))
+		body.classList.toggle("btr-hide-ads", SETTINGS.get("general.hideAds"))
+	}
+
+	const bodyWatcher = document.$watch(">body", applyBodyClasses).$then()
+
+	for (const settingPath of ["navigation.noHamburger", "general.hideAds"]) {
+		SETTINGS.onChange(settingPath, () => {
+			if (document.body) {
+				applyBodyClasses(document.body)
+			}
 		})
-		.$then()
+	}
 
 	headWatcher.$watch(`meta[name="user-data"]`, (meta: any) => {
 		const userId = +meta.dataset.userid

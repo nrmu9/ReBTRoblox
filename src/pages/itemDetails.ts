@@ -511,26 +511,60 @@ pageInit.itemdetails = () => {
 							preview.setParent(parent)
 						})
 
-						initExplorer(assetId, assetTypeId, isBundle).then((btnCont) => {
-							if (!btnCont) {
-								return
-							}
-							buttons.append(btnCont)
-						})
+						// Each button builds itself and returns nothing when its setting is
+						// off, so switching one back on is just running it again, and
+						// switching it off is removing what it left behind. That is what
+						// lets these apply without a reload.
+						const attachButton = (
+							init: (id: any, typeId: any, bundle: any) => Promise<any>,
+							settingPath: string,
+							selector: string,
+						) => {
+							let attached: HTMLElement | null = null
 
-						initDownloadButton(assetId, assetTypeId, isBundle).then((btnCont) => {
-							if (!btnCont) {
-								return
-							}
-							buttons.append(btnCont)
-						})
+							const apply = () => {
+								if (!SETTINGS.get(settingPath)) {
+									attached?.remove()
+									attached = null
+									buttons.$find(selector)?.remove()
+									return
+								}
 
-						initContentButton(assetId, assetTypeId, isBundle).then((btnCont) => {
-							if (!btnCont) {
-								return
+								if (attached?.isConnected) {
+									return
+								}
+
+								void init(assetId, assetTypeId, isBundle).then((btnCont) => {
+									// The setting may have been turned back off while this was
+									// still building.
+									if (!btnCont || !SETTINGS.get(settingPath)) {
+										return
+									}
+
+									attached = btnCont
+									buttons.append(btnCont)
+								})
 							}
-							buttons.append(btnCont)
-						})
+
+							apply()
+							SETTINGS.onChange(settingPath, apply)
+						}
+
+						attachButton(
+							initExplorer,
+							"itemdetails.explorerButton",
+							".btr-explorer-button-container",
+						)
+						attachButton(
+							initDownloadButton,
+							"itemdetails.downloadButton",
+							".btr-download-button-container",
+						)
+						attachButton(
+							initContentButton,
+							"itemdetails.contentButton",
+							".btr-content-button-container",
+						)
 					})
 				} else {
 					// legacy item details page (used for badges/gamepasses)
