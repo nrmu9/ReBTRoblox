@@ -132,7 +132,7 @@ pageInit.inventory = () => {
 		
 		injectScript.call("inventoryTools", () => {
 			angularHook.hijackModule("inventory", {
-				inventoryContentController(target, thisArg, args, argsMap) {
+				inventoryContentController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					
 					try {

@@ -435,7 +435,7 @@ pageInit.gamedetails = () => {
 		
 		reactHook.hijackConstructor(
 			props => props.getGameServers,
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const props = args[0]
 				
 				if(addServerPager && props.type === "public") {
@@ -448,7 +448,7 @@ pageInit.gamedetails = () => {
 		
 		reactHook.hijackConstructor(
 			props => props.loadMoreGameInstances && "headerTitle" in props,
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const props = args[0]
 				
 				if(addServerPager && props.type === "public") {
@@ -489,7 +489,7 @@ pageInit.gamedetails = () => {
 		
 		reactHook.hijackConstructor( // GameInstanceCard
 			props => props.gameServerStatus,
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const props = args[0]
 				const placeId = props.placeId
 				const jobId = props.id
@@ -603,7 +603,7 @@ pageInit.gamedetails = () => {
 			if(entry) {
 				elem[0].props.href = entry.url
 				
-				hijackFunction(elem[0].props, "onClick", (target, thisArg, args) => {
+				hijackFunction(elem[0].props, "onClick", (target: any, thisArg: any, args: any[]) => {
 					const event = args[0]
 					event.preventDefault()
 					

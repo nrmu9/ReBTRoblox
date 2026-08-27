@@ -93,7 +93,7 @@ pageInit.create = () => {
 							const propertyHandlers = this.propertyHandlers
 							
 							Object.defineProperty = new Proxy(Object.defineProperty, {
-								apply(target, thisArg, args) {
+								apply(target: any, thisArg: any, args: any[]) {
 									const result = target.apply(thisArg, args as any)
 									
 									const list = propertyHandlers.get(args[1])
@@ -120,7 +120,7 @@ pageInit.create = () => {
 				onSet(window, "webpackChunk_N_E", chunks => {
 					const addChunk = chunk => {
 						for(const id of Object.keys(chunk)) {
-							hijackFunction(chunk, id, (target, thisArg, args) => {
+							hijackFunction(chunk, id, (target: any, thisArg: any, args: any[]) => {
 								const result = target.apply(thisArg, args)
 								
 								try {
@@ -143,7 +143,7 @@ pageInit.create = () => {
 					}
 					
 					const override = pushfn => new Proxy(pushfn, {
-						apply: (target, thisArg, args) => {
+						apply: (target: any, thisArg: any, args: any[]) => {
 							for(const chunk of args) {
 								try { addChunk(chunk[1]) }
 								catch(ex) { console.error(ex) }
@@ -209,7 +209,7 @@ pageInit.create = () => {
 		
 		reactHook.hijackConstructor(
 			props => props.settingsHref,
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const result = target.apply(thisArg, args)
 				
 				try {

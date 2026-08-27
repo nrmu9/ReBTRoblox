@@ -14,7 +14,7 @@ pageInit.profile = () => {
 	
 	injectScript.call("profile", () => {
 		angularHook.hijackModule("peopleList", {
-			layoutService(target, thisArg, args, argsMap) {
+			layoutService(target: any, thisArg: any, args: any[], argsMap: any) {
 				const result = target.apply(thisArg, args)
 				result.maxNumberOfFriendsDisplayed = 10
 				return result

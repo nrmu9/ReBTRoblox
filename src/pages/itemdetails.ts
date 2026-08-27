@@ -36,7 +36,7 @@ pageInit.itemdetails = () => {
 	injectScript.call("itemdetails", () => {
 		reactHook.hijackConstructor(
 			props => "itemDetails" in props,
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const result = target.apply(thisArg, args)
 				
 				try {

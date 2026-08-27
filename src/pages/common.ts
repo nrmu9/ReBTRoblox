@@ -356,7 +356,7 @@ export const redirectEvents = (from, to) => {
 			for(const method of methods) {
 				if(typeof clone[method] === "function") {
 					clone[method] = new Proxy(clone[method], {
-						apply(target, thisArg, args) {
+						apply(target: any, thisArg: any, args: any[]) {
 							if(thisArg === clone) {
 								target.apply(thisArg, args)
 								return event[method].apply(event, args)
@@ -387,7 +387,7 @@ const initReactFriends = () => {
 	injectScript.call("initReactFriends", () => {
 		reactHook.hijackConstructor( // FriendsCarouselContainer
 			props => "profileUserId" in props && "carouselName" in props, 
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const props = args[0]
 				props.carouselName
 				
@@ -414,7 +414,7 @@ const initReactFriends = () => {
 		
 		reactHook.hijackConstructor( // FriendsList
 			props => "friendsList" in props, 
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				const props = args[0]
 				const friendsList = props.friendsList
 				const carouselName = props.carouselName
@@ -501,7 +501,7 @@ const initReactFriends = () => {
 			
 			reactHook.hijackConstructor( // FriendTileContent
 				props => props.displayName && props.userProfileUrl,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -536,7 +536,7 @@ const initReactFriends = () => {
 		if(settings.home.friendPresenceLinks) {
 			reactHook.hijackConstructor( // FriendTileDropdown
 				props => props.friend && props.gameUrl,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -1436,7 +1436,7 @@ pageInit.www = () => {
 		injectScript.call("cacheRobuxAmount", () => {
 			reactHook.hijackConstructor(
 				props => "isGetCurrencyCallDone" in props && "isExperimentCallDone" in props && "robuxAmount" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					try {
 						const props = args[0]
 						
@@ -1466,7 +1466,7 @@ pageInit.www = () => {
 			let hijackTruncValue = false
 
 			onSet(window, "CoreUtilities", CoreUtilities => {
-				hijackFunction(CoreUtilities.abbreviateNumber, "getTruncValue", (target, thisArg, args) => {
+				hijackFunction(CoreUtilities.abbreviateNumber, "getTruncValue", (target: any, thisArg: any, args: any[]) => {
 					if(hijackTruncValue && args.length === 1) {
 						try {
 							return target.apply(thisArg, [args[0], 100_000, null, 2])
@@ -1481,7 +1481,7 @@ pageInit.www = () => {
 
 			reactHook.hijackConstructor(
 				props => "robuxAmount" in props && !("isEligibleForVng" in props),
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					hijackTruncValue = true
 					const result = target.apply(thisArg, args)
 					hijackTruncValue = false
@@ -1514,7 +1514,7 @@ pageInit.www = () => {
 			
 			onSet(window, "Roblox", Roblox => {
 				onSet(Roblox, "AvatarAccoutrementService", AvatarAccoutrementService => {
-					hijackFunction(AvatarAccoutrementService, "getAdvancedAccessoryLimit", (target, thisArg, args) => {
+					hijackFunction(AvatarAccoutrementService, "getAdvancedAccessoryLimit", (target: any, thisArg: any, args: any[]) => {
 						if(accessoryAssetTypeIds.includes(+args[0]) || layeredAssetTypeIds.includes(+args[0])) {
 							return
 						}
@@ -1522,7 +1522,7 @@ pageInit.www = () => {
 						return target.apply(thisArg, args)
 					})
 					
-					hijackFunction(AvatarAccoutrementService, "addAssetToAvatar", (target, thisArg, args) => {
+					hijackFunction(AvatarAccoutrementService, "addAssetToAvatar", (target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 						const assets = [args[0], ...args[1]]
 						
@@ -1581,7 +1581,7 @@ pageInit.www = () => {
 			
 			injectScript.call("smallChatButton", () => {
 				angularHook.hijackModule("chat", {
-					chatController(target, thisArg, args, argsMap) {
+					chatController(target: any, thisArg: any, args: any[], argsMap: any) {
 						const result = target.apply(thisArg, args)
 
 						try {
@@ -1669,7 +1669,7 @@ pageInit.www = () => {
 		
 		onSet(window, "Roblox", Roblox => {
 			onSet(Roblox, "ExperimentationService", ExperimentationService => {
-				hijackFunction(ExperimentationService, "getAllValuesForLayer", (target, thisArg, args) => {
+				hijackFunction(ExperimentationService, "getAllValuesForLayer", (target: any, thisArg: any, args: any[]) => {
 					let result = target.apply(thisArg, args)
 					
 					if(result instanceof Promise) {

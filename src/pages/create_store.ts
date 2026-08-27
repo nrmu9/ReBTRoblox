@@ -157,13 +157,13 @@ pageInit.create_store = () => {
 		
 		injectScript.listen("stateChange", stateChanged)
 		injectScript.call("marketplacePageChanged", () => {
-			hijackFunction(history, "pushState", (target, thisArg, args) => {
+			hijackFunction(history, "pushState", (target: any, thisArg: any, args: any[]) => {
 				const result = target.apply(thisArg, args)
 				contentScript.send("stateChange")
 				return result
 			})
 			
-			hijackFunction(history, "replaceState", (target, thisArg, args) => {
+			hijackFunction(history, "replaceState", (target: any, thisArg: any, args: any[]) => {
 				const result = target.apply(thisArg, args)
 				contentScript.send("stateChange")
 				return result

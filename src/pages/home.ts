@@ -32,7 +32,7 @@ pageInit.home = () => {
 		injectScript.call("showRecommendationPlayerCount", () => {
 			reactHook.hijackConstructor(
 				props => "wideTileType" in props && "gameData" in props && "playerCountStyle" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					props.playerCountStyle = "Footer"
 					return target.apply(thisArg, args)
@@ -56,14 +56,14 @@ pageInit.home = () => {
 				}
 				
 				props.onMouseOver = new Proxy(props.onMouseOver ?? (() => {}), {
-					apply(target, thisArg, args) {
+					apply(target: any, thisArg: any, args: any[]) {
 						setIsFocused(true)
 						return target.apply(thisArg, args)
 					}
 				})
 				
 				props.onMouseLeave = new Proxy(props.onMouseLeave ?? (() => {}), {
-					apply(target, thisArg, args) {
+					apply(target: any, thisArg: any, args: any[]) {
 						setIsFocused(false)
 						return target.apply(thisArg, args)
 					}

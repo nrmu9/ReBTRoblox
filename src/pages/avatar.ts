@@ -14,7 +14,7 @@ pageInit.avatar = () => {
 		
 		reactHook.hijackConstructor(
 			props => !openAdvancedAccessories && "openAdvancedAccessories" in props,
-			(target, thisArg, args) => {
+			(target: any, thisArg: any, args: any[]) => {
 				openAdvancedAccessories = args[0].openAdvancedAccessories
 				return target.apply(thisArg, args)
 			}
@@ -115,7 +115,7 @@ pageInit.avatar = () => {
 					let wearingAssets
 					let avatarRules
 					
-					hijackFunction(AvatarAccoutrementService, "removeAssetFromAvatar", (target, thisArg, args) => {
+					hijackFunction(AvatarAccoutrementService, "removeAssetFromAvatar", (target: any, thisArg: any, args: any[]) => {
 						if(args[0] === "btrGetWearingAssets") {
 							wearingAssets = args[1]
 							throw "BTRoblox: abort (this should never be visible)"
@@ -125,7 +125,7 @@ pageInit.avatar = () => {
 					})
 					
 					angularHook.hijackModule("avatar", {
-						avatarController(target, thisArg, args, argsMap) {
+						avatarController(target: any, thisArg: any, args: any[], argsMap: any) {
 							const result = target.apply(thisArg, args)
 							
 							try {
@@ -212,7 +212,7 @@ pageInit.avatar = () => {
 			
 			reactHook.hijackConstructor(
 				props => !forceRefreshThumbnail && "forceRefreshThumbnail" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					forceRefreshThumbnail = args[0].forceRefreshThumbnail
 					return target.apply(thisArg, args)
 				}

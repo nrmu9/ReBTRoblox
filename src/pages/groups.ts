@@ -16,7 +16,7 @@ pageInit.groups = () => {
 	if(SETTINGS.get("groups.modifyLayout")) {
 		injectScript.call("groupsModifyLayout", () => {
 			angularHook.hijackModule("group", {
-				groupController(target, thisArg, args, argsMap) {
+				groupController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -32,7 +32,7 @@ pageInit.groups = () => {
 							name: null
 						}
 						
-						hijackFunction($scope, "groupDetailsTabs", (target, thisArg, args) => {
+						hijackFunction($scope, "groupDetailsTabs", (target: any, thisArg: any, args: any[]) => {
 							let result = target.apply(thisArg, args)
 							
 							const entries: [string, any][] = Object.entries(result)
@@ -51,7 +51,7 @@ pageInit.groups = () => {
 					
 					return result
 				},
-				groupTab(target, thisArg, args) {
+				groupTab(target: any, thisArg: any, args: any[]) {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -68,14 +68,14 @@ pageInit.groups = () => {
 				groupPayouts(component) {
 					component.bindings.layout = "="
 				},
-				groupPayoutsController(target, thisArg, args, argsMap) {
+				groupPayoutsController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					
 					try {
 						const { groupPayoutsService } = argsMap
 						const controller = thisArg
 						
-						hijackFunction(groupPayoutsService, "getGroupPayoutRecipients", (target, thisArg, args) => {
+						hijackFunction(groupPayoutsService, "getGroupPayoutRecipients", (target: any, thisArg: any, args: any[]) => {
 							const result = target.apply(thisArg, args)
 							
 							try {

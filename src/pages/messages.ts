@@ -174,13 +174,13 @@ pageInit.messages = () => {
 	
 	injectScript.call("messages", () => {
 		angularHook.hijackModule("messages", {
-			messagesNav(target, thisArg, args, argsMap) {
+			messagesNav(target: any, thisArg: any, args: any[], argsMap: any) {
 				const result = target.apply(thisArg, args)
 
 				try {
 					const { $location } = argsMap
 					
-					hijackFunction(result, "link", (target, thisArg, args) => {
+					hijackFunction(result, "link", (target: any, thisArg: any, args: any[]) => {
 						try {
 							const [$state] = args
 							

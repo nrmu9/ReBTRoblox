@@ -326,7 +326,7 @@ pageInit.catalog = () => {
 			
 			reactHook.hijackConstructor( // ItemCard
 				props => "unitsAvailableForConsumption" in props && "id" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					const result = target.apply(thisArg, args)
 					

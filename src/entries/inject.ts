@@ -57,7 +57,7 @@ document.addEventListener("btroblox/init", ev => {
 		if(xhrTransforms.length === 1) {
 			const xhrDetails = new WeakMap()
 			
-			hijackFunction(window, "fetch", (target, thisArg, args) => {
+			hijackFunction(window, "fetch", (target: any, thisArg: any, args: any[]) => {
 				let [url, params] = args
 				
 				if(typeof url === "string") {
@@ -88,11 +88,11 @@ document.addEventListener("btroblox/init", ev => {
 					const hijackResponse = res => {
 						if(!request.onResponse.length) { return res }
 						
-						hijackFunction(res, "clone", (target, thisArg, args) => {
+						hijackFunction(res, "clone", (target: any, thisArg: any, args: any[]) => {
 							return hijackResponse(target.apply(thisArg, args))
 						})
 						
-						hijackFunction(res, "json", (target, thisArg, args) => {
+						hijackFunction(res, "json", (target: any, thisArg: any, args: any[]) => {
 							const promise = target.apply(thisArg, args)
 							
 							return promise.then(json => {
@@ -105,7 +105,7 @@ document.addEventListener("btroblox/init", ev => {
 							})
 						})
 						
-						hijackFunction(res, "text", (target, thisArg, args) => {
+						hijackFunction(res, "text", (target: any, thisArg: any, args: any[]) => {
 							const promise = target.apply(thisArg, args)
 							
 							return promise.then(text => {
@@ -284,7 +284,7 @@ document.addEventListener("btroblox/init", ev => {
 				const fn = a[b]
 				
 				if(typeof fn === "function") {
-					hijackFunction(a, b, (target, thisArg, args) => {
+					hijackFunction(a, b, (target: any, thisArg: any, args: any[]) => {
 						const argsMap: Record<string, any> = {}
 						
 						for(const [i, arg] of Object.entries(args) as [string, any][]) {
@@ -308,7 +308,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			if(typeof injects[injects.length - 1] !== "function") { return }
 			
-			hijackFunction(injects, injects.length - 1, (target, thisArg, args) => {
+			hijackFunction(injects, injects.length - 1, (target: any, thisArg: any, args: any[]) => {
 				const argsMap: Record<string, any> = {}
 				
 				for(let i = 0; i < injects.length - 1; i++) {
@@ -369,18 +369,18 @@ document.addEventListener("btroblox/init", ev => {
 			if(module.name === "ng") {
 				// Behold the monstrosity~
 				
-				hijackFunction(module._configBlocks[0][2][0], 1, (target, thisArg, args) => {
-					hijackFunction(args[0], "provider", (target, thisArg, args) => {
+				hijackFunction(module._configBlocks[0][2][0], 1, (target: any, thisArg: any, args: any[]) => {
+					hijackFunction(args[0], "provider", (target: any, thisArg: any, args: any[]) => {
 						if(args[0] instanceof Object && "$templateCache" in args[0]) {
 							args[0].$templateCache = new Proxy(args[0].$templateCache, {
 								construct: (target, args) => {
 									const result = new target(...args)
 									
-									hijackFunction(result.$get, 1, (target, thisArg, args) => {
+									hijackFunction(result.$get, 1, (target: any, thisArg: any, args: any[]) => {
 										const cache = target.apply(thisArg, args)
 										this.templateCaches.push(cache)
 										
-										hijackFunction(cache, "put", (target, thisArg, args) => {
+										hijackFunction(cache, "put", (target: any, thisArg: any, args: any[]) => {
 											const key = args[0]
 											
 											if(this.templateListeners[key]) {
@@ -415,7 +415,7 @@ document.addEventListener("btroblox/init", ev => {
 					callback(entry)
 				}
 				
-				const init = (target, thisArg, args) => {
+				const init = (target: any, thisArg: any, args: any[]) => {
 					for(const entry of args) {
 						callback(entry)
 					}
@@ -476,7 +476,7 @@ document.addEventListener("btroblox/init", ev => {
 				onSet(angular, "module", () => {
 					let didInitNg = false
 					
-					hijackFunction(angular, "module", (target, thisArg, args) => {
+					hijackFunction(angular, "module", (target: any, thisArg: any, args: any[]) => {
 						if(!didInitNg) {
 							didInitNg = true
 							this.initModule(target.call(angular, "ng"))
@@ -1117,7 +1117,7 @@ document.addEventListener("btroblox/init", ev => {
 			}
 		},
 		
-		onCreateElement(target, thisArg, args) {
+		onCreateElement(target: any, thisArg: any, args: any[]) {
 			const result = target.apply(thisArg, args)
 			
 			const root = [result]
@@ -1164,7 +1164,7 @@ document.addEventListener("btroblox/init", ev => {
 			return root.length >= 2 ? root : root[0]
 		},
 		
-		onUseState(target, thisArg, args) {
+		onUseState(target: any, thisArg: any, args: any[]) {
 			const renderTarget = this.renderTarget
 			
 			if(!renderTarget) {
@@ -1201,7 +1201,7 @@ document.addEventListener("btroblox/init", ev => {
 			for(const filter of matching) {
 				if(filter.transform) {
 					result[1] = new Proxy(result[1], {
-						apply(target, thisArg, args) {
+						apply(target: any, thisArg: any, args: any[]) {
 							args[0] = filter.transform(args[0], false)
 							return target.apply(thisArg, args)
 						}
@@ -1324,7 +1324,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => !openAdvancedAccessories && "openAdvancedAccessories" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					openAdvancedAccessories = args[0].openAdvancedAccessories
 					return target.apply(thisArg, args)
 				}
@@ -1347,7 +1347,7 @@ document.addEventListener("btroblox/init", ev => {
 					let wearingAssets
 					let avatarRules
 					
-					hijackFunction(AvatarAccoutrementService, "removeAssetFromAvatar", (target, thisArg, args) => {
+					hijackFunction(AvatarAccoutrementService, "removeAssetFromAvatar", (target: any, thisArg: any, args: any[]) => {
 						if(args[0] === "btrGetWearingAssets") {
 							wearingAssets = args[1]
 							throw "BTRoblox: abort (this should never be visible)"
@@ -1357,7 +1357,7 @@ document.addEventListener("btroblox/init", ev => {
 					})
 					
 					angularHook.hijackModule("avatar", {
-						avatarController(target, thisArg, args, argsMap) {
+						avatarController(target: any, thisArg: any, args: any[], argsMap: any) {
 							const result = target.apply(thisArg, args)
 							
 							try {
@@ -1441,7 +1441,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => !forceRefreshThumbnail && "forceRefreshThumbnail" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					forceRefreshThumbnail = args[0].forceRefreshThumbnail
 					return target.apply(thisArg, args)
 				}
@@ -1474,7 +1474,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor( // ItemCard
 				props => "unitsAvailableForConsumption" in props && "id" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					const result = target.apply(thisArg, args)
 					
@@ -1561,7 +1561,7 @@ document.addEventListener("btroblox/init", ev => {
 				for(const method of methods) {
 					if(typeof clone[method] === "function") {
 						clone[method] = new Proxy(clone[method], {
-							apply(target, thisArg, args) {
+							apply(target: any, thisArg: any, args: any[]) {
 								if(thisArg === clone) {
 									target.apply(thisArg, args)
 									return event[method].apply(event, args)
@@ -1585,7 +1585,7 @@ document.addEventListener("btroblox/init", ev => {
 		"initReactFriends": () => {
 			reactHook.hijackConstructor( // FriendsCarouselContainer
 				props => "profileUserId" in props && "carouselName" in props, 
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					props.carouselName
 					
@@ -1612,7 +1612,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor( // FriendsList
 				props => "friendsList" in props, 
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					const friendsList = props.friendsList
 					const carouselName = props.carouselName
@@ -1699,7 +1699,7 @@ document.addEventListener("btroblox/init", ev => {
 				
 				reactHook.hijackConstructor( // FriendTileContent
 					props => props.displayName && props.userProfileUrl,
-					(target, thisArg, args) => {
+					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 						
 						try {
@@ -1734,7 +1734,7 @@ document.addEventListener("btroblox/init", ev => {
 			if(settings.home.friendPresenceLinks) {
 				reactHook.hijackConstructor( // FriendTileDropdown
 					props => props.friend && props.gameUrl,
-					(target, thisArg, args) => {
+					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 						
 						try {
@@ -1867,7 +1867,7 @@ document.addEventListener("btroblox/init", ev => {
 		"cacheRobuxAmount": () => {
 			reactHook.hijackConstructor(
 				props => "isGetCurrencyCallDone" in props && "isExperimentCallDone" in props && "robuxAmount" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					try {
 						const props = args[0]
 						
@@ -1894,7 +1894,7 @@ document.addEventListener("btroblox/init", ev => {
 			let hijackTruncValue = false
 
 			onSet(window, "CoreUtilities", CoreUtilities => {
-				hijackFunction(CoreUtilities.abbreviateNumber, "getTruncValue", (target, thisArg, args) => {
+				hijackFunction(CoreUtilities.abbreviateNumber, "getTruncValue", (target: any, thisArg: any, args: any[]) => {
 					if(hijackTruncValue && args.length === 1) {
 						try {
 							return target.apply(thisArg, [args[0], 100_000, null, 2])
@@ -1909,7 +1909,7 @@ document.addEventListener("btroblox/init", ev => {
 
 			reactHook.hijackConstructor(
 				props => "robuxAmount" in props && !("isEligibleForVng" in props),
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					hijackTruncValue = true
 					const result = target.apply(thisArg, args)
 					hijackTruncValue = false
@@ -1936,7 +1936,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			onSet(window, "Roblox", Roblox => {
 				onSet(Roblox, "AvatarAccoutrementService", AvatarAccoutrementService => {
-					hijackFunction(AvatarAccoutrementService, "getAdvancedAccessoryLimit", (target, thisArg, args) => {
+					hijackFunction(AvatarAccoutrementService, "getAdvancedAccessoryLimit", (target: any, thisArg: any, args: any[]) => {
 						if(accessoryAssetTypeIds.includes(+args[0]) || layeredAssetTypeIds.includes(+args[0])) {
 							return
 						}
@@ -1944,7 +1944,7 @@ document.addEventListener("btroblox/init", ev => {
 						return target.apply(thisArg, args)
 					})
 					
-					hijackFunction(AvatarAccoutrementService, "addAssetToAvatar", (target, thisArg, args) => {
+					hijackFunction(AvatarAccoutrementService, "addAssetToAvatar", (target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 						const assets = [args[0], ...args[1]]
 						
@@ -1993,7 +1993,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"smallChatButton": () => {
 			angularHook.hijackModule("chat", {
-				chatController(target, thisArg, args, argsMap) {
+				chatController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 
 					try {
@@ -2067,7 +2067,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			onSet(window, "Roblox", Roblox => {
 				onSet(Roblox, "ExperimentationService", ExperimentationService => {
-					hijackFunction(ExperimentationService, "getAllValuesForLayer", (target, thisArg, args) => {
+					hijackFunction(ExperimentationService, "getAllValuesForLayer", (target: any, thisArg: any, args: any[]) => {
 						let result = target.apply(thisArg, args)
 						
 						if(result instanceof Promise) {
@@ -2174,7 +2174,7 @@ document.addEventListener("btroblox/init", ev => {
 								const propertyHandlers = this.propertyHandlers
 								
 								Object.defineProperty = new Proxy(Object.defineProperty, {
-									apply(target, thisArg, args) {
+									apply(target: any, thisArg: any, args: any[]) {
 										const result = target.apply(thisArg, args as any)
 										
 										const list = propertyHandlers.get(args[1])
@@ -2201,7 +2201,7 @@ document.addEventListener("btroblox/init", ev => {
 					onSet(window, "webpackChunk_N_E", chunks => {
 						const addChunk = chunk => {
 							for(const id of Object.keys(chunk)) {
-								hijackFunction(chunk, id, (target, thisArg, args) => {
+								hijackFunction(chunk, id, (target: any, thisArg: any, args: any[]) => {
 									const result = target.apply(thisArg, args)
 									
 									try {
@@ -2224,7 +2224,7 @@ document.addEventListener("btroblox/init", ev => {
 						}
 						
 						const override = pushfn => new Proxy(pushfn, {
-							apply: (target, thisArg, args) => {
+							apply: (target: any, thisArg: any, args: any[]) => {
 								for(const chunk of args) {
 									try { addChunk(chunk[1]) }
 									catch(ex) { console.error(ex) }
@@ -2288,7 +2288,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => props.settingsHref,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -2335,7 +2335,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => props.itemType && props.updateItem,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -2450,7 +2450,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => props.menuItems && props.setMenuOpen,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -2494,7 +2494,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => "version" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -2567,13 +2567,13 @@ document.addEventListener("btroblox/init", ev => {
 			)
 		},
 		"marketplacePageChanged": () => {
-			hijackFunction(history, "pushState", (target, thisArg, args) => {
+			hijackFunction(history, "pushState", (target: any, thisArg: any, args: any[]) => {
 				const result = target.apply(thisArg, args)
 				contentScript.send("stateChange")
 				return result
 			})
 			
-			hijackFunction(history, "replaceState", (target, thisArg, args) => {
+			hijackFunction(history, "replaceState", (target: any, thisArg: any, args: any[]) => {
 				const result = target.apply(thisArg, args)
 				contentScript.send("stateChange")
 				return result
@@ -2941,7 +2941,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => props.getGameServers,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					
 					if(addServerPager && props.type === "public") {
@@ -2954,7 +2954,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor(
 				props => props.loadMoreGameInstances && "headerTitle" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					
 					if(addServerPager && props.type === "public") {
@@ -2995,7 +2995,7 @@ document.addEventListener("btroblox/init", ev => {
 			
 			reactHook.hijackConstructor( // GameInstanceCard
 				props => props.gameServerStatus,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					const placeId = props.placeId
 					const jobId = props.id
@@ -3107,7 +3107,7 @@ document.addEventListener("btroblox/init", ev => {
 				if(entry) {
 					elem[0].props.href = entry.url
 					
-					hijackFunction(elem[0].props, "onClick", (target, thisArg, args) => {
+					hijackFunction(elem[0].props, "onClick", (target: any, thisArg: any, args: any[]) => {
 						const event = args[0]
 						event.preventDefault()
 						
@@ -3122,7 +3122,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"groupsModifyLayout": () => {
 			angularHook.hijackModule("group", {
-				groupController(target, thisArg, args, argsMap) {
+				groupController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -3138,7 +3138,7 @@ document.addEventListener("btroblox/init", ev => {
 							name: null
 						}
 						
-						hijackFunction($scope, "groupDetailsTabs", (target, thisArg, args) => {
+						hijackFunction($scope, "groupDetailsTabs", (target: any, thisArg: any, args: any[]) => {
 							let result = target.apply(thisArg, args)
 							
 							const entries = Object.entries(result)
@@ -3157,7 +3157,7 @@ document.addEventListener("btroblox/init", ev => {
 					
 					return result
 				},
-				groupTab(target, thisArg, args) {
+				groupTab(target: any, thisArg: any, args: any[]) {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -3174,14 +3174,14 @@ document.addEventListener("btroblox/init", ev => {
 				groupPayouts(component) {
 					component.bindings.layout = "="
 				},
-				groupPayoutsController(target, thisArg, args, argsMap) {
+				groupPayoutsController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					
 					try {
 						const { groupPayoutsService } = argsMap
 						const controller = thisArg
 						
-						hijackFunction(groupPayoutsService, "getGroupPayoutRecipients", (target, thisArg, args) => {
+						hijackFunction(groupPayoutsService, "getGroupPayoutRecipients", (target: any, thisArg: any, args: any[]) => {
 							const result = target.apply(thisArg, args)
 							
 							try {
@@ -3228,7 +3228,7 @@ document.addEventListener("btroblox/init", ev => {
 		"showRecommendationPlayerCount": () => {
 			reactHook.hijackConstructor(
 				props => "wideTileType" in props && "gameData" in props && "playerCountStyle" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const props = args[0]
 					props.playerCountStyle = "Footer"
 					return target.apply(thisArg, args)
@@ -3249,14 +3249,14 @@ document.addEventListener("btroblox/init", ev => {
 				}
 				
 				props.onMouseOver = new Proxy(props.onMouseOver ?? (() => {}), {
-					apply(target, thisArg, args) {
+					apply(target: any, thisArg: any, args: any[]) {
 						setIsFocused(true)
 						return target.apply(thisArg, args)
 					}
 				})
 				
 				props.onMouseLeave = new Proxy(props.onMouseLeave ?? (() => {}), {
-					apply(target, thisArg, args) {
+					apply(target: any, thisArg: any, args: any[]) {
 						setIsFocused(false)
 						return target.apply(thisArg, args)
 					}
@@ -3265,7 +3265,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"inventoryTools": () => {
 			angularHook.hijackModule("inventory", {
-				inventoryContentController(target, thisArg, args, argsMap) {
+				inventoryContentController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -3305,7 +3305,7 @@ document.addEventListener("btroblox/init", ev => {
 		"itemdetails": () => {
 			reactHook.hijackConstructor(
 				props => "itemDetails" in props,
-				(target, thisArg, args) => {
+				(target: any, thisArg: any, args: any[]) => {
 					const result = target.apply(thisArg, args)
 					
 					try {
@@ -3341,13 +3341,13 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"messages": () => {
 			angularHook.hijackModule("messages", {
-				messagesNav(target, thisArg, args, argsMap) {
+				messagesNav(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 
 					try {
 						const { $location } = argsMap
 						
-						hijackFunction(result, "link", (target, thisArg, args) => {
+						hijackFunction(result, "link", (target: any, thisArg: any, args: any[]) => {
 							try {
 								const [$state] = args
 								
@@ -3397,7 +3397,7 @@ document.addEventListener("btroblox/init", ev => {
 		},
 		"profile": () => {
 			angularHook.hijackModule("peopleList", {
-				layoutService(target, thisArg, args, argsMap) {
+				layoutService(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
 					result.maxNumberOfFriendsDisplayed = 10
 					return result
