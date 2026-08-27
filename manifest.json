@@ -1,0 +1,62 @@
+{
+	"name": "BTRoblox - Making Roblox Better",
+	"short_name": "BTRoblox",
+	"description": "Enhance your Roblox experience!",
+	"author": "nrmu9, AntiBoomz",
+	"icons": {
+		"128": "res/icon_128.png"
+	},
+	"action_title": "Open BTRoblox Settings",
+	"permissions": [
+		"contextMenus",
+		"scripting",
+		"storage"
+	],
+	"host_permissions": [
+		"*://*.roblox.com/",
+		"*://*.rbxcdn.com/"
+	],
+	"web_accessible_resources": [
+		"/res/*",
+		"/css/*"
+	],
+	"content_scripts": [
+		{
+			"matches": [
+				"*://www.roblox.com/*",
+				"*://web.roblox.com/*",
+				"*://create.roblox.com/*"
+			],
+			"exclude_matches": [
+				"*://*/userads/*",
+				"*://*/user-sponsorship/*",
+				"*://*/*/userads/*",
+				"*://*/*/user-sponsorship/*"
+			],
+			"run_at": "document_start",
+			"all_frames": true,
+			"world": "MAIN"
+		},
+		{
+			"matches": [
+				"*://www.roblox.com/*",
+				"*://web.roblox.com/*"
+			],
+			"exclude_matches": [
+				"*://*/userads/*",
+				"*://*/user-sponsorship/*",
+				"*://*/*/userads/*",
+				"*://*/*/user-sponsorship/*"
+			],
+			"run_at": "document_start",
+			"all_frames": true
+		},
+		{
+			"matches": [
+				"*://create.roblox.com/*"
+			],
+			"run_at": "document_start",
+			"all_frames": true
+		}
+	]
+}

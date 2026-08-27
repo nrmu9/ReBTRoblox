@@ -31,9 +31,60 @@ const copyAssets = () => {
 	}
 }
 
+// One manifest.json in the repo root holds everything the two targets agree
+// on. The MV2/MV3 differences live here, and the version comes from
+// package.json, so a release is a single bump.
+const TARGETS = {
+	firefox: {
+		manifest_version: 2,
+		apply(manifest, shared) {
+			manifest.browser_action = { default_title: shared.action_title }
+			manifest.browser_specific_settings = {
+				gecko: {
+					id: "btroblox@antiboomz.com",
+					strict_min_version: "128.0",
+					data_collection_permissions: { required: ["none"] }
+				}
+			}
+			// MV2 has no host_permissions: hosts go in permissions.
+			manifest.permissions = [...shared.host_permissions, ...shared.permissions]
+			manifest.web_accessible_resources = shared.web_accessible_resources
+		}
+	},
+
+	chrome: {
+		manifest_version: 3,
+		apply(manifest, shared) {
+			manifest.minimum_chrome_version = "111"
+			manifest.incognito = "split"
+			manifest.action = { default_title: shared.action_title }
+			// Chrome blocks ads through declarativeNetRequest rather than webRequest.
+			manifest.permissions = ["declarativeNetRequestWithHostAccess", ...shared.permissions]
+			manifest.host_permissions = shared.host_permissions
+			manifest.web_accessible_resources = [{
+				resources: shared.web_accessible_resources,
+				matches: ["*://*.roblox.com/*"]
+			}]
+		}
+	}
+}
+
 const writeManifest = () => {
-	const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, `manifest.${target}.json`), "utf8"))
-	const hosts = target === "chrome" ? "host_permissions" : "permissions"
+	const shared = JSON.parse(fs.readFileSync(path.join(ROOT, "manifest.json"), "utf8"))
+	const { version } = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
+	const spec = TARGETS[target]
+
+	if(!spec) { throw new Error(`unknown target ${target}`) }
+
+	const { action_title, permissions, host_permissions, web_accessible_resources, ...rest } = shared
+
+	const manifest = {
+		manifest_version: spec.manifest_version,
+		...rest,
+		version
+	}
+
+	spec.apply(manifest, shared)
 
 	manifest.background = target === "chrome"
 		? { service_worker: "js/background.js" }
@@ -44,6 +95,8 @@ const writeManifest = () => {
 	}
 
 	if(dev) {
+		const hosts = target === "chrome" ? "host_permissions" : "permissions"
+
 		manifest.name = "BTRoblox DEV"
 		manifest.short_name = "BTRoblox_DEV"
 		manifest[hosts] = [...manifest[hosts], BRIDGE_ORIGIN]
