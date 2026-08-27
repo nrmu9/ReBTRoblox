@@ -1,0 +1,9 @@
+# Prettier and .editorconfig both write LF, so keep the working tree matching
+# rather than letting autocrlf rewrite every file on checkout.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
