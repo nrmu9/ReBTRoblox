@@ -1899,20 +1899,6 @@ pageInit.www = () => {
 
 	}
 
-	// Collapsed to its header, the chat would have no way back open, so the
-	// header toggles it. React rerenders the widget, so this is delegated.
-	document.$on("click", ".react-chat-root section > div:first-child", (event: Event) => {
-		if (!SETTINGS.get("general.smallChatButton") || SETTINGS.get("general.hideChat")) {
-			return
-		}
-
-		// The new chat button in the header has its own job.
-		if ((event.target as HTMLElement).closest("button")) {
-			return
-		}
-
-		;(event.currentTarget as HTMLElement).closest(".react-chat-root")?.classList.toggle("btr-chat-open")
-	})
 
 	bodyWatcher.$watch("#chat-container", applyChatSettings)
 	bodyWatcher.$watchAll(".react-chat-root", applyChatSettings, { continuous: true })
