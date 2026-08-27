@@ -98,6 +98,18 @@ const writeManifest = () => {
 		version,
 	}
 
+	// AMO rejects the submission outright past these, and it does so after a
+	// tag is already pushed, so the build refuses first.
+	const LIMITS = { name: 45, short_name: 12, description: 132 }
+
+	for (const [key, limit] of Object.entries(LIMITS)) {
+		if (manifest[key] && manifest[key].length > limit) {
+			throw new Error(
+				`manifest ${key} is ${manifest[key].length} characters, over the ${limit} AMO allows`,
+			)
+		}
+	}
+
 	spec.apply(manifest, shared)
 
 	manifest.background =
