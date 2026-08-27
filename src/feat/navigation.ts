@@ -261,6 +261,23 @@ export const Navigation = {
 			enabled: true
 		})
 		
+		const FRIENDS_LINK = `nav a[href*="/users/friends"]`
+		const MESSAGES_LINK = `nav a[href*="/my/messages"]`
+		const NOTIF_BADGE = ".foundation-web-badge"
+		
+		/** Mirror href and unread count from a left menu entry onto our own item. */
+		const mirrorNavItem = (node: HTMLElement, linkSelector: string): void => {
+			const orig = query<HTMLAnchorElement>(linkSelector)
+			const origNotif = orig?.$find(NOTIF_BADGE)
+			
+			const notif = node.$req(".btr-nav-notif")
+			const link = node.$req<HTMLAnchorElement>("a")
+			
+			if(orig) { link.href = orig.href }
+			notif.textContent = origNotif?.textContent?.trim() ?? ""
+			notif.style.display = origNotif ? "" : "none"
+		}
+		
 		Navigation.register("header_friends", {
 			label: "Show Friends",
 			
@@ -281,15 +298,7 @@ export const Navigation = {
 				node.style.display = this.enabled ? "" : "none"
 				if(!this.enabled) { return }
 				
-				const orig = query<HTMLAnchorElement>("#nav-friends")
-				const origNotif = orig?.$find(".notification")
-				
-				const notif = node.$find(".btr-nav-notif")
-				const link = node.$find("a")
-				
-				if(orig) { link.href = orig.href }
-				notif.textContent = origNotif ? origNotif.textContent.trim() : ""
-				notif.style.display = origNotif ? "" : "none"
+				mirrorNavItem(node, FRIENDS_LINK)
 			}
 		})
 		
@@ -313,15 +322,7 @@ export const Navigation = {
 				node.style.display = this.enabled ? "" : "none"
 				if(!this.enabled) { return }
 				
-				const orig = query<HTMLAnchorElement>("#nav-message")
-				const origNotif = orig?.$find(".notification")
-				
-				const notif = node.$find(".btr-nav-notif")
-				const link = node.$find("a")
-				
-				if(orig) { link.href = orig.href }
-				notif.textContent = origNotif ? origNotif.textContent.trim() : ""
-				notif.style.display = origNotif ? "" : "none"
+				mirrorNavItem(node, MESSAGES_LINK)
 			}
 		})
 		
@@ -345,11 +346,11 @@ export const Navigation = {
 				show_notifs: { label: "Show Unread", enabled: true, class: "!hide_notifs" }
 			},
 			
-			selector: "#nav-message",
+			selector: MESSAGES_LINK,
 			enabled: true,
 			
 			update(node) {
-				node.parentNode.style.display = this.enabled ? "" : "none"
+				(node.parentElement ?? node).style.display = this.enabled ? "" : "none"
 			},
 			
 			nodeAdded(node) {
@@ -373,11 +374,11 @@ export const Navigation = {
 				show_notifs: { label: "Show Requests", enabled: true, class: "!hide_notifs" }
 			},
 			
-			selector: "#nav-friends",
+			selector: FRIENDS_LINK,
 			enabled: true,
 			
 			update(node) {
-				node.parentNode.style.display = this.enabled ? "" : "none"
+				(node.parentElement ?? node).style.display = this.enabled ? "" : "none"
 			},
 			
 			nodeAdded(node) {
