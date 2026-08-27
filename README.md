@@ -1,9 +1,11 @@
-<a href="https://chrome.google.com/webstore/detail/btroblox/hbkpclpemjeibhioopcebchdmohaieln" title="Available in the Chrome Web Store"><img src="/img/ChromeWebStore_BadgeWBorder_v2_206x58.png" alt="Available in the Chrome Web Store"></a>&nbsp;&nbsp;&nbsp;<a href="https://addons.mozilla.org/en-US/firefox/addon/btroblox/" title="Get the add-on from the Firefox Add-ons store"><img src="/img/AMO-button_1.png" alt="Get the add-on from the Firefox Add-ons store"></a>
+<a href="https://github.com/nrmu9/BTRoblox/releases/latest" title="Download the latest release"><img src="https://img.shields.io/github/v/release/nrmu9/BTRoblox?label=download&style=for-the-badge" alt="Download the latest release"></a>
 
 ReBTRoblox
 ========
 
-ReBTRoblox, or Better Roblox, is an extension that aims to enhance Roblox website's look and functionality by adding a plethora of new features and modifying the layout of some existing pages.
+ReBTRoblox is an extension that aims to enhance Roblox website's look and functionality by adding a plethora of new features and modifying the layout of some existing pages.
+
+It is a fork of [BTRoblox](https://github.com/AntiBoomz/BTRoblox) by [AntiBoomz](https://github.com/AntiBoomz), who wrote the original and everything this is built on. That project has not seen active maintenance for some time and a number of its features had stopped working, so this continues it. All credit for the original work is theirs.
 
 Links
 -----
