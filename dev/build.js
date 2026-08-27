@@ -128,7 +128,11 @@ const writeManifest = () => {
 
 		manifest.name = "ReBTRoblox DEV"
 		manifest.short_name = "ReBTRoblox_DEV"
-		manifest[hosts] = [...manifest[hosts], BRIDGE_ORIGIN]
+
+		// Only the MV2 build talks to the bridge, so only it needs to reach it.
+		if (target === "firefox") {
+			manifest[hosts] = [...manifest[hosts], BRIDGE_ORIGIN]
+		}
 		manifest.permissions = [...new Set([...manifest.permissions, "tabs"])]
 
 		if (target === "firefox") {
@@ -160,6 +164,7 @@ const shared = {
 	define: {
 		"process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production"),
 		__DEV__: JSON.stringify(dev),
+		__MV3__: JSON.stringify(target === "chrome"),
 	},
 }
 

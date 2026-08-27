@@ -84,6 +84,12 @@ contentScript.listen({
 })
 // __DEV__ is a build time literal, so production drops this branch and the
 // bridge module with it. IS_DEV_MODE alone is a runtime check and would not.
-if (__DEV__ && IS_DEV_MODE) {
+//
+// MV2 only: the bridge runs code by string, which the MV3 extension CSP
+// forbids, and reaches pages through tabs.executeScript, which MV3 dropped.
+// Two builds polling the same port would also race each other for jobs.
+// __MV3__ rather than IS_MANIFEST_V3 for the same reason as __DEV__ above:
+// only a build time literal lets esbuild drop the module entirely.
+if (__DEV__ && !__MV3__ && IS_DEV_MODE) {
 	void import("@/dev/bridge").then(({ startDevBridge }) => startDevBridge())
 }

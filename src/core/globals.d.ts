@@ -3,6 +3,8 @@ import type { Watcher, WatchProps } from "@/core/watch"
 declare global {
 	/** Folded to a literal at build time so dev-only code can be tree shaken out. */
 	const __DEV__: boolean
+	/** Build time twin of IS_MANIFEST_V3, so target-only code can be dropped. */
+	const __MV3__: boolean
 
 	// Page world: provided by Roblox itself or by inject.js, and reached from
 	// stringified closures passed to injectScript.call. $ there is Roblox's
