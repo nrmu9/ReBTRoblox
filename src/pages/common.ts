@@ -21,7 +21,7 @@ import type { ItemPreviewer } from "@/rbx/Preview"
 
 export const pageLoad: Record<string, any> = {}
 
-export const onPageLoad = (fn) => {
+export const onPageLoad = (fn: (...args: any[]) => void) => {
 	const pageName = currentPage?.name
 	assert(pageName)
 
@@ -29,7 +29,7 @@ export const onPageLoad = (fn) => {
 	pageLoad[pageName].push(fn)
 }
 
-export const onPageReset = (fn) => {
+export const onPageReset = (fn: (...args: any[]) => void) => {
 	const pageName = currentPage?.name
 	assert(pageName)
 
@@ -52,13 +52,13 @@ const ContainerAssetTypeIds = {
 	maxPage: undefined as any,
 	value: undefined as any,
 	finished: undefined as any,
-	[AssetType.EmoteAnimation]: (x) => x.findFirstChildOfClass("Animation")?.getProperty("AnimationId"),
-	[AssetType.MeshPart]: (x) => x.findFirstChildOfClass("MeshPart")?.getProperty("MeshID", true),
-	[AssetType.TShirt]: (x) => x.findFirstChildOfClass("ShirtGraphic")?.getProperty("Graphic"),
-	[AssetType.Shirt]: (x) => x.findFirstChildOfClass("Shirt")?.getProperty("ShirtTemplate"),
-	[AssetType.Pants]: (x) => x.findFirstChildOfClass("Pants")?.getProperty("PantsTemplate"),
-	[AssetType.Decal]: (x) => x.findFirstChildOfClass("Decal")?.getProperty("Texture"),
-	[AssetType.Face]: (x) => x.findFirstChildOfClass("Decal")?.getProperty("Texture"),
+	[AssetType.EmoteAnimation]: (x: any) => x.findFirstChildOfClass("Animation")?.getProperty("AnimationId"),
+	[AssetType.MeshPart]: (x: any) => x.findFirstChildOfClass("MeshPart")?.getProperty("MeshID", true),
+	[AssetType.TShirt]: (x: any) => x.findFirstChildOfClass("ShirtGraphic")?.getProperty("Graphic"),
+	[AssetType.Shirt]: (x: any) => x.findFirstChildOfClass("Shirt")?.getProperty("ShirtTemplate"),
+	[AssetType.Pants]: (x: any) => x.findFirstChildOfClass("Pants")?.getProperty("PantsTemplate"),
+	[AssetType.Decal]: (x: any) => x.findFirstChildOfClass("Decal")?.getProperty("Texture"),
+	[AssetType.Face]: (x: any) => x.findFirstChildOfClass("Decal")?.getProperty("Texture"),
 }
 
 export const WearableAssetTypeIds = [
@@ -72,8 +72,9 @@ export const AccessoryAssetTypeIds = [
 
 //
 
-export const formatNumber = (num) => String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,")
-export const formatUrlName = (name, def = "Name") =>
+export const formatNumber = (num: number | string) =>
+	String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,")
+export const formatUrlName = (name: string, def = "Name") =>
 	encodeURIComponent(
 		name
 			.replace(/[']/g, "")
@@ -83,7 +84,11 @@ export const formatUrlName = (name, def = "Name") =>
 
 //
 
-export function onMouseEnter(element, selector, callback) {
+export function onMouseEnter(
+	element: HTMLElement,
+	selector: string | ((el: HTMLElement) => void),
+	callback: (...args: any[]) => void,
+) {
 	if (typeof selector === "function") {
 		element.$on("mouseenter", () => selector(element))
 		return
@@ -91,11 +96,11 @@ export function onMouseEnter(element, selector, callback) {
 
 	let hovering = false
 
-	element.$on("mouseover", selector, (event) => {
+	element.$on("mouseover", selector, (event: Event) => {
 		if (!hovering) {
 			hovering = true
 
-			const currentTarget = event.currentTarget
+			const currentTarget = event.currentTarget as HTMLElement
 			currentTarget.$on(
 				"mouseleave",
 				() => {
@@ -111,19 +116,17 @@ export function onMouseEnter(element, selector, callback) {
 
 //
 
-export function startDownload(blob, fileName) {
+export function startDownload(blobUrl: string, fileName: string) {
 	const link = document.createElement("a")
 	link.setAttribute("download", fileName || "file")
-	link.setAttribute("href", blob)
+	link.setAttribute("href", blobUrl)
 	document.body.append(link)
 	link.click()
 	link.remove()
 }
 
-export function getAssetFileType(assetTypeId, buffer) {
-	if (buffer instanceof ArrayBuffer) {
-		buffer = new Uint8Array(buffer)
-	}
+export function getAssetFileType(assetTypeId: number, input: ArrayBuffer | Uint8Array) {
+	const buffer = input instanceof ArrayBuffer ? new Uint8Array(input) : input
 
 	switch (assetTypeId) {
 		case 1:
@@ -341,16 +344,16 @@ export function createPager(noSelect?: boolean, hideWhenEmpty?: boolean): Pager 
 //
 
 let redirectIndexCounter = 0
-export const redirectEvents = (from, to) => {
+export const redirectEvents = (from: HTMLElement, to: HTMLElement) => {
 	const redirectIndex = redirectIndexCounter
 	redirectIndexCounter += 2
 
-	from.dataset.redirectEvents = redirectIndex
-	to.dataset.redirectEvents = redirectIndex + 1
+	from.dataset.redirectEvents = String(redirectIndex)
+	to.dataset.redirectEvents = String(redirectIndex + 1)
 
 	injectScript.call(
 		"redirectEvents",
-		(fromSelector, toSelector) => {
+		(fromSelector: string, toSelector: string) => {
 			const from = document.querySelector(fromSelector)
 			const to = document.querySelector(toSelector)
 
@@ -451,17 +454,20 @@ export const redirectEvents = (from, to) => {
 
 			const redirected = new WeakSet()
 
-			const callback = (event) => {
+			const callback = (event: Event) => {
 				// dispatchEvent runs a capture phase, so a clone can re-enter this
 				// capture listener if `to` is inside `from`. Never redirect twice.
 				if (redirected.has(event)) {
 					return
 				}
-				const clone = new event.constructor(
+				const clone = new (event.constructor as new (...args: any[]) => Event)(
 					event.type,
 					new Proxy(event, {
+						// Forwards every property except bubbles, so the key is arbitrary.
 						get(target, prop) {
-							return prop === "bubbles" ? false : target[prop]
+							return prop === "bubbles"
+								? false
+								: (target as unknown as Record<string | symbol, any>)[prop]
 						},
 					}),
 				)
@@ -471,13 +477,18 @@ export const redirectEvents = (from, to) => {
 					bubbles: { value: event.bubbles },
 				})
 
+				// The wrapped method names come from a runtime list, so both events
+				// are indexed dynamically here.
+				const clonedAsRecord = clone as unknown as Record<string, any>
+				const eventAsRecord = event as unknown as Record<string, any>
+
 				for (const method of methods) {
-					if (typeof clone[method] === "function") {
-						clone[method] = new Proxy(clone[method], {
+					if (typeof clonedAsRecord[method] === "function") {
+						clonedAsRecord[method] = new Proxy(clonedAsRecord[method], {
 							apply(target: any, thisArg: any, args: any[]) {
 								if (thisArg === clone) {
 									target.apply(thisArg, args)
-									return event[method].apply(event, args)
+									return eventAsRecord[method].apply(event, args)
 								}
 
 								return target.apply(thisArg, args)
@@ -613,12 +624,12 @@ const initReactFriends = () => {
 		if (settings.home.friendsShowUsername) {
 			const friendsState = reactHook.createGlobalState({})
 
-			hijackXHR((request) => {
+			hijackXHR((request: any) => {
 				if (
 					request.method === "POST" &&
 					request.url === "https://apis.roblox.com/user-profile-api/v1/user/profiles/get-profiles"
 				) {
-					request.onRequest.push((request) => {
+					request.onRequest.push((request: any) => {
 						const json = JSON.parse(request.body)
 
 						if (!json.fields.includes("names.username")) {
@@ -628,7 +639,7 @@ const initReactFriends = () => {
 						request.body = JSON.stringify(json)
 					})
 
-					request.onResponse.push((json) => {
+					request.onResponse.push((json: any) => {
 						for (const user of json.profileDetails) {
 							friendsState.value[user.userId] = user
 						}
@@ -692,7 +703,7 @@ const initReactFriends = () => {
 							result.props.children[0] = reactHook.createElement("a", {
 								href: args[0].gameUrl,
 								style: { display: "contents" },
-								onClick: (event) => event.preventDefault(),
+								onClick: (event: Event) => event.preventDefault(),
 								children: card,
 							})
 						}
@@ -865,7 +876,7 @@ export const modifyAngularTemplate = (
 }
 
 const initAngularTemplates = () => {
-	injectScript.listen("initTemplate", (key, html) => {
+	injectScript.listen("initTemplate", (key: string, html: string) => {
 		// self closing tag support
 		html = html.replace(/<([\w-:]+)([^>]*)\/>/gi, "<$1$2></$1>")
 
@@ -880,13 +891,14 @@ const initAngularTemplates = () => {
 
 //
 
-export const initPreview = async (assetId, assetTypeId, isBundle) => {
+export const initPreview = async (assetId: number, assetTypeId: number | null, isBundle: boolean) => {
 	if (!SETTINGS.get("itemdetails.itemPreviewer")) {
 		return
 	}
 
 	const isPreviewable =
-		AnimationPreviewAssetTypeIds.includes(assetTypeId) || WearableAssetTypeIds.includes(assetTypeId)
+		assetTypeId !== null &&
+		(AnimationPreviewAssetTypeIds.includes(assetTypeId) || WearableAssetTypeIds.includes(assetTypeId))
 	if (!isBundle && !isPreviewable) {
 		return
 	}
@@ -895,14 +907,14 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 	let autoLoading = false
 
 	const assetPromises: any[] = []
-	let currentOutfitId
-	let playedAnimation
-	let bundleType
-	let preview
+	let currentOutfitId: any
+	let playedAnimation: any
+	let bundleType: string | undefined
+	let preview: any
 
 	let previewPromise = deferredPromise<ItemPreviewer | null>()
 
-	const setOutfit = (outfitId) => {
+	const setOutfit = (outfitId: any) => {
 		if (!preview) {
 			currentOutfitId = outfitId
 			return
@@ -936,7 +948,10 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 			AssetType.EmoteAnimation,
 		]
 
-		if (!disabledTypes.includes(assetTypeId) && bundleType !== "AvatarAnimations") {
+		if (
+			(assetTypeId === null || !disabledTypes.includes(assetTypeId)) &&
+			bundleType !== "AvatarAnimations"
+		) {
 			const defaultAnimsR15 = {
 				run: [913376220],
 				walk: [913402848],
@@ -981,8 +996,8 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 		previewPromise.$resolve(preview)
 	})
 
-	const addAsset = async (assetId, assetTypeId, assetName, meta) => {
-		if (AnimationPreviewAssetTypeIds.includes(assetTypeId)) {
+	const addAsset = async (assetId: number, assetTypeId: number | null, assetName: string, meta: any) => {
+		if (assetTypeId !== null && AnimationPreviewAssetTypeIds.includes(assetTypeId)) {
 			await loadPreview()
 			preview.setVisible(true)
 
@@ -1003,7 +1018,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 			} else if (assetTypeId === 61) {
 				// Emote asset, contains an Animation
 				const model = await AssetCache.loadModel(assetId)
-				const animation = model.find((x) => x.ClassName === "Animation")
+				const animation = model.find((x: any) => x.ClassName === "Animation")
 				const animationId = AssetCache.getAssetIdFromUrl(animation.AnimationId)
 
 				preview.addAnimation(animationId, assetName)
@@ -1016,7 +1031,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 			} else {
 				// Avatar animation
 				const model = await AssetCache.loadModel(assetId)
-				const folder = model.find((x) => x.Name === "R15Anim")
+				const folder = model.find((x: any) => x.Name === "R15Anim")
 
 				for (const value of folder.Children) {
 					if (value.ClassName !== "StringValue") {
@@ -1042,7 +1057,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 					}
 				}
 			}
-		} else if (WearableAssetTypeIds.includes(assetTypeId)) {
+		} else if (assetTypeId !== null && WearableAssetTypeIds.includes(assetTypeId)) {
 			await loadPreview()
 
 			const asset = preview.addAssetPreview(assetId, assetTypeId, meta)
@@ -1067,7 +1082,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 
 	if (isBundle) {
 		assetPromises.push(
-			RobloxApi.catalog.getBundleDetails(assetId).then(async (details) => {
+			RobloxApi.catalog.getBundleDetails(assetId).then(async (details: any) => {
 				bundleType = details.bundleType
 
 				const outfitPromise = new Promise((resolve) => {
@@ -1101,13 +1116,13 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 				for (const item of details.items) {
 					if (item.type === "Asset") {
 						bundlePromises.push(
-							AssetCache.resolveAsset(item.id).then(async (assetRequest) => {
+							AssetCache.resolveAsset(item.id).then(async (assetRequest: any) => {
 								const outfit = await outfitPromise
 								return addAsset(
 									item.id,
 									assetRequest.assetTypeId,
 									item.name,
-									(outfit as any)?.assets.find((x) => x.id === item.id)?.meta,
+									(outfit as any)?.assets.find((x: any) => x.id === item.id)?.meta,
 								)
 							}),
 						)
@@ -1161,7 +1176,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 }
 
 const canDownloadAssetCache: Record<string, any> = {}
-const canDownloadAsset = (assetId, assetTypeId) =>
+const canDownloadAsset = (assetId: number, assetTypeId: number) =>
 	(canDownloadAssetCache[assetId] =
 		canDownloadAssetCache[assetId] ||
 		(async () => {
@@ -1172,7 +1187,7 @@ const canDownloadAsset = (assetId, assetTypeId) =>
 				/*assetTypeId === AssetType.Model ||*/ assetTypeId === AssetType.Plugin ||
 				assetTypeId === AssetType.Audio
 			) {
-				const json = await RobloxApi.assetdelivery.requestAssetV2(assetId, {
+				const json = await RobloxApi.assetdelivery.requestAssetV2(String(assetId), {
 					browserAssetRequest: true,
 				})
 
@@ -1228,19 +1243,19 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 			if (!explorerInitialized) {
 				explorerInitialized = true
 
-				const updateLoadingText = (perc) =>
+				const updateLoadingText = (perc: number) =>
 					explorer.setLoadingText(`Loading... ${Math.floor(perc * 100 + 0.5)}%`)
 				explorer.setLoadingText(`Downloading...`)
 
 				if (isBundle) {
 					let first = true
-					RobloxApi.catalog.getBundleDetails(assetId).then(async (details) => {
+					RobloxApi.catalog.getBundleDetails(assetId).then(async (details: any) => {
 						for (const item of details.items) {
 							if (item.type === "Asset") {
 								AssetCache.loadModel(
 									item.id,
 									{ async: true, onProgress: first && updateLoadingText },
-									(model) => explorer.addModel(item.name, model),
+									(model: any) => explorer.addModel(item.name, model),
 								)
 								first = false
 							}
@@ -1250,8 +1265,8 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 					AssetCache.loadModel(
 						assetId,
 						{ async: true, onProgress: updateLoadingText, format: "avatar_meshpart_head" },
-						(model) => {
-							AssetCache.loadModel(assetId, { async: true }, (model) =>
+						(model: any) => {
+							AssetCache.loadModel(assetId, { async: true }, (model: any) =>
 								explorer.addModel("SpecialMesh", model),
 							)
 							explorer.addModel("MeshPart", model)
@@ -1261,10 +1276,10 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 					AssetCache.loadModel(
 						assetId,
 						{ async: true, onProgress: updateLoadingText, format: "avatar_meshpart_accessory" },
-						(model) => {
+						(model: any) => {
 							if (assetTypeId <= AssetType.WaistAccessory) {
 								// is not layered clothing
-								AssetCache.loadModel(assetId, { async: true }, (model) =>
+								AssetCache.loadModel(assetId, { async: true }, (model: any) =>
 									explorer.addModel("SpecialMesh", model),
 								)
 							}
@@ -1272,8 +1287,11 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 						},
 					)
 				} else {
-					AssetCache.loadModel(assetId, { async: true, onProgress: updateLoadingText }, (model) =>
-						explorer.addModel("Default", model, { open: assetTypeId !== AssetType.Place }),
+					AssetCache.loadModel(
+						assetId,
+						{ async: true, onProgress: updateLoadingText },
+						(model: any) =>
+							explorer.addModel("Default", model, { open: assetTypeId !== AssetType.Place }),
 					)
 				}
 			}
@@ -1335,7 +1353,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 		URL.revokeObjectURL(blobUrl)
 	}
 
-	const doNamedDownload = (event) => {
+	const doNamedDownload = (event: Event) => {
 		const target = event.currentTarget
 		event.preventDefault()
 
@@ -1346,10 +1364,10 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 		downloadButton.classList.add("disabled")
 		downloadButton.classList.add("loading")
 
-		const format = target.getAttribute("format") ?? undefined
+		const format = (target as HTMLElement).getAttribute("format") ?? undefined
 
 		if (format === "obj") {
-			AssetCache.loadMesh(assetId, (mesh) => {
+			AssetCache.loadMesh(assetId, (mesh: any) => {
 				downloadButton.classList.remove("disabled")
 				downloadButton.classList.remove("loading")
 
@@ -1391,7 +1409,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			AssetCache.loadBuffer(
 				assetId,
 				{ browserAssetRequest: assetTypeId === AssetType.Audio, format: format },
-				(buffer) => {
+				(buffer: ArrayBuffer) => {
 					downloadButton.classList.remove("disabled")
 					downloadButton.classList.remove("loading")
 
@@ -1428,7 +1446,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			)
 
 			btnCont.$on("click", ".btr-log-mesh", () => {
-				AssetCache.loadMesh(assetId, (mesh) => {
+				AssetCache.loadMesh(assetId, (mesh: any) => {
 					console.log(mesh)
 				})
 			})
@@ -1530,7 +1548,7 @@ export const initContentButton = async (assetId: any, assetTypeId: any, isBundle
 		</a>
 	</div>`
 
-	AssetCache.loadModel(assetId, (model) => {
+	AssetCache.loadModel(assetId, (model: any) => {
 		const contentUrl = getAssetUrl(model)
 		const contentId = AssetCache.getAssetIdFromUrl(contentUrl)
 
@@ -1566,13 +1584,13 @@ pageInit.www = () => {
 
 	const headWatcher = document.$watch(">head").$then()
 	const bodyWatcher = document
-		.$watch(">body", (body) => {
+		.$watch(">body", (body: HTMLElement) => {
 			body.classList.toggle("btr-no-hamburger", SETTINGS.get("navigation.noHamburger"))
 			body.classList.toggle("btr-hide-ads", SETTINGS.get("general.hideAds"))
 		})
 		.$then()
 
-	headWatcher.$watch(`meta[name="user-data"]`, (meta) => {
+	headWatcher.$watch(`meta[name="user-data"]`, (meta: any) => {
 		const userId = +meta.dataset.userid
 
 		loggedInUser = Number.isSafeInteger(userId) ? userId : -1
@@ -1595,14 +1613,14 @@ pageInit.www = () => {
 		})
 	})
 
-	bodyWatcher.$watch("#roblox-linkify", (linkify) => {
-		const index = linkify.dataset.regex.search(/\|[^|]*shoproblox\\.com/)
+	bodyWatcher.$watch("#roblox-linkify", (linkify: HTMLElement) => {
+		const index = linkify.dataset.regex!.search(/\|[^|]*shoproblox\\.com/)
 
 		if (index !== -1) {
-			linkify.dataset.regex =
-				linkify.dataset.regex.slice(0, index) +
+			linkify.dataset.regex! =
+				linkify.dataset.regex!.slice(0, index) +
 				/|twitter\.com|youtube\.com|youtu\.be|twitch\.tv/.source +
-				linkify.dataset.regex.slice(index)
+				linkify.dataset.regex!.slice(index)
 
 			// Empty asHttpRegex matches everything, so every link will be unsecured, so fix that
 			if (!linkify.dataset.asHttpRegex) {
@@ -1625,7 +1643,7 @@ pageInit.www = () => {
 			const span = html`<span
 				style="display:block;opacity:0.75;font-size:small;font-weight:500;"
 			></span>`
-			let lastText
+			let lastText: string | undefined
 
 			const update = () => {
 				if (!RobuxToCash.isEnabled()) {
@@ -1638,7 +1656,7 @@ pageInit.www = () => {
 					return
 				}
 
-				lastText = text
+				lastText = text ?? undefined
 
 				const amt = parseInt((text ?? "").replace(/\D/g, ""), 10)
 				if (!Number.isSafeInteger(amt)) {
@@ -1676,7 +1694,7 @@ pageInit.www = () => {
 
 	if (SETTINGS.get("general.fixFirefoxLocalStorageIssue")) {
 		injectScript.call("fixFirefoxLocalStorageIssue", () => {
-			onSet(window, "CoreRobloxUtilities", (CoreRobloxUtilities) => {
+			onSet(window, "CoreRobloxUtilities", (CoreRobloxUtilities: any) => {
 				if (!CoreRobloxUtilities?.localStorageService?.saveDataByTimeStamp) {
 					return
 				}
@@ -1686,28 +1704,40 @@ pageInit.www = () => {
 
 				hijackFunction(lss, "storage", () => true)
 
-				hijackFunction(lss, "removeLocalStorage", (fn, thisArg, args) => {
-					delete localCache[args[0]]
-					return fn.apply(thisArg, args)
-				})
-
-				hijackFunction(lss, "getLocalStorage", (fn, thisArg, args) => {
-					if (args[0] in localCache) {
-						return JSON.parse(localCache[args[0]])
-					}
-
-					return fn.apply(thisArg, args)
-				})
-
-				hijackFunction(lss, "setLocalStorage", (fn, thisArg, args) => {
-					try {
+				hijackFunction(
+					lss,
+					"removeLocalStorage",
+					(fn: (...args: any[]) => void, thisArg: any, args: any[]) => {
 						delete localCache[args[0]]
 						return fn.apply(thisArg, args)
-					} catch (ex) {
-						localCache[args[0]] = JSON.stringify(args[1])
-						console.error(ex)
-					}
-				})
+					},
+				)
+
+				hijackFunction(
+					lss,
+					"getLocalStorage",
+					(fn: (...args: any[]) => void, thisArg: any, args: any[]) => {
+						if (args[0] in localCache) {
+							return JSON.parse(localCache[args[0]])
+						}
+
+						return fn.apply(thisArg, args)
+					},
+				)
+
+				hijackFunction(
+					lss,
+					"setLocalStorage",
+					(fn: (...args: any[]) => void, thisArg: any, args: any[]) => {
+						try {
+							delete localCache[args[0]]
+							return fn.apply(thisArg, args)
+						} catch (ex) {
+							localCache[args[0]] = JSON.stringify(args[1])
+							console.error(ex)
+						}
+					},
+				)
 			})
 		})
 	}
@@ -1748,7 +1778,7 @@ pageInit.www = () => {
 		injectScript.call("higherRobuxPrecision", () => {
 			let hijackTruncValue = false
 
-			onSet(window, "CoreUtilities", (CoreUtilities) => {
+			onSet(window, "CoreUtilities", (CoreUtilities: any) => {
 				hijackFunction(
 					CoreUtilities.abbreviateNumber,
 					"getTruncValue",
@@ -1780,14 +1810,14 @@ pageInit.www = () => {
 
 	if (SETTINGS.get("home.hideFriendActivity")) {
 		injectScript.call("hideFriendActivity", () => {
-			hijackXHR((request) => {
+			hijackXHR((request: any) => {
 				if (
 					request.method === "POST" &&
 					request.url.match(
 						/^https:\/\/apis\.roblox\.com\/discovery-api\/omni-recommendation(-metadata)?$/i,
 					)
 				) {
-					request.onResponse.push((json) => {
+					request.onResponse.push((json: any) => {
 						if (json?.contentMetadata?.Game) {
 							for (const gameData of Object.values(json.contentMetadata.Game) as any[]) {
 								delete (gameData as any).friendActivityTitle
@@ -1804,8 +1834,8 @@ pageInit.www = () => {
 			const accessoryAssetTypeIds = [8, 41, 42, 43, 44, 45, 46, 47, 57, 58]
 			const layeredAssetTypeIds = [64, 65, 66, 67, 68, 69, 70, 71, 72]
 
-			onSet(window, "Roblox", (Roblox) => {
-				onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService) => {
+			onSet(window, "Roblox", (Roblox: any) => {
+				onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
 					hijackFunction(
 						AvatarAccoutrementService,
 						"getAdvancedAccessoryLimit",
@@ -1885,10 +1915,12 @@ pageInit.www = () => {
 	// Chat
 
 	if (SETTINGS.get("general.hideChat")) {
-		bodyWatcher.$watch("#chat-container", (cont) => cont.remove())
+		bodyWatcher.$watch("#chat-container", (cont: HTMLElement) => cont.remove())
 	} else {
 		if (SETTINGS.get("general.smallChatButton")) {
-			bodyWatcher.$watch("#chat-container", (cont) => cont.classList.add("btr-small-chat-button"))
+			bodyWatcher.$watch("#chat-container", (cont: HTMLElement) =>
+				cont.classList.add("btr-small-chat-button"),
+			)
 
 			injectScript.call("smallChatButton", () => {
 				angularHook.hijackModule("chat", {
@@ -1903,7 +1935,7 @@ pageInit.www = () => {
 
 							$scope.$watch(
 								() => library.chatLayout.collapsed,
-								(value) => {
+								(value: any) => {
 									library.chatLayout.widthOfChat = value ? 54 + 6 : width
 									chatUtility.updateDialogsPosition(library)
 								},
@@ -1924,7 +1956,7 @@ pageInit.www = () => {
 
 	// Experiments
 
-	injectScript.listen("populateExperiment", (experiment, key, value) => {
+	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
 		robloxExperiments[experiment] ??= {}
 		robloxExperiments[experiment][key] = value
 
@@ -1938,7 +1970,7 @@ pageInit.www = () => {
 		const initial: Record<string, any> = {}
 		const layers: Record<string, any> = {}
 
-		const modify = (experiment, key, value) => {
+		const modify = (experiment: string, key: string, value: any) => {
 			modified[experiment] ??= {}
 
 			if (typeof value === "string") {
@@ -1979,7 +2011,7 @@ pageInit.www = () => {
 			console.error(ex)
 		}
 
-		const populate = (experiment, key, value) => {
+		const populate = (experiment: string, key: string, value: any) => {
 			if (key === "then" || key === "toJSON") {
 				return
 			}
@@ -1993,8 +2025,8 @@ pageInit.www = () => {
 			contentScript.send("populateExperiment", experiment, key, value)
 		}
 
-		onSet(window, "Roblox", (Roblox) => {
-			onSet(Roblox, "ExperimentationService", (ExperimentationService) => {
+		onSet(window, "Roblox", (Roblox: any) => {
+			onSet(Roblox, "ExperimentationService", (ExperimentationService: any) => {
 				hijackFunction(
 					ExperimentationService,
 					"getAllValuesForLayer",
@@ -2023,7 +2055,7 @@ pageInit.www = () => {
 
 									return new Proxy(layer, {
 										get(target, key) {
-											populate(experiment, key, undefined)
+											populate(experiment, String(key), undefined)
 											return target[key]
 										},
 									})

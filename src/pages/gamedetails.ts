@@ -991,7 +991,7 @@ pageInit.gamedetails = () => {
 
 						if (dataCont.dataset.placeId !== dataCont.dataset.rootPlaceId) {
 							const rootPlaceId = dataCont.dataset.rootPlaceId
-							const rootPlaceName = dataCont.dataset.placeName
+							const rootPlaceName = dataCont.dataset.placeName ?? ""
 
 							const box = html` <div class="section-content btr-universe-box">
 								This place is part of
