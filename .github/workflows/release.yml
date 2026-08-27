@@ -88,6 +88,16 @@ jobs:
       - name: Sign the Firefox build through AMO
         if: env.AMO_JWT_ISSUER != ''
         run: |
+          # A release that is not for the store says so in its own tag message,
+          # which keeps the decision with the release instead of in repository
+          # settings someone has to remember to put back.
+          if git tag -l --format='%(contents)' "$GITHUB_REF_NAME" | grep -qiF "[skip amo]"; then
+            unsigned="$(ls artifacts/*-firefox.xpi)"
+            mv "$unsigned" "${unsigned%-firefox.xpi}-firefox-unsigned.xpi"
+            echo "tag says [skip amo]: nothing submitted, shipping the unsigned build"
+            exit 0
+          fi
+
           # Packaging leaves dist/ holding whichever target was built last, so
           # rebuild the firefox one for web-ext to sign.
           npm run build
@@ -173,11 +183,17 @@ jobs:
             fi
           fi
 
+          # A skipped release never reached the store, so it must not point at it.
+          submitted="yes"
+          if git tag -l --format='%(contents)' "$GITHUB_REF_NAME" | grep -qiF "[skip amo]"; then
+            submitted=""
+          fi
+
           {
             if [ -n "$signed" ]; then
               echo "The \`.xpi\` below is signed by Mozilla and installs in Firefox"
               echo "directly. Open it with Firefox, or drag it onto the browser."
-            elif [ "$AMO_CHANNEL" = "listed" ]; then
+            elif [ "$AMO_CHANNEL" = "listed" ] && [ -n "$submitted" ]; then
               echo "Install for Firefox from"
               echo "[addons.mozilla.org](https://addons.mozilla.org/firefox/addon/$slug/)."
               echo
