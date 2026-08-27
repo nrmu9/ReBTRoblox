@@ -30,12 +30,15 @@ export const SettingsModal: SettingsModalState = {
 		this.visible = visible
 
 		if (visible) {
-			document.$watch(">body", (body) => this.visible && body.appendChild(this.settingsDiv))
+			document.$watch(
+				">body",
+				(body: HTMLElement) => this.visible && body.appendChild(this.settingsDiv),
+			)
 
 			if (location.hostname === "create.roblox.com") {
 				this.settingsDiv.classList.add("btr-dark-theme")
 			} else {
-				const copyThemeFromElement = (target) => {
+				const copyThemeFromElement = (target: any) => {
 					this.settingsDiv.classList.toggle(
 						"btr-light-theme",
 						target.classList.contains("light-theme"),
@@ -48,7 +51,7 @@ export const SettingsModal: SettingsModalState = {
 
 				document.$watch(
 					".light-theme:not(.btr-settings-modal), .dark-theme:not(.btr-settings-modal)",
-					(target) => {
+					(target: any) => {
 						if (this.themeObserver || !this.settingsDiv.parentNode) {
 							return
 						}
@@ -119,7 +122,7 @@ export const SettingsModal: SettingsModalState = {
 		}
 	},
 
-	switchContent(name) {
+	switchContent(name: string) {
 		assert(this.enabled, "not enabled")
 
 		if (this.currentContent === name) {
@@ -320,8 +323,8 @@ export const SettingsModal: SettingsModalState = {
 			this.contentDivs[elem.dataset.name] = elem
 		}
 
-		this.settingsDiv.$on("click", "[btr-tab]:not([disabled])", (ev) =>
-			this.switchContent(ev.currentTarget.getAttribute("btr-tab")),
+		this.settingsDiv.$on("click", "[btr-tab]:not([disabled])", (ev: Event) =>
+			this.switchContent((ev.currentTarget as HTMLElement).getAttribute("btr-tab")),
 		)
 		this.settingsDiv.$on("click", ".btr-close-subcontent", () => this.switchContent("main"))
 
@@ -546,7 +549,7 @@ export const SettingsModal: SettingsModalState = {
 		// Settings
 
 		const settingsDone: Record<string, any> = {}
-		const joinPaths = (group, path) => (!group || path.includes(".") ? path : `${group}.${path}`)
+		const joinPaths = (group, path: string) => (!group || path.includes(".") ? path : `${group}.${path}`)
 
 		for (const group of this.settingsDiv.$findAll("group")) {
 			const groupPath = group.getAttribute("path") || ""
@@ -860,7 +863,7 @@ export const SettingsModal: SettingsModalState = {
 				btn.classList.toggle("disabled", SETTINGS.getIsDefault(settingPath))
 			}
 
-			btn.$on("click", (ev) => {
+			btn.$on("click", (ev: Event) => {
 				SETTINGS.reset(settingPath)
 				ev.preventDefault()
 				ev.stopPropagation()
@@ -977,7 +980,7 @@ export const SettingsModal: SettingsModalState = {
 							update()
 						})
 
-						input.$on("keydown", (ev) => ev.keyCode === 13 && input.blur())
+						input.$on("keydown", (ev: KeyboardEvent) => ev.keyCode === 13 && input.blur())
 						input.$on("blur", () => update())
 
 						label.append(resetButton)

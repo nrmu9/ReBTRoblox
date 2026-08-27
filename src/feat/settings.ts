@@ -123,7 +123,7 @@ export const SETTINGS: Record<string, any> = {
 		}
 	},
 
-	_load(data) {
+	_load(data: any) {
 		if (data && data._version === DEFAULT_SETTINGS._version) {
 			for (const [groupName, group] of Object.entries(data) as [string, any][]) {
 				if (!(group instanceof Object)) {
@@ -155,7 +155,7 @@ export const SETTINGS: Record<string, any> = {
 		}
 	},
 
-	load(fn) {
+	load(fn: (...args: any[]) => void) {
 		if (!this.firstLoad) {
 			this.firstLoad = true
 
@@ -188,7 +188,7 @@ export const SETTINGS: Record<string, any> = {
 		return settings
 	},
 
-	_getSetting(path, root) {
+	_getSetting(path: string, root) {
 		const index = path.indexOf(".")
 		if (index === -1) {
 			return
@@ -210,7 +210,7 @@ export const SETTINGS: Record<string, any> = {
 		return setting
 	},
 
-	_isValid(settingPath, value) {
+	_isValid(settingPath: string, value: any) {
 		const setting = this._getSetting(settingPath, this.loadedSettings)
 
 		if (!setting) {
@@ -229,7 +229,7 @@ export const SETTINGS: Record<string, any> = {
 		return true
 	},
 
-	_set(settingPath, value, isDefault = false, shouldSave = false) {
+	_set(settingPath: string, value: any, isDefault = false, shouldSave = false) {
 		if (!this._isValid(settingPath, value)) {
 			return false
 		}
@@ -268,11 +268,11 @@ export const SETTINGS: Record<string, any> = {
 		return true
 	},
 
-	hasSetting(settingPath) {
+	hasSetting(settingPath: string) {
 		return !!this._getSetting(settingPath, this.loadedSettings)
 	},
 
-	get(settingPath) {
+	get(settingPath: string) {
 		if (!this.loaded) {
 			throw new Error("Settings are not loaded")
 		}
@@ -285,7 +285,7 @@ export const SETTINGS: Record<string, any> = {
 		return setting.value
 	},
 
-	set(settingPath, value) {
+	set(settingPath: string, value: any) {
 		if (!this.loaded) {
 			throw new Error("Settings are not loaded")
 		}
@@ -297,7 +297,7 @@ export const SETTINGS: Record<string, any> = {
 		this._set(settingPath, value, false, true)
 	},
 
-	getIsDefault(settingPath) {
+	getIsDefault(settingPath: string) {
 		if (!this.loaded) {
 			throw new Error("Settings are not loaded")
 		}
@@ -310,7 +310,7 @@ export const SETTINGS: Record<string, any> = {
 		return setting.default
 	},
 
-	reset(settingPath) {
+	reset(settingPath: string) {
 		if (!this.loaded) {
 			throw new Error("Settings are not loaded")
 		}
@@ -349,7 +349,7 @@ export const SETTINGS: Record<string, any> = {
 		}
 	},
 
-	onChange(settingPath, fn) {
+	onChange(settingPath: string | ((...args: any[]) => void), fn?: (...args: any[]) => void) {
 		if (settingPath instanceof Function) {
 			fn = settingPath
 			settingPath = "*"
@@ -365,7 +365,7 @@ export const SETTINGS: Record<string, any> = {
 
 if (IS_BACKGROUND_PAGE) {
 	contentScript.listen({
-		setSetting(data, respond) {
+		setSetting(data: any, respond: (value?: any) => void) {
 			SETTINGS.load(() => {
 				SETTINGS._set(data.path, data.value, data.default, true)
 			})

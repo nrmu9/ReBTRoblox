@@ -393,7 +393,7 @@ pageInit.itemdetails = () => {
 						})
 
 						if (category === "game-pass") {
-							RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data) => {
+							RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data: any) => {
 								const sales = data?.Sales
 
 								if (Number.isSafeInteger(sales) && (canConfigure || sales > 0)) {
@@ -406,7 +406,7 @@ pageInit.itemdetails = () => {
 							salesContainer.$req(".text-label").textContent = "Awarded"
 							show()
 
-							RobloxApi.badges.getBadgeDetails(assetId).then((data) => {
+							RobloxApi.badges.getBadgeDetails(assetId).then((data: any) => {
 								const numAwarded = data?.statistics?.awardedCount
 
 								if (Number.isSafeInteger(numAwarded)) {
@@ -416,7 +416,7 @@ pageInit.itemdetails = () => {
 								}
 							})
 						} else {
-							RobloxApi.economy.getAssetDetails(assetId).then((data) => {
+							RobloxApi.economy.getAssetDetails(assetId).then((data: any) => {
 								const sales = data?.Sales
 
 								if (Number.isSafeInteger(sales) && (canConfigure || sales > 0)) {
@@ -469,15 +469,15 @@ pageInit.itemdetails = () => {
 						show()
 
 						if (category === "game-pass") {
-							RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data) => {
+							RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data: any) => {
 								show(data.Created, data.Updated)
 							})
 						} else if (category === "badges") {
-							RobloxApi.badges.getBadgeDetails(assetId).then((data) => {
+							RobloxApi.badges.getBadgeDetails(assetId).then((data: any) => {
 								show(data.created, data.updated)
 							})
 						} else {
-							RobloxApi.economy.getAssetDetails(assetId).then((data) => {
+							RobloxApi.economy.getAssetDetails(assetId).then((data: any) => {
 								show(data.Created, data.Updated)
 							})
 						}
@@ -532,7 +532,7 @@ pageInit.itemdetails = () => {
 				} else {
 					// legacy item details page (used for badges/gamepasses)
 
-					container.$watch(".text-robux-lg", (elem) => {
+					container.$watch(".text-robux-lg", (elem: HTMLElement) => {
 						const originalText = elem.textContent
 						const robux = parseInt(originalText.replace(/\D/g, ""), 10)
 

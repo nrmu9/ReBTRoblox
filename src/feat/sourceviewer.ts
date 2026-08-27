@@ -425,7 +425,7 @@ export const SourceViewer = (() => {
 	const ScopeIn = new Set(["then", "do", "repeat", "function", "else"])
 	const ScopeOut = new Set(["end", "elseif", "until", "else"])
 
-	async function parseSource(source, parent) {
+	async function parseSource(source: any, parent: HTMLElement) {
 		const ParseRegex = new RegExp(_ParseRegex)
 		const allLines = source.split("\n")
 
@@ -443,7 +443,7 @@ export const SourceViewer = (() => {
 
 		const linesParent = content.$req(".btr-sourceviewer-lines")
 
-		linesParent.$on("beforeinput", (ev) => {
+		linesParent.$on("beforeinput", (ev: Event) => {
 			ev.stopImmediatePropagation()
 			ev.preventDefault()
 		})
@@ -834,7 +834,7 @@ export const SourceViewer = (() => {
 	}
 
 	return {
-		init(parent, source) {
+		init(parent: HTMLElement, source: any) {
 			return parseSource(source, parent)
 		},
 	}

@@ -44,7 +44,7 @@ pageInit.avatar = () => {
 		})
 
 		onPageLoad(() => {
-			document.$watch("body", (body) => body.classList.add("btr-avatar-refinement"))
+			document.$watch("body", (body: HTMLElement) => body.classList.add("btr-avatar-refinement"))
 		})
 
 		modifyAngularTemplate("avatar-base", (template) => {
@@ -230,45 +230,48 @@ pageInit.avatar = () => {
 
 								$scope.$on(
 									avatarConstantService.events.wornAssetsChanged,
-									(event, assetIds) => {
+									(event: Event, assetIds) => {
 										$scope.btrRefreshWearingAssets()
 									},
 								)
 
-								$scope.$on(avatarConstantService.events.avatarRulesLoaded, (event, rules) => {
-									$scope.btrAvatarRules = avatarRules = rules
-									$scope.btrBounds = {}
+								$scope.$on(
+									avatarConstantService.events.avatarRulesLoaded,
+									(event: Event, rules) => {
+										$scope.btrAvatarRules = avatarRules = rules
+										$scope.btrBounds = {}
 
-									for (const [assetTypeName, lowerBounds] of Object.entries(
-										avatarRules.accessoryRefinementLowerBounds,
-									) as [string, any][]) {
-										const upperBounds =
-											avatarRules.accessoryRefinementUpperBounds[assetTypeName]
-
-										const wearableAssetType = avatarRules.wearableAssetTypes.find(
-											(x) => x.name.replace(/\s/, "") === assetTypeName,
-										)
-										const assetBounds = ($scope.btrBounds[wearableAssetType?.id] = {})
-
-										for (const [category, values] of Object.entries(
-											lowerBounds as Record<string, any>,
+										for (const [assetTypeName, lowerBounds] of Object.entries(
+											avatarRules.accessoryRefinementLowerBounds,
 										) as [string, any][]) {
-											const bounds = (assetBounds[category] = {})
+											const upperBounds =
+												avatarRules.accessoryRefinementUpperBounds[assetTypeName]
 
-											for (const [key, value] of Object.entries(values) as [
-												string,
-												any,
-											][]) {
-												bounds[key.slice(0, 1).toUpperCase()] = {
-													min: value,
-													max: upperBounds[category][key],
+											const wearableAssetType = avatarRules.wearableAssetTypes.find(
+												(x) => x.name.replace(/\s/, "") === assetTypeName,
+											)
+											const assetBounds = ($scope.btrBounds[wearableAssetType?.id] = {})
+
+											for (const [category, values] of Object.entries(
+												lowerBounds as Record<string, any>,
+											) as [string, any][]) {
+												const bounds = (assetBounds[category] = {})
+
+												for (const [key, value] of Object.entries(values) as [
+													string,
+													any,
+												][]) {
+													bounds[key.slice(0, 1).toUpperCase()] = {
+														min: value,
+														max: upperBounds[category][key],
+													}
 												}
 											}
 										}
-									}
 
-									updateWearingAssets()
-								})
+										updateWearingAssets()
+									},
+								)
 							} catch (ex) {
 								console.error(ex)
 								if (IS_DEV_MODE) {

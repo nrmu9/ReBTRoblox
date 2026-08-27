@@ -2038,7 +2038,7 @@ if (IS_BACKGROUND_PAGE) {
 	}
 
 	contentScript.listen({
-		async getServerAddress(info, respond) {
+		async getServerAddress(info, respond: (value: any) => void) {
 			if (IS_CHROME) {
 				if (!userAgentSwitcherEnabled) {
 					userAgentSwitcherEnabled = true

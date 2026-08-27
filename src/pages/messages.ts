@@ -42,7 +42,7 @@ class MarkAllAsReadAction {
 	async loadPage(pageNum) {
 		const tryFetch = () => RobloxApi.privatemessages.getMessages(pageNum).catch(tryFetch)
 
-		return tryFetch().then(async (json) => {
+		return tryFetch().then(async (json: any) => {
 			for (const msg of json.collection) {
 				if (!msg.isRead) {
 					this.unreadMessageIds.push(msg.id)
@@ -81,7 +81,7 @@ class MarkAllAsReadAction {
 
 		const tryFetch = () => RobloxApi.privatemessages.getUnreadCount().catch(tryFetch)
 
-		this.unreadMessagesTotal = await tryFetch().then((json) => json.count)
+		this.unreadMessagesTotal = await tryFetch().then((json: any) => json.count)
 		this.unreadMessagesLeft = this.unreadMessagesTotal
 
 		const threads: any[] = []
@@ -236,7 +236,7 @@ pageInit.messages = () => {
 	})
 
 	onPageLoad(() => {
-		document.$watch("body", (body) => body.classList.add("btr-messages"))
+		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-messages"))
 
 		// document.$watch("#content").$then().$watch(">.messages-container", messages => {
 		// })

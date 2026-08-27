@@ -113,13 +113,13 @@ export const btrFastSearch = {
 
 		//
 
-		const requestThumbnail = (userId) => {
+		const requestThumbnail = (userId: number) => {
 			if (thumbnailCache[userId]) {
 				return thumbnailCache[userId]
 			}
 
 			let numRetries = 0
-			const checkForThumb = (json) => {
+			const checkForThumb = (json: any) => {
 				const thumb = json.data.find((x) => x.targetId === +userId)
 
 				if (!thumb?.imageUrl) {
@@ -141,7 +141,7 @@ export const btrFastSearch = {
 				.then(checkForThumb))
 		}
 
-		const requestPresence = (userId) => {
+		const requestPresence = (userId: number) => {
 			if (presenceCache[userId]) {
 				return presenceCache[userId]
 			}
@@ -440,10 +440,10 @@ export const btrFastSearch = {
 								</button>`
 
 								if (info.placeId) {
-									followBtn.$on("click", (ev) => {
+									followBtn.$on("click", (ev: KeyboardEvent) => {
 										injectScript.call(
 											"fastsearchFollowPlayer",
-											(userId) => {
+											(userId: number) => {
 												Roblox.GameLauncher.followPlayerIntoGame(userId)
 											},
 											user.UserId,
@@ -561,7 +561,7 @@ export const btrFastSearch = {
 			reloadSearchResults(false)
 		}
 
-		const keyDown = (ev) => {
+		const keyDown = (ev: KeyboardEvent) => {
 			if (ev.keyCode === 38 || ev.keyCode === 40 || ev.keyCode === 9) {
 				const info = getInfo()
 				if (!info) {
@@ -623,7 +623,7 @@ export const btrFastSearch = {
 			}
 		}
 
-		const keyUp = (ev) => {
+		const keyUp = (ev: KeyboardEvent) => {
 			if (ev.keyCode === 13) {
 				const info = getInfo()
 				if (!info) {

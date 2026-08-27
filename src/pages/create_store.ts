@@ -12,7 +12,7 @@ pageInit.create_store = () => {
 	}
 
 	const addRipple = (elem: any, position?: any) => {
-		elem?.$on("mousedown", (event) => {
+		elem?.$on("mousedown", (event: MouseEvent) => {
 			const ripple = html`<div class="btr-replica-ripple"></div>`
 			elem.append(ripple)
 			setTimeout(() => ripple.remove(), 1e3)
@@ -25,11 +25,11 @@ pageInit.create_store = () => {
 		})
 	}
 
-	document.$on("mouseover", ".btr-download-popover li", (event) => {
-		const target = event.currentTarget
+	document.$on("mouseover", ".btr-download-popover li", (event: Event) => {
+		const target = event.currentTarget as HTMLElement
 
 		if (!target.dataset.btrAddedRipple) {
-			target.dataset.btrAddedRipple = true
+			target.dataset.btrAddedRipple = "true"
 			addRipple(target, true)
 		}
 	})
@@ -41,7 +41,7 @@ pageInit.create_store = () => {
 			this.assetId = assetId
 			this.buttons = {}
 
-			RobloxApi.economy.getAssetDetails(assetId).then((json) => {
+			RobloxApi.economy.getAssetDetails(assetId).then((json: any) => {
 				if (this.assetId !== assetId) {
 					return
 				}
@@ -57,7 +57,7 @@ pageInit.create_store = () => {
 			this.updateAnchor()
 		}
 
-		addButton(name, elem) {
+		addButton(name: string, elem: HTMLElement) {
 			if (!elem) {
 				return
 			}
@@ -75,17 +75,17 @@ pageInit.create_store = () => {
 
 			if (!this.contentPromise) {
 				this.contentPromise = initContentButton(this.assetId, this.assetTypeId)
-				this.contentPromise.then((elem) => this.addButton("content", elem))
+				this.contentPromise.then((elem: HTMLElement) => this.addButton("content", elem))
 			}
 
 			if (!this.downloadPromise) {
 				this.downloadPromise = initDownloadButton(this.assetId, this.assetTypeId)
-				this.downloadPromise.then((elem) => this.addButton("download", elem))
+				this.downloadPromise.then((elem: HTMLElement) => this.addButton("download", elem))
 			}
 
 			if (!this.explorerPromise) {
 				this.explorerPromise = initExplorer(this.assetId, this.assetTypeId)
-				this.explorerPromise.then((elem) => this.addButton("explorer", elem))
+				this.explorerPromise.then((elem: HTMLElement) => this.addButton("explorer", elem))
 			}
 
 			this.anchor?.prepend(
@@ -115,9 +115,9 @@ pageInit.create_store = () => {
 			this.listener = null
 			this.anchor = null
 
-			this.explorerPromise?.then((btn) => btn?.remove())
-			this.downloadPromise?.then((btn) => btn?.remove())
-			this.contentPromise?.then((btn) => btn?.remove())
+			this.explorerPromise?.then((btn: HTMLElement) => btn?.remove())
+			this.downloadPromise?.then((btn: HTMLElement) => btn?.remove())
+			this.contentPromise?.then((btn: HTMLElement) => btn?.remove())
 
 			this.explorerPromise = null
 			this.downloadPromise = null
