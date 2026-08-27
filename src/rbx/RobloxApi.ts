@@ -1,3 +1,7 @@
+import type {
+	AssetId, BadgeId, BundleId, CatalogItemRequest, GamePassId, GroupId,
+	CollectionItemType, OutfitId, PlaceId, ThumbnailSize, UniverseId, UrlParams, UserId
+} from "@/rbx/types"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { IS_BACKGROUND_PAGE } from "@/core/env"
 
@@ -228,9 +232,22 @@ const batchable = (limit, callback) => {
 	return callback
 }
 
+/** URLSearchParams rejects non string values, so coerce the bag first. */
+const toSearchParams = (params?: UrlParams): URLSearchParams => {
+	if(params instanceof URLSearchParams) { return params }
+	if(typeof params === "string") { return new URLSearchParams(params) }
+	if(!params) { return new URLSearchParams() }
+
+	const out = new URLSearchParams()
+
+	for(const [key, value] of Object.entries(params)) { out.set(key, String(value)) }
+
+	return out
+}
+
 export const RobloxApi = {
 	accountinformation: {
-		getRobloxBadges: userId => 
+		getRobloxBadges: (userId: UserId) => 
 			xsrfFetch(`https://accountinformation.roblox.com/v1/users/${userId}/roblox-badges`, {
 				credentials: "include"
 			}).then(res => res.json()),
@@ -242,7 +259,7 @@ export const RobloxApi = {
 			}
 			
 			if(typeof urlParams === "string" || typeof urlParams === "number") { urlParams = { id: urlParams } }
-			if(!(urlParams instanceof URLSearchParams)) { urlParams = new URLSearchParams(urlParams) }
+			if(!(urlParams instanceof URLSearchParams)) { urlParams = toSearchParams(urlParams) }
 			
 			const headers: Record<string, string> = {}
 			if(params?.format) { headers["Roblox-AssetFormat"] = params.format }
@@ -263,12 +280,12 @@ export const RobloxApi = {
 			}).then(res => res.json()),
 		
 		// hits rate limits when requested from page, so doing backgroundCall
-		getOutfitDetails: outfitId =>
+		getOutfitDetails: (outfitId: OutfitId) =>
 			xsrfFetch(`https://avatar.roblox.com/v3/outfits/${outfitId}/details`, {
 				credentials: "include"
 			}).then(res => res.json()),
 		
-		getUserAvatar: userId =>
+		getUserAvatar: (userId: UserId) =>
 			xsrfFetch(`https://avatar.roblox.com/v2/avatar/users/${userId}/avatar`, {
 				credentials: "include"
 			}).then(res => res.json()),
@@ -278,7 +295,7 @@ export const RobloxApi = {
 				credentials: "include"
 			}).then(res => res.json()),
 			
-		setBodyColors: bodyColor3s =>
+		setBodyColors: (bodyColor3s: Record<string, string>) =>
 			xsrfFetch(`https://avatar.roblox.com/v2/avatar/set-body-colors`, {
 				method: "POST",
 				credentials: "include",
@@ -287,7 +304,7 @@ export const RobloxApi = {
 				xsrf: true
 			}).then(res => res.json()),
 		
-		renderAvatar: request =>
+		renderAvatar: (request: unknown) =>
 			xsrfFetch(`https://avatar.roblox.com/v1/avatar/render`, {
 				method: "POST",
 				credentials: "include",
@@ -296,23 +313,23 @@ export const RobloxApi = {
 			}).then(res => res.json()),
 	},
 	badges: {
-		getBadges: (userId, sortOrder, limit, cursor) =>
+		getBadges: (userId: UserId, sortOrder?: string, limit?: number, cursor?: string) =>
 			xsrfFetch(`https://badges.roblox.com/v1/users/${userId}/badges?sortOrder=${sortOrder}&limit=${limit}&cursor=${cursor || ""}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 				
-		getBadgeDetails: cacheResult(10e3, badgeId =>
+		getBadgeDetails: cacheResult(10e3, (badgeId: BadgeId) =>
 			xsrfFetch(`https://badges.roblox.com/v1/badges/${badgeId}`, {
 				credentials: "include"
 			}).then(res => res.json())
 		),
 		
-		getAwardedDates: (userId, badgeIds) =>
+		getAwardedDates: (userId: UserId, badgeIds: BadgeId[]) =>
 			xsrfFetch(`https://badges.roblox.com/v1/users/${userId}/badges/awarded-dates?badgeIds=${badgeIds.join(",")}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 				
-		deleteBadge: badgeId =>
+		deleteBadge: (badgeId: BadgeId) =>
 			xsrfFetch(`https://badges.roblox.com/v1/user/badges/${badgeId}`, {
 				method: "DELETE",
 				credentials: "include",
@@ -320,7 +337,7 @@ export const RobloxApi = {
 			}).then(res => res.json()),
 	},
 	catalog: {
-		getItemDetails: items =>
+		getItemDetails: (items: CatalogItemRequest[]) =>
 			xsrfFetch(`https://catalog.roblox.com/v1/catalog/items/details`, {
 				method: "POST",
 				credentials: "include",
@@ -329,30 +346,30 @@ export const RobloxApi = {
 				xsrf: true
 			}).then(res => res.json()),
 			
-		getBundleDetails: cacheResult(10e3, bundleId =>
+		getBundleDetails: cacheResult(10e3, (bundleId: BundleId) =>
 			xsrfFetch(`https://catalog.roblox.com/v1/bundles/${bundleId}/details`, {
 				credentials: "include"
 			}).then(res => res.json())
 		),
 		
-		getUserBundles: (userId, urlParams) =>
-			xsrfFetch(`https://catalog.roblox.com/v1/users/${userId}/bundles?${new URLSearchParams(urlParams).toString()}`, {
+		getUserBundles: (userId: UserId, urlParams?: UrlParams) =>
+			xsrfFetch(`https://catalog.roblox.com/v1/users/${userId}/bundles?${toSearchParams(urlParams).toString()}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 			
-		getFavorites: (userId, assetType, limit=10, cursor="") =>
+		getFavorites: (userId: UserId, assetType: number, limit = 10, cursor = "") =>
 			xsrfFetch(`https://catalog.roblox.com/v1/favorites/users/${userId}/favorites/${assetType}/assets?limit=${limit}&cursor=${cursor}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 	},
 	chat: {
-		getUserConversations: (pageNumber=1, pageSize=10) =>
+		getUserConversations: (pageNumber = 1, pageSize = 10) =>
 			xsrfFetch(`https://chat.roblox.com/v2/get-user-conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
 				credentials: "include",
 				xsrf: true
 			}).then(res => res.json()),
 		
-		markAsRead: conversationId =>
+		markAsRead: (conversationId: number) =>
 			xsrfFetch(`https://chat.roblox.com/v2/mark-as-read`, {
 				method: "POST",
 				credentials: "include",
@@ -364,70 +381,70 @@ export const RobloxApi = {
 	develop: {
 	},
 	economy: {
-		getAssetDetails: cacheResult(10e3, assetId =>
+		getAssetDetails: cacheResult(10e3, (assetId: AssetId) =>
 			xsrfFetch(`https://economy.roblox.com/v2/assets/${assetId}/details`, {
 				credentials: "include"
 			}).then(res => res.json())
 		),
 	},
 	friends: {
-		getFriends: userId =>
+		getFriends: (userId: UserId) =>
 			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/friends`, {
 				credentials: "include"
 			}).then(res => res.json())
 	},
 	gamepasses: {
-		getGamepassDetails: cacheResult(10e3, backgroundCall(gamepassId =>
+		getGamepassDetails: cacheResult(10e3, backgroundCall((gamepassId: GamePassId) =>
 			xsrfFetch(`https://apis.roblox.com/game-passes/v1/game-passes/${gamepassId}/details`, {
 				credentials: "include"
 			}).then(res => res.json())
 		)),
-		getGamepassProductInfo: cacheResult(10e3, backgroundCall(gamepassId =>
+		getGamepassProductInfo: cacheResult(10e3, backgroundCall((gamepassId: GamePassId) =>
 			xsrfFetch(`https://apis.roblox.com/game-passes/v1/game-passes/${gamepassId}/product-info`, {
 				credentials: "include"
 			}).then(res => res.json())
 		))
 	},
 	games: {
-		getPlaceDetails: batchable(50, placeIds =>
+		getPlaceDetails: batchable(50, (placeIds: PlaceId[]) =>
 			xsrfFetch(`https://games.roblox.com/v1/games/multiget-place-details?placeIds=${placeIds.join("&placeIds=")}`, {
 				credentials: "include"
 			}).then(res => res.json())),
 		
-		getGameDetails: batchable(50, universeIds =>
+		getGameDetails: batchable(50, (universeIds: UniverseId[]) =>
 			xsrfFetch(`https://games.roblox.com/v1/games?universeIds=${universeIds.join("&universeIds=")}`, {
 				credentials: "include"
 			}).then(res => res.json())),
 			
-		getFavorites: (userId, limit=10, cursor="") =>
+		getFavorites: (userId: UserId, limit = 10, cursor = "") =>
 			xsrfFetch(`https://games.roblox.com/v2/users/${userId}/favorite/games?limit=${limit}&cursor=${cursor}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 		
-		getUserGames: (userId, limit=10, cursor="") =>
+		getUserGames: (userId: UserId, limit = 10, cursor = "") =>
 			xsrfFetch(`https://games.roblox.com/v2/users/${userId}/games?limit=${limit}&cursor=${cursor}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 	},
 	groups: {
-		getUserGroupRoles: userId =>
+		getUserGroupRoles: (userId: UserId) =>
 			xsrfFetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, {
 				credentials: "include"
 			}).then(res => res.json()),
 	},
 	inventory: {
-		getUserInventory: (userId, urlParams) =>
-			xsrfFetch(`https://inventory.roblox.com/v2/users/${userId}/inventory?${new URLSearchParams(urlParams).toString()}`, {
+		getUserInventory: (userId: UserId, urlParams?: UrlParams) =>
+			xsrfFetch(`https://inventory.roblox.com/v2/users/${userId}/inventory?${toSearchParams(urlParams).toString()}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 			
-		getAssetOwners: (assetId, limit, cursor) =>
+		getAssetOwners: (assetId: AssetId, limit?: number, cursor?: string) =>
 			xsrfFetch(`https://inventory.roblox.com/v2/assets/${assetId}/owners?limit=${limit}&cursor=${cursor || ""}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 			
-		toggleInCollection: (assetType, assetId, addToCollection=true) =>
-			xsrfFetch(`https://inventory.roblox.com/v1/collections/items/${assetType}/${assetId}`, {
+		toggleInCollection: (itemType: CollectionItemType, assetId: AssetId, addToCollection = true) =>
+			xsrfFetch(`https://inventory.roblox.com/v1/collections/items/${itemType}/${assetId}`, {
 				method: addToCollection ? "POST" : "DELETE",
 				credentials: "include",
 				xsrf: true
@@ -447,7 +464,7 @@ export const RobloxApi = {
 			)
 	},
 	presence: {
-		getPresence: userIds =>
+		getPresence: (userIds: UserId[]) =>
 			xsrfFetch(`https://presence.roblox.com/v1/presence/users`, {
 				method: "POST",
 				credentials: "include",
@@ -456,7 +473,7 @@ export const RobloxApi = {
 			}).then(res => res.json()),
 	},
 	privatemessages: {
-		getMessages: (pageNumber=1, pageSize=20, messageTab="Inbox") =>
+		getMessages: (pageNumber = 1, pageSize = 20, messageTab = "Inbox") =>
 			xsrfFetch(`https://privatemessages.roblox.com/v1/messages?pageSize=${pageSize}&messageTab=${messageTab}&pageNumber=${pageNumber}`, {
 				credentials: "include",
 				cache: "no-store"
@@ -468,7 +485,7 @@ export const RobloxApi = {
 				cache: "no-store"
 			}).then(res => res.json()),
 			
-		markAsRead: messageIds =>
+		markAsRead: (messageIds: number[]) =>
 			xsrfFetch(`https://privatemessages.roblox.com/v1/messages/mark-read`, {
 				method: "POST",
 				credentials: "include",
@@ -479,17 +496,17 @@ export const RobloxApi = {
 			}).then(res => res.json()),
 	},
 	thumbnails: {
-		getAvatarHeadshots: batchable(100, (userIds, size="150x150") =>
+		getAvatarHeadshots: batchable(100, (userIds: UserId[], size: ThumbnailSize = "150x150") =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds.join(",")}&size=${size}&format=Png`, {
 				credentials: "include"
 			}).then(res => res.json())),
 		
-		getAvatarThumbnails: batchable(100, (userIds, size="150x150") =>
+		getAvatarThumbnails: batchable(100, (userIds: UserId[], size: ThumbnailSize = "150x150") =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userIds.join(",")}&size=${size}&format=Png`, {
 				credentials: "include"
 			}).then(res => res.json())),
 		
-		getAssetThumbnails: batchable(100, (assetIds, size) =>
+		getAssetThumbnails: batchable(100, (assetIds: AssetId[], size?: ThumbnailSize) =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/assets?assetIds=${assetIds.join(",")}&size=${size}&format=Png`, {
 				credentials: "include"
 			}).then(res => res.json())),
@@ -499,27 +516,27 @@ export const RobloxApi = {
 				credentials: "include"
 			}).then(res => res.json())),
 		
-		getGroupIcons: batchable(100, (groupIds, size="150x150", isCircular=false) =>
+		getGroupIcons: batchable(100, (groupIds: GroupId[], size: ThumbnailSize = "150x150", isCircular = false) =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/groups/icons?groupIds=${groupIds.join(",")}&size=${size}&format=Png&isCircular=${isCircular}`, {
 				credentials: "include"
 			}).then(res => res.json())),
 		
-		getBadgeIcons: batchable(100, (badgeIds, size="150x150") =>
+		getBadgeIcons: batchable(100, (badgeIds: BadgeId[], size: ThumbnailSize = "150x150") =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/badges/icons?badgeIds=${badgeIds.join(",")}&size=${size}&format=Png`, {
 				credentials: "include"
 			}).then(res => res.json())),
 			
-		getGameIcons: batchable(100, (gameIds, size="150x150") =>
+		getGameIcons: batchable(100, (gameIds: UniverseId[], size: ThumbnailSize = "150x150") =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${gameIds.join(",")}&size=${size}&format=Png`, {
 				credentials: "include"
 			}).then(res => res.json())),
 		
-		getPlaceIcons: batchable(100, (placeIds, size="150x150", isCircular=false) =>
+		getPlaceIcons: batchable(100, (placeIds: PlaceId[], size: ThumbnailSize = "150x150", isCircular = false) =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/places/gameicons?placeIds=${placeIds.join(",")}&size=${size}&format=Png&isCircular=${isCircular}`, {
 				credentials: "include"
 			}).then(res => res.json())),
 			
-		batch: requests =>
+		batch: (requests: unknown[]) =>
 			xsrfFetch(`https://thumbnails.roblox.com/v1/batch`, {
 				credentials: "include",
 				method: "POST",
@@ -528,7 +545,7 @@ export const RobloxApi = {
 			}).then(res => res.json()),
 	},
 	users: {
-		getUserDetails: userIds =>
+		getUserDetails: (userIds: UserId[]) =>
 			xsrfFetch(`https://users.roblox.com/v1/users`, {
 				method: "POST",
 				credentials: "include",
@@ -536,7 +553,7 @@ export const RobloxApi = {
 				body: JSON.stringify({ userIds: userIds })
 			}).then(res => res.json()),
 			
-		getUsersByUsernames: (usernames, excludeBannedUsers=true) =>
+		getUsersByUsernames: (usernames: string[], excludeBannedUsers = true) =>
 			xsrfFetch(`https://users.roblox.com/v1/usernames/users`, {
 				method: "POST",
 				credentials: "include",
@@ -545,7 +562,7 @@ export const RobloxApi = {
 			}).then(res => res.json())
 	},
 	userProfiles: {
-		getProfiles: (userIds, fields) => 
+		getProfiles: (userIds: UserId[], fields: string[]) => 
 			xsrfFetch(`https://apis.roblox.com/user-profile-api/v1/user/profiles/get-profiles`, {
 				method: "POST",
 				credentials: "include",
@@ -554,29 +571,29 @@ export const RobloxApi = {
 			}).then(res => res.json())
 	},
 	toolboxService: {
-		getFavorites: (userId, assetTypeId, limit=10, cursor="") =>
+		getFavorites: (userId: UserId, assetTypeId: number, limit = 10, cursor = "") =>
 			xsrfFetch(`https://apis.roblox.com/toolbox-service/v1/favorites/user/${userId}/${assetTypeId}?limit=${limit}&cursor=${cursor}`, {
 				credentials: "include"
 			}).then(res => res.json()),
 	},
 	www: {
-		deleteAssetFromInventory: assetId =>
+		deleteAssetFromInventory: (assetId: AssetId) =>
 			xsrfFetch(`https://www.roblox.com/asset/delete-from-inventory`, {
 				method: "POST",
 				credentials: "include",
-				body: new URLSearchParams({ assetId }),
+				body: toSearchParams({ assetId }),
 				xsrf: true
 			}).then(res => res.json()),
 		
-		revertPlaceToVersion: versionId =>
+		revertPlaceToVersion: (versionId: number) =>
 			xsrfFetch(`https://www.roblox.com/places/revert`, {
 				method: "POST",
 				credentials: "include",
-				body: new URLSearchParams({ assetVersionID: versionId }),
+				body: toSearchParams({ assetVersionID: versionId }),
 				xsrf: true
 			}).then(res => !!res.ok),
 		
-		shutdownAllInstances: (placeId, replaceInstances) =>
+		shutdownAllInstances: (placeId: PlaceId, replaceInstances?: boolean) =>
 			xsrfFetch(`https://www.roblox.com/games/shutdown-all-instances`, {
 				method: "POST",
 				credentials: "include",
