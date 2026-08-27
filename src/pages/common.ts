@@ -2011,7 +2011,7 @@ pageInit.www = () => {
 			console.error(ex)
 		}
 
-		const populate = (experiment: string, key: string, value: any) => {
+		const populate = (experiment: string, key: string | symbol, value: any) => {
 			if (key === "then" || key === "toJSON") {
 				return
 			}
@@ -2055,7 +2055,7 @@ pageInit.www = () => {
 
 									return new Proxy(layer, {
 										get(target, key) {
-											populate(experiment, String(key), undefined)
+											populate(experiment, key, undefined)
 											return target[key]
 										},
 									})

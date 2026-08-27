@@ -11,7 +11,7 @@ document.addEventListener(
 		void currentPage
 
 		const util = {
-			ready(fn) {
+			ready(fn: (...args: any[]) => any) {
 				if (document.readyState === "loading") {
 					document.addEventListener("DOMContentLoaded", fn, { once: true })
 				} else {
@@ -19,7 +19,7 @@ document.addEventListener(
 				}
 			},
 
-			assert(bool, ...args) {
+			assert(bool: boolean, ...args) {
 				if (!bool) {
 					throw new Error(...args)
 				}
@@ -27,7 +27,7 @@ document.addEventListener(
 			},
 		}
 
-		const onSet = (a, b, c) => {
+		const onSet = (a: any, b: any, c: any) => {
 			if (a[b]) {
 				return c(a[b])
 			}
@@ -61,7 +61,7 @@ document.addEventListener(
 
 		const xhrTransforms: any[] = []
 
-		const hijackXHR = (fn) => {
+		const hijackXHR = (fn: (...args: any[]) => any) => {
 			xhrTransforms.push(fn)
 
 			if (xhrTransforms.length === 1) {
@@ -101,7 +101,7 @@ document.addEventListener(
 						delete args[1].onRequest
 						delete args[1].onResponse
 
-						const hijackResponse = (res) => {
+						const hijackResponse = (res: any) => {
 							if (!request.onResponse.length) {
 								return res
 							}
@@ -113,7 +113,7 @@ document.addEventListener(
 							hijackFunction(res, "json", (target: any, thisArg: any, args: any[]) => {
 								const promise = target.apply(thisArg, args)
 
-								return promise.then((json) => {
+								return promise.then((json: any) => {
 									for (const fn of request.onResponse) {
 										try {
 											;(fn as any)(json, request)
@@ -129,7 +129,7 @@ document.addEventListener(
 							hijackFunction(res, "text", (target: any, thisArg: any, args: any[]) => {
 								const promise = target.apply(thisArg, args)
 
-								return promise.then((text) => {
+								return promise.then((text: string) => {
 									try {
 										const json = JSON.parse(text)
 
@@ -159,7 +159,7 @@ document.addEventListener(
 					return target.apply(thisArg, args)
 				})
 
-				hijackFunction(XMLHttpRequest.prototype, "open", (target, xhr, args) => {
+				hijackFunction(XMLHttpRequest.prototype, "open", (target: any, xhr, args: any[]) => {
 					const method = args[0]
 					const url = args[1]
 
@@ -224,7 +224,7 @@ document.addEventListener(
 					return target.apply(xhr, args)
 				})
 
-				hijackFunction(XMLHttpRequest.prototype, "send", (target, xhr, args) => {
+				hijackFunction(XMLHttpRequest.prototype, "send", (target: any, xhr, args: any[]) => {
 					const request = xhrDetails.get(xhr)
 
 					if (request) {
@@ -250,7 +250,8 @@ document.addEventListener(
 
 		//
 
-		const formatNumber = (num) => String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,") // Intl.NumberFormat().format(num)
+		const formatNumber = (num: number | string) =>
+			String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,") // Intl.NumberFormat().format(num)
 
 		const RobuxToCash = {
 			selectedRobuxToCashOption: selectedRobuxToCashOption,
@@ -274,7 +275,7 @@ document.addEventListener(
 			send(action, ...args) {
 				document.dispatchEvent(new CustomEvent(`btroblox/content/${action}`, { detail: args }))
 			},
-			listen(action, callback) {
+			listen(action, callback: (...args: any[]) => any) {
 				let listeners = this.messageListeners[action]
 
 				if (!listeners) {
@@ -309,7 +310,7 @@ document.addEventListener(
 			moduleListeners: [],
 			loadedModules: {},
 
-			applyEntry(module, entry, callback) {
+			applyEntry(module: any, entry: any, callback: (...args: any[]) => any) {
 				const [, type, data] = entry
 
 				if (type === "constant" || type === "component") {
@@ -321,7 +322,7 @@ document.addEventListener(
 					return
 				}
 
-				const hijack = (a, b, injects) => {
+				const hijack = (a: any, b: any, injects) => {
 					const fn = a[b]
 
 					if (typeof fn === "function") {
@@ -344,7 +345,7 @@ document.addEventListener(
 				}
 			},
 
-			applyConfig(module, config, callback) {
+			applyConfig(module: any, config, callback: (...args: any[]) => any) {
 				const injects = config[2][0]
 
 				if (typeof injects[injects.length - 1] !== "function") {
@@ -387,7 +388,7 @@ document.addEventListener(
 				}
 			},
 
-			hijackConfig(moduleName, callback) {
+			hijackConfig(moduleName, callback: (...args: any[]) => any) {
 				let module
 
 				try {
@@ -407,7 +408,7 @@ document.addEventListener(
 
 			//
 
-			initModule(module) {
+			initModule(module: any) {
 				if (this.loadedModules[module.name] === module) {
 					return
 				}
@@ -473,7 +474,7 @@ document.addEventListener(
 					)
 				}
 
-				const route = (queue, callback) => {
+				const route = (queue, callback: (...args: any[]) => any) => {
 					for (const entry of queue) {
 						callback(entry)
 					}
@@ -501,7 +502,7 @@ document.addEventListener(
 					}
 				})
 
-				route(module._invokeQueue, (entry) => {
+				route(module._invokeQueue, (entry: any) => {
 					const name = entry[2][0]
 
 					const listeners = this.moduleListeners[module.name]?.[name]
@@ -516,7 +517,7 @@ document.addEventListener(
 			},
 
 			init() {
-				contentScript.listen("updateTemplate", (key, html) => {
+				contentScript.listen("updateTemplate", (key: string, html: string) => {
 					this.cachedTemplates[key] = html
 
 					for (const cache of this.templateCaches) {
@@ -526,7 +527,7 @@ document.addEventListener(
 					}
 				})
 
-				contentScript.listen("listenForTemplate", (key) => {
+				contentScript.listen("listenForTemplate", (key: string) => {
 					for (const cache of this.templateCaches) {
 						const html = cache.get(key)
 
@@ -568,7 +569,7 @@ document.addEventListener(
 
 			//
 
-			parseReactStringSelector(selector) {
+			parseReactStringSelector(selector: string) {
 				if (this.cachedSelectors[selector]) {
 					return this.cachedSelectors[selector]
 				}
@@ -635,7 +636,7 @@ document.addEventListener(
 				return result
 			},
 
-			parseReactSelector(selectors) {
+			parseReactSelector(selectors: any) {
 				selectors = Array.isArray(selectors) ? selectors : [selectors]
 				const result: any[] = []
 
@@ -688,7 +689,7 @@ document.addEventListener(
 				return result
 			},
 
-			selectorMatches(elem, selectors) {
+			selectorMatches(elem: any, selectors: any) {
 				if (!elem?.props) {
 					return false
 				}
@@ -922,7 +923,7 @@ document.addEventListener(
 				}
 			},
 
-			querySelector(element, selectors, depth = 5, path = false) {
+			querySelector(element, selectors: any, depth = 5, path = false) {
 				if (!element?.props) {
 					return null
 				}
@@ -937,7 +938,7 @@ document.addEventListener(
 				)
 			},
 
-			querySelectorAll(element, selectors, depth = 5, path = false) {
+			querySelectorAll(element, selectors: any, depth = 5, path = false) {
 				if (!element?.props) {
 					return null
 				}
@@ -955,7 +956,7 @@ document.addEventListener(
 				<Record<string, any>>{
 					btrIsWrapped: true,
 
-					matches(selector) {
+					matches(selector: string) {
 						return reactHook.selectorMatches(this[0], selector)
 					},
 
@@ -980,11 +981,11 @@ document.addEventListener(
 						return children
 					},
 
-					prepend(elem) {
+					prepend(elem: any) {
 						this._children().unshift(reactHook.unwrap(elem))
 					},
 
-					append(elem) {
+					append(elem: any) {
 						this._children().push(reactHook.unwrap(elem))
 					},
 
@@ -1027,7 +1028,7 @@ document.addEventListener(
 						this.replaceWith()
 					},
 
-					find(selector, depth = 5) {
+					find(selector: string, depth = 5) {
 						const path = reactHook.querySelector(this[0], selector, depth, true)
 						if (!path) {
 							return null
@@ -1042,7 +1043,7 @@ document.addEventListener(
 						get() {
 							Object.defineProperty(this, "classList", {
 								value: {
-									contains: (input) => {
+									contains: (input: any) => {
 										return (this[0].props.className ?? "").split(" ").includes(input)
 									},
 									add: (...input) => {
@@ -1068,7 +1069,7 @@ document.addEventListener(
 
 										this[0].props.className = classNames.join(" ")
 									},
-									toggle: (input, force) => {
+									toggle: (input: any, force: boolean) => {
 										if (
 											force === true ||
 											(force !== false && !this.classList.contains(input))
@@ -1087,11 +1088,11 @@ document.addEventListener(
 				},
 			),
 
-			unwrap(elem) {
+			unwrap(elem: any) {
 				return elem?.btrIsWrapped ? elem[0] : elem
 			},
 
-			wrap(path) {
+			wrap(path: any) {
 				if (!Array.isArray(path)) {
 					throw new Error("path is not an array")
 				}
@@ -1101,13 +1102,13 @@ document.addEventListener(
 
 			//
 
-			createGlobalState(value) {
+			createGlobalState(value: any) {
 				return {
 					listeners: new Set(),
 					value: value,
 					counter: 0,
 
-					set(value) {
+					set(value: any) {
 						this.value = value
 						this.update()
 					},
@@ -1122,7 +1123,7 @@ document.addEventListener(
 				}
 			},
 
-			useGlobalState(globalState) {
+			useGlobalState(globalState: any) {
 				const [, setValue] = this.React.useState()
 
 				this.React.useEffect(() => {
@@ -1137,7 +1138,7 @@ document.addEventListener(
 
 			//
 
-			hijackConstructor(filter, handler) {
+			hijackConstructor(filter: (...args: any[]) => any, handler: (...args: any[]) => any) {
 				const info = {
 					index: this.constructorReplaces.length,
 					filter,
@@ -1152,7 +1153,7 @@ document.addEventListener(
 				return info
 			},
 
-			hijackUseState(filter, transform, permanent) {
+			hijackUseState(filter: (...args: any[]) => any, transform: (...args: any[]) => any, permanent) {
 				const renderTarget = this.renderTarget
 
 				if (!renderTarget) {
@@ -1165,11 +1166,11 @@ document.addEventListener(
 				renderTarget.hijackState.push({ filter, transform, permanent })
 			},
 
-			hijackUseStateGlobal(filter, transform) {
+			hijackUseStateGlobal(filter: (...args: any[]) => any, transform: (...args: any[]) => any) {
 				this.globalHijackState.push({ filter, transform })
 			},
 
-			inject(selector, callback) {
+			inject(selector: string, callback: (...args: any[]) => any) {
 				this.injectedContent.push({
 					selector: this.parseReactSelector(selector),
 					callback: callback,
@@ -1219,7 +1220,7 @@ document.addEventListener(
 			},
 
 			renderProxyProps: {
-				apply(render, thisArg, args) {
+				apply(render: any, thisArg: any, args: any[]) {
 					if (reactHook.renderTarget) {
 						return reactHook.nextConstructorReplace(render, 0, thisArg, args)
 					}
@@ -1228,7 +1229,7 @@ document.addEventListener(
 				},
 			},
 
-			applyProxy(result) {
+			applyProxy(result: any) {
 				const type = result.type
 				if (!type) {
 					return
@@ -1463,7 +1464,7 @@ document.addEventListener(
 
 			init() {
 				onSet(window, "React", this.onReact.bind(this))
-				onSet(window, "ReactJSX", (jsx) => {
+				onSet(window, "ReactJSX", (jsx: any) => {
 					hijackFunction(jsx, "jsxs", this.onCreateElement.bind(this))
 					hijackFunction(jsx, "jsx", this.onCreateElement.bind(this))
 				})
@@ -1478,7 +1479,7 @@ document.addEventListener(
 				let openAdvancedAccessories
 
 				reactHook.hijackConstructor(
-					(props) => !openAdvancedAccessories && "openAdvancedAccessories" in props,
+					(props: any) => !openAdvancedAccessories && "openAdvancedAccessories" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						openAdvancedAccessories = args[0].openAdvancedAccessories
 						return target.apply(thisArg, args)
@@ -1553,7 +1554,7 @@ document.addEventListener(
 										}
 									}
 
-									$scope.btrUpdateItem = (item) => {
+									$scope.btrUpdateItem = (item: any) => {
 										if (item.meta?.scale && item.btrScale) {
 											item.meta.scale.X = item.btrScale
 											item.meta.scale.Y = item.btrScale
@@ -1576,14 +1577,14 @@ document.addEventListener(
 
 									$scope.$on(
 										avatarConstantService.events.wornAssetsChanged,
-										(event, assetIds) => {
+										(event: Event, assetIds) => {
 											$scope.btrRefreshWearingAssets()
 										},
 									)
 
 									$scope.$on(
 										avatarConstantService.events.avatarRulesLoaded,
-										(event, rules) => {
+										(event: Event, rules) => {
 											$scope.btrAvatarRules = avatarRules = rules
 											$scope.btrBounds = {}
 
@@ -1594,7 +1595,7 @@ document.addEventListener(
 													avatarRules.accessoryRefinementUpperBounds[assetTypeName]
 
 												const wearableAssetType = avatarRules.wearableAssetTypes.find(
-													(x) => x.name.replace(/\s/, "") === assetTypeName,
+													(x: any) => x.name.replace(/\s/, "") === assetTypeName,
 												)
 												const assetBounds = ($scope.btrBounds[wearableAssetType?.id] =
 													{})
@@ -1636,7 +1637,7 @@ document.addEventListener(
 				let forceRefreshThumbnail
 
 				reactHook.hijackConstructor(
-					(props) => !forceRefreshThumbnail && "forceRefreshThumbnail" in props,
+					(props: any) => !forceRefreshThumbnail && "forceRefreshThumbnail" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						forceRefreshThumbnail = args[0].forceRefreshThumbnail
 						return target.apply(thisArg, args)
@@ -1656,7 +1657,7 @@ document.addEventListener(
 					)
 				})
 
-				hijackXHR((request) => {
+				hijackXHR((request: any) => {
 					if (request.url.endsWith("/set-body-colors")) {
 						request.onResponse.push(() => {
 							contentScript.send("updateBodyColors")
@@ -1675,7 +1676,7 @@ document.addEventListener(
 
 				reactHook.hijackConstructor(
 					// ItemCard
-					(props) => "unitsAvailableForConsumption" in props && "id" in props,
+					(props: any) => "unitsAvailableForConsumption" in props && "id" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						const props = args[0]
 						const result = target.apply(thisArg, args)
@@ -1695,7 +1696,7 @@ document.addEventListener(
 							if (owned) {
 								result.props.className = (result.props.className ?? "") + " btr-owned"
 
-								const parent = reactHook.queryElement(result, (x) =>
+								const parent = reactHook.queryElement(result, (x: any) =>
 									x.props.className?.includes("item-card-link"),
 								)
 
@@ -1822,8 +1823,8 @@ document.addEventListener(
 					"composedPath",
 				]
 
-				const callback = (event) => {
-					const clone = new event.constructor(
+				const callback = (event: Event) => {
+					const clone = new (event.constructor as new (...args: any[]) => Event)(
 						event.type,
 						new Proxy(event, {
 							get(target, prop) {
@@ -1864,12 +1865,12 @@ document.addEventListener(
 			initReactFriends: () => {
 				reactHook.hijackConstructor(
 					// FriendsCarouselContainer
-					(props) => "profileUserId" in props && "carouselName" in props,
+					(props: any) => "profileUserId" in props && "carouselName" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						// disable MustHideConnections so that friends load in faster
 						reactHook.hijackUseState(
-							(value, index) => value === false && index === 4,
-							(value, initial) => (initial ? true : value),
+							(value: any, index: number) => value === false && index === 4,
+							(value: any, initial: any) => (initial ? true : value),
 						)
 
 						const result = target.apply(thisArg, args)
@@ -1892,7 +1893,7 @@ document.addEventListener(
 
 				reactHook.hijackConstructor(
 					// FriendsList
-					(props) => "friendsList" in props,
+					(props: any) => "friendsList" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						const props = args[0]
 						const friendsList = props.friendsList
@@ -1912,8 +1913,8 @@ document.addEventListener(
 						if (showSecondRow) {
 							reactHook.hijackUseState(
 								// visibleFriendsList
-								(value, index) => value === friendsList,
-								(value, initial) => {
+								(value: any, index: number) => value === friendsList,
+								(value: any, initial: any) => {
 									if (value && friendsList && !initial) {
 										let count = value.length * 2
 
@@ -1972,13 +1973,13 @@ document.addEventListener(
 				if (settings.home.friendsShowUsername) {
 					const friendsState = reactHook.createGlobalState({})
 
-					hijackXHR((request) => {
+					hijackXHR((request: any) => {
 						if (
 							request.method === "POST" &&
 							request.url ===
 								"https://apis.roblox.com/user-profile-api/v1/user/profiles/get-profiles"
 						) {
-							request.onRequest.push((request) => {
+							request.onRequest.push((request: any) => {
 								const json = JSON.parse(request.body)
 
 								if (!json.fields.includes("names.username")) {
@@ -1988,7 +1989,7 @@ document.addEventListener(
 								request.body = JSON.stringify(json)
 							})
 
-							request.onResponse.push((json) => {
+							request.onResponse.push((json: any) => {
 								for (const user of json.profileDetails) {
 									friendsState.value[user.userId] = user
 								}
@@ -2000,14 +2001,14 @@ document.addEventListener(
 
 					reactHook.hijackConstructor(
 						// FriendTileContent
-						(props) => props.displayName && props.userProfileUrl,
+						(props: any) => props.displayName && props.userProfileUrl,
 						(target: any, thisArg: any, args: any[]) => {
 							const result = target.apply(thisArg, args)
 
 							try {
 								const userId = args[0].id
 
-								const labels = reactHook.queryElement(result, (x) =>
+								const labels = reactHook.queryElement(result, (x: any) =>
 									x.props.className?.includes("friends-carousel-tile-labels"),
 								)
 								if (labels && Array.isArray(labels.props.children)) {
@@ -2041,7 +2042,7 @@ document.addEventListener(
 				if (settings.home.friendPresenceLinks) {
 					reactHook.hijackConstructor(
 						// FriendTileDropdown
-						(props) => props.friend && props.gameUrl,
+						(props: any) => props.friend && props.gameUrl,
 						(target: any, thisArg: any, args: any[]) => {
 							const result = target.apply(thisArg, args)
 
@@ -2052,7 +2053,7 @@ document.addEventListener(
 									result.props.children[0] = reactHook.createElement("a", {
 										href: args[0].gameUrl,
 										style: { display: "contents" },
-										onClick: (event) => event.preventDefault(),
+										onClick: (event: Event) => event.preventDefault(),
 										children: card,
 									})
 								}
@@ -2066,7 +2067,7 @@ document.addEventListener(
 				}
 			},
 			initReactRobuxToCash: () => {
-				reactHook.inject(".text-robux-lg", (elem) => {
+				reactHook.inject(".text-robux-lg", (elem: any) => {
 					const originalText = elem[0].props.children
 					if (typeof originalText !== "string") {
 						return
@@ -2086,7 +2087,7 @@ document.addEventListener(
 					}
 				})
 
-				reactHook.inject(".text-robux-tile", (elem) => {
+				reactHook.inject(".text-robux-tile", (elem: any) => {
 					const originalText = elem[0].props.children
 					if (typeof originalText !== "string") {
 						return
@@ -2106,7 +2107,7 @@ document.addEventListener(
 					}
 				})
 
-				reactHook.inject(".text-robux", (elem) => {
+				reactHook.inject(".text-robux", (elem: any) => {
 					const originalText = elem[0].props.children
 					if (typeof originalText !== "string") {
 						return
@@ -2126,8 +2127,8 @@ document.addEventListener(
 					}
 				})
 
-				reactHook.inject(".icon-robux-container", (elem) => {
-					const child = elem.find((x) => "amount" in x.props)
+				reactHook.inject(".icon-robux-container", (elem: any) => {
+					const child = elem.find((x: any) => "amount" in x.props)
 
 					if (child) {
 						const cash = RobuxToCash.convert(child[0].props.amount ?? 0)
@@ -2147,7 +2148,7 @@ document.addEventListener(
 				Roblox?.BootstrapWidgets?.SetupPopover(null, null, "[data-bind='popover-btr-download']")
 			},
 			addBTRSettings: () => {
-				reactHook.inject("#settings-popover-menu", (elem) => {
+				reactHook.inject("#settings-popover-menu", (elem: any) => {
 					elem.prepend(
 						reactHook.createElement("li", {
 							dangerouslySetInnerHTML: {
@@ -2168,33 +2169,45 @@ document.addEventListener(
 
 					hijackFunction(lss, "storage", () => true)
 
-					hijackFunction(lss, "removeLocalStorage", (fn, thisArg, args) => {
-						delete localCache[args[0]]
-						return fn.apply(thisArg, args)
-					})
-
-					hijackFunction(lss, "getLocalStorage", (fn, thisArg, args) => {
-						if (args[0] in localCache) {
-							return JSON.parse(localCache[args[0]])
-						}
-
-						return fn.apply(thisArg, args)
-					})
-
-					hijackFunction(lss, "setLocalStorage", (fn, thisArg, args) => {
-						try {
+					hijackFunction(
+						lss,
+						"removeLocalStorage",
+						(fn: (...args: any[]) => any, thisArg: any, args: any[]) => {
 							delete localCache[args[0]]
 							return fn.apply(thisArg, args)
-						} catch (ex) {
-							localCache[args[0]] = JSON.stringify(args[1])
-							console.error(ex)
-						}
-					})
+						},
+					)
+
+					hijackFunction(
+						lss,
+						"getLocalStorage",
+						(fn: (...args: any[]) => any, thisArg: any, args: any[]) => {
+							if (args[0] in localCache) {
+								return JSON.parse(localCache[args[0]])
+							}
+
+							return fn.apply(thisArg, args)
+						},
+					)
+
+					hijackFunction(
+						lss,
+						"setLocalStorage",
+						(fn: (...args: any[]) => any, thisArg: any, args: any[]) => {
+							try {
+								delete localCache[args[0]]
+								return fn.apply(thisArg, args)
+							} catch (ex) {
+								localCache[args[0]] = JSON.stringify(args[1])
+								console.error(ex)
+							}
+						},
+					)
 				})
 			},
 			cacheRobuxAmount: () => {
 				reactHook.hijackConstructor(
-					(props) =>
+					(props: any) =>
 						"isGetCurrencyCallDone" in props &&
 						"isExperimentCallDone" in props &&
 						"robuxAmount" in props,
@@ -2243,7 +2256,7 @@ document.addEventListener(
 				})
 
 				reactHook.hijackConstructor(
-					(props) => "robuxAmount" in props && !("isEligibleForVng" in props),
+					(props: any) => "robuxAmount" in props && !("isEligibleForVng" in props),
 					(target: any, thisArg: any, args: any[]) => {
 						hijackTruncValue = true
 						const result = target.apply(thisArg, args)
@@ -2253,14 +2266,14 @@ document.addEventListener(
 				)
 			},
 			hideFriendActivity: () => {
-				hijackXHR((request) => {
+				hijackXHR((request: any) => {
 					if (
 						request.method === "POST" &&
 						request.url.match(
 							/^https:\/\/apis\.roblox\.com\/discovery-api\/omni-recommendation(-metadata)?$/i,
 						)
 					) {
-						request.onResponse.push((json) => {
+						request.onResponse.push((json: any) => {
 							if (json?.contentMetadata?.Game) {
 								for (const gameData of Object.values(json.contentMetadata.Game) as any[]) {
 									delete gameData.friendActivityTitle
@@ -2363,7 +2376,7 @@ document.addEventListener(
 
 							$scope.$watch(
 								() => library.chatLayout.collapsed,
-								(value) => {
+								(value: any) => {
 									library.chatLayout.widthOfChat = value ? 54 + 6 : width
 									chatUtility.updateDialogsPosition(library)
 								},
@@ -2384,7 +2397,7 @@ document.addEventListener(
 				const initial: Record<string, any> = {}
 				const layers: Record<string, any> = {}
 
-				const modify = (experiment, key, value) => {
+				const modify = (experiment, key: string, value: any) => {
 					modified[experiment] ??= {}
 
 					if (typeof value === "string") {
@@ -2422,7 +2435,7 @@ document.addEventListener(
 					console.error(ex)
 				}
 
-				const populate = (experiment, key, value) => {
+				const populate = (experiment: string, key: string | symbol, value: any) => {
 					if (key === "then" || key === "toJSON") {
 						return
 					}
@@ -2492,13 +2505,13 @@ document.addEventListener(
 			hijackAuth: () => {
 				let didSendFirstAuth = false
 
-				hijackXHR((request) => {
+				hijackXHR((request: any) => {
 					if (
 						!didSendFirstAuth &&
 						request.method === "GET" &&
 						request.url === `https://users.roblox.com/v1/users/authenticated`
 					) {
-						request.onResponse.push((json) => {
+						request.onResponse.push((json: any) => {
 							if (!didSendFirstAuth) {
 								didSendFirstAuth = true
 								contentScript.send("onFirstAuth", json)
@@ -2514,18 +2527,18 @@ document.addEventListener(
 					moduleHandlers: [] as any[],
 					objects: {},
 
-					onModule(fn) {
+					onModule(fn: (...args: any[]) => any) {
 						this.moduleHandlers.push(fn)
 					},
 
-					onProperty(keys, fn) {
+					onProperty(keys, fn: (...args: any[]) => any) {
 						if (!Array.isArray(keys)) {
 							keys = [keys]
 						}
 
 						const callback =
 							keys.length >= 2
-								? (obj) => {
+								? (obj: any) => {
 										for (const key of keys) {
 											if (!Object.hasOwn(obj, key)) {
 												return
@@ -2667,7 +2680,7 @@ document.addEventListener(
 
 				objects.Mui = {}
 
-				webpackHook.onModule((module, target) => {
+				webpackHook.onModule((module: any, target: any) => {
 					if ("jsx" in module && "jsxs" in module) {
 						hijackFunction(module, "jsx", reactHook.onCreateElement.bind(reactHook))
 						hijackFunction(module, "jsxs", reactHook.onCreateElement.bind(reactHook))
@@ -2697,14 +2710,14 @@ document.addEventListener(
 				const objects: Record<string, any> = webpackHook.objects
 
 				reactHook.hijackConstructor(
-					(props) => props.settingsHref,
+					(props: any) => props.settingsHref,
 					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 
 						try {
 							const list = reactHook.queryElement(
 								result,
-								(x) => x.props.id === "top-navigation-authentication-status-menu",
+								(x: any) => x.props.id === "top-navigation-authentication-status-menu",
 							)
 
 							if (list) {
@@ -2727,7 +2740,7 @@ document.addEventListener(
 				const { webpackHook } = BTRoblox
 				const objects: Record<string, any> = webpackHook.objects
 
-				const Link = (url, entry) =>
+				const Link = (url: string, entry: any) =>
 					objects.jsx("a", {
 						href: url,
 						style: { all: "unset", display: "contents" },
@@ -2751,7 +2764,7 @@ document.addEventListener(
 				})
 
 				reactHook.hijackConstructor(
-					(props) => props.itemType && props.updateItem,
+					(props: any) => props.itemType && props.updateItem,
 					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 
@@ -2766,7 +2779,7 @@ document.addEventListener(
 											x?.props?.onClick &&
 											reactHook.queryElement(
 												x,
-												(x) => x?.props?.itemKey === "Action.CopyURL",
+												(x: any) => x?.props?.itemKey === "Action.CopyURL",
 											),
 									)
 									if (index !== -1) {
@@ -2932,7 +2945,7 @@ document.addEventListener(
 				)
 
 				reactHook.hijackConstructor(
-					(props) => props.menuItems && props.setMenuOpen,
+					(props: any) => props.menuItems && props.setMenuOpen,
 					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 
@@ -2980,7 +2993,7 @@ document.addEventListener(
 				const objects: Record<string, any> = webpackHook.objects
 
 				reactHook.hijackConstructor(
-					(props) => "version" in props,
+					(props: any) => "version" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 
@@ -3096,7 +3109,7 @@ document.addEventListener(
 					if (!promise) {
 						let numRetries = 0
 
-						const tryRetry = async (res) => {
+						const tryRetry = async (res: any) => {
 							if (res.status === 429 && numRetries < 2) {
 								numRetries += 1
 								await new Promise((resolve) => setTimeout(resolve, 3e3))
@@ -3467,7 +3480,7 @@ document.addEventListener(
 				const addServerPager = settings.gamedetails.addServerPager
 
 				reactHook.hijackConstructor(
-					(props) => props.getGameServers,
+					(props: any) => props.getGameServers,
 					(target: any, thisArg: any, args: any[]) => {
 						const props = args[0]
 
@@ -3480,7 +3493,7 @@ document.addEventListener(
 				)
 
 				reactHook.hijackConstructor(
-					(props) => props.loadMoreGameInstances && "headerTitle" in props,
+					(props: any) => props.loadMoreGameInstances && "headerTitle" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						const props = args[0]
 
@@ -3492,7 +3505,7 @@ document.addEventListener(
 						const result = target.apply(thisArg, args)
 
 						try {
-							const list = reactHook.queryElement(result, (x) =>
+							const list = reactHook.queryElement(result, (x: any) =>
 								x.props.id?.includes("running-games"),
 							)
 
@@ -3504,14 +3517,14 @@ document.addEventListener(
 								)
 							}
 
-							const ul = reactHook.queryElement(list, (x) => x.type === "ul", 5)
+							const ul = reactHook.queryElement(list, (x: any) => x.type === "ul", 5)
 							const servers = ul?.props?.children
 
 							if (servers) {
 								for (const server of [servers].flat()) {
 									if (server?.props) {
 										server.props.ping = props?.gameInstances?.find(
-											(x) => x.id === server.props.id,
+											(x: any) => x.id === server.props.id,
 										)?.ping
 									}
 								}
@@ -3526,7 +3539,7 @@ document.addEventListener(
 
 				reactHook.hijackConstructor(
 					// GameInstanceCard
-					(props) => props.gameServerStatus,
+					(props: any) => props.gameServerStatus,
 					(target: any, thisArg: any, args: any[]) => {
 						const props = args[0]
 						const placeId = props.placeId
@@ -3536,7 +3549,7 @@ document.addEventListener(
 
 						try {
 							// add context menu entry to copy jobid
-							const joinBtn = reactHook.queryElement(result, (x) =>
+							const joinBtn = reactHook.queryElement(result, (x: any) =>
 								x.props.className?.includes("game-server-join-btn"),
 							)
 							if (joinBtn) {
@@ -3546,7 +3559,7 @@ document.addEventListener(
 							// add region/ping label
 							const status =
 								regionSetting !== "none" &&
-								reactHook.queryElement(result, (x) =>
+								reactHook.queryElement(result, (x: any) =>
 									x.props.className?.includes("rbx-game-status"),
 								)
 							if (status) {
@@ -3618,8 +3631,9 @@ document.addEventListener(
 				)
 
 				reactHook.hijackUseStateGlobal(
-					(value, index) => ["tab-about", "tab-game-instances", "tab-store"].includes(value),
-					(value, initial) => {
+					(value: any, index: number) =>
+						["tab-about", "tab-game-instances", "tab-store"].includes(value),
+					(value: any, initial: any) => {
 						if (value === "tab-about" && window.location.hash !== "#!/about") {
 							return "tab-game-instances"
 						}
@@ -3629,7 +3643,7 @@ document.addEventListener(
 				)
 			},
 			gamedetails: () => {
-				reactHook.inject(".game-description-container", (elem) => {
+				reactHook.inject(".game-description-container", (elem: any) => {
 					elem.replaceWith(
 						reactHook.createElement(
 							"div",
@@ -3643,7 +3657,7 @@ document.addEventListener(
 					)
 				})
 
-				reactHook.inject(".container-list.games-detail", (elem) => {
+				reactHook.inject(".container-list.games-detail", (elem: any) => {
 					elem.replaceWith(
 						reactHook.createElement(
 							"div",
@@ -3657,9 +3671,9 @@ document.addEventListener(
 					)
 				})
 
-				reactHook.inject(".game-social-links .btn-secondary-lg", (elem) => {
+				reactHook.inject(".game-social-links .btn-secondary-lg", (elem: any) => {
 					const socials = reactHook.renderTarget?.state[0]?.[0]
-					const entry = socials?.find((x) => x.id === +elem[0].key)
+					const entry = socials?.find((x: any) => x.id === +elem[0].key)
 
 					if (entry) {
 						elem[0].props.href = entry.url
@@ -3770,17 +3784,17 @@ document.addEventListener(
 				})
 			},
 			favoritesAtTop: () => {
-				hijackXHR((request) => {
+				hijackXHR((request: any) => {
 					if (
 						request.method === "POST" &&
 						request.url.match(
 							/^https:\/\/apis\.roblox\.com\/discovery-api\/omni-recommendation(-metadata)?$/i,
 						)
 					) {
-						request.onResponse.push((json) => {
+						request.onResponse.push((json: any) => {
 							if (settings.home.favoritesAtTop && json?.sorts) {
-								const favoritesSort = json.sorts.find((x) => x.topicId === 100000001)
-								const continueSort = json.sorts.find((x) => x.topicId === 100000003)
+								const favoritesSort = json.sorts.find((x: any) => x.topicId === 100000001)
+								const continueSort = json.sorts.find((x: any) => x.topicId === 100000003)
 
 								if (favoritesSort) {
 									json.sorts.splice(json.sorts.indexOf(favoritesSort), 1)
@@ -3798,7 +3812,8 @@ document.addEventListener(
 			},
 			showRecommendationPlayerCount: () => {
 				reactHook.hijackConstructor(
-					(props) => "wideTileType" in props && "gameData" in props && "playerCountStyle" in props,
+					(props: any) =>
+						"wideTileType" in props && "gameData" in props && "playerCountStyle" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						const props = args[0]
 						props.playerCountStyle = "Footer"
@@ -3807,7 +3822,7 @@ document.addEventListener(
 				)
 			},
 			instantGameHoverAction: () => {
-				reactHook.inject(".hover-game-tile.old-hover", (elem) => {
+				reactHook.inject(".hover-game-tile.old-hover", (elem: any) => {
 					const props = elem[0].props
 
 					const [isFocused, setIsFocused] = reactHook.React.useState(false)
@@ -3877,7 +3892,7 @@ document.addEventListener(
 			},
 			itemdetails: () => {
 				reactHook.hijackConstructor(
-					(props) => "itemDetails" in props,
+					(props: any) => "itemDetails" in props,
 					(target: any, thisArg: any, args: any[]) => {
 						const result = target.apply(thisArg, args)
 
@@ -3961,7 +3976,7 @@ document.addEventListener(
 				})
 			},
 			money: () => {
-				reactHook.inject(".balance-label.icon-robux-container", (elem) => {
+				reactHook.inject(".balance-label.icon-robux-container", (elem: any) => {
 					const list = elem[0].props.children[0]?.props.children
 
 					if (Array.isArray(list)) {
@@ -4015,18 +4030,18 @@ document.addEventListener(
 					}
 				})
 
-				hijackXHR((request) => {
+				hijackXHR((request: any) => {
 					if (request.url === "https://apis.roblox.com/profile-platform-api/v1/profiles/get") {
-						request.onResponse.push((json) => {
+						request.onResponse.push((json: any) => {
 							contentScript.send("profileData", json)
 						})
 					}
 				})
 			},
-			setupGamePopovers: (selector) => {
+			setupGamePopovers: (selector: string) => {
 				Roblox?.BootstrapWidgets?.SetupPopover(null, null, selector)
 			},
-			linkify: (target) => $(target).linkify(),
+			linkify: (target: any) => $(target).linkify(),
 			profilePlayGame: (placeId) => {
 				Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 			},
@@ -4036,7 +4051,7 @@ document.addEventListener(
 			"adblock.js": () => {
 				util.ready(() => {
 					if (window.Roblox?.PrerollPlayer) {
-						window.Roblox.PrerollPlayer.waitForPreroll = (x) => $.Deferred().resolve(x)
+						window.Roblox.PrerollPlayer.waitForPreroll = (x: any) => $.Deferred().resolve(x)
 					}
 
 					if (window.Roblox?.VideoPreRollDFP) {
@@ -4048,7 +4063,7 @@ document.addEventListener(
 				Roblox.GameLauncher.followPlayerIntoGame(userId)
 			},
 			fastsearch: () => {
-				reactHook.inject("#navbar-universal-search, .navbar-search", (elem) => {
+				reactHook.inject("#navbar-universal-search, .navbar-search", (elem: any) => {
 					elem.find("ul")?.prepend(
 						reactHook.createElement("div", {
 							id: "btr-fastsearch-container",
@@ -4058,8 +4073,8 @@ document.addEventListener(
 				})
 			},
 			navigation: () => {
-				reactHook.inject("ul.navbar-right", (elem) => {
-					const robux = elem.find((x) => "robuxAmount" in x.props)
+				reactHook.inject("ul.navbar-right", (elem: any) => {
+					const robux = elem.find((x: any) => "robuxAmount" in x.props)
 
 					if (robux) {
 						robux.before(
@@ -4077,8 +4092,8 @@ document.addEventListener(
 					}
 				})
 
-				reactHook.inject(".left-col-list", (elem) => {
-					const trade = elem.find((x) => x.key === "trade")
+				reactHook.inject(".left-col-list", (elem: any) => {
+					const trade = elem.find((x: any) => x.key === "trade")
 					if (trade) {
 						trade.after(
 							reactHook.createElement("div", {
@@ -4089,7 +4104,7 @@ document.addEventListener(
 						)
 					}
 
-					const blog = elem.find((x) => x.key === "blog")
+					const blog = elem.find((x: any) => x.key === "blog")
 					if (blog) {
 						blog.before(
 							reactHook.createElement("div", {
@@ -4112,7 +4127,7 @@ document.addEventListener(
 			// Stop inserting injected functions here
 		}
 
-		contentScript.listen("call", (name, args) => {
+		contentScript.listen("call", (name: string, args: any[]) => {
 			injectedFunctions[name](...args)
 		})
 
