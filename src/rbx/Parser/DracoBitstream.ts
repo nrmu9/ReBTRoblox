@@ -148,7 +148,7 @@ export const DracoBitstream = {
 		return parser
 	},
 	
-	parseHeader(stream) {
+	parseHeader(stream: ByteReader): DracoHeader {
 		const string = stream.String(5)
 		
 		if(string !== "DRACO") {
@@ -172,7 +172,7 @@ export const DracoBitstream = {
 	
 	//
 	
-	decodeConnectivityData(stream, parser, encoderMethod) {
+	decodeConnectivityData(stream: ByteReader, parser: DracoParser, encoderMethod: number) {
 		// DecodeConnectivityData
 		if(encoderMethod === MESH_SEQUENTIAL_ENCODING) {
 			const numFaces = parser.numFaces = this.LEB128(stream)
@@ -218,7 +218,7 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodeAttributeData(stream, parser, encoderMethod) {
+	decodeAttributeData(stream: ByteReader, parser: DracoParser, encoderMethod: number) {
 		// DecodeAttributeData
 		const numAttributeDecoders = stream.UInt8()
 		const decoders: DracoDecoder[] = parser.decoders = []
@@ -269,7 +269,7 @@ export const DracoBitstream = {
 		}
 	},
 	
-	generateSequence(parser, encoderMethod) {
+	generateSequence(parser: DracoParser, encoderMethod: number) {
 		// GenerateSequence
 		if(encoderMethod === MESH_SEQUENTIAL_ENCODING) {
 			for(const decoder of parser.decoders) {
@@ -284,7 +284,7 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodeAttributes(stream, parser) {
+	decodeAttributes(stream: ByteReader, parser: DracoParser) {
 		// initialize rans
 		parser.rans = this.createRans()
 		
@@ -295,7 +295,7 @@ export const DracoBitstream = {
 		for(const decoder of parser.decoders) {
 			// SequentialAttributeDecodersController::DecodePortableAttributes()
 			
-			for(const attribute of decoder.attributes) {
+			for(const attribute of decoder.attributes ?? []) {
 				const decoderType = attribute.decoderType
 				
 				// console.log(
@@ -314,7 +314,7 @@ export const DracoBitstream = {
 			// DecodeDataNeededByPortableTransforms()
 			// TransformAttributesToOriginalFormat()
 			
-			for(const attribute of decoder.attributes) {
+			for(const attribute of decoder.attributes ?? []) {
 				const decoderType = attribute.decoderType
 				
 				if(decoderType === SEQUENTIAL_ATTRIBUTE_ENCODER_QUANTIZATION) {
@@ -328,9 +328,9 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodeAttribute_Generic(stream, parser, decoder, attribute) {
+	decodeAttribute_Generic(stream: ByteReader, parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute) {
 		const pointIds = decoder.pointIds
-		const numEntries = pointIds.length
+		const numEntries = (pointIds ?? []).length
 		
 		const numComponents = attribute.numComponents
 		const numValues = numEntries * numComponents
@@ -355,7 +355,7 @@ export const DracoBitstream = {
 			break
 		case 8:
 			for(let k = 0; k < numValues; k++) {
-				output[k] = stream.UInt64LE()
+				output[k] = Number(stream.UInt64LE())
 			}
 			break
 		}
@@ -363,7 +363,7 @@ export const DracoBitstream = {
 		attribute.output = output
 	},
 	
-	decodeAttribute_Compressed(stream, parser, decoder, attribute, decoderType) {
+	decodeAttribute_Compressed(stream: ByteReader, parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute, decoderType: number | null) {
 		// SequentialIntegerAttributeDecoder::DecodeValues
 		const predictionScheme = attribute.predictionScheme = stream.UInt8()
 		let predictionTransformType
@@ -375,7 +375,7 @@ export const DracoBitstream = {
 		// SequentialIntegerAttributeDecoder::DecodeIntegerValues
 		const compressed = stream.UInt8()
 		
-		const numEntries = decoder.pointIds.length
+		const numEntries = (decoder.pointIds ?? []).length
 		let numComponents = attribute.numComponents
 		
 		if(decoderType === SEQUENTIAL_ATTRIBUTE_ENCODER_NORMALS && predictionScheme === PREDICTION_DIFFERENCE) {
@@ -408,7 +408,7 @@ export const DracoBitstream = {
 				break
 			case 8:
 				for(let k = 0; k < numValues; k++) {
-					output[k] = stream.UInt64LE()
+					output[k] = Number(stream.UInt64LE())
 				}
 				break
 			default:
@@ -433,7 +433,7 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodeSymbols(stream, parser, numValues, numComponents, output) {
+	decodeSymbols(stream: ByteReader, parser: DracoParser, numValues: number, numComponents: number, output: number[]) {
 		// symbol_decoding.cc - DecodeSymbols
 		const TAGGED_SYMBOLS = 0
 		const RAW_SYMBOLS = 1
@@ -551,7 +551,7 @@ export const DracoBitstream = {
 			let maxValue = maxQuantizedValue - 1
 			let centerValue = maxValue / 2
 			
-			const invertDiamond = (s, t) => {
+			const invertDiamond = (s: number, t: number) => {
 				let sign_s, sign_t
 				
 				if(s >= 0 && t >= 0) {
@@ -582,7 +582,7 @@ export const DracoBitstream = {
 				]
 			}
 			
-			const getRotationCount = pred => {
+			const getRotationCount = (pred: number[]) => {
 				const sign_x = pred[0]
 				const sign_y = pred[1]
 
@@ -613,7 +613,7 @@ export const DracoBitstream = {
 				return rotation_count
 			}
 			
-			const rotatePoint = (point, rotationCount) => {
+			const rotatePoint = (point: number[], rotationCount: number) => {
 				switch (rotationCount) {
 				case 1:
 					return [point[1], -point[0]];

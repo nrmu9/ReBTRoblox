@@ -23,19 +23,19 @@ export class ByteReader extends Uint8Array {
 		this.view = new DataView(this.buffer as ArrayBuffer, this.byteOffset, this.byteLength)
 	}
 
-	SetIndex(n) { this.index = n }
+	SetIndex(n: number): void { this.index = n }
 	GetIndex() { return this.index }
 	GetRemaining() { return this.length - this.index }
 	GetLength() { return this.length }
-	Jump(n) { this.index += n }
+	Jump(n: number): void { this.index += n }
 
-	Array(n) {
+	Array(n: number): Uint8Array {
 		const result = new Uint8Array(this.buffer, this.byteOffset + this.index, n)
 		this.index += n
 		return result
 	}
 	
-	Match(match) {
+	Match(match: string | ArrayLike<number>): boolean {
 		let index = this.index
 		
 		if(typeof match === "string") {
@@ -79,11 +79,11 @@ export class ByteReader extends Uint8Array {
 	DoubleLE() { return this.view.getFloat64((this.index += 8) - 8, true) }
 	DoubleBE() { return this.view.getFloat64((this.index += 8) - 8, false) }
 
-	String(n) { return bufferToString(this.Array(n)) }
+	String(n: number): string { return bufferToString(this.Array(n)) }
 
 	// Compression
 	
-	Zstd(comLength, decomLength, output) {
+	Zstd(comLength: number, decomLength: number, output?: Uint8Array): Uint8Array {
 		assert(this.GetRemaining() >= comLength, "[ByteReader.Zstd] unexpected eof")
 		
 		if(!output || output.length < decomLength) {
@@ -97,7 +97,7 @@ export class ByteReader extends Uint8Array {
 		return output
 	}
 	
-	LZ4(comLength, decomLength, output) {
+	LZ4(comLength: number, decomLength: number, output?: Uint8Array): Uint8Array {
 		assert(this.GetRemaining() >= comLength, "[ByteReader.LZ4] unexpected eof")
 		
 		if(!output || output.length < decomLength) {
@@ -158,7 +158,7 @@ export class ByteReader extends Uint8Array {
 
 	// Interleaved
 	
-	RBXInterleavedUInt16(count, result) {
+	RBXInterleavedUInt16(count: number, result: number[]): number[] {
 		for(let i = 0; i < count; i++) {
 			result[i] =
 				this[this.index + i + count * 0] * 256 +
@@ -169,7 +169,7 @@ export class ByteReader extends Uint8Array {
 		return result
 	}
 	
-	RBXInterleavedUInt32(count, result) {
+	RBXInterleavedUInt32(count: number, result: number[]): number[] {
 		for(let i = 0; i < count; i++) {
 			result[i] =
 				this[this.index + i + count * 0] * 16777216 +
@@ -201,7 +201,7 @@ export class ByteReader extends Uint8Array {
 		return result
 	}
 	
-	RBXInterleavedInt16(count, result) {
+	RBXInterleavedInt16(count: number, result: number[]): number[] {
 		this.RBXInterleavedUInt16(count, result)
 		
 		for(let i = 0; i < count; i++) {
@@ -212,7 +212,7 @@ export class ByteReader extends Uint8Array {
 		return result
 	}
 
-	RBXInterleavedInt32(count, result) {
+	RBXInterleavedInt32(count: number, result: number[]): number[] {
 		this.RBXInterleavedUInt32(count, result)
 		
 		for(let i = 0; i < count; i++) {
@@ -234,7 +234,7 @@ export class ByteReader extends Uint8Array {
 		return result
 	}
 
-	RBXInterleavedFloat(count, result) {
+	RBXInterleavedFloat(count: number, result: number[]): number[] {
 		this.RBXInterleavedUInt32(count, result)
 		
 		for(let i = 0; i < count; i++) {

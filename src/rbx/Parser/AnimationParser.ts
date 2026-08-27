@@ -33,7 +33,7 @@ FloatCurve.ValuesAndtimes {
 */
 
 export const RBXAnimationParser = {
-	CFrameToQuat(cf) {
+	CFrameToQuat(cf: number[]) {
 		const trace = cf[3] + cf[7] + cf[11]
 		let qw, qx, qy, qz
 		
@@ -113,7 +113,7 @@ export const RBXAnimationParser = {
 		return result
 	},
 	
-	parseCurves(result, target) {
+	parseCurves(result: Record<string, any>, target: any) {
 		for(const child of target.Children) {
 			if(child.ClassName === "Folder") {
 				this.parseCurves(result, child)
@@ -172,7 +172,7 @@ export const RBXAnimationParser = {
 		}
 	},
 
-	parsePoses(result, rootPose, time) {
+	parsePoses(result: Record<string, any>, rootPose: any, time: number) {
 		for(const pose of rootPose.Children) {
 			if(pose.ClassName !== "Pose") { continue }
 			

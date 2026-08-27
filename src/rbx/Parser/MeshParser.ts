@@ -13,18 +13,18 @@ export interface MeshBone {
 export interface Mesh {
 	vertices: Float32Array
 	normals: Float32Array
-	tangents: Float32Array
+	tangents?: Float32Array
 	uvs: Float32Array
 	faces: Uint32Array
 	lods: number[]
-	vertexColors: Uint8Array | null
+	vertexColors?: Uint8Array | null
 	skinIndices?: Uint16Array
 	skinWeights?: Float32Array
 	bones?: MeshBone[]
 }
 
 export const RBXMeshParser = {
-	parse(buffer) {
+	parse(buffer: ArrayBuffer | Uint8Array): Mesh {
 		const reader = new ByteReader(buffer)
 		assert(reader.String(8) === "version ", "Invalid mesh file")
 
@@ -48,12 +48,12 @@ export const RBXMeshParser = {
 		}
 	},
 
-	parseText(str) {
+	parseText(str: string): Mesh {
 		const lines = str.split(/\r?\n/)
 		assert(lines.length === 3, "Invalid mesh version 1 file (Wrong amount of lines)")
 
 		const version = lines[0]
-		const faceCount = lines[1]
+		const faceCount = Number(lines[1])
 		const data = lines[2]
 
 		const vectors = data.replace(/\s+/g, "").slice(1, -1).split("][")
@@ -88,7 +88,7 @@ export const RBXMeshParser = {
 		return { vertices, normals, uvs, faces, lods: [0, faceCount] }
 	},
 	
-	parseBin(buffer, version) {
+	parseBin(buffer: ArrayBuffer | Uint8Array, version: string): Mesh {
 		const reader = new ByteReader(buffer)
 		assert(reader.String(12) === `version ${version}`, "Bad header")
 
@@ -352,7 +352,7 @@ export const RBXMeshParser = {
 		return mesh
 	},
 	
-	parseChunked(buffer, version) {
+	parseChunked(buffer: ArrayBuffer | Uint8Array, version: string): Mesh {
 		const reader = new ByteReader(buffer)
 		assert(reader.String(12) === `version ${version}`, "Bad header")
 
