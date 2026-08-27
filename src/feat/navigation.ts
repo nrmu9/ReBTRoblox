@@ -99,7 +99,10 @@ export const Navigation = {
 			setEnabled(enabled: boolean | undefined) {
 				if (typeof enabled === "boolean") {
 					this.enabled = enabled
-					this.isDefault = false
+					// Toggling back to where it started is the same state as never
+					// having touched it, so it should stop counting as changed and
+					// stop offering a reset.
+					this.isDefault = enabled === this.enabledByDefault
 				} else {
 					this.enabled = this.enabledByDefault
 					this.isDefault = true

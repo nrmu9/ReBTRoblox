@@ -192,7 +192,7 @@ export const SettingsModal: SettingsModalState = {
 						</div>
 						<checkbox label="Show 'Copy Id' Context Items" path=enableContextMenus></checkbox>
 						<checkbox label="Higher Robux Precision" path=higherRobuxPrecision></checkbox>
-						<checkbox label="Remember Robux Amount" path=cacheRobuxAmount></checkbox>
+						<checkbox label="Show Robux While Loading" path=cacheRobuxAmount></checkbox>
 
 						<div style="display: inline-block; width: 50%; padding: 2px; float: right;">
 							<label style="">Robux to Cash Conversion Rate</label>

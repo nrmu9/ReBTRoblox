@@ -927,8 +927,12 @@
 	background-color: var(--btr-surface);
 	color: var(--btr-content);
 	border: 1px solid var(--btr-stroke-emphasis);
-	padding: 0 var(--btr-space-sm);
+	/* Room on the right for the native arrow, or a long rate label runs
+	   underneath it. */
+	padding: 0 var(--btr-space-lg) 0 var(--btr-space-sm);
 	font-size: 14px;
+	line-height: normal;
+	text-overflow: ellipsis;
 	transition: border-color 120ms ease;
 }
 

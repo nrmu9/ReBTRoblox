@@ -59,6 +59,12 @@ document.documentElement.setAttribute("btr-loaded", "true")
 SETTINGS.load(() => {
 	injectScript.init(SETTINGS.serialize(), IS_DEV_MODE, RobuxToCash.getSelectedOption())
 
+	// Keep the page world in step. Hooks there read their settings per call, so
+	// this is what lets them change without a reload.
+	SETTINGS.onChange(() =>
+		injectScript.send("updateSettings", SETTINGS.serialize(), RobuxToCash.getSelectedOption()),
+	)
+
 	//
 
 	const initialized: Record<string, boolean> = {}

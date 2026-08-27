@@ -1934,9 +1934,9 @@ const startInject = () => {
 						let showSecondRow = false
 
 						if (carouselName === "WebHomeFriendsCarousel") {
-							showSecondRow = settings.home.friendsSecondRow
+							showSecondRow = settings.home?.friendsSecondRow
 						} else if (carouselName === "WebProfileFriendsCarousel") {
-							showSecondRow = settings.home.friendsSecondRow
+							showSecondRow = settings.home?.friendsSecondRow
 
 							// Fixes an issue where profile friends list shows one too few friends
 							props.isAddFriendsTileEnabled = false
@@ -2002,7 +2002,7 @@ const startInject = () => {
 					},
 				)
 
-				if (settings.home.friendsShowUsername) {
+				if (settings.home?.friendsShowUsername) {
 					const friendsState = reactHook.createGlobalState({})
 
 					hijackXHR((request: any) => {
@@ -2071,7 +2071,7 @@ const startInject = () => {
 					)
 				}
 
-				if (settings.home.friendPresenceLinks) {
+				if (settings.home?.friendPresenceLinks) {
 					reactHook.hijackConstructor(
 						// FriendTileDropdown
 						(props: any) => props.friend && props.gameUrl,
@@ -2378,7 +2378,7 @@ const startInject = () => {
 								}
 
 								if (
-									!settings.avatar.removeLayeredLimits &&
+									!settings.avatar?.removeLayeredLimits &&
 									layeredAssetTypeIds.includes(assetTypeId)
 								) {
 									if (!result.includes(asset)) {
@@ -2411,7 +2411,7 @@ const startInject = () => {
 
 					if (key === LAYERED_KEY) {
 						// A plain number the editor compares a running count against.
-						return settings.avatar.removeLayeredLimits ? RAISED_LIMIT : original
+						return settings.avatar?.removeLayeredLimits ? RAISED_LIMIT : original
 					}
 
 					if (key === TYPE_KEY) {
@@ -2538,7 +2538,7 @@ const startInject = () => {
 										}
 
 										if (
-											!settings.avatar.removeLayeredLimits &&
+											!settings.avatar?.removeLayeredLimits &&
 											layeredAssetTypeIds.includes(assetTypeId)
 										) {
 											if (!result.includes(asset)) {
@@ -4422,6 +4422,15 @@ const startInject = () => {
 
 		contentScript.listen("setCurrentPage", (_currentPage) => {
 			currentPage = _currentPage
+		})
+
+		// init only fires once, so without this the page world would keep running
+		// against the settings it booted with. Every hook that reads through the
+		// settings proxy per call picks changes up from here with no reload.
+		contentScript.listen("updateSettings", (newSettings: any, cashOption: any) => {
+			pageSettings = newSettings
+			selectedRobuxToCashOption = cashOption
+			RobuxToCash.selectedRobuxToCashOption = cashOption
 		})
 
 		reactHook.init()
