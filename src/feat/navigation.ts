@@ -6,6 +6,39 @@ import { SHARED_DATA } from "@/feat/shareddata"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { query } from "@/core/query"
 
+/** What a caller passes to Navigation.register to describe one nav item. */
+interface NavigationElementInfo {
+	label?: string
+	/** Where the item goes, watched for so it survives Roblox re-rendering. */
+	selector?: string
+	/** Replacement markup, cloned over the matched node. */
+	html?: HTMLElement
+	enabled?: boolean
+	settings?: Record<string, any>
+	class?: string
+	update?: (node: HTMLElement) => void
+	nodeAdded?: (node: HTMLElement) => void
+	init?: () => void
+	[key: string]: any
+}
+
+/**
+ * A registered nav item: the descriptor above plus the bookkeeping register
+ * adds. Settings are registered as elements too, which is why a parent link
+ * lives here.
+ */
+interface NavigationElement extends NavigationElementInfo {
+	name: string
+	nodeSelector: string
+	parent?: NavigationElement
+	enabledByDefault: boolean
+	isDefault: boolean
+	addNode: (node: HTMLElement) => void
+	updateAll: () => void
+	setEnabled: (enabled?: boolean) => void
+	saveState: () => void
+}
+
 export const Navigation = {
 	enabled: undefined as any,
 	isDefault: undefined as any,
@@ -26,14 +59,14 @@ export const Navigation = {
 		return Array.isArray(elements) ? {} : elements
 	},
 
-	register(name, elementInfo) {
+	register(name: string, elementInfo: NavigationElementInfo) {
 		const enabledByDefault = elementInfo.enabled !== false
 
-		const element = (this.elements[name] = {
+		const element: NavigationElement = (this.elements[name] = {
 			nodeSelector: `.btr-nav-node-${name}`,
 			class: name,
 
-			update(node) {
+			update(node: HTMLElement) {
 				node.style.display = this.enabled ? "" : "none"
 			},
 
@@ -48,7 +81,7 @@ export const Navigation = {
 			saveState() {
 				const states = Navigation.getElementStates()
 				const prevState = states[this.name]
-				let state
+				let state: { enabled?: boolean } | undefined
 
 				if (!this.isDefault) {
 					if (!state) {
@@ -63,7 +96,7 @@ export const Navigation = {
 				}
 			},
 
-			setEnabled(enabled) {
+			setEnabled(enabled: boolean | undefined) {
 				if (typeof enabled === "boolean") {
 					this.enabled = enabled
 					this.isDefault = false
@@ -83,7 +116,7 @@ export const Navigation = {
 				}
 			},
 
-			updateNode(node) {
+			updateNode(node: HTMLElement) {
 				let className = this.class
 				let enabled = this.enabled
 
@@ -95,7 +128,7 @@ export const Navigation = {
 				node.classList.toggle(`btr-nav-${className}`, enabled)
 			},
 
-			addNode(node) {
+			addNode(node: HTMLElement) {
 				node.classList.add(this.nodeSelector.slice(1))
 
 				this.updateNode(node)
@@ -117,7 +150,7 @@ export const Navigation = {
 				settingName = settingName.slice(element.parent.name.length + 1)
 			}
 
-			element.parent.settings[settingName] = element
+			;(element.parent.settings ??= {})[settingName] = element
 		}
 
 		if (elementInfo.settings) {
@@ -150,9 +183,9 @@ export const Navigation = {
 				}
 
 				if (element.selector) {
-					document.$watch(element.selector, (node) => {
+					document.$watch(element.selector, (node: HTMLElement) => {
 						if (element.html) {
-							const newNode = element.html.cloneNode(true)
+							const newNode = element.html.cloneNode(true) as HTMLElement
 							node.replaceWith(newNode)
 							node = newNode
 						}
@@ -186,7 +219,7 @@ export const Navigation = {
 					.$then()
 					.$watch(
 						"ul.rbx-navbar",
-						(navbar) => {
+						(navbar: HTMLElement) => {
 							const button = html`<li class=cursor-pointer style="order:-1"><a class="font-header-2 nav-menu-title text-header" href=/home>Home</a></li>`
 							navbar.append(button)
 							this.addNode(button)
@@ -253,7 +286,7 @@ export const Navigation = {
 					.$then()
 					.$watch(
 						"ul.rbx-navbar",
-						(navbar) => {
+						(navbar: HTMLElement) => {
 							const robuxBtn =
 								navbar.$find(
 									`.rbx-navbar a[href^="/robux"], .rbx-navbar a[href^="/upgrades/robux"]`,
@@ -346,7 +379,7 @@ export const Navigation = {
 				</a>
 			</li>`,
 
-			update(node) {
+			update(node: HTMLElement) {
 				node.style.display = this.enabled ? "" : "none"
 				if (!this.enabled) {
 					return
@@ -371,7 +404,7 @@ export const Navigation = {
 				</a>
 			</li>`,
 
-			update(node) {
+			update(node: HTMLElement) {
 				node.style.display = this.enabled ? "" : "none"
 				if (!this.enabled) {
 					return
@@ -389,8 +422,8 @@ export const Navigation = {
 			selector: "#nav-home",
 			enabled: false,
 
-			update(node) {
-				node.parentNode.style.display = this.enabled ? "" : "none"
+			update(node: HTMLElement) {
+				node.parentElement!.style.display = this.enabled ? "" : "none"
 			},
 		})
 
@@ -404,11 +437,11 @@ export const Navigation = {
 			selector: MESSAGES_LINK,
 			enabled: true,
 
-			update(node) {
+			update(node: HTMLElement) {
 				;(node.parentElement ?? node).style.display = this.enabled ? "" : "none"
 			},
 
-			nodeAdded(node) {
+			nodeAdded(node: HTMLElement) {
 				observeNavSource(node, "header_messages")
 			},
 		})
@@ -423,11 +456,11 @@ export const Navigation = {
 			selector: FRIENDS_LINK,
 			enabled: true,
 
-			update(node) {
+			update(node: HTMLElement) {
 				;(node.parentElement ?? node).style.display = this.enabled ? "" : "none"
 			},
 
-			nodeAdded(node) {
+			nodeAdded(node: HTMLElement) {
 				observeNavSource(node, "header_friends")
 			},
 		})
@@ -438,8 +471,8 @@ export const Navigation = {
 			selector: "#nav-trade",
 			enabled: true,
 
-			update(node) {
-				node.parentNode.style.display = this.enabled ? "" : "none"
+			update(node: HTMLElement) {
+				node.parentElement!.style.display = this.enabled ? "" : "none"
 			},
 		})
 
@@ -475,16 +508,16 @@ export const Navigation = {
 			selector: "#btr-placeholder-blogfeed",
 			html: html`<div id="btr-blogfeed-container"><li id="btr-blogfeed"></li></div>`,
 
-			update(node) {
+			update(node: HTMLElement) {
 				node.style.display = this.enabled ? "" : "none"
 
 				if (this.enabled && !this.loadedFeed) {
 					this.loadedFeed = true
 
-					const blogfeed = node.$find("#btr-blogfeed")
+					const blogfeed = node.$req("#btr-blogfeed")
 					const parser = new DOMParser()
 
-					const updateBlogFeed = (blogFeedData) => {
+					const updateBlogFeed = (blogFeedData: any[]) => {
 						blogfeed.replaceChildren()
 
 						for (const item of blogFeedData) {
@@ -506,7 +539,7 @@ export const Navigation = {
 						}
 					}
 
-					backgroundScript.send("requestBlogFeed", (data) => updateBlogFeed(data))
+					backgroundScript.send("requestBlogFeed", (data: any[]) => updateBlogFeed(data))
 
 					if (SHARED_DATA.get("blogfeed")) {
 						updateBlogFeed(SHARED_DATA.get("blogfeed"))
@@ -521,8 +554,8 @@ export const Navigation = {
 			selector: "#nav-shop",
 			enabled: true,
 
-			update(node) {
-				node.parentNode.style.display = this.enabled ? "" : "none"
+			update(node: HTMLElement) {
+				node.parentElement!.style.display = this.enabled ? "" : "none"
 			},
 		})
 
@@ -532,8 +565,8 @@ export const Navigation = {
 			selector: "#nav-giftcards",
 			enabled: true,
 
-			update(node) {
-				node.parentNode.style.display = this.enabled ? "" : "none"
+			update(node: HTMLElement) {
+				node.parentElement!.style.display = this.enabled ? "" : "none"
 			},
 		})
 
