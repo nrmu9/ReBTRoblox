@@ -107,10 +107,27 @@ jobs:
             --artifacts-dir amo \
             "${args[@]}"
 
-          version="${GITHUB_REF_NAME#v}"
-          mv "$(find amo -name '*.xpi' | head -n1)" "artifacts/btroblox-$version-firefox.xpi"
+          # The signed build has to land on top of the unsigned one, so the name
+          # is read from the same place packaging reads it. Hardcoding it once
+          # shipped an unsigned .xpi beside the signed one under a stale name.
+          unsigned="$(ls artifacts/*-firefox.xpi)"
+          mv "$(find amo -name '*.xpi' | head -n1)" "$unsigned"
 
-          echo "signed the firefox build through AMO on the $AMO_CHANNEL channel"
+          echo "signed $unsigned through AMO on the $AMO_CHANNEL channel"
+
+      # Shipping an unsigned .xpi that looks signed is worse than not signing
+      # at all, so this refuses to publish one.
+      - name: Verify the .xpi carries Mozilla's signature
+        if: env.AMO_JWT_ISSUER != ''
+        run: |
+          xpi="$(ls artifacts/*-firefox.xpi)"
+
+          if ! unzip -l "$xpi" | grep -q "META-INF/mozilla.rsa"; then
+            echo "::error::$xpi is not signed"
+            exit 1
+          fi
+
+          echo "$xpi carries Mozilla's signature"
 
       # Regenerated here so the sums cover the signed .xpi when there is one.
       - name: Checksum the artifacts

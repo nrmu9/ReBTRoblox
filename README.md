@@ -1,4 +1,4 @@
-<a href="https://github.com/nrmu9/BTRoblox/releases/latest" title="Download the latest release"><img src="https://img.shields.io/github/v/release/nrmu9/BTRoblox?label=download&style=for-the-badge" alt="Download the latest release"></a>
+<a href="https://github.com/nrmu9/ReBTRoblox/releases/latest" title="Download the latest release"><img src="https://img.shields.io/github/v/release/nrmu9/ReBTRoblox?label=download&style=for-the-badge" alt="Download the latest release"></a>
 
 ReBTRoblox
 ========
