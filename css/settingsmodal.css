@@ -51,15 +51,15 @@
 
 .btr-settings-modal,
 .btr-settings-modal * {
-	font-family: "Source Sans Pro", Arial, Helvetica, sans-serif;
+	font-family: "Builder Sans", "Source Sans Pro", Helvetica, Arial, sans-serif;
 	box-sizing: border-box;
 }
 
 .btr-settings {
 	display: flex;
 	flex-direction: column;
-	width: 640px;
-	max-width: 80%;
+	width: 680px;
+	max-width: 90%;
 	height: auto;
 	max-height: 90%;
 
@@ -79,18 +79,12 @@
 .btr-settings-header {
 	flex: 0 0 auto;
 	display: flex;
-	height: 30px;
+	height: 48px;
+	padding: 0 8px 0 16px;
 	align-items: center;
 	background: var(--btr-modal-raised);
 	color: var(--btr-modal-text-strong);
 	border-bottom: 1px solid var(--btr-modal-stroke);
-}
-
-.btr-dark-theme .btr-settings-header {
-	background: #191b1d;
-	color: #fff;
-
-	border-bottom: 1px solid #18191b;
 }
 
 .btr-settings-content {
@@ -101,7 +95,7 @@
 
 	position: relative;
 
-	padding: 6px;
+	padding: 12px;
 }
 
 .btr-setting-reset-button {
@@ -242,23 +236,19 @@
 .btr-settings-footer {
 	display: flex;
 	flex: 0 0 auto;
-	height: 24px;
-	line-height: 24px;
+	height: 44px;
+	align-items: center;
+	gap: 8px;
 
-	padding: 0 6px;
-
-	padding-right: 4px;
+	padding: 0 12px 0 16px;
 	border-top: 1px solid var(--btr-modal-stroke);
-}
-
-.btr-dark-theme .btr-settings-footer {
-	border-top-color: #191b1d;
+	color: var(--btr-modal-text-muted);
+	font-size: 13px;
 }
 
 .btr-settings-footer-version {
 	flex: 0 0 fit-content;
 	text-align: left;
-	margin-right: 8px;
 }
 
 .btr-settings-footer-x,
@@ -286,18 +276,23 @@
 
 .btr-settings-header-title {
 	display: inline-block;
-	margin-left: 6px;
-	font-weight: bold;
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: 0.2px;
 }
 
 .btr-settings-header-close {
-	float: right;
-	margin-right: 4px;
-	padding: 6px;
-	font-weight: bold;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-circle, 9999px);
+	font-weight: 600;
 	text-align: center;
 	cursor: pointer;
 	font-size: 12px;
+	transition: background-color 120ms ease;
 }
 
 .btr-settings .btr-settings-enabled-toggle {
@@ -372,11 +367,14 @@
 
 .btr-settings-content group {
 	display: block;
-	padding: 8px;
-	padding-top: 0; /* Done in .btr-setting-group-title-container */
-	padding-bottom: 12px;
+	padding: 0 14px 14px;
 
 	position: relative;
+
+	background: var(--btr-modal-raised);
+	border: 1px solid var(--btr-modal-stroke);
+	border-radius: var(--btr-modal-radius);
+	margin-bottom: 10px;
 }
 
 .btr-settings-content group::after {
@@ -389,9 +387,7 @@
 	background: rgba(0, 0, 0, 0.02);
 }
 
-#btr-settings-main group:not(:first-child) {
-	border-top: 1px solid var(--btr-modal-stroke);
-}
+
 
 .btr-settings-content group .btr-setting-group-title-container {
 	position: relative;
@@ -400,11 +396,12 @@
 
 .btr-settings-content group .btr-setting-group-title-container h4 {
 	display: block;
-	/* color: #191919; */
-	font-size: 18px;
-	margin: 0 0 5px;
+	color: var(--btr-modal-text-strong);
+	font-size: 15px;
+	font-weight: 600;
+	margin: 0 0 8px;
 	padding: 0;
-	line-height: 1em;
+	line-height: 1.2em;
 }
 
 .btr-settings-content group.btr-group-disabled .btr-setting-group-title-container h4,
@@ -815,4 +812,56 @@
 	.btr-settings-modal .btr-settings {
 		transition: none;
 	}
+}
+
+/* Elements, restyled to sit closer to Roblox's own controls. */
+.btr-settings-header-close:hover {
+	background: var(--btr-modal-hover);
+}
+
+.btr-settings-content checkbox input + label:before {
+	border-radius: var(--btr-modal-radius-sm);
+	transition:
+		background-color 120ms ease,
+		border-color 120ms ease;
+}
+
+.btr-settings-content select {
+	border-radius: var(--btr-modal-radius-sm);
+	background-color: var(--btr-modal-surface);
+	color: var(--btr-modal-text);
+	border: 1px solid var(--btr-modal-stroke);
+	padding: 3px 6px;
+	transition: border-color 120ms ease;
+}
+
+.btr-settings-content select:hover {
+	border-color: var(--btr-modal-accent);
+}
+
+/* Shown only once a change lands that the page cannot pick up live. */
+.btr-settings-reload {
+	margin-left: auto;
+	border: none;
+	border-radius: var(--btr-modal-radius-sm);
+	background: var(--btr-modal-accent);
+	color: #fff;
+	font: inherit;
+	font-weight: 600;
+	padding: 5px 12px;
+	cursor: pointer;
+	opacity: 0;
+	transform: translateY(3px);
+	transition:
+		opacity 140ms ease,
+		transform 140ms ease;
+}
+
+.btr-settings-reload.visible {
+	opacity: 1;
+	transform: none;
+}
+
+.btr-settings-reload[hidden] {
+	display: none;
 }

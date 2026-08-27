@@ -289,7 +289,7 @@ export const SettingsModal: SettingsModalState = {
 				<div class=btr-settings-footer>
 					<div class=btr-settings-footer-version>v${chrome.runtime.getManifest().version}</div>
 					<a href=https://www.roblox.com/users/864843843/profile target=_blank title="Check me out on Roblox" class=btr-settings-footer-roblox></a>
-					<div class=btr-settings-footer-text>Refresh the page to apply settings</div>
+					<button class=btr-settings-reload hidden>Reload to apply</button>
 				</div>
 			</div>
 		</div>`
@@ -335,6 +335,32 @@ export const SettingsModal: SettingsModalState = {
 			this.switchContent((ev.currentTarget as HTMLElement).getAttribute("btr-tab")),
 		)
 		this.settingsDiv.$on("click", ".btr-close-subcontent", () => this.switchContent("main"))
+
+		{
+			// Settings that already re-read their value do not need a reload, so the
+			// prompt stays hidden for those. Everything else is applied at page init,
+			// which is why the modal used to carry a standing refresh note.
+			const APPLIES_LIVE = new Set([
+				"general.theme",
+				"general.enableContextMenus",
+				"general.robuxToUSDRate",
+			])
+
+			const reloadButton: HTMLButtonElement | null = this.settingsDiv.$find(".btr-settings-reload")
+
+			if (reloadButton) {
+				reloadButton.$on("click", () => location.reload())
+
+				SETTINGS.onChange((settingPath: string) => {
+					if (APPLIES_LIVE.has(settingPath) || !reloadButton.hidden) {
+						return
+					}
+
+					reloadButton.hidden = false
+					requestAnimationFrame(() => reloadButton.classList.add("visible"))
+				})
+			}
+		}
 
 		//
 
