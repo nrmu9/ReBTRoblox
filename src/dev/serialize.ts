@@ -49,4 +49,5 @@ export const SERIALIZE_SRC = `(() => {
 	}
 })()`
 
+// oxlint-disable-next-line eslint/no-eval
 export const serialize = (0, eval)(SERIALIZE_SRC) as (value: unknown) => unknown

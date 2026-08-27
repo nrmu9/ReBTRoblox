@@ -6,8 +6,6 @@ import { SHARED_DATA } from "@/feat/shareddata"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { query } from "@/core/query"
 
-;("use strict")
-
 export const Navigation = {
 	enabled: undefined as any,
 	isDefault: undefined as any,

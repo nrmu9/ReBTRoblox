@@ -130,8 +130,7 @@ SETTINGS.load(() => {
 	injectScript.listen("onPageChanged", onPageChanged)
 	onPageChanged()
 
-	if (location.host === "create.roblox.com") {
-	} else {
+	if (location.host !== "create.roblox.com") {
 		document.$watch("#content", (content) => {
 			const marker = html`<div id="btr-detect-content" style="display:none"></div>`
 			content.append(marker)
@@ -173,7 +172,7 @@ backgroundScript.send("checkPermissions", (hasPermissions) => {
 			alert.$on("click", () => {
 				backgroundScript.send("requestPermissions", (wasGranted) => {
 					if (wasGranted) {
-						location.pathname = location.pathname
+						location.assign(location.pathname)
 					}
 				})
 			})

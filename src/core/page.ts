@@ -225,7 +225,7 @@ export const getCurrentPage = (): any => {
 		for (let pattern of page.matches) {
 			// locale prefixed urls
 			if (pattern.startsWith("^")) {
-				pattern = `^(?:/\w{2}|/\w{2}-\w{2,3})?${pattern.slice(1)}`
+				pattern = `^(?:/\\w{2}|/\\w{2}-\\w{2,3})?${pattern.slice(1)}`
 			}
 
 			const matches = location.pathname.match(new RegExp(pattern, "i"))

@@ -184,77 +184,93 @@ const OwnerAssetCache = {
 				}
 
 				if (timeUntilPopulate <= 0) {
-					operation.promise = new Promise(async (resolve) => {
-						const removedSet = new Set(next.list)
-						let cursor = ""
+					operation.promise = new Promise((resolve, reject) => {
+						// The body settles the promise and then keeps running, so it cannot
+						// simply become an async function that returns. Keep the executor
+						// synchronous and attach the async body, so a throw rejects rather
+						// than leaving the promise pending forever.
+						const run = async () => {
+							const removedSet = new Set(next.list)
+							let cursor = ""
 
-						while (true) {
-							let newItems, newCursor
+							while (true) {
+								let newItems, newCursor
 
-							for (let i = 0; i < 3; i++) {
-								try {
-									;[newItems, newCursor] = await this.request(next, true, cursor)
-									break
-								} catch (ex) {
-									console.error(ex)
-									await new Promise((resolve) => setTimeout(resolve, 2e3))
+								for (let i = 0; i < 3; i++) {
+									try {
+										;[newItems, newCursor] = await this.request(next, true, cursor)
+										break
+									} catch (ex) {
+										console.error(ex)
+										await new Promise((resolve) => setTimeout(resolve, 2e3))
+									}
 								}
+
+								if (!newItems) {
+									next.currentOperation = null
+									resolve(false)
+									break
+								}
+
+								for (const id of newItems) {
+									removedSet.delete(id)
+
+									next.list.add(id)
+									this.markAsset(next, id, true, changes)
+								}
+
+								if (!newCursor) {
+									break
+								}
+								cursor = newCursor
+								pushChanges()
 							}
 
-							if (!newItems) {
-								next.currentOperation = null
-								resolve(false)
-								break
+							for (const id of removedSet) {
+								this.markAsset(next, id, false, changes)
 							}
 
-							for (const id of newItems) {
-								removedSet.delete(id)
+							next.currentOperation = null
+							next.lastPopulate = Date.now()
+							next.lastUpdate = Date.now() // Populate also works as an update
+							this.markDirty()
 
-								next.list.add(id)
-								this.markAsset(next, id, true, changes)
-							}
-
-							if (!newCursor) {
-								break
-							}
-							cursor = newCursor
 							pushChanges()
+							resolve(true)
 						}
 
-						for (const id of removedSet) {
-							this.markAsset(next, id, false, changes)
-						}
-
-						next.currentOperation = null
-						next.lastPopulate = Date.now()
-						next.lastUpdate = Date.now() // Populate also works as an update
-						this.markDirty()
-
-						pushChanges()
-						resolve(true)
+						run().catch(reject)
 					})
 				} else {
-					operation.promise = new Promise(async (resolve) => {
-						try {
-							const [newItems] = await this.request(next, false)
+					operation.promise = new Promise((resolve, reject) => {
+						// The body settles the promise and then keeps running, so it cannot
+						// simply become an async function that returns. Keep the executor
+						// synchronous and attach the async body, so a throw rejects rather
+						// than leaving the promise pending forever.
+						const run = async () => {
+							try {
+								const [newItems] = await this.request(next, false)
 
-							for (const id of newItems) {
-								next.list.add(id)
-								this.markAsset(next, id, true, changes)
+								for (const id of newItems) {
+									next.list.add(id)
+									this.markAsset(next, id, true, changes)
+								}
+							} catch (ex) {
+								console.error(ex)
+								next.currentOperation = null
+								resolve(false)
+								return
 							}
-						} catch (ex) {
-							console.error(ex)
+
 							next.currentOperation = null
-							resolve(false)
-							return
+							next.lastUpdate = Date.now()
+							this.markDirty()
+
+							pushChanges()
+							resolve(true)
 						}
 
-						next.currentOperation = null
-						next.lastUpdate = Date.now()
-						this.markDirty()
-
-						pushChanges()
-						resolve(true)
+						run().catch(reject)
 					})
 				}
 			}

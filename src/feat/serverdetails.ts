@@ -2142,8 +2142,6 @@ const resolveServerDetails = (details) => {
 					statusTextLong: `Unable to fetch server location: Unknown status ${details.status}`,
 				}
 		}
-
-		return
 	}
 
 	const address = details.address

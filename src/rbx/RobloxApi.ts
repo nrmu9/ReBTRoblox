@@ -164,25 +164,27 @@ const backgroundCall = (callback) => {
 		return callback
 	}
 
-	return (...args) =>
-		new Promise(async (resolve, reject) => {
-			if (!cachedXsrfToken) {
-				cachedXsrfToken =
-					document.querySelector<HTMLMetaElement>("meta[name='csrf-token']")?.dataset.token ?? null
-			}
+	// The awaits used to sit inside the Promise executor, so anything they threw
+	// was swallowed and the promise never settled. Resolve the arguments first,
+	// and route an unwrap failure to reject rather than leaving the caller hanging.
+	return async (...args) => {
+		if (!cachedXsrfToken) {
+			cachedXsrfToken =
+				document.querySelector<HTMLMetaElement>("meta[name='csrf-token']")?.dataset.token ?? null
+		}
 
-			backgroundScript.send(
-				messageId,
-				{ args: await wrapArgs(args), xsrf: cachedXsrfToken },
-				async (result) => {
-					if (result.success) {
-						resolve(await unwrapArgs(result.result))
-					} else {
-						reject(result.result)
-					}
-				},
-			)
+		const wrapped = await wrapArgs(args)
+
+		return new Promise((resolve, reject) => {
+			backgroundScript.send(messageId, { args: wrapped, xsrf: cachedXsrfToken }, (result) => {
+				if (result.success) {
+					Promise.resolve(unwrapArgs(result.result)).then(resolve, reject)
+				} else {
+					reject(result.result)
+				}
+			})
 		})
+	}
 }
 
 interface XsrfInit extends RequestInit {

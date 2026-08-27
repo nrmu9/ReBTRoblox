@@ -50,8 +50,7 @@ browserAction.onClicked.addListener((tab) => {
 			},
 		},
 		(results) => {
-			if (chrome.runtime.lastError) {
-			} // Clear lastError
+			void chrome.runtime.lastError // reading it is what clears it
 
 			if (results?.[0]?.result !== true) {
 				chrome.tabs.create({ url: "https://www.roblox.com/home?btr_settings_open=true" })

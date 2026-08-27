@@ -168,7 +168,7 @@ export const RBXAnimationParser = {
 					reader.Jump(4)
 					const timeCount = reader.UInt32LE()
 
-					assert(timeCount == valueCount, "value and time count do not match")
+					assert(timeCount === valueCount, "value and time count do not match")
 
 					for (let i = 0; i < timeCount; i++) {
 						const time = (curves[i].time = reader.UInt32LE() / 2400)

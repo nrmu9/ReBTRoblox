@@ -686,7 +686,6 @@ const RBXBinaryParser = {
 					const rgbs = chunk.Array(count * 3)
 
 					for (let i = 0; i < count; i++) {
-						values[i]
 						values[i] = [rgbs[i] / 255, rgbs[i + count] / 255, rgbs[i + count * 2] / 255]
 					}
 

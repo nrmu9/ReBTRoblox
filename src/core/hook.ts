@@ -93,6 +93,8 @@ const sweep = (registration: Registration): void => {
 const flush = (): void => {
 	pending = false
 
+	// Copied on purpose: sweeping a registration can dispose others.
+	// oxlint-disable-next-line unicorn/no-useless-spread
 	for (const registration of [...registrations.values()]) {
 		if (!registration.disposed) {
 			sweep(registration)

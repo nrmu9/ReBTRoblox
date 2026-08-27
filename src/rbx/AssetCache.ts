@@ -75,7 +75,7 @@ export const AssetCache = (() => {
 			if (
 				!strict &&
 				typeof request === "string" &&
-				/^https?:\/\/[^\/]+\.rbxcdn\.com\/*[0-9a-fA-F]{32}/i.test(request)
+				/^https?:\/\/[^/]+\.rbxcdn\.com\/*[0-9a-fA-F]{32}/i.test(request)
 			) {
 				const assetRequest: Record<string, any> = {
 					strict,

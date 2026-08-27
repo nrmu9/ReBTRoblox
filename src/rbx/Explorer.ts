@@ -431,6 +431,7 @@ export const Explorer = (() => {
 				hidden.Capabilities = true
 			}
 
+			// oxlint-disable-next-line eslint/eqeqeq
 			if (target.SourceAssetId == -1) {
 				// intentional == to account for bigints
 				hidden.SourceAssetId = true

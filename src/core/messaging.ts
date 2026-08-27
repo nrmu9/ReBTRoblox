@@ -48,8 +48,7 @@ export const backgroundScript: any = {
 
 		port.onMessage.addListener((msg) => this.onPortMessage(port, msg))
 		port.onDisconnect.addListener(() => {
-			if (chrome.runtime.lastError) {
-			} // Clear lastError
+			void chrome.runtime.lastError // reading it is what clears it
 			this.disconnectPort()
 		})
 

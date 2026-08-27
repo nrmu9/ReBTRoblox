@@ -318,7 +318,6 @@ pageInit.create_dashboard = () => {
 										}),
 										" ",
 										"Download",
-										,
 									],
 								}),
 							)

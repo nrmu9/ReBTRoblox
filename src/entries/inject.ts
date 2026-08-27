@@ -1866,12 +1866,9 @@ document.addEventListener(
 					// FriendsCarouselContainer
 					(props) => "profileUserId" in props && "carouselName" in props,
 					(target: any, thisArg: any, args: any[]) => {
-						const props = args[0]
-						props.carouselName
-
 						// disable MustHideConnections so that friends load in faster
 						reactHook.hijackUseState(
-							(value, index) => value === false && index == 4,
+							(value, index) => value === false && index === 4,
 							(value, initial) => (initial ? true : value),
 						)
 
@@ -3045,7 +3042,6 @@ document.addEventListener(
 											}),
 											" ",
 											"Download",
-											,
 										],
 									}),
 								)
