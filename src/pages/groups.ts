@@ -1,6 +1,6 @@
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
-import { loadOptionalFeature } from "@/feat/loadfeature"
+import { loadOptionalFeature } from "@/feat/loadFeature"
 import { SETTINGS } from "@/feat/settings"
 import { modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
 

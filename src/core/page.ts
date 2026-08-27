@@ -30,7 +30,7 @@ export const PAGE_INFO: Record<string, any> = {
 	},
 	gamedetails: {
 		matches: ["^/games/(\\d+)/"],
-		js: ["pages/gamedetails.js"],
+		js: ["pages/gameDetails.js"],
 		css: ["gamedetails.css"],
 	},
 	games: {
@@ -45,7 +45,7 @@ export const PAGE_INFO: Record<string, any> = {
 	},
 	groupadmin: {
 		matches: ["^/groups/configure$", "^/communities/configure$"],
-		js: ["pages/groupadmin.js"],
+		js: ["pages/groupAdmin.js"],
 		css: [],
 	},
 	home: {
@@ -60,7 +60,7 @@ export const PAGE_INFO: Record<string, any> = {
 	},
 	itemdetails: {
 		matches: ["^/(catalog|library|game-pass|badges|bundles)/(\\d+)/"],
-		js: ["pages/itemdetails.js"],
+		js: ["pages/itemDetails.js"],
 		css: ["itemdetails.css"],
 	},
 	membership: {
@@ -92,13 +92,13 @@ export const PAGE_INFO: Record<string, any> = {
 	create_dashboard: {
 		domainMatches: ["create.roblox.com"],
 		matches: ["^/dashboard/"],
-		js: ["pages/create_dashboard.js"],
+		js: ["pages/createDashboard.js"],
 		css: ["create_dashboard.css"],
 	},
 	create_store: {
 		domainMatches: ["create.roblox.com"],
 		matches: ["^/store/"],
-		js: ["pages/create_store.js"],
+		js: ["pages/createStore.js"],
 		css: ["create_store.css"],
 	},
 }

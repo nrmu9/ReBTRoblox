@@ -4,12 +4,12 @@
 import { IS_DEV_MODE, IS_MANIFEST_V3 } from "@/core/env"
 import { contentScript } from "@/core/messaging"
 
-import "@/feat/shareddata"
+import "@/feat/sharedData"
 import "@/feat/settings"
-import "@/feat/contextmenu"
-import "@/feat/serverdetails"
-import "@/feat/loadfeature"
-import "@/feat/blogfeed"
+import "@/feat/contextMenu"
+import "@/feat/serverDetails"
+import "@/feat/loadFeature"
+import "@/feat/blogFeed"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 

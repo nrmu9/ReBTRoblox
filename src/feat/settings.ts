@@ -1,7 +1,7 @@
 import { deferredPromise } from "@/core/deferred"
 import { IS_BACKGROUND_PAGE, STORAGE } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
-import { SHARED_DATA } from "@/feat/shareddata"
+import { SHARED_DATA } from "@/feat/sharedData"
 
 export const DEFAULT_SETTINGS = {
 	loaded: undefined as boolean | undefined,

@@ -1,8 +1,8 @@
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
-import { loadOptionalFeature } from "@/feat/loadfeature"
-import { RobuxToCash } from "@/feat/robuxtocash"
+import { loadOptionalFeature } from "@/feat/loadFeature"
+import { RobuxToCash } from "@/feat/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,

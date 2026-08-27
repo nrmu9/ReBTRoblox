@@ -1,6 +1,6 @@
 import { STORAGE } from "@/core/env"
 import { contentScript } from "@/core/messaging"
-import { SHARED_DATA } from "@/feat/shareddata"
+import { SHARED_DATA } from "@/feat/sharedData"
 
 const BlogFeed = {
 	lastRequest: 0,

@@ -2,7 +2,7 @@ import { contentScript, injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { Navigation } from "@/feat/navigation"
 import { SETTINGS } from "@/feat/settings"
-import { SettingsModal } from "@/feat/settingsmodal"
+import { SettingsModal } from "@/feat/settingsModal"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { setLoggedInUser } from "@/pages/common"
 

@@ -2,7 +2,7 @@ import { dateSince } from "@/core/date"
 import { html } from "@/core/html"
 import { backgroundScript, injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
-import { SHARED_DATA } from "@/feat/shareddata"
+import { SHARED_DATA } from "@/feat/sharedData"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { query } from "@/core/query"
 

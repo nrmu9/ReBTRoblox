@@ -1,7 +1,7 @@
 import { THROW_DEV_WARNING } from "@/core/env"
 import { html } from "@/core/html"
 import { pageInit } from "@/core/page"
-import { RobuxToCash } from "@/feat/robuxtocash"
+import { RobuxToCash } from "@/feat/robuxToCash"
 import { modifyAngularTemplate } from "@/pages/common"
 
 pageInit.groupadmin = () => {

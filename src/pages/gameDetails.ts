@@ -2,8 +2,8 @@ import { dateSince } from "@/core/date"
 import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
-import { ContextMenu } from "@/feat/contextmenu"
-import { RobuxToCash } from "@/feat/robuxtocash"
+import { ContextMenu } from "@/feat/contextMenu"
+import { RobuxToCash } from "@/feat/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatUrlName,
@@ -19,7 +19,7 @@ import {
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { getServerDetails } from "@/feat/serverdetails"
+import { getServerDetails } from "@/feat/serverDetails"
 import { queryReq } from "@/core/query"
 
 pageInit.gamedetails = () => {

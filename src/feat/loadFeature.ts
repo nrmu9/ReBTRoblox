@@ -10,7 +10,7 @@ import { insertCSS } from "@/core/page"
 const loaders: Record<string, () => Promise<unknown>> = {
 	previewer: () => import("@/rbx/Preview"),
 	explorer: () => import("@/rbx/Explorer"),
-	sourceViewer: () => import("@/feat/sourceviewer"),
+	sourceViewer: () => import("@/feat/sourceViewer"),
 	parser: () => import("@/rbx/Parser/ModelParser"),
 }
 

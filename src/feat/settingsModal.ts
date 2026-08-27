@@ -3,9 +3,9 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { assert } from "@/core/util"
 import { Navigation } from "@/feat/navigation"
-import { RobuxToCash } from "@/feat/robuxtocash"
+import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
-import { SHARED_DATA } from "@/feat/shareddata"
+import { SHARED_DATA } from "@/feat/sharedData"
 import { robloxExperiments } from "@/pages/common"
 
 interface SettingsModalState {
