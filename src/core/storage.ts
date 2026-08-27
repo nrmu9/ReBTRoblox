@@ -113,4 +113,10 @@ export const btrLocalStorage = {
 	},
 }
 
-btrLocalStorage.refresh()
+// This module reaches the MV3 background through feat/serverDetails, and a
+// service worker has no localStorage, so the migration below threw on import
+// and took the whole worker down before it registered anything. The store is
+// only meaningful on a page; where there is none there is nothing to migrate.
+if (typeof localStorage !== "undefined") {
+	btrLocalStorage.refresh()
+}
