@@ -2332,8 +2332,14 @@ const startInject = () => {
 				// Raised rather than removed: the editor treats a missing maxNumber as 1.
 				const RAISED_LIMIT = 100
 
+				// Read per call rather than at registration: this hook installs at
+				// document_start, before init has delivered settings, so gating it
+				// up front would ignore the setting entirely.
+				const bypassEnabled = () => settings.avatar?.removeAccessoryLimits !== false
+
 				const isBypassed = (assetTypeId: any) =>
-					accessoryAssetTypeIds.includes(+assetTypeId) || layeredAssetTypeIds.includes(+assetTypeId)
+					bypassEnabled() &&
+					(accessoryAssetTypeIds.includes(+assetTypeId) || layeredAssetTypeIds.includes(+assetTypeId))
 
 				// Roblox added category caps (Tops, Bottoms, Outerwear all allow 1) that
 				// short circuit before maxNumber is read, and the table holding them is
@@ -2343,6 +2349,11 @@ const startInject = () => {
 				const keepDroppedAssets = (original: any) =>
 					function (this: any, ...args: any[]) {
 						const result = original.apply(this, args)
+
+						if (!bypassEnabled()) {
+							return result
+						}
+
 						const assets = [args[0], ...args[1]]
 
 						let accessoriesLeft = 10

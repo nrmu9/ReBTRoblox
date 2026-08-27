@@ -192,6 +192,7 @@ export const SettingsModal: SettingsModalState = {
 						</div>
 						<checkbox label="Show 'Copy Id' Context Items" path=enableContextMenus></checkbox>
 						<checkbox label="Higher Robux Precision" path=higherRobuxPrecision></checkbox>
+						<checkbox label="Remember Robux Amount" path=cacheRobuxAmount></checkbox>
 
 						<div style="display: inline-block; width: 50%; padding: 2px; float: right;">
 							<label style="">Robux to Cash Conversion Rate</label>
@@ -211,7 +212,21 @@ export const SettingsModal: SettingsModalState = {
 						<checkbox label="Show Friend Usernames" path=friendsShowUsername></checkbox>
 						<checkbox label="Move Favorites to Top" path=favoritesAtTop></checkbox>
 						<checkbox label="Hide Friend Activity" path=hideFriendActivity></checkbox>
+						<checkbox label="Link Friend Presence" path=friendPresenceLinks></checkbox>
+						<checkbox label="Show Player Counts" path=showRecommendationPlayerCount></checkbox>
+						<checkbox label="Instant Game Hover" path=instantGameHoverAction></checkbox>
 					</group>
+					<group label=Avatar path=avatar toggleable>
+						<checkbox label="Remove Accessory Limits" path=removeAccessoryLimits></checkbox>
+						<checkbox
+							label="Remove Layered Clothing Limits"
+							path=removeLayeredLimits
+							require=removeAccessoryLimits
+						></checkbox>
+						<checkbox label="Full Range Body Colors" path=fullRangeBodyColors></checkbox>
+						<checkbox label="Refine Asset Layout" path=assetRefinement></checkbox>
+					</group>
+					<group label=Messages path=messages toggleable></group>
 					<group label=Profile path=profile toggleable>
 						<checkbox label="Embed Inventory" path=embedInventoryEnabled></checkbox>
 					</group>
@@ -222,6 +237,7 @@ export const SettingsModal: SettingsModalState = {
 						<checkbox label="Highlight Owned Badges" path=showBadgeOwned></checkbox>
 						<checkbox label="Compact Badge Stats" path=compactBadgeStats></checkbox>
 						<checkbox label="Paged Server List" path=addServerPager></checkbox>
+						<checkbox label="Show Server Region" path=showServerRegion></checkbox>
 					</group>
 					<group label="Item Details" path=itemdetails toggleable>
 						<checkbox label="Item Previewer" path=itemPreviewer></checkbox>
@@ -229,6 +245,8 @@ export const SettingsModal: SettingsModalState = {
 						<checkbox label="Show Explorer Button" path=explorerButton></checkbox>
 						<checkbox label="Show Download Button" path=downloadButton></checkbox>
 						<checkbox label="Show Content Button" path=contentButton></checkbox>
+						<checkbox label="Show Sales" path=showSales></checkbox>
+						<checkbox label="Show Created and Updated" path=showCreatedAndUpdated></checkbox>
 					</group>
 					<group label=Inventory path=inventory toggleable>
 						<checkbox label="Inventory Tools" path=inventoryTools></checkbox>
@@ -241,6 +259,10 @@ export const SettingsModal: SettingsModalState = {
 						<checkbox label="Modify Asset Options" path=assetOptions></checkbox>
 					</group>
 					<group label="Advanced" minimizable minimized>
+						<checkbox
+							label="Fix Firefox Local Storage"
+							path=general.fixFirefoxLocalStorageIssue
+						></checkbox>
 						<div id=btr-settings-wip>
 						</div>
 						<details id=btr-settings-experiments>
