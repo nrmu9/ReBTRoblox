@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the running one pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # .node-version is the single source of truth, so the runner tracks
+      # whatever the repo is pinned to rather than a version copied in here.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run format:check
+
+      - run: npm run typecheck
+
+      # Packaging builds both targets, so this covers the manifest generation
+      # for MV2 and MV3 as well as the bundles.
+      - run: npm run package
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: btroblox-${{ github.sha }}
+          path: artifacts/
+          retention-days: 14

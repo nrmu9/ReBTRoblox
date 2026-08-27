@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    env:
+      # Optional. Without them the release ships an unsigned .xpi, which is
+      # installable in Developer Edition and Nightly but not in release Firefox.
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+
+    steps:
+      # The tag object itself is needed to check its signature, so this cannot
+      # be a shallow checkout.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # Only the owner's own keys are imported, so a tag signed by anything
+      # else fails for want of a public key rather than passing unnoticed.
+      - name: Verify the tag is signed by the repository owner
+        run: |
+          tag="$GITHUB_REF_NAME"
+
+          if [ "$(git cat-file -t "$tag")" != "tag" ]; then
+            echo "::error::$tag is a lightweight tag. Releases must be annotated and signed: git tag -s $tag"
+            exit 1
+          fi
+
+          curl -fsSL "https://github.com/${{ github.repository_owner }}.gpg" | gpg --batch --quiet --import
+
+          if ! git verify-tag "$tag"; then
+            echo "::error::$tag is not signed by a gpg key published on the ${{ github.repository_owner }} account"
+            exit 1
+          fi
+
+      # package.json drives the manifest version, so a tag that disagrees with
+      # it would ship a build numbered differently from its own release.
+      - name: Verify the tag matches package.json
+        run: |
+          tag="$GITHUB_REF_NAME"
+
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::$tag is not a semver tag of the form v1.2.3"
+            exit 1
+          fi
+
+          version="$(node -p "require('./package.json').version")"
+
+          if [ "${tag#v}" != "$version" ]; then
+            echo "::error::tag $tag does not match package.json version $version"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # A tag can be pushed without CI having passed on the commit, so the
+      # checks run again rather than being assumed.
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm run package
+
+      - name: Sign the Firefox build through AMO
+        if: env.AMO_JWT_ISSUER != ''
+        run: |
+          # Packaging leaves dist/ holding whichever target was built last, so
+          # rebuild the firefox one for web-ext to sign.
+          npm run build
+
+          npx --yes web-ext sign \
+            --source-dir dist \
+            --channel unlisted \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --artifacts-dir amo
+
+          version="${GITHUB_REF_NAME#v}"
+          mv "$(find amo -name '*.xpi' | head -n1)" "artifacts/btroblox-$version-firefox.xpi"
+
+          echo "signed the firefox build through AMO"
+
+      # Regenerated here so the sums cover the signed .xpi when there is one.
+      - name: Checksum the artifacts
+        run: |
+          cd artifacts
+          rm -f SHA256SUMS
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
