@@ -1005,13 +1005,13 @@ export const RobuxToCash = {
 		return this.Options[SETTINGS.get("general.robuxToUSDRate")] || this.Options.none
 	},
 
-	convertAngular(expr) {
+	convertAngular(expr: any) {
 		const option = this.getSelectedOption()
 
 		return `${option.currency.symbol}{{((${expr})*${option.cash}/${option.robux} + 0.4999)/100 | number: ${option.currency.numFractions}}}`
 	},
 
-	convert(robux) {
+	convert(robux: number) {
 		const option = this.getSelectedOption()
 
 		const cash = Math.round((robux * option.cash) / option.robux + 0.4999) / 100

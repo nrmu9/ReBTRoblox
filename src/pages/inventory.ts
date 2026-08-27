@@ -23,7 +23,7 @@ pageInit.inventory = () => {
 					body.classList.add("btr-embed")
 
 					let requested = false
-					let lastHeight
+					let lastHeight: string | undefined
 
 					const updateHeight = () => {
 						if (!requested) {

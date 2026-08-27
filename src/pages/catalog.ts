@@ -98,7 +98,7 @@ const OwnerAssetCache = {
 	},
 
 	async request(next: any, populate = false, cursor?: any) {
-		let nextPageCursor
+		let nextPageCursor: any[] | null
 		let newItems
 
 		if (next.type === "bundles") {
@@ -339,7 +339,7 @@ pageInit.catalog = () => {
 	}
 
 	if (SETTINGS.get("catalog.showOwnedAssets")) {
-		let currentRequest
+		let currentRequest: any
 
 		injectScript.listen("checkOwnedAsset", (assetId: number) => {
 			if (!currentRequest) {

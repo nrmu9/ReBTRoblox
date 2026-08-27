@@ -2,7 +2,7 @@ import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
 
-const serverRegions = {
+const serverRegions: Record<string, any> = {
 	Amsterdam: {
 		city: "Amsterdam",
 		country: { name: "Netherlands", code: "NL" },
@@ -496,7 +496,7 @@ const serverRegions = {
 	},
 }
 
-const serverRegionsByIp = {
+const serverRegionsByIp: Record<string, any> = {
 	// "128.116.0.0": serverRegions.SanJose,
 	"128.116.1.0": serverRegions.LosAngeles,
 	"128.116.5.0": serverRegions.Frankfurt,
@@ -1988,16 +1988,16 @@ const awsRegions = {
 		},
 	},
 
-	resolve(ip) {
+	resolve(ip: string) {
 		const match = ip.trim().match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
 		if (!match) {
 			return null
 		}
 
-		const [a, b, c, d] = match.slice(1).map((x) => +x)
+		const [a, b, c, d] = match.slice(1).map((x: any) => +x)
 		const ip_number = a * 256 ** 3 + b * 256 ** 2 + c * 256 + d
 
-		const get_first = (list, ...args) => {
+		const get_first = (list: any, ...args) => {
 			let result = list
 			for (const arg of args) {
 				result = result[arg]
@@ -2029,7 +2029,7 @@ const awsRegions = {
 
 if (IS_BACKGROUND_PAGE) {
 	let userAgentSwitcherEnabled = false
-	let userAgentSwitcherTimeout
+	let userAgentSwitcherTimeout: ReturnType<typeof setTimeout> | undefined
 
 	if (IS_CHROME) {
 		chrome.declarativeNetRequest.updateSessionRules({
@@ -2038,7 +2038,7 @@ if (IS_BACKGROUND_PAGE) {
 	}
 
 	contentScript.listen({
-		async getServerAddress(info, respond: (value: any) => void) {
+		async getServerAddress(info: any, respond: (value: any) => void) {
 			if (IS_CHROME) {
 				if (!userAgentSwitcherEnabled) {
 					userAgentSwitcherEnabled = true
@@ -2115,9 +2115,9 @@ if (IS_BACKGROUND_PAGE) {
 	})
 }
 
-const gettingServerDetails = {}
+const gettingServerDetails: Record<string, any> = {}
 
-const resolveServerDetails = (details) => {
+const resolveServerDetails = (details: any) => {
 	if (!details.success) {
 		switch (details.status) {
 			case 22:
@@ -2176,7 +2176,7 @@ const resolveServerDetails = (details) => {
 	}
 }
 
-export const getServerDetails = (placeId, jobId, callback) => {
+export const getServerDetails = (placeId: number, jobId: string, callback: (...args: any[]) => void) => {
 	const cached = btrLocalStorage.getItem(`serverDetailsV2-${jobId}`)
 
 	if (cached) {
@@ -2188,7 +2188,7 @@ export const getServerDetails = (placeId, jobId, callback) => {
 
 	if (!promise) {
 		promise = gettingServerDetails[jobId] = new Promise((resolve) => {
-			backgroundScript.send("getServerAddress", { placeId: placeId, jobId: jobId }, (details) => {
+			backgroundScript.send("getServerAddress", { placeId: placeId, jobId: jobId }, (details: any) => {
 				delete gettingServerDetails[jobId]
 
 				btrLocalStorage.setItem(`serverDetailsV2-${jobId}`, details, {

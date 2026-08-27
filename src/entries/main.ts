@@ -131,7 +131,7 @@ SETTINGS.load(() => {
 	onPageChanged()
 
 	if (location.host !== "create.roblox.com") {
-		document.$watch("#content", (content) => {
+		document.$watch("#content", (content: HTMLElement) => {
 			const marker = html`<div id="btr-detect-content" style="display:none"></div>`
 			content.append(marker)
 
@@ -151,7 +151,7 @@ SETTINGS.load(() => {
 
 SHARED_DATA.init()
 
-backgroundScript.send("checkPermissions", (hasPermissions) => {
+backgroundScript.send("checkPermissions", (hasPermissions: boolean) => {
 	if (!hasPermissions) {
 		const oldBanner = query("#btr-permission-banner")
 		if (oldBanner) {
@@ -170,7 +170,7 @@ backgroundScript.send("checkPermissions", (hasPermissions) => {
 
 		if (IS_CHROME) {
 			alert.$on("click", () => {
-				backgroundScript.send("requestPermissions", (wasGranted) => {
+				backgroundScript.send("requestPermissions", (wasGranted: boolean) => {
 					if (wasGranted) {
 						location.assign(location.pathname)
 					}

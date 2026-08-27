@@ -132,13 +132,13 @@ if (IS_BACKGROUND_PAGE) {
 			},
 		],
 
-		onClick(info, tab) {
-			const copyToClipboard = async (text) => {
+		onClick(info: any, tab: chrome.tabs.Tab) {
+			const copyToClipboard = async (text: string) => {
 				if (navigator.clipboard?.writeText) {
 					navigator.clipboard.writeText(text)
 				} else {
 					chrome.scripting.executeScript({
-						target: { tabId: tab.id, frameIds: [info.frameId] },
+						target: { tabId: tab.id!, frameIds: [info.frameId] },
 						func: (text) => navigator.clipboard.writeText(text),
 						args: [text],
 					})
@@ -385,7 +385,7 @@ if (IS_BACKGROUND_PAGE) {
 	}
 
 	contentScript.listen({
-		setCustomContextMenuItems(items, respond, port) {
+		setCustomContextMenuItems(items: any, respond: (value?: any) => void, port: any) {
 			ContextMenu.customContextMenuItems = items
 			ContextMenu.update()
 		},
@@ -452,11 +452,11 @@ if (IS_BACKGROUND_PAGE) {
 			}
 		},
 
-		getCustomContextMenu(element) {
+		getCustomContextMenu(element: any) {
 			return this.customContextMenus.get(element)
 		},
 
-		setCustomContextMenu(element, items) {
+		setCustomContextMenu(element: any, items: any) {
 			const lastEntry = this.customContextMenus.get(element)
 			const type = element.nodeName === "A" ? "link" : "page"
 
@@ -522,7 +522,7 @@ if (IS_BACKGROUND_PAGE) {
 					}
 				},
 
-				onContextMenu: (event) => {
+				onContextMenu: (event: Event) => {
 					event.stopImmediatePropagation()
 				},
 

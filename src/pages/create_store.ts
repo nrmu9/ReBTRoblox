@@ -37,7 +37,7 @@ pageInit.create_store = () => {
 	class AssetDetailsPage {
 		[key: string]: any
 
-		constructor(assetId) {
+		constructor(assetId: number) {
 			this.assetId = assetId
 			this.buttons = {}
 
@@ -127,9 +127,9 @@ pageInit.create_store = () => {
 
 	//
 
-	let currPageParams
-	let currPageObj
-	let currPage
+	let currPageParams: any
+	let currPageObj: any
+	let currPage: any
 
 	const stateChanged = () => {
 		let nextPageParams

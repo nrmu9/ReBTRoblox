@@ -12,7 +12,7 @@ pageInit.avatar = () => {
 	}
 
 	injectScript.call("avatar", () => {
-		let openAdvancedAccessories
+		let openAdvancedAccessories: any
 
 		reactHook.hijackConstructor(
 			(props) => !openAdvancedAccessories && "openAdvancedAccessories" in props,
@@ -159,8 +159,8 @@ pageInit.avatar = () => {
 		injectScript.call("assetRefinement", () => {
 			onSet(window, "Roblox", (Roblox: any) => {
 				onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
-					let wearingAssets
-					let avatarRules
+					let wearingAssets: any
+					let avatarRules: any
 
 					hijackFunction(
 						AvatarAccoutrementService,
@@ -289,7 +289,7 @@ pageInit.avatar = () => {
 
 	if (SETTINGS.get("avatar.fullRangeBodyColors")) {
 		injectScript.call("fullRangeBodyColors", () => {
-			let forceRefreshThumbnail
+			let forceRefreshThumbnail: any
 
 			reactHook.hijackConstructor(
 				(props) => !forceRefreshThumbnail && "forceRefreshThumbnail" in props,

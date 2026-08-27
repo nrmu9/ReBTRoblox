@@ -231,7 +231,7 @@ pageInit.profile = () => {
 						const cont = _status.parentNode
 						cont.append(statusDiv)
 
-						let lastStatus
+						let lastStatus: any
 
 						const update = () => {
 							const status = cont.$find(".avatar-status")
@@ -418,7 +418,7 @@ pageInit.profile = () => {
 				let currentPage = 1
 				let isLoading = false
 				let hasMorePages = true
-				let nextPageCursor
+				let nextPageCursor: any
 
 				const openPage = async (page: number) => {
 					const pageStart = (page - 1) * pageSize

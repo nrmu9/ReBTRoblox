@@ -35,8 +35,8 @@ const BlogFeed = {
 						date: post.fields.displayed_publish_date,
 						title: post.fields.title,
 						desc:
-							post.fields.long_form_content?.find((x) => x.type === "long-form-text")?.fields
-								.body ?? "",
+							post.fields.long_form_content?.find((x: any) => x.type === "long-form-text")
+								?.fields.body ?? "",
 					})
 				}
 
@@ -65,13 +65,13 @@ STORAGE.get(["cachedBlogFeedV2"], (data) => {
 })
 
 contentScript.listen({
-	requestBlogFeed(_, respond) {
+	requestBlogFeed(_: any, respond: ((value?: any, hasMore?: boolean) => void) & { cancel: () => void }) {
 		if (BlogFeed.cached) {
 			respond(BlogFeed.cached, true)
 		}
 
 		BlogFeed.request().then(
-			(data) => respond(data),
+			(data: any) => respond(data),
 			() => respond.cancel(),
 		)
 	},

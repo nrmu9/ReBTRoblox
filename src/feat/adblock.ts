@@ -71,7 +71,7 @@ export const btrAdblock = {
 		injectScript.call("adblock.js", () => {
 			util.ready(() => {
 				if (window.Roblox?.PrerollPlayer) {
-					window.Roblox.PrerollPlayer.waitForPreroll = (x) => $.Deferred().resolve(x)
+					window.Roblox.PrerollPlayer.waitForPreroll = (x: any) => $.Deferred().resolve(x)
 				}
 
 				if (window.Roblox?.VideoPreRollDFP) {

@@ -431,7 +431,7 @@ export const SourceViewer = (() => {
 
 		const lineObjects: any[] = []
 		let lineNumber = 0
-		let current
+		let current: any
 
 		const content = html` <div class="btr-sourceviewer-source-container">
 			<div class="btr-sourceviewer-linenumbers">
@@ -448,7 +448,7 @@ export const SourceViewer = (() => {
 			ev.preventDefault()
 		})
 
-		const toggleScope = (startLine) => {
+		const toggleScope = (startLine: any) => {
 			let endLineNumber = startLine.lineNumber
 
 			while (true) {

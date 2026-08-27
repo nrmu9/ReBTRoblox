@@ -516,8 +516,8 @@ export const SettingsModal: SettingsModalState = {
 			const resetButton = this.settingsDiv.$find("#btr-reset-settings")
 			const resetButtonDefaultText = resetButton.textContent
 			let isResetting = false
-			let resetInterval
-			let resetTimer
+			let resetInterval: ReturnType<typeof setInterval> | null = null
+			let resetTimer = 0
 
 			resetButton.$on("click", () => {
 				if (!isResetting) {
@@ -532,7 +532,9 @@ export const SettingsModal: SettingsModalState = {
 							return
 						}
 
-						clearInterval(resetInterval)
+						if (resetInterval !== null) {
+							clearInterval(resetInterval)
+						}
 						resetInterval = null
 						resetButton.textContent = resetButtonDefaultText
 						isResetting = false
@@ -540,7 +542,9 @@ export const SettingsModal: SettingsModalState = {
 					return
 				}
 
-				clearInterval(resetInterval)
+				if (resetInterval !== null) {
+					clearInterval(resetInterval)
+				}
 				resetInterval = null
 				resetButton.textContent = resetButtonDefaultText
 				isResetting = false

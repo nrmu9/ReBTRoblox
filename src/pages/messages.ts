@@ -164,7 +164,7 @@ pageInit.messages = () => {
 		}
 	})
 
-	let markAllAsRead
+	let markAllAsRead: any
 
 	document.$on("click", ".btr-markAllAsReadInbox", () => {
 		if (markAllAsRead?.running) {

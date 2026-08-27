@@ -32,12 +32,12 @@ const getRequiredPermissions = (): any => {
 
 const browserAction: any = IS_MANIFEST_V3 ? chrome.action : (chrome as any).browserAction
 
-browserAction.onClicked.addListener((tab) => {
+browserAction.onClicked.addListener((tab: chrome.tabs.Tab) => {
 	chrome.permissions.request(getRequiredPermissions(), () => {})
 
 	chrome.scripting.executeScript(
 		{
-			target: { tabId: tab.id },
+			target: { tabId: tab.id! },
 			func: () => {
 				// window.BTRoblox is published by the content entry; the bundle no
 				// longer leaks these as content-script globals.
@@ -60,7 +60,7 @@ browserAction.onClicked.addListener((tab) => {
 })
 
 contentScript.listen({
-	async checkPermissions(_, respond) {
+	async checkPermissions(_: any, respond: (value?: any) => void) {
 		// Can't check all at once because it doesn't handle overlapping permissions properly.
 		// i.e. checking for both *.roblox.com and www.roblox.com will return true even if
 		// we don't have www.roblox.com permission (which we explicitly need on Chrome to
@@ -78,7 +78,7 @@ contentScript.listen({
 		respond(true)
 	},
 
-	requestPermissions(_, respond) {
+	requestPermissions(_: any, respond: (value?: any) => void) {
 		chrome.permissions.request(getRequiredPermissions(), respond)
 	},
 })

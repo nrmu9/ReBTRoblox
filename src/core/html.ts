@@ -6,7 +6,7 @@ export const htmltemplate = function (
 ): HTMLTemplateElement {
 	const parts: readonly string[] = typeof pieces === "string" ? [pieces] : pieces
 
-	const trimWhitespace = (s) => s.replace(/\b\n\s*\b/g, " ").replace(/\n[^\S ]*/g, "")
+	const trimWhitespace = (s: string) => s.replace(/\b\n\s*\b/g, " ").replace(/\n[^\S ]*/g, "")
 
 	let result = trimWhitespace(parts[0])
 
@@ -18,11 +18,11 @@ export const htmltemplate = function (
 	template.innerHTML = result
 
 	const replaceRegex = new RegExp(`!btr(\\d+)!`, "g")
-	const replaceFn = (_, i) => args[parseInt(i, 10)]
+	const replaceFn = (_: string, i: string) => String(args[parseInt(i, 10)])
 
-	const replaceInserts = (node) => {
+	const replaceInserts = (node: Node) => {
 		if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-			if (node.attributes) {
+			if (node instanceof Element) {
 				for (const attr of node.attributes) {
 					replaceInserts(attr)
 				}
@@ -33,10 +33,10 @@ export const htmltemplate = function (
 			}
 		} else if (node.nodeType === Node.ATTRIBUTE_NODE) {
 			if (!node.nodeName.toLowerCase().startsWith("on")) {
-				node.nodeValue = node.nodeValue.replace(replaceRegex, replaceFn)
+				node.nodeValue = node.nodeValue?.replace(replaceRegex, replaceFn) ?? null
 			}
 		} else if (node.nodeType === Node.TEXT_NODE) {
-			node.nodeValue = node.nodeValue.replace(replaceRegex, replaceFn)
+			node.nodeValue = node.nodeValue?.replace(replaceRegex, replaceFn) ?? null
 		}
 	}
 

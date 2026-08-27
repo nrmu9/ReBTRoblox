@@ -41,7 +41,7 @@ const btrFriends = {
 
 					if (json.data.length > 0) {
 						const profiles = await RobloxApi.userProfiles.getProfiles(
-							json.data.map((x) => x.id),
+							json.data.map((x: any) => x.id),
 							["isVerified", "names.username", "names.displayName"],
 						)
 
@@ -120,7 +120,7 @@ export const btrFastSearch = {
 
 			let numRetries = 0
 			const checkForThumb = (json: any) => {
-				const thumb = json.data.find((x) => x.targetId === +userId)
+				const thumb = json.data.find((x: any) => x.targetId === +userId)
 
 				if (!thumb?.imageUrl) {
 					if (numRetries++ >= 1) {
@@ -172,12 +172,12 @@ export const btrFastSearch = {
 				})
 			}
 
-			return (presenceCache[userId] = presencePromise.then((presences) => presences[userId]))
+			return (presenceCache[userId] = presencePromise.then((presences: any) => presences[userId]))
 		}
 
 		//
 
-		const getMatches = (search) => {
+		const getMatches = (search: any) => {
 			const matches: Record<string, any>[] = Object.entries(userCache)
 				.map(([name, user]) => {
 					const x: Record<string, any> = {
@@ -288,7 +288,7 @@ export const btrFastSearch = {
 			}
 		}
 
-		const reloadSearchResults = (preserveSelection) => {
+		const reloadSearchResults = (preserveSelection: boolean) => {
 			const info = getInfo()
 			if (!info) {
 				return
@@ -385,7 +385,7 @@ export const btrFastSearch = {
 				if (!user.Temporary) {
 					item.$req(".btr-fastsearch-thumbnail").classList.add("shimmer", "loading")
 
-					requestThumbnail(user.UserId).then((url) => {
+					requestThumbnail(user.UserId).then((url: string) => {
 						if (lastResultsLoaded !== now) {
 							return
 						}
@@ -409,7 +409,7 @@ export const btrFastSearch = {
 						}
 					})
 
-					requestPresence(user.UserId).then((info) => {
+					requestPresence(user.UserId).then((info: any) => {
 						if (lastResultsLoaded !== now) {
 							return
 						}
@@ -485,7 +485,7 @@ export const btrFastSearch = {
 			}
 		}
 
-		const updateSearch = (search) => {
+		const updateSearch = (search: any) => {
 			if (currentSearchText === search) {
 				return
 			}
@@ -535,7 +535,7 @@ export const btrFastSearch = {
 			if (shouldLoadFriends) {
 				shouldLoadFriends = false
 
-				btrFriends.loadFriends().then((friends) => {
+				btrFriends.loadFriends().then((friends: any) => {
 					for (const [name, entry] of Object.entries(userCache) as [string, any][]) {
 						if (entry.IsFriend) {
 							delete userCache[name]
@@ -694,7 +694,7 @@ export const btrFastSearch = {
 			.$then()
 			.$watch(
 				"#navbar-universal-search, .navbar-search",
-				(search) => {
+				(search: any) => {
 					search.$on("keydown", "input", keyDown)
 					search.$on("keyup", "input", keyUp, { capture: true })
 					search.$on("input", "input", update)
