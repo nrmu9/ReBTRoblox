@@ -415,6 +415,56 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 
 /* Explorer */
 
+/* The explorer panel used to be hardcoded light, which left a white sheet on
+   top of a dark page. Roblox toggles .dark-theme on body, so drive the panel
+   from variables and restate only those for dark. Light values are unchanged. */
+:root {
+	--btr-explorer-bg: #fff;
+	--btr-explorer-text: #191919;
+	--btr-explorer-strong: #000;
+	--btr-explorer-menu-bg: #fff;
+	--btr-explorer-header-bg: #d0d0d0;
+	--btr-explorer-header-border: #c8c8c8;
+	--btr-explorer-list-border: #b6b6b6;
+	--btr-explorer-control-border: #bbb;
+	--btr-explorer-control-bg: #f0f0f0;
+	--btr-explorer-muted: #777;
+	--btr-explorer-btn-bg: #f6f6f6;
+	--btr-explorer-btn-border: #dddddd;
+	--btr-explorer-btn-hover: #f9f9f9;
+	--btr-explorer-btn-selected: #d9d9d9;
+	--btr-explorer-hover-bg: #e4eefe;
+	--btr-explorer-selected-bg: #6894d9;
+	--btr-explorer-on-selected: #fff;
+	--btr-explorer-group-bg: #e9e9e9;
+	--btr-explorer-divider: #eeeeee;
+	--btr-explorer-shadow: rgba(25, 25, 25, 0.3);
+}
+
+.dark-theme {
+	--btr-explorer-bg: #232527;
+	--btr-explorer-text: #e4e4e4;
+	--btr-explorer-strong: #f1f1f1;
+	--btr-explorer-menu-bg: #26292c;
+	--btr-explorer-header-bg: #2c2f33;
+	--btr-explorer-header-border: #3c4046;
+	--btr-explorer-list-border: #3c4046;
+	--btr-explorer-control-border: #45494f;
+	--btr-explorer-control-bg: #2a2d31;
+	--btr-explorer-muted: #9aa0a6;
+	--btr-explorer-btn-bg: #2a2d31;
+	--btr-explorer-btn-border: #3c4046;
+	--btr-explorer-btn-hover: #33373b;
+	--btr-explorer-btn-selected: #3f4449;
+	--btr-explorer-hover-bg: #2e3b52;
+	--btr-explorer-selected-bg: #4a6fa5;
+	--btr-explorer-on-selected: #fff;
+	--btr-explorer-group-bg: #2a2d31;
+	--btr-explorer-divider: #34383c;
+	--btr-explorer-shadow: rgba(0, 0, 0, 0.55);
+}
+
+
 .btr-explorer-button-container {
 	position: relative;
 	display: inline-block;
@@ -523,8 +573,8 @@ a:not(.disabled):hover > .btr-icon-content {
 	position: relative;
 	white-space: nowrap;
 
-	background: #fff;
-	color: #191919;
+	background: var(--btr-explorer-bg);
+	color: var(--btr-explorer-text);
 }
 
 .btr-explorer-header,
@@ -539,10 +589,10 @@ a:not(.disabled):hover > .btr-icon-content {
 
 	grid-column: 1 / span 2;
 
-	background: #d0d0d0;
-	border: 1px solid #c8c8c8;
+	background: var(--btr-explorer-header-bg);
+	border: 1px solid var(--btr-explorer-header-border);
 
-	color: #000;
+	color: var(--btr-explorer-strong);
 	cursor: default;
 
 	overflow: hidden;
@@ -561,7 +611,7 @@ a:not(.disabled):hover > .btr-icon-content {
 	overflow: auto;
 	overscroll-behavior: contain;
 
-	border: 1px solid #b6b6b6;
+	border: 1px solid var(--btr-explorer-list-border);
 }
 
 .btr-explorer-list {
@@ -600,8 +650,8 @@ a:not(.disabled):hover > .btr-icon-content {
 }
 
 .btr-explorer-header .btr-dropdown-container .btr-dropdown-btn {
-	background: white;
-	border: 1px solid #bbb;
+	background: var(--btr-explorer-menu-bg);
+	border: 1px solid var(--btr-explorer-control-border);
 	border: none;
 	border-radius: 2px;
 	padding: 2px 3px;
@@ -617,16 +667,16 @@ a:not(.disabled):hover > .btr-icon-content {
 	white-space: nowrap;
 	margin-right: 2px;
 	font-weight: 500;
-	color: #000;
+	color: var(--btr-explorer-strong);
 }
 
 .btr-explorer-header .btr-dropdown-container .btr-dropdown-btn:hover {
-	background: #f0f0f0;
+	background: var(--btr-explorer-control-bg);
 }
 
 .btr-explorer-header .btr-dropdown-container .btr-dropdown-menu {
-	background: #fff;
-	border: 1px solid #bbb;
+	background: var(--btr-explorer-menu-bg);
+	border: 1px solid var(--btr-explorer-control-border);
 	margin-top: -3px;
 	right: -2px;
 	max-width: 200px;
@@ -656,18 +706,18 @@ a:not(.disabled):hover > .btr-icon-content {
 
 .btr-explorer-header .btr-dropdown-container .btr-dropdown-menu > li.selected a {
 	font-weight: bold;
-	background: #f0f0f0;
+	background: var(--btr-explorer-control-bg);
 }
 
 .btr-explorer-header .btr-dropdown-container .btr-dropdown-menu > li:hover a {
-	background: #f0f0f0;
+	background: var(--btr-explorer-control-bg);
 }
 
 .btr-explorer-filter {
 	position: relative;
 	width: 100%;
 	padding: 0 2px;
-	border: 1px solid #c8c8c8;
+	border: 1px solid var(--btr-explorer-header-border);
 	border-top: none;
 }
 
@@ -675,13 +725,13 @@ a:not(.disabled):hover > .btr-icon-content {
 	width: 100%;
 	height: 20px;
 	border: none;
-	background: #fff;
-	color: #000;
+	background: var(--btr-explorer-menu-bg);
+	color: var(--btr-explorer-strong);
 	outline: none;
 }
 
 .btr-explorer-filter input.btr-explorer-filter-input::placeholder {
-	color: #777;
+	color: var(--btr-explorer-muted);
 }
 
 .btr-explorer-filter.loading::after {
@@ -702,19 +752,19 @@ a:not(.disabled):hover > .btr-icon-content {
 	max-width: 33%;
 	text-align: center;
 
-	background: #f6f6f6;
-	border: 1px solid #dddddd;
+	background: var(--btr-explorer-btn-bg);
+	border: 1px solid var(--btr-explorer-btn-border);
 
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
 .btr-explorer-view-btn:hover {
-	background: #f9f9f9;
+	background: var(--btr-explorer-btn-hover);
 }
 
 .btr-explorer-view-btn.selected {
-	background: #d9d9d9;
+	background: var(--btr-explorer-btn-selected);
 }
 
 .btr-explorer-childlist {
@@ -735,7 +785,7 @@ a:not(.disabled):hover > .btr-icon-content {
 
 	height: 20px;
 	font-weight: 500;
-	color: #000;
+	color: var(--btr-explorer-strong);
 
 	align-items: center;
 
@@ -747,12 +797,12 @@ a:not(.disabled):hover > .btr-icon-content {
 }
 
 .btr-explorer-item:not(.selected):hover {
-	background-color: #e4eefe;
+	background-color: var(--btr-explorer-hover-bg);
 }
 
 .btr-explorer-item.selected {
-	background-color: #6894d9;
-	color: white;
+	background-color: var(--btr-explorer-selected-bg);
+	color: var(--btr-explorer-on-selected);
 }
 
 .btr-explorer-more {
@@ -785,7 +835,7 @@ a:not(.disabled):hover > .btr-icon-content {
 	left: 5px;
 	top: 2px;
 
-	border-left: 5px solid #000;
+	border-left: 5px solid var(--btr-explorer-strong);
 	border-top: 5px solid transparent;
 	border-bottom: 5px solid transparent;
 	border-radius: 2px;
@@ -805,7 +855,7 @@ a:not(.disabled):hover > .btr-icon-content {
 }
 
 .selected .btr-explorer-more::before {
-	border-left-color: #fff;
+	border-left-color: var(--btr-explorer-on-selected);
 }
 
 .btr-explorer-icon {
@@ -821,14 +871,14 @@ a:not(.disabled):hover > .btr-icon-content {
 .btr-properties {
 	position: absolute;
 
-	background: #ffffff;
+	background: var(--btr-explorer-bg);
 	font-size: 13px;
 	font-weight: 500;
 
 	top: 0;
 	left: 100%;
 	overflow: hidden;
-	box-shadow: 0 1px 4px 0 rgba(25, 25, 25, 0.3);
+	box-shadow: 0 1px 4px 0 var(--btr-explorer-shadow);
 	z-index: -1;
 }
 
@@ -869,19 +919,19 @@ a:not(.disabled):hover > .btr-icon-content {
 
 	height: 22px;
 
-	background-color: #e9e9e9;
-	border-bottom: 1px solid #eeeeee;
+	background-color: var(--btr-explorer-group-bg);
+	border-bottom: 1px solid var(--btr-explorer-divider);
 
 	align-items: center;
 	font-weight: bold;
-	color: #000;
+	color: var(--btr-explorer-strong);
 
 	user-select: none;
 	-moz-user-select: none;
 }
 
 .btr-properties .btr-property-group:hover {
-	background: #e4eefe;
+	background: var(--btr-explorer-hover-bg);
 }
 
 .btr-properties .btr-property-group.closed + .btr-properties-list {
@@ -889,11 +939,11 @@ a:not(.disabled):hover > .btr-icon-content {
 }
 
 .btr-property > div {
-	border-bottom: 1px solid #eeeeee;
+	border-bottom: 1px solid var(--btr-explorer-divider);
 }
 
 .btr-property-name {
-	border-right: 1px solid #eeeeee;
+	border-right: 1px solid var(--btr-explorer-divider);
 	padding-right: 5px;
 }
 
@@ -938,7 +988,7 @@ a:not(.disabled):hover > .btr-icon-content {
 	float: left;
 	width: 13px;
 	height: 13px;
-	border: 1px solid #000;
+	border: 1px solid var(--btr-explorer-strong);
 	margin-top: 5px;
 	margin-right: 6px;
 }
@@ -959,7 +1009,7 @@ a:not(.disabled):hover > .btr-icon-content {
 	margin: 0;
 	border: none;
 	resize: none;
-	color: #191919;
+	color: var(--btr-explorer-text);
 
 	overflow: hidden;
 	white-space: nowrap;

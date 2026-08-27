@@ -3,7 +3,7 @@ import { IS_DEV_MODE, THROW_DEV_WARNING } from "@/core/env"
 import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
 import { currentPage } from "@/core/page"
-import { assert, bufferToString, ready } from "@/core/util"
+import { assert, bufferToString, formatFileName, ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadfeature"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxtocash"
@@ -1340,9 +1340,23 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 
 	const downloadButton = btnCont.$req<HTMLAnchorElement>("a")
 
-	const download = (data: any, fileType?: any) => {
-		const title = query("#item-container .item-name-container h2")
-		const fileName = `${(title && formatUrlName(title.textContent ?? "", "")) || assetId.toString()}.${fileType || getAssetFileType(assetTypeId, data)}`
+	/**
+	 * Roblox reshuffles this page often and the old heading selector stopped
+	 * matching, which is why downloads were falling back to the bare asset id.
+	 * Try the markup, then the metadata, which does not depend on the layout.
+	 */
+	const getItemName = () => {
+		const heading = query(
+			"#item-container .item-name-container h2, #item-details-container h1, .item-name-container h1",
+		)
+
+		return heading?.textContent?.trim() || query<HTMLMetaElement>('meta[property="og:title"]')?.content || ""
+	}
+
+	const download = (data: any, fileType?: any, suffix?: string) => {
+		const name = formatFileName(getItemName(), assetId.toString())
+		const extension = fileType || getAssetFileType(assetTypeId, data)
+		const fileName = `${name}${suffix ? `_${suffix}` : ""}.${extension}`
 
 		const blobUrl = URL.createObjectURL(new Blob([data], { type: "binary/octet-stream" }))
 		startDownload(blobUrl, fileName)
@@ -1361,6 +1375,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 		downloadButton.classList.add("loading")
 
 		const format = (target as HTMLElement).getAttribute("format") ?? undefined
+		const suffix = (target as HTMLElement).getAttribute("suffix") ?? undefined
 
 		if (format === "obj") {
 			AssetCache.loadMesh(assetId, (mesh: any) => {
@@ -1399,7 +1414,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 					lines.push(`f ${a}/${a}/${a} ${b}/${b}/${b} ${c}/${c}/${c}`)
 				}
 
-				download(lines.join("\n"), "obj")
+				download(lines.join("\n"), "obj", suffix)
 			})
 		} else {
 			AssetCache.loadBuffer(
@@ -1414,7 +1429,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 						return
 					}
 
-					download(buffer)
+					download(buffer, undefined, suffix)
 				},
 			)
 		}
@@ -1469,12 +1484,12 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 		const popoverTemplate = html` <div class="rbx-popover-content" data-toggle="popover-btr-download">
 			<ul class="dropdown-menu" role="menu">
 				<li>
-					<a class="btr-download" format="avatar_meshpart_head" href="${assetUrl}"
+					<a class="btr-download" format="avatar_meshpart_head" suffix="meshpart" href="${assetUrl}"
 						>Download MeshPart</a
 					>
 				</li>
 				<li>
-					<a class="btr-download">Download SpecialMesh</a>
+					<a class="btr-download" suffix="specialmesh">Download SpecialMesh</a>
 				</li>
 			</ul>
 		</div>`
@@ -1489,12 +1504,12 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			const popoverTemplate = html` <div class="rbx-popover-content" data-toggle="popover-btr-download">
 				<ul class="dropdown-menu" role="menu">
 					<li>
-						<a class="btr-download" format="avatar_meshpart_accessory" href="${assetUrl}"
+						<a class="btr-download" format="avatar_meshpart_accessory" suffix="meshpart" href="${assetUrl}"
 							>Download MeshPart</a
 						>
 					</li>
 					<li>
-						<a class="btr-download">Download SpecialMesh</a>
+						<a class="btr-download" suffix="specialmesh">Download SpecialMesh</a>
 					</li>
 				</ul>
 			</div>`

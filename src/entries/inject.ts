@@ -4326,13 +4326,18 @@ const startInject = () => {
 		// Hooks that install a react or angular interception. They must be
 		// registered before Roblox renders, and registering one twice would apply
 		// its transform twice, so the content script calling later is a no op.
+		//
+		// Only put a hook here if it installs something. Anything that acts on the
+		// current DOM belongs on demand: listing it here runs it once at
+		// document_start, when there is nothing to act on, and the dedupe below
+		// then swallows every later call. setupPopovers, refreshInventory and
+		// refreshMessages were all silently dead that way.
 		const EAGER_HOOKS = [
 			"avatar",
 			"assetRefinement",
 			"fullRangeBodyColors",
 			"showOwnedAssets",
 			"initReactRobuxToCash",
-			"setupPopovers",
 			"addBTRSettings",
 			"fixFirefoxLocalStorageIssue",
 			"cacheRobuxAmount",
@@ -4351,9 +4356,7 @@ const startInject = () => {
 			"showRecommendationPlayerCount",
 			"instantGameHoverAction",
 			"inventoryTools",
-			"refreshInventory",
 			"itemdetails",
-			"refreshMessages",
 			"messages",
 			"money",
 			"profile",

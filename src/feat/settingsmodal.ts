@@ -167,10 +167,10 @@ export const SettingsModal: SettingsModalState = {
 								<option value=sky>Sky</option>
 								<option value=red>Red</option>
 							</select>
-							
+
 							<checkbox devOnly label="Theme Hot Reload" path=themeHotReload></checkbox>
 						</div>
-	
+
 						<checkbox label="Hide Ads" path=hideAds></checkbox>
 						<checkbox label="Fast User Search" path=general.fastSearch></checkbox>
 						<div>
@@ -179,7 +179,7 @@ export const SettingsModal: SettingsModalState = {
 						</div>
 						<checkbox label="Show 'Copy Id' Context Items" path=enableContextMenus></checkbox>
 						<checkbox label="Higher Robux Precision" path=higherRobuxPrecision></checkbox>
-						
+
 						<div style="display: inline-block; width: 50%; padding: 2px; float: right;">
 							<label style="">Robux to Cash Conversion Rate</label>
 							<span style="width: calc(100% - 14px); display: inline-flex;">
@@ -239,7 +239,7 @@ export const SettingsModal: SettingsModalState = {
 						</div>
 					</group>
 				</div>
-				
+
 				<div class=btr-settings-content data-name=navigation>
 					<div class=btr-settings-content-header>
 						<button class="btn-control-sm btr-close-subcontent"><span class=icon-left></span></button>
@@ -252,7 +252,7 @@ export const SettingsModal: SettingsModalState = {
 						</group>
 					</div>
 				</div>
-				
+
 				<div class=btr-settings-content id=btr-settings-item-previewer data-name=itemPreviewerSettings>
 					<div class=btr-settings-content-header>
 						<button class="btn-control-sm btr-close-subcontent"><span class=icon-left></span></button>
@@ -279,8 +279,7 @@ export const SettingsModal: SettingsModalState = {
 				</div>
 				<div class=btr-settings-footer>
 					<div class=btr-settings-footer-version>v${chrome.runtime.getManifest().version}</div>
-					<a href=https://x.com/AntiBoomz target=_blank title="Contact me on X" class=btr-settings-footer-x></a>
-					<a href=https://www.roblox.com/users/4719353/profile target=_blank title="Check me out on Roblox" class=btr-settings-footer-roblox></a>
+					<a href=https://www.roblox.com/users/864843843/profile target=_blank title="Check me out on Roblox" class=btr-settings-footer-roblox></a>
 					<div class=btr-settings-footer-text>Refresh the page to apply settings</div>
 				</div>
 			</div>

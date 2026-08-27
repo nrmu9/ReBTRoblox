@@ -52,6 +52,36 @@ export const ready = (fn: () => void): void => {
 	}
 }
 
+/**
+ * Turns an item name into something safe to write to disk: accents folded to
+ * plain letters, emoji and control codes dropped, whitespace collapsed, and the
+ * characters Windows refuses in a filename removed. Returns the fallback when
+ * nothing printable survives, which is what happens for all emoji names.
+ */
+export const formatFileName = (name: string, fallback: string): string => {
+	const cleaned = name
+		.normalize("NFKD")
+		// accents left as combining marks by the decomposition above, plus the
+		// variation and keycap marks that trail emoji
+		.replace(/\p{M}/gu, "")
+		.replace(/\p{Extended_Pictographic}/gu, "")
+		// control and format codepoints
+		.replace(/\p{C}/gu, "")
+		// reserved in filenames on Windows
+		.replace(/[<>:"/\\|?*]/g, "")
+		// underscores rather than spaces, so the name survives a shell unquoted
+		.replace(/\s+/g, "_")
+		// a leading or trailing dot makes for a hidden or malformed file
+		.replace(/^[_.\s]+|[_.\s]+$/g, "")
+
+	// Reserved device names still resolve even with an extension appended.
+	if (!cleaned || /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(cleaned)) {
+		return fallback
+	}
+
+	return cleaned.slice(0, 100)
+}
+
 /** Runs fn at most once, returning the cached result thereafter. */
 export const onceFn = <T extends (...args: any[]) => any>(fn: T): T => {
 	let called = false
