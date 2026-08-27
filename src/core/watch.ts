@@ -25,9 +25,9 @@ export interface Watcher {
 		callback?: Callback | WatchProps,
 		props?: WatchProps,
 	): Watcher
-	$watchAll(
+	$watchAll<T extends Element = HTMLElement>(
 		selector: string,
-		callback: (element: Element, stop: () => void) => void,
+		callback: (element: T, stop: () => void) => void,
 		props?: WatchProps,
 	): Watcher
 	$then(callback?: (target: any) => void): Watcher

@@ -23,7 +23,7 @@ import { getServerDetails } from "@/feat/serverdetails"
 import { queryReq } from "@/core/query"
 
 pageInit.gamedetails = () => {
-	onPageLoad((placeIdString) => {
+	onPageLoad((placeIdString: string) => {
 		const placeId = Number.parseInt(placeIdString, 10)
 
 		if (RobuxToCash.isEnabled()) {
@@ -32,7 +32,7 @@ pageInit.gamedetails = () => {
 				.$then()
 				.$watch(
 					".text-robux",
-					(label) => {
+					(label: any) => {
 						const robux = parseInt(label.textContent.replace(/\D/g, ""), 10)
 
 						if (Number.isSafeInteger(robux)) {
@@ -49,8 +49,8 @@ pageInit.gamedetails = () => {
 			.$then()
 			.$watch(">#game-detail-page")
 			.$then()
-			.$watch("#game-context-menu .dropdown-menu .VisitButtonEditGLI", (placeEdit) => {
-				placeEdit.parentNode.parentNode.append(
+			.$watch("#game-context-menu .dropdown-menu .VisitButtonEditGLI", (placeEdit: HTMLElement) => {
+				placeEdit.parentElement!.parentElement!.append(
 					html`<li>
 						<a class="btr-download-place"><div>Download</div></a>
 					</li>`,
@@ -59,7 +59,7 @@ pageInit.gamedetails = () => {
 				const target = queryReq("#game-context-menu")
 
 				target.$on("click", ".btr-download-place", () => {
-					AssetCache.loadBuffer(placeId, (ab) => {
+					AssetCache.loadBuffer(placeId, (ab: ArrayBuffer) => {
 						const blobUrl = URL.createObjectURL(new Blob([ab]))
 
 						const splitPath = window.location.pathname.split("/")
@@ -84,7 +84,7 @@ pageInit.gamedetails = () => {
 
 					target.after(btnCont)
 
-					placeEdit.parentNode.parentNode.append(
+					placeEdit.parentElement!.parentElement!.append(
 						html`<li>
 							<a class="btr-open-in-explorer"><div>Open in Explorer</div></a>
 						</li>`,
@@ -112,7 +112,7 @@ pageInit.gamedetails = () => {
 		const btrPagerState = reactHook.createGlobalState(btrPager)
 		const serverParams = { sortOrder: "Desc", excludeFullGames: false }
 
-		const loadLargePage = async (placeId, largePageIndex) => {
+		const loadLargePage = async (placeId: number, largePageIndex: number) => {
 			if (largePageIndex >= cursors.length + 2) {
 				throw new Error("Tried to load page with no cursor")
 			}
@@ -125,7 +125,7 @@ pageInit.gamedetails = () => {
 			if (!promise) {
 				let numRetries = 0
 
-				const tryRetry = async (res) => {
+				const tryRetry = async (res: any) => {
 					if (res.status === 429 && numRetries < 2) {
 						numRetries += 1
 						await new Promise((resolve) => setTimeout(resolve, 3e3))
@@ -174,7 +174,7 @@ pageInit.gamedetails = () => {
 			return json
 		}
 
-		const updateMaxPage = async (placeId, skipPageIndex) => {
+		const updateMaxPage = async (placeId: number, skipPageIndex: number) => {
 			const largePageIndex = Math.min(
 				Math.floor((btrPager.maxPage * pageSize - 1) / largePageSize) + 1,
 				cursors.length + (btrPager.foundMaxPage ? 1 : 0),
@@ -203,7 +203,7 @@ pageInit.gamedetails = () => {
 			})
 		}
 
-		const loadServers = async (placeId) => {
+		const loadServers = async (placeId: number) => {
 			const largePages: Record<string, any> = {}
 
 			outer: while (true) {
@@ -266,8 +266,8 @@ pageInit.gamedetails = () => {
 			}
 		}
 
-		let getGameInstancesPromise
-		const btrGetPublicGameInstances = (placeId, cursor, params) => {
+		let getGameInstancesPromise: Promise<any> | null = null
+		const btrGetPublicGameInstances = (placeId: number, cursor: string, params: any) => {
 			if (!params?.btrRefresh) {
 				const sortOrder = params?.sortOrder === "Asc" ? "Asc" : "Desc"
 				const excludeFullGames = params?.excludeFullGames ? true : false
@@ -312,7 +312,11 @@ pageInit.gamedetails = () => {
 			return getGameInstancesPromise
 		}
 
-		const btrPagerConstructor = ({ refreshGameInstances }) => {
+		const btrPagerConstructor = ({
+			refreshGameInstances,
+		}: {
+			refreshGameInstances: (...args: any[]) => any
+		}) => {
 			const btrPager = reactHook.useGlobalState(btrPagerState)
 
 			const canPrev = !btrPager.loading && btrPager.currentPage > 1
@@ -333,7 +337,7 @@ pageInit.gamedetails = () => {
 				inputRef.current.value = btrPager.currentPage
 			}, [btrPager.currentPage])
 
-			const submit = (pressedEnter) => {
+			const submit = (pressedEnter: boolean) => {
 				const num = parseInt(inputRef.current.value, 10)
 
 				if (Number.isSafeInteger(num) && (pressedEnter || btrPager.targetPage !== num)) {
@@ -404,14 +408,15 @@ pageInit.gamedetails = () => {
 								updateInputWidth()
 							},
 
-							onKeyDown(e) {
-								if (e.which === 13) {
+							onKeyDown(e: Event) {
+								if ((e as KeyboardEvent).which === 13) {
 									submit(true)
-									e.target.blur()
+									const target = e.target as HTMLElement
+									target.blur()
 								}
 							},
 
-							onBlur(e) {
+							onBlur(e: Event) {
 								submit(false)
 							},
 						}),
@@ -483,7 +488,7 @@ pageInit.gamedetails = () => {
 		const globalServerRegions: Record<string, any> = {}
 		const onRegionsChanged = new Set()
 
-		contentScript.listen("setServerRegion", (jobId, details) => {
+		contentScript.listen("setServerRegion", (jobId: string, details: any) => {
 			globalServerRegions[jobId] = details
 
 			for (const fn of Array.from(onRegionsChanged) as any[]) {
@@ -537,7 +542,7 @@ pageInit.gamedetails = () => {
 						for (const server of [servers].flat()) {
 							if (server?.props) {
 								server.props.ping = props?.gameInstances?.find(
-									(x) => x.id === server.props.id,
+									(x: any) => x.id === server.props.id,
 								)?.ping
 							}
 						}
@@ -683,7 +688,7 @@ pageInit.gamedetails = () => {
 
 		reactHook.inject(".game-social-links .btn-secondary-lg", (elem) => {
 			const socials = reactHook.renderTarget?.state[0]?.[0]
-			const entry = socials?.find((x) => x.id === +elem[0].key)
+			const entry = socials?.find((x: any) => x.id === +elem[0].key)
 
 			if (entry) {
 				elem[0].props.href = entry.url
@@ -702,13 +707,13 @@ pageInit.gamedetails = () => {
 	if (SETTINGS.get("gamedetails.showServerRegion")) {
 		const requesting: Record<string, any> = {}
 
-		injectScript.listen("getServerRegion", (placeId, jobId) => {
+		injectScript.listen("getServerRegion", (placeId: number, jobId: string) => {
 			if (typeof jobId !== "string" || requesting[jobId]) {
 				return
 			}
 			requesting[jobId] = true
 
-			getServerDetails(placeId, jobId, (details) => {
+			getServerDetails(placeId, jobId, (details: any) => {
 				delete requesting[jobId]
 				injectScript.send("setServerRegion", jobId, details)
 			})
@@ -719,15 +724,15 @@ pageInit.gamedetails = () => {
 		document.body?.classList.remove("btr-gamedetails")
 	})
 
-	onPageLoad((placeIdString) => {
+	onPageLoad((placeIdString: string) => {
 		const placeId = Number.parseInt(placeIdString, 10)
 
-		document.$watch("body", (body) => body.classList.add("btr-gamedetails"))
+		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-gamedetails"))
 
 		document
 			.$watch("#content")
 			.$then()
-			.$watch(">#game-detail-page", (container) => {
+			.$watch(">#game-detail-page", (container: HTMLElement) => {
 				const newContainer = html` <div class="col-xs-12 btr-game-main-container section-content">
 					<div class="placeholder-main"></div>
 				</div>`
@@ -735,20 +740,23 @@ pageInit.gamedetails = () => {
 				const midContainer = html` <div class="col-xs-12 btr-mid-container"></div>`
 
 				container
-					.$watch(["#tab-about", "#tab-game-instances"], (aboutTab, gameTab) => {
-						aboutTab.$find(".text-lead").textContent = "Recommended"
+					.$watch(
+						["#tab-about", "#tab-game-instances"],
+						(aboutTab: HTMLElement, gameTab: HTMLElement) => {
+							aboutTab.$req(".text-lead").textContent = "Recommended"
 
-						aboutTab.classList.remove("active")
-						gameTab.classList.add("active")
+							aboutTab.classList.remove("active")
+							gameTab.classList.add("active")
 
-						const parent = aboutTab.parentNode
-						parent.append(aboutTab)
-						parent.prepend(gameTab)
-					})
-					.$watch("#game-instances", (games) => {
+							const parent = aboutTab.parentElement!
+							parent.append(aboutTab)
+							parent.prepend(gameTab)
+						},
+					)
+					.$watch("#game-instances", (games: HTMLElement) => {
 						games.classList.add("active")
 
-						onMouseEnter(games, ".game-server-join-btn", (btn) => {
+						onMouseEnter(games, ".game-server-join-btn", (btn: HTMLElement) => {
 							const instanceId = btn.dataset.btrInstanceId
 
 							if (instanceId) {
@@ -758,49 +766,58 @@ pageInit.gamedetails = () => {
 							}
 						})
 					})
-					.$watch(".game-main-content", (mainCont) => {
+					.$watch(".game-main-content", (mainCont: HTMLElement) => {
 						mainCont.classList.remove("section-content")
 						mainCont.before(newContainer)
 						newContainer.after(midContainer)
 						newContainer.$req(".placeholder-main").replaceWith(mainCont)
 					})
-					.$watch("#about", (about) => {
+					.$watch("#about", (about: HTMLElement) => {
 						about.classList.remove("active")
 					})
-					.$watch(".game-about-container,#game-details-about-tab-container", (cont) => {
-						if (cont.id === "game-details-about-tab-container") {
-							// react about tab
-							container.$watch("#game-details-about-tab-container", (parent) => {
-								midContainer.append(parent)
+					.$watch(
+						".game-about-container,#game-details-about-tab-container",
+						(cont: HTMLElement) => {
+							if (cont.id === "game-details-about-tab-container") {
+								// react about tab
+								container.$watch(
+									"#game-details-about-tab-container",
+									(parent: HTMLElement) => {
+										midContainer.append(parent)
 
-								parent.$watch("#btr-description-wrapper", (descCont) => {
-									newContainer.append(descCont)
-									redirectEvents(descCont, parent)
-								})
+										parent.$watch("#btr-description-wrapper", (descCont: HTMLElement) => {
+											newContainer.append(descCont)
+											redirectEvents(descCont, parent)
+										})
 
-								parent.$watch("#btr-recommendations-wrapper", (recCont) => {
-									queryReq("#about").append(recCont)
-									redirectEvents(recCont, parent)
-								})
-							})
-						} else {
-							// legacy about tab
-							newContainer.append(cont)
+										parent.$watch(
+											"#btr-recommendations-wrapper",
+											(recCont: HTMLElement) => {
+												queryReq("#about").append(recCont)
+												redirectEvents(recCont, parent)
+											},
+										)
+									},
+								)
+							} else {
+								// legacy about tab
+								newContainer.append(cont)
 
-							container
-								.$watch("#about")
-								.$then()
-								.$watchAll("*", (child) => {
-									if (child.id === "private-server-container-about-tab") {
-										child.style.display = "none"
-									} else if (child.id !== "recommended-games-container") {
-										midContainer.append(child)
-									}
-								})
-						}
-					})
+								container
+									.$watch("#about")
+									.$then()
+									.$watchAll("*", (child: HTMLElement) => {
+										if (child.id === "private-server-container-about-tab") {
+											child.style.display = "none"
+										} else if (child.id !== "recommended-games-container") {
+											midContainer.append(child)
+										}
+									})
+							}
+						},
+					)
 
-					.$watch(".tab-content", (cont) => {
+					.$watch(".tab-content", (cont: HTMLElement) => {
 						cont.classList.add("section")
 
 						cont.$watchAll(".tab-pane", (pane) => {
@@ -809,7 +826,7 @@ pageInit.gamedetails = () => {
 							}
 						})
 					})
-					.$watch(".badge-container", (badges) => {
+					.$watch(".badge-container", (badges: HTMLElement) => {
 						badges.classList.add("btr-badges-container")
 
 						if (SETTINGS.get("gamedetails.compactBadgeStats")) {
@@ -817,7 +834,7 @@ pageInit.gamedetails = () => {
 						}
 
 						const badgeQueue: any[] = []
-						let ownedTimeout
+						let ownedTimeout: ReturnType<typeof setTimeout> | undefined
 
 						const updateOwned = async () => {
 							const userId = await loggedInUserPromise
@@ -834,7 +851,7 @@ pageInit.gamedetails = () => {
 									}
 
 									for (const { row, badgeId } of badgeList) {
-										const entry = json.data.find((x) => x.badgeId === badgeId)
+										const entry = json.data.find((x: any) => x.badgeId === badgeId)
 
 										row.classList.toggle("btr-notowned", !entry)
 										row.$find(".btr-unlock-date")?.remove()
@@ -857,9 +874,9 @@ pageInit.gamedetails = () => {
 						badges
 							.$watch(">.stack-list")
 							.$then()
-							.$watchAll(".badge-row", (row) => {
-								const url = row.$find(".badge-image>a").href
-								const label = row.$find(".badge-name")
+							.$watchAll(".badge-row", (row: HTMLElement) => {
+								const url = row.$req<HTMLAnchorElement>(".badge-image>a").href
+								const label = row.$req(".badge-name")
 								const link = html<HTMLAnchorElement>`<a href="${url}"
 									>${label.textContent}</a
 								>`
@@ -885,7 +902,7 @@ pageInit.gamedetails = () => {
 									}
 								}
 
-								const desc = row.$find("p.para-overflow")
+								const desc = row.$req("p.para-overflow")
 								desc.classList.add("btr-desc-content")
 								desc.classList.remove("para-overflow")
 
@@ -921,7 +938,7 @@ pageInit.gamedetails = () => {
 							})
 
 						if (SETTINGS.get("gamedetails.showBadgeOwned")) {
-							badges.$watch(".container-header h2", (header) => {
+							badges.$watch(".container-header h2", (header: HTMLElement) => {
 								const refresh = html<HTMLButtonElement>`<button
 									type="button"
 									class="btn-more rbx-refresh refresh-link-icon btn-control-xs btn-min-width"
@@ -938,7 +955,7 @@ pageInit.gamedetails = () => {
 									badgeQueue.splice(0, badgeQueue.length)
 
 									for (const row of badges.$findAll(".badge-row")) {
-										const url = row.$find(".badge-image>a").href
+										const url = row.$req<HTMLAnchorElement>(".badge-image>a").href
 
 										const match = url.match(/(?:catalog|badges)\/(\d+)\//)
 										if (!match) {
@@ -962,10 +979,10 @@ pageInit.gamedetails = () => {
 							})
 						}
 					})
-					.$watch("#carousel-game-details", (details) => {
+					.$watch("#carousel-game-details", (details: any) => {
 						details.setAttribute("data-is-video-autoplayed-on-ready", "false")
 					})
-					.$watch("#game-detail-meta-data", (dataCont) => {
+					.$watch("#game-detail-meta-data", (dataCont: HTMLElement) => {
 						ContextMenu.setCustomContextMenu(document.documentElement, {
 							copyParent: true,
 							placeLink: dataCont.dataset.placeId,
@@ -991,7 +1008,7 @@ pageInit.gamedetails = () => {
 							box.$req(".btr-universe-visit-button").$on("click", () => {
 								injectScript.call(
 									"gamedetailsPlayGame",
-									(placeId) => {
+									(placeId: number) => {
 										Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 									},
 									rootPlaceId,
@@ -1002,7 +1019,7 @@ pageInit.gamedetails = () => {
 						}
 					})
 
-				RobloxApi.economy.getAssetDetails(placeId).then((data) => {
+				RobloxApi.economy.getAssetDetails(placeId).then((data: any) => {
 					if (!data.Updated) {
 						return
 					}
@@ -1012,15 +1029,15 @@ pageInit.gamedetails = () => {
 						.$then()
 						.$watch(
 							".game-stat .text-lead",
-							(x) => x.previousElementSibling?.textContent === "Created",
-							(label) => {
+							(x: any) => x.previousElementSibling?.textContent === "Created",
+							(label: any) => {
 								label.title = new Date(data.Created).$format("M/D/YYYY h:mm:ss A (T)")
 							},
 						)
 						.$watch(
 							".game-stat .text-lead",
-							(x) => x.previousElementSibling?.textContent === "Updated",
-							(label) => {
+							(x: any) => x.previousElementSibling?.textContent === "Updated",
+							(label: any) => {
 								label.classList.remove("date-time-i18n") // Otherwise roblox rewrites the label
 
 								label.title = new Date(data.Updated).$format("M/D/YYYY h:mm:ss A (T)")
