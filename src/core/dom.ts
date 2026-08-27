@@ -1,20 +1,20 @@
 // Microtask-scheduled callbacks, cancellable before they run.
 
-const immediates = new Map<number, (...args: any[]) => void>()
+const immediates = new Map<number, () => void>()
 const resolved = Promise.resolve()
 
 let immediateCounter = 0
 
-export const setImmediate = (fn: (...args: any[]) => void, ...args: any[]): number => {
+export const setImmediate = <A extends unknown[]>(fn: (...args: A) => void, ...args: A): number => {
 	const key = immediateCounter++
-	immediates.set(key, fn)
+	immediates.set(key, () => fn(...args))
 
 	void resolved.then(() => {
 		const pending = immediates.get(key)
 		if(!pending) { return }
 
 		immediates.delete(key)
-		pending(...args)
+		pending()
 	})
 
 	return key

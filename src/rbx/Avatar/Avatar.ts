@@ -447,7 +447,7 @@ export const RBXAvatar = (() => {
 					
 					loaded: false,
 					loading: false,
-					loadPromise: deferredPromise(),
+					loadPromise: deferredPromise<unknown>(),
 					
 					accessories: [],
 					bodyparts: [],
@@ -879,7 +879,7 @@ export const RBXAvatar = (() => {
 			this.animator = new RBXAnimator()
 			this.assets = []
 
-			this.baseLoadedPromise = deferredPromise()
+			this.baseLoadedPromise = deferredPromise<unknown>()
 			
 			this.activeMaterials = []
 			this.sortedJointsArray = []
@@ -2205,7 +2205,7 @@ export const RBXAvatar = (() => {
 		}
 		
 		async _fetchLayeredClothing(request) {
-			let objHash = btrLocalStorage.getItem(`btrLayeredCache-${request.hash}`)
+			let objHash = btrLocalStorage.getItem<string>(`btrLayeredCache-${request.hash}`)
 			
 			if(!objHash) {
 				const body = {
@@ -2281,6 +2281,8 @@ export const RBXAvatar = (() => {
 				}
 			}
 			
+			if(!objHash) { return }
+
 			let objFile = objCache[objHash]
 			
 			if(!objFile) {

@@ -17,6 +17,7 @@ import { btrFastSearch } from "@/feat/fastsearch"
 import { btrAdblock } from "@/feat/adblock"
 import { query } from "@/core/query"
 import { onceFn } from "@/core/util"
+import type { ItemPreviewer } from "@/rbx/Preview"
 
 
 
@@ -39,7 +40,7 @@ export const onPageReset = fn => {
 	pageReset[pageName].push(fn)
 }
 
-export let loggedInUserPromise = deferredPromise()
+export let loggedInUserPromise = deferredPromise<number>()
 export let loggedInUser = -1
 
 export const setLoggedInUser = (userId: number): void => { loggedInUser = userId }
@@ -702,7 +703,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 	let bundleType
 	let preview
 	
-	let previewPromise = deferredPromise()
+	let previewPromise = deferredPromise<ItemPreviewer | null>()
 	
 	const setOutfit = outfitId => {
 		if(!preview) {

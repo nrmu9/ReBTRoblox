@@ -1,7 +1,20 @@
+export interface StorageSetOptions {
+	/** Epoch ms after which getItem discards the entry. */
+	expires?: number
+	/** Store the string as is instead of JSON encoding it. */
+	raw?: boolean
+	replacer?: (this: unknown, key: string, value: unknown) => unknown
+}
+
+export interface StorageGetOptions {
+	raw?: boolean
+	reviver?: (this: unknown, key: string, value: unknown) => unknown
+}
+
 export const btrLocalStorage = {
 	keyPrefix: "BTRoblox:",
 	
-	setItem(key: string, value: any, params?: any) {
+	setItem(key: string, value: unknown, params?: StorageSetOptions): boolean {
 		key = this.keyPrefix + key
 		
 		if(value === null || value === undefined) {
@@ -11,7 +24,7 @@ export const btrLocalStorage = {
 		
 		let prefix = ""
 		
-		if(Number.isSafeInteger(params?.expires)) {
+		if(params && Number.isSafeInteger(params.expires)) {
 			prefix += `expires=${params.expires};`
 		}
 		
@@ -28,11 +41,11 @@ export const btrLocalStorage = {
 		}
 	},
 	
-	removeItem(key: string) {
+	removeItem(key: string): boolean {
 		return this.setItem(key, undefined)
 	},
 	
-	getItem(key: string, params?: any) {
+	getItem<T = unknown>(key: string, params?: StorageGetOptions): T | null {
 		key = this.keyPrefix + key
 		
 		const value = localStorage.getItem(key)
@@ -56,17 +69,17 @@ export const btrLocalStorage = {
 		}
 		
 		if(params?.raw) {
-			return value.slice(startIndex)
+			return value.slice(startIndex) as T
 		}
 		
 		return JSON.parse(value.slice(startIndex), params?.reviver)
 	},
 	
-	hasItem(key: string) {
+	hasItem(key: string): boolean {
 		return this.getItem(key, { raw: true }) ? true : false
 	},
 	
-	refresh() {
+	refresh(): void {
 		for(let i = localStorage.length; i--;) {
 			const key = localStorage.key(i)
 			if(key === null) { continue }

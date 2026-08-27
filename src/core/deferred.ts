@@ -4,12 +4,12 @@
 // construction on the page just to expose $resolve/$reject. The method names are
 // kept so existing call sites read the same.
 
-export type DeferredPromise<T = any> = Promise<T> & {
+export type DeferredPromise<T = void> = Promise<T> & {
 	$resolve: (value?: T | PromiseLike<T>) => void
-	$reject: (reason?: any) => void
+	$reject: (reason?: unknown) => void
 }
 
-export const deferredPromise = <T = any>(): DeferredPromise<T> => {
+export const deferredPromise = <T = void>(): DeferredPromise<T> => {
 	const { promise, resolve, reject } = Promise.withResolvers<T>()
 
 	return Object.assign(promise, { $resolve: resolve as any, $reject: reject })

@@ -59,7 +59,7 @@ pageInit.profile = () => {
 	const profileDataPromises: Record<string, any> = {}
 	
 	injectScript.listen("profileData", json => {
-		const promise = profileDataPromises[json.profileId] ??= deferredPromise()
+		const promise = profileDataPromises[json.profileId] ??= deferredPromise<unknown>()
 		promise.$resolve(json)
 	})
 	
@@ -167,7 +167,7 @@ pageInit.profile = () => {
 			</div>`
 			
 			// const presencePromise = new Promise(resolve => resolve(RobloxApi.presence.getPresence([userId]).then(json => json?.userPresences?.[0])))
-			const profileDataPromise = profileDataPromises[userIdString] ??= deferredPromise()
+			const profileDataPromise = profileDataPromises[userIdString] ??= deferredPromise<unknown>()
 			
 			profileContainer
 				.$watch(".profile-tabs", tabs => {

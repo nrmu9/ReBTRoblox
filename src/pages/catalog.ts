@@ -243,7 +243,7 @@ const OwnerAssetCache = {
 		this.resetData()
 		
 		try {
-			const savedCache = btrLocalStorage.getItem("ownerAssetCache")
+			const savedCache = btrLocalStorage.getItem<{ types?: Record<string, any> }>("ownerAssetCache")
 			
 			if(savedCache) {
 				if(savedCache.types) {

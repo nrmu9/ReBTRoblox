@@ -108,7 +108,7 @@ for(const list of Object.values(DEFAULT_SETTINGS) as any[]) {
 
 export const SETTINGS: Record<string, any> = {
 	_onChangeListeners: [],
-	_loadPromise: deferredPromise(),
+	_loadPromise: deferredPromise<unknown>(),
 	
 	firstLoad: false,
 	loaded: false,
