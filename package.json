@@ -21,7 +21,8 @@
 		"lint:fix": "oxlint --fix",
 		"package": "node dev/package.js",
 		"package:firefox": "node dev/package.js --target=firefox",
-		"package:chrome": "node dev/package.js --target=chrome"
+		"package:chrome": "node dev/package.js --target=chrome",
+		"dev:chrome": "node dev/build.js --dev --watch --target=chrome --out=dist-chrome"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.2.7",
