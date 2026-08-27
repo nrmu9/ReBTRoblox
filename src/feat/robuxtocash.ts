@@ -988,7 +988,10 @@ export const RobuxToCash = {
 
 	OptionLists: {
 		None: [{ name: "none", cash: 1, robux: 1 }],
-		USD: [{ name: "devex", cash: 380, robux: 1000 }],
+		USD: [
+			{ name: "devex", label: "DevEx", cash: 380, robux: 1000 },
+			{ name: "devexUS18", label: "DevEx (US 18+)", cash: 540, robux: 1000 },
+		],
 	},
 
 	Options: {} as Record<string, any>,

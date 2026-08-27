@@ -471,13 +471,13 @@ export const SettingsModal: SettingsModalState = {
 					if (option.name === "none") {
 						fullText = "No currency selected"
 					} else {
-						const display = option.name.includes("devex")
-							? "DevEx"
-							: option.name.includes("Subscription")
+						const display =
+							option.label ??
+							(option.name.includes("Subscription")
 								? "Subscription"
 								: option.name.includes("Premium")
 									? "Premium"
-									: "Regular"
+									: "Regular")
 
 						const rateText = option.currency.usdRate
 							? `${option.currency.symbol}${(option.cash / 100).toFixed(option.currency.numFractions)} ≈ US$${(option.usdCash / 100).toFixed(2)} = R$${option.robux}`
