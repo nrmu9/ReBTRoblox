@@ -295,7 +295,7 @@ export const Explorer = (() => {
 					console.error(ex)
 				}
 
-				const update = (setting?: any) => {
+				const update = (_setting?: any) => {
 					btrLocalStorage.setItem("svSettings", svSettings)
 
 					this.sourceViewerModal.$find(".btr-sourceviewer-content").style = `
@@ -699,7 +699,7 @@ export const Explorer = (() => {
 				}
 			}
 
-			for (const group of Object.values(groups).sort(sortPropertyGroups) as any[]) {
+			for (const group of Object.values(groups).toSorted(sortPropertyGroups) as any[]) {
 				const titleButton = html`<div class="btr-property-group">
 					<div class="btr-property-group-more"></div>
 					${group.Name}

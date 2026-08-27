@@ -23,7 +23,7 @@ pageInit.profile = () => {
 
 	injectScript.call("profile", () => {
 		angularHook.hijackModule("peopleList", {
-			layoutService(target: any, thisArg: any, args: any[], argsMap: any) {
+			layoutService(target: any, thisArg: any, args: any[], _argsMap: any) {
 				const result = target.apply(thisArg, args)
 				result.maxNumberOfFriendsDisplayed = 10
 				return result
@@ -195,7 +195,7 @@ pageInit.profile = () => {
 				.$watch("#friends-carousel-container", (friends: any) => {
 					newCont.$req(".placeholder-friends").after(friends)
 
-					friends.$watch(">*", (cont: HTMLElement) => {
+					friends.$watch(">*", (_cont: HTMLElement) => {
 						newCont.$req(".placeholder-friends").remove()
 					})
 				})
@@ -575,7 +575,7 @@ pageInit.profile = () => {
 						list.replaceChildren()
 
 						const thumbs: Record<string, any> = {}
-						const groups = json.data.sort((a: any, b: any) =>
+						const groups = json.data.toSorted((a: any, b: any) =>
 							a.isPrimaryGroup ? -1 : b.isPrimaryGroup ? 1 : 0,
 						)
 

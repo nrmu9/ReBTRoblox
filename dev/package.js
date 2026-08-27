@@ -40,7 +40,9 @@ const build = (target) =>
 
 /** Every file under dir, sorted, named relative to it with forward slashes. */
 const collect = (dir, prefix = "") => {
-	const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))
+	const entries = fs
+		.readdirSync(dir, { withFileTypes: true })
+		.toSorted((a, b) => (a.name < b.name ? -1 : 1))
 	const files = []
 
 	for (const entry of entries) {

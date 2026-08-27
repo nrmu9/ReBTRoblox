@@ -156,7 +156,7 @@ const build = (dump, metadata, previous) => {
 
 	const enums = dump.Enums.map((e) => [
 		e.Name,
-		e.Items.sort((a, b) => a.Value - b.Value).map((i) => i.Name),
+		e.Items.toSorted((a, b) => a.Value - b.Value).map((i) => i.Name),
 	])
 	const enumIndex = {}
 	enums.forEach(([name], i) => (enumIndex[name] = i))

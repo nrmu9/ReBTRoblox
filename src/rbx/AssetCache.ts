@@ -258,7 +258,7 @@ export const AssetCache = (() => {
 
 			return RBXModelParser.parse(buffer).result
 		}),
-		loadMesh: createMethod(async (buffer: ArrayBuffer, assetRequest: AssetRequest) => {
+		loadMesh: createMethod(async (buffer: ArrayBuffer, _assetRequest: AssetRequest) => {
 			await loadOptionalFeature("parser")
 			return RBXMeshParser.parse(buffer)
 		}),
@@ -278,8 +278,8 @@ export const AssetCache = (() => {
 					}
 				}),
 		),
-		loadBuffer: createMethod((buffer: ArrayBuffer, assetRequest: AssetRequest) => buffer),
-		loadText: createMethod((buffer: ArrayBuffer, assetRequest: AssetRequest) => bufferToString(buffer)),
+		loadBuffer: createMethod((buffer: ArrayBuffer, _assetRequest: AssetRequest) => buffer),
+		loadText: createMethod((buffer: ArrayBuffer, _assetRequest: AssetRequest) => bufferToString(buffer)),
 
 		getHashUrl(hash: string, prefix = "c") {
 			let code = 31

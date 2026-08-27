@@ -110,7 +110,7 @@ export const backgroundScript: any = {
 export const injectScript: any = {
 	messageListeners: {},
 
-	call(name: string, fn: MessageCallback, ...args: any[]) {
+	call(name: string, _fn: MessageCallback, ...args: any[]) {
 		this.send("call", name, args)
 	},
 

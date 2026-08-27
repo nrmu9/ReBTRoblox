@@ -230,7 +230,7 @@ pageInit.avatar = () => {
 
 								$scope.$on(
 									avatarConstantService.events.wornAssetsChanged,
-									(event: Event, assetIds: number[]) => {
+									(_event: Event, _assetIds: number[]) => {
 										$scope.btrRefreshWearingAssets()
 									},
 								)

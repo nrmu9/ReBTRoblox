@@ -639,7 +639,7 @@ export const RBXAvatar = (() => {
 			}
 			state.loading = true
 
-			const finish = (success: boolean) => {
+			const finish = (_success: boolean) => {
 				state.loading = false
 				state.loaded = true
 

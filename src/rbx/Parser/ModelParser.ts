@@ -947,7 +947,7 @@ const RBXXmlParser = {
 			.replace(/&&/g, "&")
 	},
 
-	parse(buffer: any, params?: any) {
+	parse(buffer: any, _params?: any) {
 		const xml = new DOMParser().parseFromString(
 			this.escapeXml(bufferToString(buffer)),
 			"text/xml",

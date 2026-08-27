@@ -551,7 +551,7 @@ export const SettingsModal: SettingsModalState = {
 
 			for (const currency of currencies
 				.filter((x) => x.usdRate)
-				.sort((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
+				.toSorted((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
 				currencySelect.append(
 					html<HTMLOptionElement>`<option
 						title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}"
@@ -1040,7 +1040,7 @@ export const SettingsModal: SettingsModalState = {
 						entries: {},
 					}
 
-					const keys = Object.keys(this.experiments).sort()
+					const keys = Object.keys(this.experiments).toSorted()
 					const next = this.experiments[keys[keys.indexOf(experiment) + 1]]
 
 					if (next) {
@@ -1121,7 +1121,7 @@ export const SettingsModal: SettingsModalState = {
 							key: key,
 						}
 
-						const keys = Object.keys(group.entries).sort()
+						const keys = Object.keys(group.entries).toSorted()
 						const next = group.entries[keys[keys.indexOf(key) + 1]]
 
 						if (next) {

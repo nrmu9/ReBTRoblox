@@ -171,7 +171,7 @@ pageInit.inventory = () => {
 		})
 
 		document
-			.$on("change", ".btr-it-box", (e) => {
+			.$on("change", ".btr-it-box", (_e) => {
 				updateButtons()
 			})
 			.$on<MouseEvent>("click", ".btr-it-checkbox", (e) => {

@@ -83,7 +83,7 @@ for (const file of walk("src")) {
 
 const out = [...found.entries()]
 	.map(([selector, sites]) => ({ selector, sites }))
-	.sort((a, b) => a.sites[0].localeCompare(b.sites[0]))
+	.toSorted((a, b) => a.sites[0].localeCompare(b.sites[0]))
 
 const files = new Set(out.flatMap((o) => o.sites.map((s) => s.split(":")[0])))
 

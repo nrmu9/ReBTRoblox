@@ -509,7 +509,7 @@ export const SETTINGS: Record<string, any> = {
 	},
 
 	onChange(settingPath: string | ((...args: any[]) => void), fn?: (...args: any[]) => void) {
-		if (settingPath instanceof Function) {
+		if (typeof settingPath === "function") {
 			fn = settingPath
 			settingPath = "*"
 		}

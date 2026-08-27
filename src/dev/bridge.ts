@@ -20,7 +20,7 @@ const post = (path: string, data: unknown) =>
 // Expression bodies get their value returned, statement bodies must return themselves.
 const bodyOf = (code: string): string => {
 	try {
-		new Function(`return (${code})`)
+		Function(`return (${code})`)
 		return `return (${code})`
 	} catch (err) {
 		return code

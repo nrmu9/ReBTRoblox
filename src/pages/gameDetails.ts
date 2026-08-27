@@ -270,7 +270,7 @@ pageInit.gamedetails = () => {
 		const btrGetPublicGameInstances = (placeId: number, cursor: string, params: any) => {
 			if (!params?.btrRefresh) {
 				const sortOrder = params?.sortOrder === "Asc" ? "Asc" : "Desc"
-				const excludeFullGames = params?.excludeFullGames ? true : false
+				const excludeFullGames = !!params?.excludeFullGames
 
 				if (
 					serverParams.sortOrder !== sortOrder ||
@@ -416,7 +416,7 @@ pageInit.gamedetails = () => {
 								}
 							},
 
-							onBlur(e: Event) {
+							onBlur(_e: Event) {
 								submit(false)
 							},
 						}),
@@ -646,8 +646,8 @@ pageInit.gamedetails = () => {
 		)
 
 		reactHook.hijackUseStateGlobal(
-			(value, index) => ["tab-about", "tab-game-instances", "tab-store"].includes(value),
-			(value, initial) => {
+			(value, _index) => ["tab-about", "tab-game-instances", "tab-store"].includes(value),
+			(value, _initial) => {
 				if (value === "tab-about" && window.location.hash !== "#!/about") {
 					return "tab-game-instances"
 				}

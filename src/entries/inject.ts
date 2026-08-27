@@ -1601,7 +1601,7 @@ const startInject = () => {
 
 									$scope.$on(
 										avatarConstantService.events.wornAssetsChanged,
-										(event: Event, assetIds: any) => {
+										(_event: Event, _assetIds: any) => {
 											$scope.btrRefreshWearingAssets()
 										},
 									)
@@ -1945,7 +1945,7 @@ const startInject = () => {
 						if (showSecondRow) {
 							reactHook.hijackUseState(
 								// visibleFriendsList
-								(value: any, index: number) => value === friendsList,
+								(value: any, _index: number) => value === friendsList,
 								(value: any, initial: any) => {
 									if (value && friendsList && !initial) {
 										let count = value.length * 2
@@ -3427,7 +3427,7 @@ const startInject = () => {
 				const btrGetPublicGameInstances = (placeId: number, cursor: string, params: any) => {
 					if (!params?.btrRefresh) {
 						const sortOrder = params?.sortOrder === "Asc" ? "Asc" : "Desc"
-						const excludeFullGames = params?.excludeFullGames ? true : false
+						const excludeFullGames = !!params?.excludeFullGames
 
 						if (
 							serverParams.sortOrder !== sortOrder ||
@@ -3573,7 +3573,7 @@ const startInject = () => {
 										}
 									},
 
-									onBlur(e: any) {
+									onBlur(_e: any) {
 										submit(false)
 									},
 								}),
@@ -3808,9 +3808,9 @@ const startInject = () => {
 				)
 
 				reactHook.hijackUseStateGlobal(
-					(value: any, index: number) =>
+					(value: any, _index: number) =>
 						["tab-about", "tab-game-instances", "tab-store"].includes(value),
-					(value: any, initial: any) => {
+					(value: any, _initial: any) => {
 						if (value === "tab-about" && window.location.hash !== "#!/about") {
 							return "tab-game-instances"
 						}
@@ -4174,7 +4174,7 @@ const startInject = () => {
 			},
 			profile: () => {
 				angularHook.hijackModule("peopleList", {
-					layoutService(target: any, thisArg: any, args: any[], argsMap: any) {
+					layoutService(target: any, thisArg: any, args: any[], _argsMap: any) {
 						const result = target.apply(thisArg, args)
 						result.maxNumberOfFriendsDisplayed = 10
 						return result

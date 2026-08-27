@@ -561,7 +561,7 @@ const initReactFriends = () => {
 				if (showSecondRow) {
 					reactHook.hijackUseState(
 						// visibleFriendsList
-						(value, index) => value === friendsList,
+						(value, _index) => value === friendsList,
 						(value, initial) => {
 							if (value && friendsList && !initial) {
 								let count = value.length * 2
@@ -1472,7 +1472,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			popoverTemplate.classList.toggle("visible")
 		})
 
-		document.$on("click", (event) => {
+		document.$on("click", (_event) => {
 			if (popoverTemplate.classList.contains("visible")) {
 				popoverTemplate.classList.toggle("visible")
 			}
@@ -1545,7 +1545,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 	return btnCont
 }
 
-export const initContentButton = async (assetId: any, assetTypeId: any, isBundle?: any) => {
+export const initContentButton = async (assetId: any, assetTypeId: any, _isBundle?: any) => {
 	if (!SETTINGS.get("itemdetails.contentButton")) {
 		return
 	}
@@ -1646,7 +1646,7 @@ pageInit.www = () => {
 		const index = linkify.dataset.regex!.search(/\|[^|]*shoproblox\\.com/)
 
 		if (index !== -1) {
-			linkify.dataset.regex! =
+			linkify.dataset.regex =
 				linkify.dataset.regex!.slice(0, index) +
 				/|twitter\.com|youtube\.com|youtu\.be|twitch\.tv/.source +
 				linkify.dataset.regex!.slice(index)

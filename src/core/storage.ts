@@ -78,7 +78,7 @@ export const btrLocalStorage = {
 	},
 
 	hasItem(key: string): boolean {
-		return this.getItem(key, { raw: true }) ? true : false
+		return !!this.getItem(key, { raw: true })
 	},
 
 	refresh(): void {

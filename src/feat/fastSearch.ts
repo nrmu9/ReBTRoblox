@@ -216,7 +216,7 @@ export const btrFastSearch = {
 					return x
 				})
 				.filter((x) => x.display)
-				.sort((a, b) => a.sort - b.sort)
+				.toSorted((a, b) => a.sort - b.sort)
 				.slice(0, 4)
 
 			// Move non-friend exacts to be last of the visible ones

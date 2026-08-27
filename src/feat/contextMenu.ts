@@ -151,7 +151,7 @@ if (IS_BACKGROUND_PAGE) {
 			let data: any = null
 
 			if (info.menuItemId.startsWith("custom!")) {
-				const [_, _menuId, _data] = info.menuItemId.match(/^custom!([^!]+)!(.*)$/)
+				const [, _menuId, _data] = info.menuItemId.match(/^custom!([^!]+)!(.*)$/)
 				menuId = _menuId
 				data = JSON.parse(_data)
 			}
@@ -385,7 +385,7 @@ if (IS_BACKGROUND_PAGE) {
 	}
 
 	contentScript.listen({
-		setCustomContextMenuItems(items: any, respond: (value?: any) => void, port: any) {
+		setCustomContextMenuItems(items: any) {
 			ContextMenu.customContextMenuItems = items
 			ContextMenu.update()
 		},
