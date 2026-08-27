@@ -2315,6 +2315,170 @@ const startInject = () => {
 				const accessoryAssetTypeIds = [8, 41, 42, 43, 44, 45, 46, 47, 57, 58]
 				const layeredAssetTypeIds = [64, 65, 66, 67, 68, 69, 70, 71, 72]
 
+				// The editor used to read window.Roblox.AvatarAccoutrementService, so
+				// hijacking that object was enough. Roblox now bundles the rules module
+				// into the avatar bundle and calls its own copy, which the global never
+				// sees. Webpack builds that copy with defineProperty getters, so rewrite
+				// the descriptor as it is defined. Keep the global hooks below too: other
+				// pages still go through them.
+				const LIMIT_KEY = "getAdvancedAccessoryLimit"
+				const LAYERED_KEY = "maxNumberOfLayeredClothingItems"
+				const TYPE_KEY = "getAssetTypeById"
+				const ADD_KEY = "addAssetToAvatar"
+
+				// Raised rather than removed: the editor treats a missing maxNumber as 1.
+				const RAISED_LIMIT = 100
+
+				const isBypassed = (assetTypeId: any) =>
+					accessoryAssetTypeIds.includes(+assetTypeId) || layeredAssetTypeIds.includes(+assetTypeId)
+
+				// Roblox added category caps (Tops, Bottoms, Outerwear all allow 1) that
+				// short circuit before maxNumber is read, and the table holding them is
+				// module private with no export to reach it. So let the original run and
+				// put back what it dropped, which is what the hook below does for the
+				// global copy.
+				const keepDroppedAssets =
+					(original: any) =>
+					function (this: any, ...args: any[]) {
+						const result = original.apply(this, args)
+						const assets = [args[0], ...args[1]]
+
+						let accessoriesLeft = 10
+						let layeredLeft = 10
+
+						for (let i = 0; i < assets.length; i++) {
+							const asset = assets[i]
+							const assetTypeId = asset?.assetType?.id
+
+							const isAccessory = accessoryAssetTypeIds.includes(assetTypeId)
+							const isLayered = layeredAssetTypeIds.includes(assetTypeId) || assetTypeId === 41
+
+							let valid = true
+
+							if (isAccessory || isLayered) {
+								if (isAccessory && accessoriesLeft <= 0) {
+									valid = false
+								}
+
+								if (isLayered && layeredLeft <= 0) {
+									valid = false
+								}
+
+								if (
+									!settings.avatar.removeLayeredLimits &&
+									layeredAssetTypeIds.includes(assetTypeId)
+								) {
+									if (!result.includes(asset)) {
+										valid = false
+									}
+								}
+							} else {
+								valid = result.includes(asset)
+							}
+
+							if (valid) {
+								if (isAccessory) {
+									accessoriesLeft--
+								}
+								if (isLayered) {
+									layeredLeft--
+								}
+							} else {
+								assets.splice(i--, 1)
+							}
+						}
+
+						return assets
+					}
+
+				const replaceValue = (key: string, original: any) => {
+					if (key === ADD_KEY) {
+						return keepDroppedAssets(original)
+					}
+
+					if (key === LAYERED_KEY) {
+						// A plain number the editor compares a running count against.
+						return settings.avatar.removeLayeredLimits ? RAISED_LIMIT : original
+					}
+
+					if (key === TYPE_KEY) {
+						// addAssetToAvatar derives its per type cap from this table, so raise
+						// maxNumber in place. Mutating keeps the entry identity, which the
+						// editor compares elsewhere.
+						return (assetTypeId: any) => {
+							const assetType = original(assetTypeId)
+
+							if (assetType && isBypassed(assetType.id ?? assetTypeId)) {
+								if (assetType.maxNumber < RAISED_LIMIT) {
+									assetType.maxNumber = RAISED_LIMIT
+								}
+							}
+
+							return assetType
+						}
+					}
+
+					return (assetTypeId: any) => (isBypassed(assetTypeId) ? undefined : original(assetTypeId))
+				}
+
+				hijackFunction(Object, "defineProperty", (target: any, thisArg: any, args: any[]) => {
+					const key = args[1]
+
+					if (
+						(key === LIMIT_KEY || key === LAYERED_KEY || key === TYPE_KEY || key === ADD_KEY) &&
+						typeof args[2]?.get === "function"
+					) {
+
+						const descriptor = args[2]
+						const readOriginal = descriptor.get
+						let replacement: any
+						let resolved = false
+
+						args[2] = {
+							...descriptor,
+							get() {
+								if (!resolved) {
+									resolved = true
+									replacement = replaceValue(key, readOriginal.call(this))
+								}
+
+								return replacement
+							},
+						}
+
+						const result = target.apply(thisArg, args)
+
+						if (key === TYPE_KEY) {
+							// addAssetToAvatar reads the per type cap through the module's own
+							// binding, not through this namespace, so wrapping the getter alone
+							// never runs for it. The entries it gets back are shared with this
+							// table though, so walk every bypassed type once and raise
+							// maxNumber in place. Deferred because the binding is not
+							// initialised while the namespace is still being defined.
+							const namespace = args[0]
+
+							setTimeout(() => {
+								try {
+									const getAssetType = namespace[TYPE_KEY]
+
+									for (const assetTypeId of [
+										...accessoryAssetTypeIds,
+										...layeredAssetTypeIds,
+									]) {
+										getAssetType(assetTypeId)
+									}
+								} catch (ex) {
+									console.error(ex)
+								}
+							}, 0)
+						}
+
+						return result
+					}
+
+					return target.apply(thisArg, args)
+				})
+
 				onSet(window, "Roblox", (Roblox: any) => {
 					onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
 						hijackFunction(
@@ -4177,6 +4341,7 @@ const startInject = () => {
 			"smallChatButton",
 			"hijackAuth",
 			"webpackHook",
+			"removeAccessoryLimits",
 			"createAddBTRSettings",
 			"createAssetOptions",
 			"createDownloadVersion",
@@ -4200,7 +4365,6 @@ const startInject = () => {
 		// These read settings, so they cannot run until init has delivered them.
 		const SETTINGS_HOOKS = [
 			"initReactFriends",
-			"removeAccessoryLimits",
 			"experiments",
 			"pagedServers",
 			"favoritesAtTop",
