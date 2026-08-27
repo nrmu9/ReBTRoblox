@@ -1,5 +1,6 @@
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
+import type { ItemPreviewer } from "@/rbx/Preview"
 import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { RobuxToCash } from "@/feat/robuxToCash"
@@ -497,19 +498,48 @@ pageInit.itemdetails = () => {
 						const isBundle = itemType === "Bundle"
 						const assetTypeId = isBundle ? null : +buttons.dataset.btrAssetTypeId!
 
-						initPreview(assetId, assetTypeId, isBundle).then((preview) => {
-							if (!preview) {
-								return
-							} // preview didnt load
-							if (!document.contains(buttons)) {
-								return
-							} // already changed page
+						// setVisible(false) detaches the previewer and setVisible(true) puts
+						// it back, so it only has to be built once and the setting can be
+						// flipped either way without a reload.
+						let previewer: ItemPreviewer | null = null
 
-							const parent = document.querySelector(
-								".item-thumbnail-container, #item-thumbnail-container-frontend",
-							)!.parentElement
-							preview.setParent(parent)
-						})
+						const applyPreviewer = () => {
+							if (!SETTINGS.get("itemdetails.itemPreviewer")) {
+								previewer?.setVisible(false)
+								return
+							}
+
+							if (previewer) {
+								previewer.setVisible(true)
+								return
+							}
+
+							void initPreview(assetId, assetTypeId, isBundle).then((preview) => {
+								if (!preview) {
+									return
+								} // preview didnt load
+								if (!document.contains(buttons)) {
+									return
+								} // already changed page
+								if (!SETTINGS.get("itemdetails.itemPreviewer")) {
+									return
+								} // switched back off while it was loading
+
+								const parent = document.querySelector(
+									".item-thumbnail-container, #item-thumbnail-container-frontend",
+								)?.parentElement
+
+								if (!parent) {
+									return
+								}
+
+								previewer = preview
+								preview.setParent(parent)
+							})
+						}
+
+						applyPreviewer()
+						SETTINGS.onChange("itemdetails.itemPreviewer", applyPreviewer)
 
 						// Each button builds itself and returns nothing when its setting is
 						// off, so switching one back on is just running it again, and
