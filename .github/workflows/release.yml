@@ -16,6 +16,9 @@ jobs:
       # installable in Developer Edition and Nightly but not in release Firefox.
       AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
       AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+      # "unlisted" signs for self distribution. Set the AMO_CHANNEL repository
+      # variable to "listed" to submit to the add-ons store instead.
+      AMO_CHANNEL: ${{ vars.AMO_CHANNEL || 'unlisted' }}
 
     steps:
       # The tag object itself is needed to check its signature, so this cannot
@@ -82,17 +85,26 @@ jobs:
           # rebuild the firefox one for web-ext to sign.
           npm run build
 
+          # A listed submission of minified code has to carry the sources the
+          # reviewer builds from, taken straight from the tag being released.
+          args=()
+          if [ "$AMO_CHANNEL" = "listed" ]; then
+            git archive --format=zip --prefix="btroblox/" "$GITHUB_REF_NAME" -o source.zip
+            args+=(--upload-source-code source.zip)
+          fi
+
           npx --yes web-ext sign \
             --source-dir dist \
-            --channel unlisted \
+            --channel "$AMO_CHANNEL" \
             --api-key "$AMO_JWT_ISSUER" \
             --api-secret "$AMO_JWT_SECRET" \
-            --artifacts-dir amo
+            --artifacts-dir amo \
+            "${args[@]}"
 
           version="${GITHUB_REF_NAME#v}"
           mv "$(find amo -name '*.xpi' | head -n1)" "artifacts/btroblox-$version-firefox.xpi"
 
-          echo "signed the firefox build through AMO"
+          echo "signed the firefox build through AMO on the $AMO_CHANNEL channel"
 
       # Regenerated here so the sums cover the signed .xpi when there is one.
       - name: Checksum the artifacts
