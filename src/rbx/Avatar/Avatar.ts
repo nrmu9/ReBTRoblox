@@ -11,6 +11,7 @@ import { RBXComposites } from "@/rbx/Avatar/Composites"
 import { AssetType, BrickColor } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { AccessoryAssetTypeIds } from "@/pages/common"
+import { EventEmitter } from "@/rbx/EventEmitter"
 
 export const RBXAvatar = (() => {
 	function getFirstLod(mesh) {

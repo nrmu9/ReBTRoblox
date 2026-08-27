@@ -8,6 +8,7 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 import { RBXScene } from "@/rbx/Scene"
 import { AccessoryAssetTypeIds, AnimationPreviewAssetTypeIds, WearableAssetTypeIds, loggedInUserPromise } from "@/pages/common"
 import { query } from "@/core/query"
+import { EventEmitter } from "@/rbx/EventEmitter"
 
 const outfitCache: Record<string, any> = {}
 let avatarRulePromise

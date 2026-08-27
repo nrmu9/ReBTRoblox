@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import { RBXAvatar } from "@/rbx/Avatar/Avatar"
+import { EventEmitter } from "@/rbx/EventEmitter"
 
 export const RBXScene = (() => {
 	class Scene extends EventEmitter {
