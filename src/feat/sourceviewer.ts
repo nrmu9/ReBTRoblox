@@ -379,7 +379,7 @@ export const SourceViewer = (() => {
 	}
 
 	for (const [name, enumItems] of Object.entries(ApiDump.getEnums()) as [string, any][]) {
-		const set = (Globals.Enum[name] = new Set())
+		const set = ((Globals.Enum as Record<string, any>)[name] = new Set())
 
 		for (const name of Object.values(enumItems) as any[]) {
 			set.add(name)
@@ -503,7 +503,7 @@ export const SourceViewer = (() => {
 
 		//
 
-		const matchUntil = (...matches) => {
+		const matchUntil = (...matches: any[]) => {
 			const startIndex = ParseRegex.lastIndex
 			let lastIndex = startIndex
 
@@ -740,7 +740,12 @@ export const SourceViewer = (() => {
 				let global = Globals
 
 				for (let i = 0; i < indexState.length; i += 2) {
-					global = global instanceof Set ? global.has(indexState[i]) : global?.[indexState[i]]
+					global =
+						global instanceof Set
+							? global.has((indexState as Record<string, any>)[i])
+							: (global as Record<string, any> | undefined)?.[
+									(indexState as Record<string, any>)[i]
+								]
 				}
 
 				if (indexState.length === 1) {

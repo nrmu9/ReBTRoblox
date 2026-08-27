@@ -74,9 +74,9 @@ const OwnerAssetCache = {
 		}
 
 		if (owned) {
-			this.assetMap[id] = true
+			;(this.assetMap as Record<string, any>)[id] = true
 		} else {
-			delete this.assetMap[id]
+			delete (this.assetMap as Record<string, any>)[id]
 		}
 
 		if (copyTo) {
@@ -129,7 +129,7 @@ const OwnerAssetCache = {
 				newItems.push(...json.data.map((x: any) => x.assetId))
 
 				if (json.nextPageCursor) {
-					nextPageCursor[index] = json.nextPageCursor
+					;(nextPageCursor as Record<string, any>)[index] = json.nextPageCursor
 				}
 			}
 
@@ -354,7 +354,7 @@ pageInit.catalog = () => {
 					const initData: Record<string, any> = {}
 
 					for (const assetId of assetIds) {
-						if (OwnerAssetCache.assetMap[assetId]) {
+						if ((OwnerAssetCache.assetMap as Record<string, any>)[assetId]) {
 							initData[assetId] = true
 						}
 					}

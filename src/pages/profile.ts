@@ -447,7 +447,8 @@ pageInit.profile = () => {
 						const thumbUrl =
 							(data.thumb && data.thumb.imageUrl) ||
 							"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
-						const thumbClass = (data.thumb && thumbClasses[data.thumb.state]) || ""
+						const thumbClass =
+							(data.thumb && (thumbClasses as Record<string, any>)[data.thumb.state]) || ""
 
 						list.append(
 							html` <div class="card">
@@ -489,7 +490,8 @@ pageInit.profile = () => {
 									const thumbUrl =
 										badge.thumb.imageUrl ||
 										"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
-									const thumbClass = thumbClasses[badge.thumb.state] || ""
+									const thumbClass =
+										(thumbClasses as Record<string, any>)[badge.thumb.state] || ""
 
 									img.src = thumbUrl
 									if (thumbClass) {
@@ -1171,7 +1173,7 @@ pageInit.profile = () => {
 
 							item.$req(".btr-game-playbutton-container").replaceChildren(html`
 								<div
-									title="${prohibitedReasons[placeDetails.reasonProhibited] || placeDetails.reasonProhibited}"
+									title="${(prohibitedReasons as Record<string, any>)[placeDetails.reasonProhibited] || placeDetails.reasonProhibited}"
 									class="btr-place-prohibited btn-common-play-game-unplayable-lg btn-primary-lg"
 									disabled
 								>

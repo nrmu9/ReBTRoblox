@@ -255,7 +255,9 @@ pageInit.avatar = () => {
 											for (const [category, values] of Object.entries(
 												lowerBounds as Record<string, any>,
 											) as [string, any][]) {
-												const bounds = (assetBounds[category] = {})
+												const bounds: Record<string, any> = ((
+													assetBounds as Record<string, any>
+												)[category] = {})
 
 												for (const [key, value] of Object.entries(values) as [
 													string,

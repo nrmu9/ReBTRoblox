@@ -322,7 +322,7 @@ export class ByteReader extends Uint8Array {
 	for (const key of peekMethods) {
 		const fn = ByteReader.prototype[key]
 
-		ByteReader.prototype["Peek" + key] = function (...args) {
+		ByteReader.prototype["Peek" + key] = function (...args: any[]) {
 			const index = this.GetIndex()
 			const result = fn.apply(this, args)
 			this.SetIndex(index)

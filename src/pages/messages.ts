@@ -35,12 +35,12 @@ class MarkAllAsReadAction {
 			return
 		}
 
-		const tryFetch = () => RobloxApi.privatemessages.markAsRead(messageIds).catch(tryFetch)
+		const tryFetch = (): Promise<any> => RobloxApi.privatemessages.markAsRead(messageIds).catch(tryFetch)
 		return tryFetch()
 	}
 
 	async loadPage(pageNum: number) {
-		const tryFetch = () => RobloxApi.privatemessages.getMessages(pageNum).catch(tryFetch)
+		const tryFetch = (): Promise<any> => RobloxApi.privatemessages.getMessages(pageNum).catch(tryFetch)
 
 		return tryFetch().then(async (json: any) => {
 			for (const msg of json.collection) {
@@ -79,7 +79,7 @@ class MarkAllAsReadAction {
 
 		this.setButtonText("Processing...")
 
-		const tryFetch = () => RobloxApi.privatemessages.getUnreadCount().catch(tryFetch)
+		const tryFetch = (): Promise<any> => RobloxApi.privatemessages.getUnreadCount().catch(tryFetch)
 
 		this.unreadMessagesTotal = await tryFetch().then((json: any) => json.count)
 		this.unreadMessagesLeft = this.unreadMessagesTotal
@@ -200,7 +200,7 @@ pageInit.messages = () => {
 						try {
 							const [$state] = args
 
-							$state.btr_setPage = ($event) => {
+							$state.btr_setPage = ($event: any) => {
 								const value = +$event.target.value
 
 								if (!Number.isNaN(value)) {

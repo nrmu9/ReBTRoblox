@@ -406,7 +406,11 @@ export const DracoBitstream = {
 		const predictionScheme = (attribute.predictionScheme = stream.UInt8())
 		let predictionTransformType
 
-		if (predictionScheme !== PREDICTION_NONE) {
+		if (
+			predictionScheme !== undefined &&
+			predictionTransformType !== undefined &&
+			predictionScheme !== PREDICTION_NONE
+		) {
 			predictionTransformType = attribute.predictionTransformType = stream.Int8()
 		}
 
@@ -468,7 +472,11 @@ export const DracoBitstream = {
 			}
 		}
 
-		if (predictionScheme !== PREDICTION_NONE) {
+		if (
+			predictionScheme !== undefined &&
+			predictionTransformType !== undefined &&
+			predictionScheme !== PREDICTION_NONE
+		) {
 			this.decodePredictionData(
 				stream,
 				parser,

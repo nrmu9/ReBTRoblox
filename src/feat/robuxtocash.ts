@@ -1040,7 +1040,8 @@ for (const [name, currency] of Object.entries(RobuxToCash.Currencies) as [string
 		}).resolvedOptions().maximumFractionDigits
 	} catch (ex) {}
 
-	const options = (RobuxToCash.OptionLists[name] = RobuxToCash.OptionLists[name] || [])
+	const lists = RobuxToCash.OptionLists as Record<string, any>
+	const options = (lists[name] = lists[name] || [])
 	const refCurrency = currency.usdRate ? RobuxToCash.Currencies.USD : currency
 
 	for (const [index, rate] of Object.entries(refCurrency.robuxRates) as [string, any][]) {

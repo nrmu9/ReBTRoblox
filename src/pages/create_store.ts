@@ -158,7 +158,7 @@ pageInit.create_store = () => {
 
 		if (nextPage) {
 			currPageParams = nextPageParams
-			currPageObj = new nextPage(...currPageParams)
+			currPageObj = new (nextPage as new (...args: any[]) => any)(...(currPageParams ?? []))
 			currPage = nextPage
 		}
 	}

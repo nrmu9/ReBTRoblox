@@ -317,7 +317,7 @@ if (IS_BACKGROUND_PAGE) {
 									value.length === lastValue.length
 								) {
 									for (const [index, value2] of Object.entries(value) as [string, any][]) {
-										if (lastValue[index] !== value2) {
+										if ((lastValue as Record<string, any>)[index] !== value2) {
 											identical = false
 											break outer
 										}

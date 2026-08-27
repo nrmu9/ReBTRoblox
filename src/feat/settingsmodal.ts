@@ -451,7 +451,10 @@ export const SettingsModal: SettingsModalState = {
 			}
 
 			currencySelect.$on("change", () => {
-				SETTINGS.set("general.robuxToUSDRate", RobuxToCash.OptionLists[currencySelect.value][0].name)
+				SETTINGS.set(
+					"general.robuxToUSDRate",
+					(RobuxToCash.OptionLists as Record<string, any>)[currencySelect.value][0].name,
+				)
 			})
 
 			rateSelect.$on("change", setRate)
@@ -463,7 +466,7 @@ export const SettingsModal: SettingsModalState = {
 				rateSelect.replaceChildren()
 				let selected = false
 
-				for (const option of RobuxToCash.OptionLists[name]) {
+				for (const option of (RobuxToCash.OptionLists as Record<string, any>)[name]) {
 					let fullText = ""
 
 					if (option.name === "none") {
@@ -763,7 +766,7 @@ export const SettingsModal: SettingsModalState = {
 
 		for (const [groupPath, settingsGroup] of Object.entries(SETTINGS.loadedSettings) as [string, any][]) {
 			for (const [settingName, settingValueInfo] of Object.entries(settingsGroup) as [string, any][]) {
-				const defaultValueInfo = DEFAULT_SETTINGS[groupPath][settingName]
+				const defaultValueInfo = (DEFAULT_SETTINGS as Record<string, any>)[groupPath][settingName]
 				const settingValue = settingValueInfo.value
 
 				const settingPath = `${groupPath}.${settingName}`

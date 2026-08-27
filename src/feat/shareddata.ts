@@ -69,11 +69,11 @@ export const SHARED_DATA = {
 	},
 
 	get(key: string) {
-		return this.data[key]
+		return (this.data as Record<string, any>)[key]
 	},
 
 	set(key: string, value: any) {
-		this.data[key] = value
+		;(this.data as Record<string, any>)[key] = value
 
 		if (IS_BACKGROUND_PAGE && this._loaded) {
 			setImmediate(() => this.updateData())

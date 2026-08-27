@@ -1997,7 +1997,7 @@ const awsRegions = {
 		const [a, b, c, d] = match.slice(1).map((x: any) => +x)
 		const ip_number = a * 256 ** 3 + b * 256 ** 2 + c * 256 + d
 
-		const get_first = (list: any, ...args) => {
+		const get_first = (list: any, ...args: any[]) => {
 			let result = list
 			for (const arg of args) {
 				result = result[arg]

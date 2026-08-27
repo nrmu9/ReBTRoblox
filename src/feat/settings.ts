@@ -188,7 +188,7 @@ export const SETTINGS: Record<string, any> = {
 		return settings
 	},
 
-	_getSetting(path: string, root) {
+	_getSetting(path: string, root: any) {
 		const index = path.indexOf(".")
 		if (index === -1) {
 			return

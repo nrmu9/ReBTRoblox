@@ -87,7 +87,7 @@ export const RBXScene = (() => {
 				{
 					target: canvas,
 					events: {
-						mousedown: (event) => {
+						mousedown: (event: any) => {
 							if (!this.cameraControlsEnabled) {
 								return
 							}
@@ -104,13 +104,13 @@ export const RBXScene = (() => {
 
 							event.preventDefault()
 						},
-						contextmenu: (event) => {
+						contextmenu: (event: any) => {
 							if (!this.cameraControlsEnabled) {
 								return
 							}
 							event.preventDefault()
 						},
-						wheel: (event) => {
+						wheel: (event: any) => {
 							if (!this.cameraControlsEnabled) {
 								return
 							}
@@ -130,7 +130,7 @@ export const RBXScene = (() => {
 				{
 					target: window,
 					events: {
-						mousemove: (event) => {
+						mousemove: (event: any) => {
 							if (!this.cameraControlsEnabled) {
 								return
 							}
@@ -151,12 +151,12 @@ export const RBXScene = (() => {
 								this.cameraRotation.y -= (2 * Math.PI * moveX) / this.canvas.clientWidth
 							}
 						},
-						mouseup: (event) => {
+						mouseup: (event: any) => {
 							if (this.isDragging && event.button === this.dragButton) {
 								this.isDragging = false
 							}
 						},
-						contextmenu: (event) => {
+						contextmenu: (event: any) => {
 							if (!this.cameraControlsEnabled) {
 								return
 							}

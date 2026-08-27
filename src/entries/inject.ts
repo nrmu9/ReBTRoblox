@@ -19,7 +19,7 @@ document.addEventListener(
 				}
 			},
 
-			assert(bool: boolean, ...args) {
+			assert(bool: boolean, ...args: any[]) {
 				if (!bool) {
 					throw new Error(...args)
 				}
@@ -32,9 +32,9 @@ document.addEventListener(
 				return c(a[b])
 			}
 
-			let descriptor
+			let descriptor: PropertyDescriptor
 			try {
-				descriptor = Object.getOwnPropertyDescriptor(a, b)
+				descriptor = Object.getOwnPropertyDescriptor(a, b)!
 			} catch (ex) {}
 
 			Object.defineProperty(a, b, {
@@ -51,7 +51,7 @@ document.addEventListener(
 			})
 		}
 
-		const hijackFunction = (...args) => {
+		const hijackFunction = (...args: any[]) => {
 			if (args.length === 2) {
 				return new Proxy(args[0], { apply: args[1] })
 			}
@@ -159,7 +159,7 @@ document.addEventListener(
 					return target.apply(thisArg, args)
 				})
 
-				hijackFunction(XMLHttpRequest.prototype, "open", (target: any, xhr, args: any[]) => {
+				hijackFunction(XMLHttpRequest.prototype, "open", (target: any, xhr: any, args: any[]) => {
 					const method = args[0]
 					const url = args[1]
 
@@ -224,7 +224,7 @@ document.addEventListener(
 					return target.apply(xhr, args)
 				})
 
-				hijackFunction(XMLHttpRequest.prototype, "send", (target: any, xhr, args: any[]) => {
+				hijackFunction(XMLHttpRequest.prototype, "send", (target: any, xhr: any, args: any[]) => {
 					const request = xhrDetails.get(xhr)
 
 					if (request) {
@@ -259,7 +259,7 @@ document.addEventListener(
 			getSelectedOption() {
 				return this.selectedRobuxToCashOption
 			},
-			convert(robux) {
+			convert(robux: number) {
 				const option = this.getSelectedOption()
 
 				const cash = Math.round((robux * option.cash) / option.robux + 0.4999) / 100
@@ -270,12 +270,12 @@ document.addEventListener(
 		}
 
 		const contentScript = {
-			messageListeners: {},
+			messageListeners: {} as Record<string, ((...args: any[]) => void)[]>,
 
-			send(action, ...args) {
+			send(action: string, ...args: any[]) {
 				document.dispatchEvent(new CustomEvent(`btroblox/content/${action}`, { detail: args }))
 			},
-			listen(action, callback: (...args: any[]) => any) {
+			listen(action: string, callback: (...args: any[]) => any) {
 				let listeners = this.messageListeners[action]
 
 				if (!listeners) {
@@ -322,7 +322,7 @@ document.addEventListener(
 					return
 				}
 
-				const hijack = (a: any, b: any, injects) => {
+				const hijack = (a: any, b: any, injects: any) => {
 					const fn = a[b]
 
 					if (typeof fn === "function") {
@@ -345,7 +345,7 @@ document.addEventListener(
 				}
 			},
 
-			applyConfig(module: any, config, callback: (...args: any[]) => any) {
+			applyConfig(module: any, config: any, callback: (...args: any[]) => any) {
 				const injects = config[2][0]
 
 				if (typeof injects[injects.length - 1] !== "function") {
@@ -365,7 +365,7 @@ document.addEventListener(
 
 			//
 
-			hijackModule(moduleName, objects) {
+			hijackModule(moduleName: string, objects: any) {
 				let module
 
 				try {
@@ -388,7 +388,7 @@ document.addEventListener(
 				}
 			},
 
-			hijackConfig(moduleName, callback: (...args: any[]) => any) {
+			hijackConfig(moduleName: string, callback: (...args: any[]) => any) {
 				let module
 
 				try {
@@ -474,7 +474,7 @@ document.addEventListener(
 					)
 				}
 
-				const route = (queue, callback: (...args: any[]) => any) => {
+				const route = (queue: any, callback: (...args: any[]) => any) => {
 					for (const entry of queue) {
 						callback(entry)
 					}
@@ -540,7 +540,7 @@ document.addEventListener(
 					this.templateListeners[key] = true
 				})
 
-				onSet(window, "angular", (angular) => {
+				onSet(window, "angular", (angular: any) => {
 					onSet(angular, "module", () => {
 						let didInitNg = false
 
@@ -923,7 +923,7 @@ document.addEventListener(
 				}
 			},
 
-			querySelector(element, selectors: any, depth = 5, path = false) {
+			querySelector(element: any, selectors: any, depth = 5, path = false) {
 				if (!element?.props) {
 					return null
 				}
@@ -938,7 +938,7 @@ document.addEventListener(
 				)
 			},
 
-			querySelectorAll(element, selectors: any, depth = 5, path = false) {
+			querySelectorAll(element: any, selectors: any, depth = 5, path = false) {
 				if (!element?.props) {
 					return null
 				}
@@ -989,7 +989,7 @@ document.addEventListener(
 						this._children().push(reactHook.unwrap(elem))
 					},
 
-					before(...elems) {
+					before(...elems: any[]) {
 						const parent = this.parent()
 
 						const children = parent ? parent._children(true) : this.path[0]
@@ -1000,7 +1000,7 @@ document.addEventListener(
 						}
 					},
 
-					after(...elems) {
+					after(...elems: any[]) {
 						const parent = this.parent()
 
 						const children = parent ? parent._children(true) : this.path[0]
@@ -1011,7 +1011,7 @@ document.addEventListener(
 						}
 					},
 
-					replaceWith(...elems) {
+					replaceWith(...elems: any[]) {
 						const parent = this.parent()
 
 						const children = parent ? parent._children(true) : this.path[0]
@@ -1046,7 +1046,7 @@ document.addEventListener(
 									contains: (input: any) => {
 										return (this[0].props.className ?? "").split(" ").includes(input)
 									},
-									add: (...input) => {
+									add: (...input: string[]) => {
 										const classNames = (this[0].props.className ?? "").split(" ")
 
 										for (const className of input) {
@@ -1057,7 +1057,7 @@ document.addEventListener(
 
 										this[0].props.className = classNames.join(" ")
 									},
-									remove: (...input) => {
+									remove: (...input: string[]) => {
 										const classNames = (this[0].props.className ?? "").split(" ")
 
 										for (const className of input) {
@@ -1153,7 +1153,11 @@ document.addEventListener(
 				return info
 			},
 
-			hijackUseState(filter: (...args: any[]) => any, transform: (...args: any[]) => any, permanent) {
+			hijackUseState(
+				filter: (...args: any[]) => any,
+				transform: (...args: any[]) => any,
+				permanent: boolean,
+			) {
 				const renderTarget = this.renderTarget
 
 				if (!renderTarget) {
@@ -1235,7 +1239,7 @@ document.addEventListener(
 					return
 				}
 
-				let target, key, render
+				let target: any, key!: string, render: any
 
 				if (typeof type === "function") {
 					if (type.prototype?.isReactComponent) {
@@ -1363,7 +1367,7 @@ document.addEventListener(
 				return result
 			},
 
-			onReact(_react) {
+			onReact(_react: any) {
 				this.React = _react
 
 				hijackFunction(this.React, "createElement", this.onCreateElement.bind(this))
@@ -1456,7 +1460,7 @@ document.addEventListener(
 				})
 			},
 
-			createElement(...args) {
+			createElement(...args: any[]) {
 				return this.React.createElement(...args)
 			},
 
@@ -1473,10 +1477,10 @@ document.addEventListener(
 
 		//
 
-		const injectedFunctions = {
+		const injectedFunctions: Record<string, (...args: any[]) => any> = {
 			// Insert injected functions here,
 			avatar: () => {
-				let openAdvancedAccessories
+				let openAdvancedAccessories: any
 
 				reactHook.hijackConstructor(
 					(props: any) => !openAdvancedAccessories && "openAdvancedAccessories" in props,
@@ -1486,7 +1490,7 @@ document.addEventListener(
 					},
 				)
 
-				reactHook.inject(".redraw-avatar", (redraw) => {
+				reactHook.inject(".redraw-avatar", (redraw: any) => {
 					redraw.classList.add("btr-redraw-avatar")
 
 					redraw.append(
@@ -1502,10 +1506,10 @@ document.addEventListener(
 				})
 			},
 			assetRefinement: () => {
-				onSet(window, "Roblox", (Roblox) => {
-					onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService) => {
-						let wearingAssets
-						let avatarRules
+				onSet(window, "Roblox", (Roblox: any) => {
+					onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
+						let wearingAssets: any
+						let avatarRules: any
 
 						hijackFunction(
 							AvatarAccoutrementService,
@@ -1577,14 +1581,14 @@ document.addEventListener(
 
 									$scope.$on(
 										avatarConstantService.events.wornAssetsChanged,
-										(event: Event, assetIds) => {
+										(event: Event, assetIds: any) => {
 											$scope.btrRefreshWearingAssets()
 										},
 									)
 
 									$scope.$on(
 										avatarConstantService.events.avatarRulesLoaded,
-										(event: Event, rules) => {
+										(event: Event, rules: any) => {
 											$scope.btrAvatarRules = avatarRules = rules
 											$scope.btrBounds = {}
 
@@ -1597,13 +1601,16 @@ document.addEventListener(
 												const wearableAssetType = avatarRules.wearableAssetTypes.find(
 													(x: any) => x.name.replace(/\s/, "") === assetTypeName,
 												)
-												const assetBounds = ($scope.btrBounds[wearableAssetType?.id] =
-													{})
+												const assetBounds: Record<string, any> = ($scope.btrBounds[
+													wearableAssetType?.id
+												] = {})
 
 												for (const [category, values] of Object.entries(
 													lowerBounds,
 												) as [string, any][]) {
-													const bounds = (assetBounds[category] = {})
+													const bounds: Record<string, any> = (assetBounds[
+														category
+													] = {})
 
 													for (const [key, value] of Object.entries(values) as [
 														string,
@@ -1634,7 +1641,7 @@ document.addEventListener(
 				})
 			},
 			fullRangeBodyColors: () => {
-				let forceRefreshThumbnail
+				let forceRefreshThumbnail: any
 
 				reactHook.hijackConstructor(
 					(props: any) => !forceRefreshThumbnail && "forceRefreshThumbnail" in props,
@@ -1724,7 +1731,7 @@ document.addEventListener(
 					},
 				)
 			},
-			redirectEvents: (fromSelector, toSelector) => {
+			redirectEvents: (fromSelector: string, toSelector: string) => {
 				const from = document.querySelector(fromSelector)
 				const to = document.querySelector(toSelector)
 
@@ -1828,7 +1835,9 @@ document.addEventListener(
 						event.type,
 						new Proxy(event, {
 							get(target, prop) {
-								return prop === "bubbles" ? false : target[prop]
+								return prop === "bubbles"
+									? false
+									: (target as unknown as Record<string | symbol, any>)[prop]
 							},
 						}),
 					)
@@ -1838,13 +1847,16 @@ document.addEventListener(
 						bubbles: { value: event.bubbles },
 					})
 
+					const clonedAsRecord = clone as unknown as Record<string, any>
+					const eventAsRecord = event as unknown as Record<string, any>
+
 					for (const method of methods) {
-						if (typeof clone[method] === "function") {
-							clone[method] = new Proxy(clone[method], {
+						if (typeof clonedAsRecord[method] === "function") {
+							clonedAsRecord[method] = new Proxy(clonedAsRecord[method], {
 								apply(target: any, thisArg: any, args: any[]) {
 									if (thisArg === clone) {
 										target.apply(thisArg, args)
-										return event[method].apply(event, args)
+										return eventAsRecord[method].apply(event, args)
 									}
 
 									return target.apply(thisArg, args)
@@ -2159,7 +2171,7 @@ document.addEventListener(
 				})
 			},
 			fixFirefoxLocalStorageIssue: () => {
-				onSet(window, "CoreRobloxUtilities", (CoreRobloxUtilities) => {
+				onSet(window, "CoreRobloxUtilities", (CoreRobloxUtilities: any) => {
 					if (!CoreRobloxUtilities?.localStorageService?.saveDataByTimeStamp) {
 						return
 					}
@@ -2237,7 +2249,7 @@ document.addEventListener(
 			higherRobuxPrecision: () => {
 				let hijackTruncValue = false
 
-				onSet(window, "CoreUtilities", (CoreUtilities) => {
+				onSet(window, "CoreUtilities", (CoreUtilities: any) => {
 					hijackFunction(
 						CoreUtilities.abbreviateNumber,
 						"getTruncValue",
@@ -2287,8 +2299,8 @@ document.addEventListener(
 				const accessoryAssetTypeIds = [8, 41, 42, 43, 44, 45, 46, 47, 57, 58]
 				const layeredAssetTypeIds = [64, 65, 66, 67, 68, 69, 70, 71, 72]
 
-				onSet(window, "Roblox", (Roblox) => {
-					onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService) => {
+				onSet(window, "Roblox", (Roblox: any) => {
+					onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
 						hijackFunction(
 							AvatarAccoutrementService,
 							"getAdvancedAccessoryLimit",
@@ -2397,7 +2409,7 @@ document.addEventListener(
 				const initial: Record<string, any> = {}
 				const layers: Record<string, any> = {}
 
-				const modify = (experiment, key: string, value: any) => {
+				const modify = (experiment: string, key: string, value: any) => {
 					modified[experiment] ??= {}
 
 					if (typeof value === "string") {
@@ -2449,8 +2461,8 @@ document.addEventListener(
 					contentScript.send("populateExperiment", experiment, key, value)
 				}
 
-				onSet(window, "Roblox", (Roblox) => {
-					onSet(Roblox, "ExperimentationService", (ExperimentationService) => {
+				onSet(window, "Roblox", (Roblox: any) => {
+					onSet(Roblox, "ExperimentationService", (ExperimentationService: any) => {
 						hijackFunction(
 							ExperimentationService,
 							"getAllValuesForLayer",
@@ -2531,7 +2543,7 @@ document.addEventListener(
 						this.moduleHandlers.push(fn)
 					},
 
-					onProperty(keys, fn: (...args: any[]) => any) {
+					onProperty(keys: any, fn: (...args: any[]) => any) {
 						if (!Array.isArray(keys)) {
 							keys = [keys]
 						}
@@ -2606,8 +2618,8 @@ document.addEventListener(
 					},
 
 					init() {
-						onSet(window, "webpackChunk_N_E", (chunks) => {
-							const addChunk = (chunk) => {
+						onSet(window, "webpackChunk_N_E", (chunks: any) => {
+							const addChunk = (chunk: any) => {
 								for (const id of Object.keys(chunk)) {
 									hijackFunction(chunk, id, (target: any, thisArg: any, args: any[]) => {
 										const result = target.apply(thisArg, args)
@@ -2637,7 +2649,7 @@ document.addEventListener(
 								}
 							}
 
-							const override = (pushfn) =>
+							const override = (pushfn: (...args: any[]) => any) =>
 								new Proxy(pushfn, {
 									apply: (target: any, thisArg: any, args: any[]) => {
 										for (const chunk of args) {
@@ -3096,7 +3108,7 @@ document.addEventListener(
 				const btrPagerState = reactHook.createGlobalState(btrPager)
 				const serverParams = { sortOrder: "Desc", excludeFullGames: false }
 
-				const loadLargePage = async (placeId, largePageIndex) => {
+				const loadLargePage = async (placeId: number, largePageIndex: number) => {
 					if (largePageIndex >= cursors.length + 2) {
 						throw new Error("Tried to load page with no cursor")
 					}
@@ -3158,7 +3170,7 @@ document.addEventListener(
 					return json
 				}
 
-				const updateMaxPage = async (placeId, skipPageIndex) => {
+				const updateMaxPage = async (placeId: number, skipPageIndex: number) => {
 					const largePageIndex = Math.min(
 						Math.floor((btrPager.maxPage * pageSize - 1) / largePageSize) + 1,
 						cursors.length + (btrPager.foundMaxPage ? 1 : 0),
@@ -3187,7 +3199,7 @@ document.addEventListener(
 					})
 				}
 
-				const loadServers = async (placeId) => {
+				const loadServers = async (placeId: number) => {
 					const largePages: Record<string, any> = {}
 
 					outer: while (true) {
@@ -3250,8 +3262,8 @@ document.addEventListener(
 					}
 				}
 
-				let getGameInstancesPromise
-				const btrGetPublicGameInstances = (placeId, cursor, params) => {
+				let getGameInstancesPromise: Promise<any> | null = null
+				const btrGetPublicGameInstances = (placeId: number, cursor: string, params: any) => {
 					if (!params?.btrRefresh) {
 						const sortOrder = params?.sortOrder === "Asc" ? "Asc" : "Desc"
 						const excludeFullGames = params?.excludeFullGames ? true : false
@@ -3297,7 +3309,11 @@ document.addEventListener(
 					return getGameInstancesPromise
 				}
 
-				const btrPagerConstructor = ({ refreshGameInstances }) => {
+				const btrPagerConstructor = ({
+					refreshGameInstances,
+				}: {
+					refreshGameInstances: (...args: any[]) => any
+				}) => {
 					const btrPager = reactHook.useGlobalState(btrPagerState)
 
 					const canPrev = !btrPager.loading && btrPager.currentPage > 1
@@ -3318,7 +3334,7 @@ document.addEventListener(
 						inputRef.current.value = btrPager.currentPage
 					}, [btrPager.currentPage])
 
-					const submit = (pressedEnter) => {
+					const submit = (pressedEnter: boolean) => {
 						const num = parseInt(inputRef.current.value, 10)
 
 						if (Number.isSafeInteger(num) && (pressedEnter || btrPager.targetPage !== num)) {
@@ -3389,14 +3405,14 @@ document.addEventListener(
 										updateInputWidth()
 									},
 
-									onKeyDown(e) {
+									onKeyDown(e: any) {
 										if (e.which === 13) {
 											submit(true)
 											e.target.blur()
 										}
 									},
 
-									onBlur(e) {
+									onBlur(e: any) {
 										submit(false)
 									},
 								}),
@@ -3688,7 +3704,7 @@ document.addEventListener(
 					}
 				})
 			},
-			gamedetailsPlayGame: (placeId) => {
+			gamedetailsPlayGame: (placeId: number) => {
 				Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 			},
 			groupsModifyLayout: () => {
@@ -3746,7 +3762,7 @@ document.addEventListener(
 				})
 
 				angularHook.hijackModule("groupPayouts", {
-					groupPayouts(component) {
+					groupPayouts(component: any) {
 						component.bindings.layout = "="
 					},
 					groupPayoutsController(target: any, thisArg: any, args: any[], argsMap: any) {
@@ -3764,7 +3780,7 @@ document.addEventListener(
 
 									try {
 										result.then(
-											(recipients) =>
+											(recipients: any) =>
 												(controller.layout.btrPayoutsEnabled = recipients.length > 0),
 											() => (controller.layout.btrPayoutsEnabled = false),
 										)
@@ -3945,7 +3961,7 @@ document.addEventListener(
 								try {
 									const [$state] = args
 
-									$state.btr_setPage = ($event) => {
+									$state.btr_setPage = ($event: any) => {
 										const value = +$event.target.value
 
 										if (!Number.isNaN(value)) {
@@ -4004,7 +4020,7 @@ document.addEventListener(
 					},
 				})
 
-				reactHook.inject(">.profile-tab-content", (tabContent) => {
+				reactHook.inject(">.profile-tab-content", (tabContent: any) => {
 					for (const child of tabContent[0].props.children) {
 						switch (child.key) {
 							case "About":
@@ -4042,10 +4058,10 @@ document.addEventListener(
 				Roblox?.BootstrapWidgets?.SetupPopover(null, null, selector)
 			},
 			linkify: (target: any) => $(target).linkify(),
-			profilePlayGame: (placeId) => {
+			profilePlayGame: (placeId: number) => {
 				Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 			},
-			profileEditPlace: (gameId, placeId) => {
+			profileEditPlace: (gameId: number, placeId: number) => {
 				Roblox.GameLauncher.editGameInStudio(placeId, gameId)
 			},
 			"adblock.js": () => {
@@ -4059,7 +4075,7 @@ document.addEventListener(
 					}
 				})
 			},
-			fastsearchFollowPlayer: (userId) => {
+			fastsearchFollowPlayer: (userId: number) => {
 				Roblox.GameLauncher.followPlayerIntoGame(userId)
 			},
 			fastsearch: () => {
