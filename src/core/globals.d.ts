@@ -188,8 +188,25 @@ declare global {
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 	}
 
+	/**
+	 * What a $on handler receives. The delegated form redefines currentTarget to
+	 * the element the selector matched, so unlike the DOM it is always an
+	 * element rather than EventTarget | null.
+	 */
+	type BtrEvent<E extends Event = Event> = E & { readonly currentTarget: HTMLElement }
+
 	interface EventTarget {
-		$on(eventType: string, selector?: any, callback?: any, options?: any): this
+		$on<E extends Event = Event>(
+			eventType: string,
+			callback: (ev: BtrEvent<E>) => void,
+			options?: AddEventListenerOptions,
+		): this
+		$on<E extends Event = Event>(
+			eventType: string,
+			selector: string,
+			callback: (ev: BtrEvent<E>) => void,
+			options?: AddEventListenerOptions,
+		): this
 		$off(eventType: string, selector?: any, callback?: any, options?: any): this
 	}
 

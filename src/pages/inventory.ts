@@ -174,9 +174,9 @@ pageInit.inventory = () => {
 			.$on("change", ".btr-it-box", (e) => {
 				updateButtons()
 			})
-			.$on("click", ".btr-it-checkbox", (e) => {
-				const checkbox = e.currentTarget.$find(".btr-it-box")
-				const id = +checkbox.dataset.index
+			.$on<MouseEvent>("click", ".btr-it-checkbox", (e) => {
+				const checkbox = e.currentTarget.$req<HTMLInputElement>(".btr-it-box")
+				const id = +checkbox.dataset.index!
 
 				if (e.shiftKey && lastPressed != null && id !== lastPressed) {
 					const from = Math.min(id, lastPressed)

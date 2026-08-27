@@ -58,7 +58,7 @@ pageInit.profile = () => {
 
 		hijackXHR((request) => {
 			if (request.url === "https://apis.roblox.com/profile-platform-api/v1/profiles/get") {
-				request.onResponse.push((json) => {
+				request.onResponse.push((json: any) => {
 					contentScript.send("profileData", json)
 				})
 			}
@@ -67,7 +67,7 @@ pageInit.profile = () => {
 
 	const profileDataPromises: Record<string, any> = {}
 
-	injectScript.listen("profileData", (json) => {
+	injectScript.listen("profileData", (json: any) => {
 		const promise = (profileDataPromises[json.profileId] ??= deferredPromise<unknown>())
 		promise.$resolve(json)
 	})
@@ -326,7 +326,7 @@ pageInit.profile = () => {
 
 			const gamesPromise = RobloxApi.games.getUserGames(userId, 50)
 
-			profileDataPromise.then((json) => {
+			profileDataPromise.then((json: any) => {
 				if (!document.contains(profileContainer)) {
 					return
 				}
@@ -420,7 +420,7 @@ pageInit.profile = () => {
 				let hasMorePages = true
 				let nextPageCursor
 
-				const openPage = async (page) => {
+				const openPage = async (page: number) => {
 					const pageStart = (page - 1) * pageSize
 					const badges = playerBadges.slice(pageStart, pageStart + pageSize)
 
@@ -479,7 +479,7 @@ pageInit.profile = () => {
 							thumb.gettingThumb = true
 						}
 
-						RobloxApi.thumbnails.getBadgeIcons(needsThumbs.map((x) => x.id)).then((json) => {
+						RobloxApi.thumbnails.getBadgeIcons(needsThumbs.map((x) => x.id)).then((json: any) => {
 							for (const thumb of json.data) {
 								const badge = badges.find((x) => x.id === thumb.targetId)
 								badge.thumb = thumb
@@ -501,7 +501,7 @@ pageInit.profile = () => {
 					}
 				}
 
-				const loadPage = async (page) => {
+				const loadPage = async (page: number) => {
 					if (isLoading) {
 						return
 					}
@@ -545,7 +545,7 @@ pageInit.profile = () => {
 				const pager = createPager(false, true)
 				list.after(pager)
 
-				function loadPage(page) {
+				function loadPage(page: number) {
 					pager.setPage(page)
 
 					for (const [index, obj] of Array.from(list.children).entries()) {
@@ -669,7 +669,7 @@ pageInit.profile = () => {
 
 				const favoriteData: Record<string, any> = {}
 
-				const loadPage = async (category, page) => {
+				const loadPage = async (category: number, page: number) => {
 					if (isLoading) {
 						return
 					}
@@ -713,7 +713,7 @@ pageInit.profile = () => {
 							json = await RobloxApi.games
 								.getFavorites(userId, 100, data.nextPageCursor)
 								.then((json) => {
-									json.data = json.data.map((x) => ({
+									json.data = json.data.map((x: any) => ({
 										url: `/games/${x.rootPlace?.id}/`,
 										id: x.rootPlace?.id,
 										gameId: x.id,
@@ -733,7 +733,7 @@ pageInit.profile = () => {
 							json = await RobloxApi.toolboxService
 								.getFavorites(userId, category, 100, data.nextPageCursor)
 								.then((json) => {
-									json.data = json.data.map((x) => ({
+									json.data = json.data.map((x: any) => ({
 										url: `https://create.roblox.com/store/asset/${x.asset.id}/`,
 										id: x.asset.id,
 										assetTypeId: x.asset.assetTypeId,
@@ -752,7 +752,7 @@ pageInit.profile = () => {
 							json = await RobloxApi.catalog
 								.getFavorites(userId, category, 100, data.nextPageCursor)
 								.then((json) => {
-									json.data = json.data.map((x) => ({
+									json.data = json.data.map((x: any) => ({
 										url: `/catalog/${x.id}/`,
 										id: x.id,
 										assetTypeId: x.assetType,
@@ -897,7 +897,7 @@ pageInit.profile = () => {
 
 				const items: any[] = []
 
-				const transition = (item, open, instant = false) => {
+				const transition = (item: any, open, instant = false) => {
 					const content = item.$req(".btr-game-content")
 					const height = content.scrollHeight
 
@@ -925,7 +925,7 @@ pageInit.profile = () => {
 					}
 				}
 
-				const select = (item, instant = false) => {
+				const select = (item: any, instant = false) => {
 					const prev = content.$find(".selected")
 					if (prev === item) {
 						return
@@ -945,7 +945,7 @@ pageInit.profile = () => {
 
 				content.after(pager)
 
-				function loadPage(page) {
+				function loadPage(page: number) {
 					pager.setPage(page)
 
 					for (const [index, obj] of Array.from(items as any).entries()) {
@@ -1051,13 +1051,13 @@ pageInit.profile = () => {
 					content.$find(">.spinner")?.remove()
 					item.classList.add("visible")
 
-					RobloxApi.thumbnails.getGameThumbnails.batch(universeId, "768x432").then((json) => {
-						const thumb = json.data.find((x) => x.universeId === universeId)
+					RobloxApi.thumbnails.getGameThumbnails.batch(universeId, "768x432").then((json: any) => {
+						const thumb = json.data.find((x: any) => x.universeId === universeId)
 						item.$req<HTMLImageElement>(".btr-game-thumb").src = thumb.thumbnails?.[0]?.imageUrl
 					})
 
 					RobloxApi.games.getGameDetails.batch(universeId).then(async (_gameDetails) => {
-						const gameDetails = _gameDetails.data.find((x) => x.id === universeId)
+						const gameDetails = _gameDetails.data.find((x: any) => x.id === universeId)
 						const placeId = gameDetails.rootPlaceId
 
 						item.$req<HTMLAnchorElement>(".btr-game-thumb-container").href =
@@ -1119,15 +1119,15 @@ pageInit.profile = () => {
 						item.$req(".slide-item-members-count").textContent = formatNumber(gameDetails.playing)
 						item.$req(".slide-item-visits").textContent = formatNumber(gameDetails.visits)
 
-						RobloxApi.thumbnails.getPlaceIcons.batch(placeId, "150x150").then((json) => {
-							const thumb = json.data.find((x) => x.targetId === placeId)
+						RobloxApi.thumbnails.getPlaceIcons.batch(placeId, "150x150").then((json: any) => {
+							const thumb = json.data.find((x: any) => x.targetId === placeId)
 							item.$req<HTMLImageElement>(".btr-game-icon").src = thumb.imageUrl
 						})
 
 						//
 
 						const _placeDetails = await RobloxApi.games.getPlaceDetails.batch(placeId)
-						const placeDetails = _placeDetails.find((x) => x.placeId === placeId)
+						const placeDetails = _placeDetails.find((x: any) => x.placeId === placeId)
 
 						const desc = item.$req(".btr-game-desc-content")
 						desc.textContent = placeDetails.description
@@ -1190,10 +1190,10 @@ pageInit.profile = () => {
 				document.body.$on("click", ".btr-game-playbutton", (ev) => {
 					injectScript.call(
 						"profilePlayGame",
-						(placeId) => {
+						(placeId: number) => {
 							Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 						},
-						+ev.currentTarget.dataset.placeid,
+						+ev.currentTarget.dataset.placeid!,
 					)
 					ev.preventDefault()
 				})
@@ -1201,17 +1201,17 @@ pageInit.profile = () => {
 				document.body.$on("click", ".btr-btn-edit-place", (ev) => {
 					injectScript.call(
 						"profileEditPlace",
-						(gameId, placeId) => {
+						(gameId, placeId: number) => {
 							Roblox.GameLauncher.editGameInStudio(placeId, gameId)
 						},
-						+ev.currentTarget.dataset.gameid,
-						+ev.currentTarget.dataset.placeid,
+						+ev.currentTarget.dataset.gameid!,
+						+ev.currentTarget.dataset.placeid!,
 					)
 					ev.preventDefault()
 				})
 
 				document.body.$on("click", ".btr-btn-toggle-profile", (ev) => {
-					const placeId = +ev.currentTarget.dataset.placeid
+					const placeId = +ev.currentTarget.dataset.placeid!
 					RobloxApi.inventory.toggleInCollection("asset", placeId, false)
 					ev.preventDefault()
 				})

@@ -336,8 +336,8 @@ pageInit.create_dashboard = () => {
 		document.$on("click", ".btr-download-version", (ev) => {
 			const button = ev.currentTarget
 
-			const assetId = parseInt(button.getAttribute("btrAssetId"), 10)
-			const assetVersionNumber = parseInt(button.getAttribute("btrVersion"), 10)
+			const assetId = parseInt(button.getAttribute("btrAssetId") ?? "", 10)
+			const assetVersionNumber = parseInt(button.getAttribute("btrVersion") ?? "", 10)
 
 			if (!Number.isSafeInteger(assetId) || !Number.isSafeInteger(assetVersionNumber)) {
 				return
@@ -348,8 +348,8 @@ pageInit.create_dashboard = () => {
 			}
 			isDownloading = true
 
-			button.$find(".btr-mui-circular-progress-root").style.display = ""
-			button.$find(".btr-download-icon").style.opacity = "0"
+			button.$req(".btr-mui-circular-progress-root").style.display = ""
+			button.$req(".btr-download-icon").style.opacity = "0"
 
 			const placeNameRaw = document.title.match(/^(.*) \/ Version History$/)?.[1] ?? "place"
 			const placeName = placeNameRaw.replace(/\W+/g, "-").replace(/^-+|-+$/g, "")
@@ -363,8 +363,8 @@ pageInit.create_dashboard = () => {
 				URL.revokeObjectURL(blobUrl)
 
 				isDownloading = false
-				button.$find(".btr-mui-circular-progress-root").style.display = "none"
-				button.$find(".btr-download-icon").style.opacity = ""
+				button.$req(".btr-mui-circular-progress-root").style.display = "none"
+				button.$req(".btr-download-icon").style.opacity = ""
 			})
 		})
 	}

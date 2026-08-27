@@ -317,7 +317,7 @@ export function createPager(noSelect?: boolean, hideWhenEmpty?: boolean): Pager 
 			Object.defineProperty(cur, "value", descriptor)
 		}
 
-		cur.$on("keydown", (e) => e.keyCode === 13 && cur.blur())
+		cur.$on<KeyboardEvent>("keydown", (e) => e.keyCode === 13 && cur.blur())
 		cur.$on("blur", () => {
 			let page = parseInt(cur.value, 10)
 
@@ -1289,7 +1289,7 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 		document.body.$on("mousedown", (ev) => {
 			if (
 				popover.classList.contains("visible") &&
-				!btnCont.contains(ev.target) &&
+				!btnCont.contains(ev.target as Node) &&
 				!explorer.getRootElement().contains(ev.target)
 			) {
 				popover.classList.remove("visible")

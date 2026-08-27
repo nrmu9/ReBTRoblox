@@ -1224,7 +1224,7 @@ export const HoverPreview = (() => {
 		const rotBtn = html`<span class="btr-hover-preview-camera-rotate"></span>`
 		preview.container.append(rotBtn)
 
-		rotBtn.$on("mousedown", (ev) => {
+		rotBtn.$on<MouseEvent>("mousedown", (ev) => {
 			if (ev.button !== 0) {
 				return
 			}
@@ -1317,7 +1317,7 @@ export const HoverPreview = (() => {
 				}
 
 				const img = thumbCont.$find("img")
-				if (img && invalidThumbnails.includes(img.src)) {
+				if (img && invalidThumbnails.includes((img as HTMLImageElement).src)) {
 					return
 				}
 
