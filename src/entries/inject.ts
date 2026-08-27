@@ -2267,14 +2267,20 @@ const startInject = () => {
 				)
 			},
 			higherRobuxPrecision: () => {
-				let hijackTruncValue = false
-
 				onSet(window, "CoreUtilities", (CoreUtilities: any) => {
 					hijackFunction(
 						CoreUtilities.abbreviateNumber,
 						"getTruncValue",
 						(target: any, thisArg: any, args: any[]) => {
-							if (hijackTruncValue && args.length === 1) {
+							// The navbar robux badge is the only caller that passes a lone
+							// value; the friend and message counters pass their own
+							// threshold. That alone identifies it, so this no longer waits
+							// on a react constructor hijack to set a flag, which is what
+							// stopped the feature working when the props moved.
+							//
+							// Read the setting per call: the hook installs before init has
+							// delivered settings, so it cannot be gated at registration.
+							if (args.length === 1 && settings.general.higherRobuxPrecision) {
 								try {
 									return target.apply(thisArg, [args[0], 100_000, null, 2])
 								} catch (ex) {
@@ -2286,16 +2292,6 @@ const startInject = () => {
 						},
 					)
 				})
-
-				reactHook.hijackConstructor(
-					(props: any) => "robuxAmount" in props && !("isEligibleForVng" in props),
-					(target: any, thisArg: any, args: any[]) => {
-						hijackTruncValue = true
-						const result = target.apply(thisArg, args)
-						hijackTruncValue = false
-						return result
-					},
-				)
 			},
 			hideFriendActivity: () => {
 				hijackXHR((request: any) => {
