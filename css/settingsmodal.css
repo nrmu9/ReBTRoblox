@@ -1,32 +1,63 @@
-/* Roblox publishes its design tokens on :root and swaps them with the site
-   theme, so the modal borrows them directly and only carries fallbacks for
-   surfaces that predate them, like create.roblox.com. That is what keeps this
-   looking like the rest of the site instead of approximating it. */
+/* Roblox's design system, read off its own foundation-web components: a 4px
+   spacing scale, radii of 4/8/16, buttons at 40px with 8px corners and 14px
+   600 text, and the surface/content/stroke tokens it publishes on :root and
+   swaps with the site theme. Fallbacks cover surfaces that predate the tokens,
+   such as create.roblox.com. */
 .btr-settings-modal {
-	--btr-modal-surface: var(--color-surface-100, #ffffff);
-	--btr-modal-raised: var(--color-surface-200, #f2f4f5);
-	--btr-modal-sunken: var(--color-surface-300, #e8ebed);
-	--btr-modal-text: var(--color-content-default, #393b3d);
-	--btr-modal-text-strong: var(--color-content-emphasis, #191919);
-	--btr-modal-text-muted: var(--color-content-muted, #6b6f76);
-	--btr-modal-stroke: var(--color-stroke-default, rgba(25, 25, 25, 0.12));
-	--btr-modal-hover: var(--color-state-hover, rgba(25, 25, 25, 0.06));
-	--btr-modal-accent: var(--color-content-link, #00a2ff);
-	--btr-modal-radius: var(--radius-medium, 8px);
-	--btr-modal-radius-sm: var(--radius-small, 4px);
-	--btr-modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+	--btr-surface: var(--color-surface-100, #ffffff);
+	--btr-surface-raised: var(--color-surface-200, #f3f4f6);
+	--btr-surface-sunken: var(--color-surface-300, #e9ebee);
+	--btr-content: var(--color-content-default, #3b3f47);
+	--btr-content-emphasis: var(--color-content-emphasis, #191b1f);
+	--btr-content-muted: var(--color-content-muted, #6f737d);
+	--btr-stroke: var(--color-stroke-default, rgba(25, 26, 31, 0.12));
+	--btr-stroke-emphasis: var(--color-stroke-emphasis, rgba(25, 26, 31, 0.16));
+	--btr-state-hover: var(--color-state-hover, rgba(25, 26, 31, 0.08));
+	--btr-state-press: var(--color-state-press, rgba(25, 26, 31, 0.12));
+	--btr-accent: #335fff;
+	--btr-link: var(--color-content-link, #335fff);
+
+	--btr-radius-sm: var(--radius-small, 4px);
+	--btr-radius: var(--radius-medium, 8px);
+	--btr-radius-lg: var(--radius-large, 16px);
+
+	--btr-space-xs: 4px;
+	--btr-space-sm: 8px;
+	--btr-space-md: 12px;
+	--btr-space-lg: 16px;
+
+	--btr-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .btr-settings-modal.btr-dark-theme {
-	--btr-modal-surface: var(--color-surface-100, #232527);
-	--btr-modal-raised: var(--color-surface-200, #2b2d31);
-	--btr-modal-sunken: var(--color-surface-300, #34373c);
-	--btr-modal-text: var(--color-content-default, #e4e4e4);
-	--btr-modal-text-strong: var(--color-content-emphasis, #ffffff);
-	--btr-modal-text-muted: var(--color-content-muted, #a8adb8);
-	--btr-modal-stroke: var(--color-stroke-default, rgba(208, 217, 251, 0.12));
-	--btr-modal-hover: var(--color-state-hover, rgba(208, 217, 251, 0.08));
-	--btr-modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+	--btr-surface: var(--color-surface-100, #191a1f);
+	--btr-surface-raised: var(--color-surface-200, #202227);
+	--btr-surface-sunken: var(--color-surface-300, #272930);
+	--btr-content: var(--color-content-default, #d5d7dd);
+	--btr-content-emphasis: var(--color-content-emphasis, #f7f7f8);
+	--btr-content-muted: var(--color-content-muted, #bcbec8);
+	--btr-stroke: var(--color-stroke-default, rgba(208, 217, 251, 0.12));
+	--btr-stroke-emphasis: var(--color-stroke-emphasis, rgba(208, 217, 251, 0.16));
+	--btr-state-hover: var(--color-state-hover, rgba(208, 217, 251, 0.08));
+	--btr-state-press: var(--color-state-press, rgba(208, 217, 251, 0.12));
+
+	--btr-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* the earlier names stay pointed at these so nothing downstream breaks */
+.btr-settings-modal {
+	--btr-modal-surface: var(--btr-surface);
+	--btr-modal-raised: var(--btr-surface-raised);
+	--btr-modal-sunken: var(--btr-surface-sunken);
+	--btr-modal-text: var(--btr-content);
+	--btr-modal-text-strong: var(--btr-content-emphasis);
+	--btr-modal-text-muted: var(--btr-content-muted);
+	--btr-modal-stroke: var(--btr-stroke);
+	--btr-modal-hover: var(--btr-state-hover);
+	--btr-modal-accent: var(--btr-accent);
+	--btr-modal-radius: var(--btr-radius);
+	--btr-modal-radius-sm: var(--btr-radius-sm);
+	--btr-modal-shadow: var(--btr-shadow);
 }
 
 .btr-settings-modal {
@@ -814,47 +845,153 @@
 	}
 }
 
-/* Elements, restyled to sit closer to Roblox's own controls. */
+/* Components, on Roblox's scale. */
+
+.btr-settings {
+	border-radius: var(--btr-radius-lg);
+}
+
+.btr-settings-header {
+	height: 56px;
+	padding: 0 var(--btr-space-sm) 0 var(--btr-space-lg);
+	background: var(--btr-surface);
+	border-bottom: 1px solid var(--btr-stroke);
+}
+
+.btr-settings-header-title {
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.4;
+	color: var(--btr-content-emphasis);
+}
+
+.btr-settings-header-close {
+	width: 40px;
+	height: 40px;
+	border-radius: var(--btr-radius);
+	color: var(--btr-content-emphasis);
+	transition: background-color 120ms ease;
+}
+
 .btr-settings-header-close:hover {
-	background: var(--btr-modal-hover);
+	background: var(--btr-state-hover);
+}
+
+.btr-settings-header-close:active {
+	background: var(--btr-state-press);
+}
+
+.btr-settings-content {
+	padding: var(--btr-space-lg);
+	background: var(--btr-surface);
+}
+
+.btr-settings-content group {
+	padding: 0 var(--btr-space-lg) var(--btr-space-lg);
+	background: var(--btr-surface-raised);
+	border: 1px solid var(--btr-stroke);
+	border-radius: var(--btr-radius);
+	margin-bottom: var(--btr-space-md);
+}
+
+.btr-settings-content group .btr-setting-group-title-container h4 {
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.4;
+	color: var(--btr-content-emphasis);
+	margin: 0 0 var(--btr-space-sm);
+}
+
+.btr-settings-content checkbox label {
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--btr-content);
 }
 
 .btr-settings-content checkbox input + label:before {
-	border-radius: var(--btr-modal-radius-sm);
+	border-radius: var(--btr-radius-sm);
+	border: 1px solid var(--btr-stroke-emphasis);
 	transition:
 		background-color 120ms ease,
 		border-color 120ms ease;
 }
 
+.btr-settings-content checkbox input:checked + label:before {
+	background-color: var(--btr-accent);
+	border-color: var(--btr-accent);
+}
+
 .btr-settings-content select {
-	border-radius: var(--btr-modal-radius-sm);
-	background-color: var(--btr-modal-surface);
-	color: var(--btr-modal-text);
-	border: 1px solid var(--btr-modal-stroke);
-	padding: 3px 6px;
+	height: 32px;
+	border-radius: var(--btr-radius);
+	background-color: var(--btr-surface);
+	color: var(--btr-content);
+	border: 1px solid var(--btr-stroke-emphasis);
+	padding: 0 var(--btr-space-sm);
+	font-size: 14px;
 	transition: border-color 120ms ease;
 }
 
 .btr-settings-content select:hover {
-	border-color: var(--btr-modal-accent);
+	border-color: var(--btr-stroke-contrast, var(--btr-content-muted));
+}
+
+/* Roblox's buttons: 40 tall, 8 corners, 14px semibold. */
+.btr-settings-content .btn-control-xs,
+.btr-settings-content .btn-control-sm {
+	height: 40px;
+	padding: 0 var(--btr-space-md);
+	border-radius: var(--btr-radius);
+	border: none;
+	background: var(--btr-state-press);
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1;
+	cursor: pointer;
+	transition: background-color 120ms ease;
+}
+
+.btr-settings-content .btn-control-xs:hover,
+.btr-settings-content .btn-control-sm:hover {
+	background: var(--btr-state-hover);
+}
+
+.btr-settings-footer {
+	height: 56px;
+	padding: 0 var(--btr-space-md) 0 var(--btr-space-lg);
+	gap: var(--btr-space-sm);
+	background: var(--btr-surface);
+	border-top: 1px solid var(--btr-stroke);
+	color: var(--btr-content-muted);
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.4;
 }
 
 /* Shown only once a change lands that the page cannot pick up live. */
 .btr-settings-reload {
 	margin-left: auto;
+	height: 40px;
+	padding: 0 var(--btr-space-md);
 	border: none;
-	border-radius: var(--btr-modal-radius-sm);
-	background: var(--btr-modal-accent);
+	border-radius: var(--btr-radius);
+	background: var(--btr-accent);
 	color: #fff;
-	font: inherit;
+	font-family: inherit;
+	font-size: 14px;
 	font-weight: 600;
-	padding: 5px 12px;
 	cursor: pointer;
 	opacity: 0;
 	transform: translateY(3px);
 	transition:
 		opacity 140ms ease,
-		transform 140ms ease;
+		transform 140ms ease,
+		filter 120ms ease;
+}
+
+.btr-settings-reload:hover {
+	filter: brightness(1.1);
 }
 
 .btr-settings-reload.visible {
