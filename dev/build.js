@@ -75,9 +75,14 @@ const TARGETS = {
 			// Chrome blocks ads through declarativeNetRequest rather than webRequest.
 			manifest.permissions = ["declarativeNetRequestWithHostAccess", ...shared.permissions]
 			manifest.host_permissions = shared.host_permissions
+			// The content script reaches main.js through a dynamic import, and
+			// chrome only resolves those for web accessible resources: without
+			// this the import fails as chrome-extension://invalid. Firefox needs
+			// no such entry, and its MV2 list cannot be scoped to a site, so the
+			// scripts are exposed here only, and only to roblox.
 			manifest.web_accessible_resources = [
 				{
-					resources: shared.web_accessible_resources,
+					resources: [...shared.web_accessible_resources, "/js/main.js", "/js/chunk-*.js"],
 					matches: ["*://*.roblox.com/*"],
 				},
 			]
