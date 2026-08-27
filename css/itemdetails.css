@@ -13,28 +13,29 @@
 	--btr-buttons-right-padding: 8px;
 }
 
-.btr-buttons { /* new item details */
+.btr-buttons {
+	/* new item details */
 	display: flex;
 	flex-direction: row;
 	padding-top: var(--btr-buttons-top-padding, 5px);
 	padding-right: var(--btr-buttons-right-padding, 0px);
-	
+
 	& > div {
 		margin-left: 12px;
-		
+
 		a {
 			display: inline-block;
 		}
 	}
-	
+
 	.btr-content-button {
 		order: 1;
 	}
-	
+
 	.btr-download-button {
 		order: 2;
 	}
-	
+
 	.btr-explorer-button-container {
 		order: 3;
 	}
@@ -104,7 +105,7 @@
 }
 
 .dark-theme .btr-preview-container {
-	background: rgba(39,41,48,.5);
+	background: rgba(39, 41, 48, 0.5);
 }
 
 /* */
@@ -118,9 +119,9 @@
 	vertical-align: bottom;
 	padding-right: 10px;
 	padding-bottom: 56px;
-	
+
 	row-gap: 8px;
-	
+
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -150,7 +151,7 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 
 	justify-content: center;
 	align-items: center;
-	
+
 	background-color: var(--btr-btn-color) !important;
 
 	z-index: 5;
@@ -174,9 +175,15 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	transform: translateZ(0); /* Fixes a weird rendery bug until it updates again */
 }
 
-.btr-icon-hat { background-position: 0 0; }
-.btr-icon-body { background-position: 0 -28px; }
-.btr-icon-preview { background-position: 0 -56px; }
+.btr-icon-hat {
+	background-position: 0 0;
+}
+.btr-icon-body {
+	background-position: 0 -28px;
+}
+.btr-icon-preview {
+	background-position: 0 -56px;
+}
 
 .btr-thumb-btn.checked span {
 	background-position-x: -28px;
@@ -201,14 +208,14 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	bottom: 0;
 
 	padding: 8px 16px;
-	
+
 	--popup-bg: #fafafa;
-	
+
 	background: var(--popup-bg);
 	/* color: rgb(96, 97, 98); */
-	
+
 	border-radius: 4px;
-	box-shadow: 0 -5px 20px rgba(25,25,25,0.15);
+	box-shadow: 0 -5px 20px rgba(25, 25, 25, 0.15);
 	opacity: 0;
 
 	font-size: 15px;
@@ -217,9 +224,11 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 
 	user-select: none;
 	-moz-user-select: none;
-	
+
 	visibility: hidden;
-	transition: .2s opacity .2s, 0s visibility .4s;
+	transition:
+		0.2s opacity 0.2s,
+		0s visibility 0.4s;
 }
 
 .dark-theme .btr-thumb-btn-container .btr-thumb-popup {
@@ -233,7 +242,9 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 .btr-body-popup:not(.disabled):focus-within {
 	visibility: visible;
 	opacity: 1;
-	transition: .2s opacity 0s, 0s visibility 0s;
+	transition:
+		0.2s opacity 0s,
+		0s visibility 0s;
 }
 
 .btr-thumb-btn-container .btr-body-popup {
@@ -265,7 +276,7 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 }
 
 .btr-thumb-btn-container .btr-body-popup .btr-body-outfits .btr-body-outfit-icon {
-	background: rgba(127, 127, 127, .2);
+	background: rgba(127, 127, 127, 0.2);
 
 	flex: 0 0 auto;
 	width: 50px;
@@ -313,41 +324,40 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	float: right;
 }
 
-
-.btr-thumb-popup.btr-body-popup input[type=range] {
+.btr-thumb-popup.btr-body-popup input[type="range"] {
 	-webkit-appearance: none;
 	height: 6px;
 	width: 100%;
 	border-radius: 3px;
 	/* cursor: pointer; */
-	
+
 	display: block;
 	height: 20px;
 }
 
-.btr-thumb-popup.btr-body-popup input[type=range][disabled] {
+.btr-thumb-popup.btr-body-popup input[type="range"][disabled] {
 	filter: grayscale(1);
 	opacity: 0.5;
 }
 
-.dark-theme .btr-thumb-popup.btr-body-popup input[type=range]::-webkit-slider-runnable-track {
+.dark-theme .btr-thumb-popup.btr-body-popup input[type="range"]::-webkit-slider-runnable-track {
 	--btr-input-bg: #111214;
 }
 
-.btr-thumb-popup.btr-body-popup input[type=range]::-webkit-slider-runnable-track {
+.btr-thumb-popup.btr-body-popup input[type="range"]::-webkit-slider-runnable-track {
 	--btr-input-bg: #e3e3e3;
 	--btr-input-progress: #00a2ff;
-	
+
 	background: linear-gradient(
 		to right,
 		var(--btr-input-progress) 0%,
 		var(--btr-input-progress) var(--btr-input-perc, 0.01%),
 		var(--btr-input-bg) var(--btr-input-perc, 0.01%),
 		var(--btr-input-bg) 100%
-	)
+	);
 }
 
-.btr-thumb-popup.btr-body-popup input[type=range]::-webkit-slider-thumb {
+.btr-thumb-popup.btr-body-popup input[type="range"]::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	width: 16px;
 	height: 16px;
@@ -356,7 +366,7 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	border-width: 1px;
 }
 
-.btr-thumb-popup.btr-body-popup input[type=range]::-moz-range-thumb {
+.btr-thumb-popup.btr-body-popup input[type="range"]::-moz-range-thumb {
 	-webkit-appearance: none;
 	width: 16px;
 	height: 16px;
@@ -365,8 +375,12 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	border-width: 1px;
 }
 
-.btr-thumb-popup.btr-body-popup input[type=range]:not(:disabled)::-webkit-slider-thumb:hover { box-shadow: none; }
-.btr-thumb-popup.btr-body-popup input[type=range]:not(:disabled)::-moz-range-thumb:hover { box-shadow: none; }
+.btr-thumb-popup.btr-body-popup input[type="range"]:not(:disabled)::-webkit-slider-thumb:hover {
+	box-shadow: none;
+}
+.btr-thumb-popup.btr-body-popup input[type="range"]:not(:disabled)::-moz-range-thumb:hover {
+	box-shadow: none;
+}
 
 /* fix default bundle animation button positioning */
 
@@ -381,11 +395,11 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 
 .btr-animation-name {
 	margin: 0 12px 12px;
-    line-height: 1em;
-    float: left;
-    position: absolute;
-    bottom: 50px;
-    font-size: 18px;
+	line-height: 1em;
+	float: left;
+	position: absolute;
+	bottom: 50px;
+	font-size: 18px;
 	user-select: none;
 }
 
@@ -410,9 +424,9 @@ body .btr-bundle-animations .btr-bundle-btn,
 body .btr-bundle-animations .btr-bundle-btn-alt {
 	display: inline-flex;
 	width: 38px;
-    height: 38px;
-    margin: 0 0 0 12px;
-	transition: .05s linear .05s;
+	height: 38px;
+	margin: 0 0 0 12px;
+	transition: 0.05s linear 0.05s;
 
 	background-color: var(--btr-btn-color) !important;
 
@@ -429,12 +443,12 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 
 .btr-bundle-animations .btr-bundle-btn > div[class^="btr-anim-icon-"] {
 	background-image: url(https://www.roblox.com/images/Shared/icon_animation.svg);
-    background-repeat: no-repeat;
-    background-size: 200% auto;
-    display: inline-block;
-    height: 28px;
-    width: 28px;
-    vertical-align: middle;
+	background-repeat: no-repeat;
+	background-size: 200% auto;
+	display: inline-block;
+	height: 28px;
+	width: 28px;
+	vertical-align: middle;
 }
 
 .btr-bundle-animations .btr-bundle-btn[disabled] > div[class^="btr-anim-icon-"] {
@@ -442,20 +456,34 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 }
 
 .dark-theme .btr-bundle-animations .btr-bundle-btn > div[class^="btr-anim-icon-"] {
-	background-image: url(https://www.roblox.com/images/Shared/animation_dark_09282018.svg)
+	background-image: url(https://www.roblox.com/images/Shared/animation_dark_09282018.svg);
 }
 
 .btr-bundle-animations .btr-bundle-btn.selected:not([disabled]) > div[class^="btr-anim-icon-"] {
 	background-position-x: -28px;
 }
 
-.btr-bundle-animations .btr-anim-icon-run { background-position: 0 0 }
-.btr-bundle-animations .btr-anim-icon-walk { background-position: 0 -28px }
-.btr-bundle-animations .btr-anim-icon-fall { background-position: 0 -56px }
-.btr-bundle-animations .btr-anim-icon-jump { background-position: 0 -84px }
-.btr-bundle-animations .btr-anim-icon-swim { background-position: 0 -112px }
-.btr-bundle-animations .btr-anim-icon-climb { background-position: 0 -140px }
-.btr-bundle-animations .btr-anim-icon-idle { background-position: 0 -168px }
+.btr-bundle-animations .btr-anim-icon-run {
+	background-position: 0 0;
+}
+.btr-bundle-animations .btr-anim-icon-walk {
+	background-position: 0 -28px;
+}
+.btr-bundle-animations .btr-anim-icon-fall {
+	background-position: 0 -56px;
+}
+.btr-bundle-animations .btr-anim-icon-jump {
+	background-position: 0 -84px;
+}
+.btr-bundle-animations .btr-anim-icon-swim {
+	background-position: 0 -112px;
+}
+.btr-bundle-animations .btr-anim-icon-climb {
+	background-position: 0 -140px;
+}
+.btr-bundle-animations .btr-anim-icon-idle {
+	background-position: 0 -168px;
+}
 
 .btr-bundle-animations .btr-bundle-btn:has(.btr-bundle-alt-container) {
 	border-top: 1px solid #555 !important;
@@ -468,27 +496,28 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 .btr-bundle-animations .btr-bundle-btn-alt:defined {
 	position: relative;
 	height: 22px;
-	
+
 	padding: 0;
 	padding-bottom: 5px;
-	
+
 	margin: 0;
 	margin-top: -5px;
 	margin-bottom: -13px;
-	
+
 	background-color: var(--btr-btn-color) !important;
 
 	border: 1px solid #555;
 	border-radius: 8px;
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
-	
+
 	align-items: center;
 	font-size: 11px;
-	
-	transition: .05s all linear 0s;
-	
-	&:hover, &.selected {
+
+	transition: 0.05s all linear 0s;
+
+	&:hover,
+	&.selected {
 		background-color: light-dark(
 			lch(from var(--btr-btn-color) calc(l - 10) c h),
 			lch(from var(--btr-btn-color) calc(l + 10) c h)
@@ -512,7 +541,7 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 
 .btr-bundle-animations .btr-bundle-btn-alt.selected {
 	font-weight: 900;
-	color: light-dark(#333, #FFF);
+	color: light-dark(#333, #fff);
 }
 
 /* */
@@ -537,13 +566,24 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 	outline: 1px solid gray;
 }
 
-.btr-bg-btn[data-color="white"], #AssetThumbnail[data-btr-bg="white"] .thumbnail-span { background: white; }
-.btr-bg-btn[data-color="black"], #AssetThumbnail[data-btr-bg="black"] .thumbnail-span { background: black; }
-.btr-bg-btn[data-color="none"], #AssetThumbnail[data-btr-bg="none"] .thumbnail-span {
+.btr-bg-btn[data-color="white"],
+#AssetThumbnail[data-btr-bg="white"] .thumbnail-span {
+	background: white;
+}
+.btr-bg-btn[data-color="black"],
+#AssetThumbnail[data-btr-bg="black"] .thumbnail-span {
+	background: black;
+}
+.btr-bg-btn[data-color="none"],
+#AssetThumbnail[data-btr-bg="none"] .thumbnail-span {
 	background-color: white;
-	background-image: linear-gradient(45deg, #e6e6e8 25%, transparent 25%, transparent 75%, #e6e6e8 75%), linear-gradient(45deg, #e6e6e8 25%, transparent 25%, transparent 75%, #e6e6e8 75%);
+	background-image:
+		linear-gradient(45deg, #e6e6e8 25%, transparent 25%, transparent 75%, #e6e6e8 75%),
+		linear-gradient(45deg, #e6e6e8 25%, transparent 25%, transparent 75%, #e6e6e8 75%);
 	background-size: 20px 20px;
-	background-position: 0 0, 10px 10px;
+	background-position:
+		0 0,
+		10px 10px;
 }
 
 /* */
@@ -593,17 +633,17 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 	bottom: 0;
 	left: 8px;
 	right: 8px;
-	border-bottom: 1px solid #E3E3E3;
+	border-bottom: 1px solid #e3e3e3;
 }
 
 .btr-owner-item:nth-child(3n + 1):not(:last-child)::after,
-.btr-owner-item:nth-child(3n + 2):not(:last-child)::after  {
+.btr-owner-item:nth-child(3n + 2):not(:last-child)::after {
 	content: "";
 	position: absolute;
 	right: 0;
 	top: 8px;
 	bottom: 8px;
-	border-right: 1px solid #E3E3E3;
+	border-right: 1px solid #e3e3e3;
 }
 
 .btr-owner-item .list-header {

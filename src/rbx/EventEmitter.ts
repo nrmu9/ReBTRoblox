@@ -24,9 +24,11 @@ function getEventProps(item: object, init: true): EventProps
 function getEventProps(item: object, init?: boolean): EventProps | null
 function getEventProps(item: object, init?: boolean): EventProps | null {
 	const existing = EventMap.get(item)
-	if(existing) { return existing }
+	if (existing) {
+		return existing
+	}
 
-	if(init) {
+	if (init) {
 		const props: EventProps = { listeners: {} }
 		EventMap.set(item, props)
 		return props
@@ -40,7 +42,7 @@ export class EventEmitter {
 
 	on(eventName: string, fn: Listener, opt: ListenerOptions = {}): this {
 		const props = getEventProps(this, true)
-		const listeners = props.listeners[eventName] ??= []
+		const listeners = (props.listeners[eventName] ??= [])
 
 		listeners.push({ fn, opt })
 
@@ -55,10 +57,12 @@ export class EventEmitter {
 	off(eventName: string, fn: Listener): this {
 		const props = getEventProps(this)
 		const listeners = props?.listeners[eventName]
-		if(!listeners) { return this }
+		if (!listeners) {
+			return this
+		}
 
-		for(let i = listeners.length; i--;) {
-			if(listeners[i].fn === fn) {
+		for (let i = listeners.length; i--;) {
+			if (listeners[i].fn === fn) {
 				listeners[i] = listeners[listeners.length - 1]
 				listeners.pop()
 			}
@@ -70,10 +74,12 @@ export class EventEmitter {
 	trigger(eventName: string, ...args: unknown[]): void {
 		const props = getEventProps(this)
 		const listeners = props?.listeners[eventName]
-		if(!listeners) { return }
+		if (!listeners) {
+			return
+		}
 
-		for(const x of listeners.slice()) {
-			if(x.opt.once) {
+		for (const x of listeners.slice()) {
+			if (x.opt.once) {
 				listeners.splice(listeners.indexOf(x), 1)
 			}
 

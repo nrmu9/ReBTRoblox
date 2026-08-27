@@ -4,7 +4,7 @@ html {
 	--btr-header-color: #0a0a0a;
 	--btr-nav-color: #121212;
 	--btr-body-padding: -24px;
-	
+
 	background: var(--btr-theme-color) url(/res/bg_simblk.webp) left top repeat fixed !important;
 	min-height: 100%;
 }
@@ -38,7 +38,8 @@ html body {
 
 #header span[class^="icon-nav-"],
 #header #nav-robux,
-#header .icon-logo, #header .icon-logo-r {
+#header .icon-logo,
+#header .icon-logo-r {
 	filter: invert(0.5) brightness(10);
 }
 
@@ -117,8 +118,6 @@ html body {
 	z-index: -1;
 }
 
-
-
 /* #header,
 .btr-settings-header {
 	background: #0a0a0a;
@@ -131,7 +130,6 @@ html body {
 #header .rbx-navbar li .nav-menu-title:hover {
 	background-color: rgba(230, 230, 230, 0.1);
 } */
-
 
 /* Sidebar */
 /* 
@@ -147,7 +145,6 @@ html body {
 #navigation .rbx-scrollbar li a:not(:hover) span[class^="icon"] {
 	filter: invert(100%);
 } */
-
 
 /* Body */
 
@@ -176,7 +173,6 @@ html #BodyWrapper::before {
 	z-index: -1;
 } */
 
-
 /* Footer */
 
 /* html .container-footer {
@@ -190,7 +186,6 @@ html #BodyWrapper::before {
 .container-footer .footer-links li a {
 	color: rgba(255, 255, 255, .7);
 } */
-
 
 /* Feed */
 

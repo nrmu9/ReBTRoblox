@@ -49,7 +49,7 @@ installExtensions()
 // which cannot see module scope.
 window.BTRoblox = Object.assign(window.BTRoblox ?? {}, { SETTINGS, SettingsModal })
 
-if(IS_DEV_MODE) {
+if (IS_DEV_MODE) {
 	void import("@/dev/probe").then(({ startDevProbe }) => startDevProbe())
 }
 
@@ -57,103 +57,122 @@ if(IS_DEV_MODE) {
 document.documentElement.setAttribute("btr-loaded", "true")
 
 SETTINGS.load(() => {
-	injectScript.init(
-		SETTINGS.serialize(),
-		IS_DEV_MODE,
-		RobuxToCash.getSelectedOption()
-	)
-	
+	injectScript.init(SETTINGS.serialize(), IS_DEV_MODE, RobuxToCash.getSelectedOption())
+
 	//
-	
+
 	const initialized: Record<string, boolean> = {}
-	
+
 	const onPageChanged = () => {
-		if(currentPage) {
-			if(pageReset[currentPage.name]) {
-				for(const fn of pageReset[currentPage.name]) {
-					try { fn.apply(null, currentPage.matches) }
-					catch(ex) { console.error(ex) }
+		if (currentPage) {
+			if (pageReset[currentPage.name]) {
+				for (const fn of pageReset[currentPage.name]) {
+					try {
+						fn.apply(null, currentPage.matches)
+					} catch (ex) {
+						console.error(ex)
+					}
 				}
 			}
 		}
-		
+
 		setCurrentPage(getCurrentPage())
-		
-		injectScript.send("setCurrentPage", currentPage ? { name: currentPage.name, matches: currentPage.matches } : null)
+
+		injectScript.send(
+			"setCurrentPage",
+			currentPage ? { name: currentPage.name, matches: currentPage.matches } : null,
+		)
 		updatePageCSS()
-		
-		if(!initialized.common) {
+
+		if (!initialized.common) {
 			initialized.common = true
-			
-			if(location.host === "create.roblox.com") {
-				try { pageInit.create() }
-				catch(ex) { console.error(ex) }
+
+			if (location.host === "create.roblox.com") {
+				try {
+					pageInit.create()
+				} catch (ex) {
+					console.error(ex)
+				}
 			} else {
-				try { pageInit.www() }
-				catch(ex) { console.error(ex) }
-			}
-		}
-		
-		if(currentPage) {
-			if(!initialized[currentPage.name]) {
-				initialized[currentPage.name] = true
-				
-				if(pageInit[currentPage.name]) {
-					try { pageInit[currentPage.name]() }
-					catch(ex) { console.error(ex) }
+				try {
+					pageInit.www()
+				} catch (ex) {
+					console.error(ex)
 				}
 			}
-			
-			if(pageLoad[currentPage.name]) {
-				for(const fn of pageLoad[currentPage.name]) {
-					try { fn.apply(null, currentPage.matches) }
-					catch(ex) { console.error(ex) }
+		}
+
+		if (currentPage) {
+			if (!initialized[currentPage.name]) {
+				initialized[currentPage.name] = true
+
+				if (pageInit[currentPage.name]) {
+					try {
+						pageInit[currentPage.name]()
+					} catch (ex) {
+						console.error(ex)
+					}
+				}
+			}
+
+			if (pageLoad[currentPage.name]) {
+				for (const fn of pageLoad[currentPage.name]) {
+					try {
+						fn.apply(null, currentPage.matches)
+					} catch (ex) {
+						console.error(ex)
+					}
 				}
 			}
 		}
 	}
-	
+
 	injectScript.listen("onPageChanged", onPageChanged)
 	onPageChanged()
-	
-	if(location.host === "create.roblox.com") {
+
+	if (location.host === "create.roblox.com") {
 	} else {
-		document.$watch("#content", content => {
-			const marker = html`<div id=btr-detect-content style=display:none></div>`
+		document.$watch("#content", (content) => {
+			const marker = html`<div id="btr-detect-content" style="display:none"></div>`
 			content.append(marker)
-			
+
 			new MutationObserver(() => {
-				if(!marker.parentNode) {
+				if (!marker.parentNode) {
 					content.append(marker)
 					onPageChanged()
 				}
 			}).observe(content, { childList: true })
 		})
 	}
-	
+
 	//
-	
+
 	SETTINGS.onChange("general.theme", () => updatePageCSS())
 })
 
 SHARED_DATA.init()
 
-backgroundScript.send("checkPermissions", hasPermissions => {
-	if(!hasPermissions) {
+backgroundScript.send("checkPermissions", (hasPermissions) => {
+	if (!hasPermissions) {
 		const oldBanner = query("#btr-permission-banner")
-		if(oldBanner) { oldBanner.remove() }
-		
-		const alert = html`
-		<div id=btr-permission-banner style="position:fixed;width:100%;height:24px;left:0;top:40px;background:red;color:white;cursor:pointer;z-index:100000;text-align:center;user-select:none;">
-			BTRoblox needs some permissions to work properly. Click here or click the extension button to fix the issue.
+		if (oldBanner) {
+			oldBanner.remove()
+		}
+
+		const alert = html` <div
+			id="btr-permission-banner"
+			style="position:fixed;width:100%;height:24px;left:0;top:40px;background:red;color:white;cursor:pointer;z-index:100000;text-align:center;user-select:none;"
+		>
+			BTRoblox needs some permissions to work properly. Click here or click the extension button to fix
+			the issue.
 		</div>`
-		
-		document.$watch(">body").$then(body => body.append(alert))
-		
-		if(IS_CHROME) {
+
+		document.$watch(">body").$then((body) => body.append(alert))
+
+		if (IS_CHROME) {
 			alert.$on("click", () => {
-				backgroundScript.send("requestPermissions", wasGranted => {
-					if(wasGranted) {
+				backgroundScript.send("requestPermissions", (wasGranted) => {
+					if (wasGranted) {
 						location.pathname = location.pathname
 					}
 				})

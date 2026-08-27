@@ -2,64 +2,68 @@ import { AssetCache } from "@/rbx/AssetCache"
 import { RBXAvatar } from "@/rbx/Avatar/Avatar"
 
 export const RBXAvatarRigs = (() => {
-	const RecurseTree = model => {
+	const RecurseTree = (model) => {
 		const parts: Record<string, any> = {}
 
-		const recursePart = part => {
-			if(part.Name in parts) { return parts[part.Name] }
-			
+		const recursePart = (part) => {
+			if (part.Name in parts) {
+				return parts[part.Name]
+			}
+
 			const partData = <Record<string, any>>{
 				name: part.Name,
 				children: [],
 				attachments: {},
-				origSize: [...(part.size || part.Size)]
+				origSize: [...(part.size || part.Size)],
 			}
 
 			parts[part.Name] = partData
-			
-			for(const item of part.Children) {
-				if(item.ClassName === "Attachment" && !item.Name.endsWith("RigAttachment")) {
-					partData.attachments[item.Name] = RBXAvatar.CFrameToMatrix4(...<any[]>item.CFrame)
-					
-				} else if(item.ClassName === "WrapTarget") {
+
+			for (const item of part.Children) {
+				if (item.ClassName === "Attachment" && !item.Name.endsWith("RigAttachment")) {
+					partData.attachments[item.Name] = RBXAvatar.CFrameToMatrix4(...(<any[]>item.CFrame))
+				} else if (item.ClassName === "WrapTarget") {
 					partData.wrapTarget = {
 						cageMeshId: item.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...<any[]>item.CageOrigin),
-						stiffness: item.Stiffness ?? 0
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...(<any[]>item.CageOrigin)),
+						stiffness: item.Stiffness ?? 0,
 					}
-					
-				} else if(item.ClassName === "Motor6D") {
+				} else if (item.ClassName === "Motor6D") {
 					const part0Data = recursePart(item.Part0)
 					const part1Data = recursePart(item.Part1)
 
 					part1Data.JointName = item.Name
-					part1Data.C0 = RBXAvatar.CFrameToMatrix4(...<any[]>item.C0)
-					part1Data.C1 = RBXAvatar.CFrameToMatrix4(...<any[]>item.C1)
+					part1Data.C0 = RBXAvatar.CFrameToMatrix4(...(<any[]>item.C0))
+					part1Data.C1 = RBXAvatar.CFrameToMatrix4(...(<any[]>item.C1))
 
 					part0Data.children.push(part1Data)
 
-					if(item.Name === "Root" || item.Name === "Neck") {
-						part0Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(...<any[]>item.C0)
+					if (item.Name === "Root" || item.Name === "Neck") {
+						part0Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(
+							...(<any[]>item.C0),
+						)
 					} else {
-						part1Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(...<any[]>item.C1)
+						part1Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(
+							...(<any[]>item.C1),
+						)
 					}
 				}
 			}
 
-			if(part.ClassName === "MeshPart") {
+			if (part.ClassName === "MeshPart") {
 				partData.meshId = part.MeshID ?? part.MeshId
-			} else if(part.Name === "Head") {
+			} else if (part.Name === "Head") {
 				partData.meshId = RBXAvatar.LocalAssets[`res/previewer/heads/head.mesh`]
-			} else if(RBXAvatar.R6BodyPartNames.indexOf(part.Name) !== -1) {
+			} else if (RBXAvatar.R6BodyPartNames.indexOf(part.Name) !== -1) {
 				const fname = part.Name.toLowerCase().replace(/\s/g, "")
 				partData.meshId = RBXAvatar.LocalAssets[`res/previewer/meshes/${fname}.mesh`]
 			}
 
 			return partData
 		}
-		
-		for(const item of model.Children) {
-			if(item.ClassName === "Part" || item.ClassName === "MeshPart") {
+
+		for (const item of model.Children) {
+			if (item.ClassName === "Part" || item.ClassName === "MeshPart") {
 				recursePart(item)
 			}
 		}
@@ -75,21 +79,23 @@ export const RBXAvatarRigs = (() => {
 		loaded: false,
 
 		load() {
-			if(this.loadPromise) {
+			if (this.loadPromise) {
 				return this.loadPromise
 			}
 
-			return this.loadPromise = this.loadPromise || new Promise<void>(resolve => {
-				const path = RBXAvatar.LocalAssets["res/previewer/characterModels.rbxm"]
+			return (this.loadPromise =
+				this.loadPromise ||
+				new Promise<void>((resolve) => {
+					const path = RBXAvatar.LocalAssets["res/previewer/characterModels.rbxm"]
 
-				AssetCache.loadModel(true, path, model => {
-					this.R6Tree = RecurseTree(model.find(x => x.Name === "R6"))
-					this.R15Tree = RecurseTree(model.find(x => x.Name === "R15"))
+					AssetCache.loadModel(true, path, (model) => {
+						this.R6Tree = RecurseTree(model.find((x) => x.Name === "R6"))
+						this.R15Tree = RecurseTree(model.find((x) => x.Name === "R15"))
 
-					this.loaded = true
-					resolve()
-				})
-			})
-		}
+						this.loaded = true
+						resolve()
+					})
+				}))
+		},
 	}
 })()

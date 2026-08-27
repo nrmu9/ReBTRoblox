@@ -21,7 +21,6 @@ export interface ClassInfo {
 import Data from "@/rbx/ApiDump.data.json"
 
 export const ApiDump = (() => {
-
 	const categories = Data.Categories as string[]
 	const rawEnums = Data.Enums as unknown as RawEnum[]
 	const rawClasses = Data.Classes as unknown as RawClass[]
@@ -33,35 +32,40 @@ export const ApiDump = (() => {
 
 	let isPrepared = false
 
-	const groupOf = (index: number): string => index === -1 ? "HIDDEN" : categories[index]
+	const groupOf = (index: number): string => (index === -1 ? "HIDDEN" : categories[index])
 
 	const prepare = (): void => {
-		if(isPrepared) { return }
+		if (isPrepared) {
+			return
+		}
 		isPrepared = true
 
-		for(const [name, items] of rawEnums) {
+		for (const [name, items] of rawEnums) {
 			enumsByName[name] = items
 		}
 
-		for(const entry of rawClasses) {
+		for (const entry of rawClasses) {
 			let [className, superClass, members, rmd] = entry as [string, any, any, any]
 
-			if(typeof superClass !== "number") {
+			if (typeof superClass !== "number") {
 				rmd = members
 				members = superClass
 				superClass = null
 			}
 
 			const parentName = rawClasses[superClass || 0][0]
-			const parent = className === parentName ? null : classesByName[parentName] ?? null
+			const parent = className === parentName ? null : (classesByName[parentName] ?? null)
 
 			let resolved: Record<string, PropInfo> | undefined
 
-			if(members) {
+			if (members) {
 				resolved = {}
 
-				for(const [prop, value] of Object.entries(members as Record<string, RawMember>) as [string, any][]) {
-					if(typeof value === "number") {
+				for (const [prop, value] of Object.entries(members as Record<string, RawMember>) as [
+					string,
+					any,
+				][]) {
+					if (typeof value === "number") {
 						resolved[prop] = { Group: groupOf(value) }
 					} else {
 						const [cat, enumIndex] = value
@@ -70,7 +74,7 @@ export const ApiDump = (() => {
 						resolved[prop] = {
 							Group: groupOf(cat ?? 0),
 							EnumType: enumType,
-							EnumItems: enumItems
+							EnumItems: enumItems,
 						}
 					}
 				}
@@ -81,7 +85,7 @@ export const ApiDump = (() => {
 				Superclass: parent,
 				Members: resolved,
 				ExplorerOrder: typeof rmd === "number" ? rmd : Array.isArray(rmd) ? rmd[0] : undefined,
-				ExplorerIcon: Array.isArray(rmd) ? rmd[1] : undefined
+				ExplorerIcon: Array.isArray(rmd) ? rmd[1] : undefined,
 			}
 		}
 	}
@@ -91,9 +95,11 @@ export const ApiDump = (() => {
 
 		let target: ClassInfo | null = classesByName[className] ?? classesByName[ZeroClassName] ?? null
 
-		while(target) {
+		while (target) {
 			const propInfo = target.Members?.[prop]
-			if(propInfo) { return propInfo }
+			if (propInfo) {
+				return propInfo
+			}
 
 			target = target.Superclass
 		}
@@ -133,6 +139,6 @@ export const ApiDump = (() => {
 		getExplorerOrder(className: string): number {
 			prepare()
 			return classesByName[className]?.ExplorerOrder ?? 2 ** 53
-		}
+		},
 	}
 })()

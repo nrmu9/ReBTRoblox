@@ -17,7 +17,7 @@ const run = async () => {
 		bundle: true,
 		write: false,
 		format: "iife",
-		alias: { "@": path.join(ROOT, "src") }
+		alias: { "@": path.join(ROOT, "src") },
 	})
 
 	const script = built.outputFiles[0].text
@@ -27,14 +27,14 @@ const run = async () => {
 
 		res.writeHead(200, {
 			"content-type": js ? "text/javascript" : "text/html",
-			"cache-control": "no-store"
+			"cache-control": "no-store",
 		})
 
 		res.end(js ? script : `${page}<script src="test.js"></script>`)
 	}).listen(PORT, "127.0.0.1", () => console.log(`tests on http://127.0.0.1:${PORT}`))
 }
 
-run().catch(err => {
+run().catch((err) => {
 	console.error(err)
 	process.exit(1)
 })

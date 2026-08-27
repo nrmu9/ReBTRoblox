@@ -14,7 +14,7 @@ const BRIDGE_ORIGIN = "http://127.0.0.1:8787/*"
 const args = process.argv.slice(2)
 const dev = args.includes("--dev")
 const watch = args.includes("--watch")
-const target = (args.find(arg => arg.startsWith("--target=")) || "--target=firefox").split("=")[1]
+const target = (args.find((arg) => arg.startsWith("--target=")) || "--target=firefox").split("=")[1]
 
 // content is a classic-script loader that imports main; main is ESM so esbuild
 // can split the optional features, keeping three.js out of the initial download.
@@ -22,12 +22,14 @@ const CLASSIC = ["background", "content", "inject"]
 const MODULE = ["main"]
 const ASSETS = ["css", "img", "res", "lib"]
 
-const entry = name => path.join(ROOT, "src/entries", `${name}.ts`)
+const entry = (name) => path.join(ROOT, "src/entries", `${name}.ts`)
 
 const copyAssets = () => {
-	for(const dir of ASSETS) {
+	for (const dir of ASSETS) {
 		const from = path.join(ROOT, dir)
-		if(fs.existsSync(from)) { fs.cpSync(from, path.join(OUT, dir), { recursive: true }) }
+		if (fs.existsSync(from)) {
+			fs.cpSync(from, path.join(OUT, dir), { recursive: true })
+		}
 	}
 }
 
@@ -43,13 +45,13 @@ const TARGETS = {
 				gecko: {
 					id: "btroblox@antiboomz.com",
 					strict_min_version: "128.0",
-					data_collection_permissions: { required: ["none"] }
-				}
+					data_collection_permissions: { required: ["none"] },
+				},
 			}
 			// MV2 has no host_permissions: hosts go in permissions.
 			manifest.permissions = [...shared.host_permissions, ...shared.permissions]
 			manifest.web_accessible_resources = shared.web_accessible_resources
-		}
+		},
 	},
 
 	chrome: {
@@ -61,12 +63,14 @@ const TARGETS = {
 			// Chrome blocks ads through declarativeNetRequest rather than webRequest.
 			manifest.permissions = ["declarativeNetRequestWithHostAccess", ...shared.permissions]
 			manifest.host_permissions = shared.host_permissions
-			manifest.web_accessible_resources = [{
-				resources: shared.web_accessible_resources,
-				matches: ["*://*.roblox.com/*"]
-			}]
-		}
-	}
+			manifest.web_accessible_resources = [
+				{
+					resources: shared.web_accessible_resources,
+					matches: ["*://*.roblox.com/*"],
+				},
+			]
+		},
+	},
 }
 
 const writeManifest = () => {
@@ -74,27 +78,28 @@ const writeManifest = () => {
 	const { version } = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
 	const spec = TARGETS[target]
 
-	if(!spec) { throw new Error(`unknown target ${target}`) }
+	if (!spec) {
+		throw new Error(`unknown target ${target}`)
+	}
 
 	const { action_title, permissions, host_permissions, web_accessible_resources, ...rest } = shared
 
 	const manifest = {
 		manifest_version: spec.manifest_version,
 		...rest,
-		version
+		version,
 	}
 
 	spec.apply(manifest, shared)
 
-	manifest.background = target === "chrome"
-		? { service_worker: "js/background.js" }
-		: { scripts: ["js/background.js"] }
+	manifest.background =
+		target === "chrome" ? { service_worker: "js/background.js" } : { scripts: ["js/background.js"] }
 
-	for(const entry of manifest.content_scripts) {
+	for (const entry of manifest.content_scripts) {
 		entry.js = entry.world === "MAIN" ? ["js/inject.js"] : ["js/content.js"]
 	}
 
-	if(dev) {
+	if (dev) {
 		const hosts = target === "chrome" ? "host_permissions" : "permissions"
 
 		manifest.name = "BTRoblox DEV"
@@ -102,7 +107,7 @@ const writeManifest = () => {
 		manifest[hosts] = [...manifest[hosts], BRIDGE_ORIGIN]
 		manifest.permissions = [...new Set([...manifest.permissions, "tabs"])]
 
-		if(target === "firefox") {
+		if (target === "firefox") {
 			manifest.content_security_policy = "script-src 'self' 'unsafe-eval'; object-src 'self'"
 		}
 	}
@@ -119,25 +124,25 @@ const shared = {
 	legalComments: "none",
 	logLevel: "info",
 	alias: { "@": path.join(ROOT, "src") },
-	define: { "process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production") }
+	define: { "process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production") },
 }
 
 const configs = [
 	{ ...shared, entryPoints: CLASSIC.map(entry), format: "iife" },
-	{ ...shared, entryPoints: MODULE.map(entry), format: "esm", splitting: true, chunkNames: "chunk-[hash]" }
+	{ ...shared, entryPoints: MODULE.map(entry), format: "esm", splitting: true, chunkNames: "chunk-[hash]" },
 ]
 
 const run = async () => {
 	fs.rmSync(OUT, { recursive: true, force: true })
 	fs.mkdirSync(path.join(OUT, "js"), { recursive: true })
 
-	if(watch) {
-		for(const config of configs) {
+	if (watch) {
+		for (const config of configs) {
 			const ctx = await esbuild.context(config)
 			await ctx.watch()
 		}
 	} else {
-		await Promise.all(configs.map(config => esbuild.build(config)))
+		await Promise.all(configs.map((config) => esbuild.build(config)))
 	}
 
 	copyAssets()
@@ -146,7 +151,7 @@ const run = async () => {
 	console.log(`built dist/ (${target}${dev ? ", dev" : ""})`)
 }
 
-run().catch(err => {
+run().catch((err) => {
 	console.error(err)
 	process.exit(1)
 })

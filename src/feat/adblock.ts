@@ -9,15 +9,15 @@ export const btrAdblock = {
 
 		const iframes = document.getElementsByTagName("iframe")
 		const scripts = document.getElementsByTagName("script")
-		
+
 		const doneMap = new WeakMap()
 
 		onDomChanged(() => {
-			for(let i = iframes.length; i--;) {
+			for (let i = iframes.length; i--;) {
 				const iframe = iframes[i]
 
-				if(!doneMap.get(iframe)) {
-					if(iframe.matches(iframeSelector)) {
+				if (!doneMap.get(iframe)) {
+					if (iframe.matches(iframeSelector)) {
 						iframe.remove()
 					} else {
 						doneMap.set(iframe, true)
@@ -25,17 +25,17 @@ export const btrAdblock = {
 				}
 			}
 
-			for(let i = scripts.length; i--;) {
+			for (let i = scripts.length; i--;) {
 				const script = scripts[i]
 
-				if(doneMap.get(script)) {
+				if (doneMap.get(script)) {
 					break
 				}
 
 				doneMap.set(script, true)
 
-				if(script.src) {
-					if(
+				if (script.src) {
+					if (
 						script.src.includes("imasdk.googleapis.com") ||
 						script.src.includes("googletagmanager.com") ||
 						script.src.includes("radar.cedexis.com") ||
@@ -46,10 +46,9 @@ export const btrAdblock = {
 					}
 				} else {
 					const cont = script.textContent
-					if(
+					if (
 						!cont.includes("ContentJS") && // is not inject.js
-						(
-							cont.includes("scorecardresearch.com") ||
+						(cont.includes("scorecardresearch.com") ||
 							cont.includes("cedexis.com") ||
 							cont.includes("pingdom.net") ||
 							cont.includes("ns1p.net") ||
@@ -57,28 +56,28 @@ export const btrAdblock = {
 							cont.includes("Roblox.VideoPreRollDFP") ||
 							cont.includes("Roblox.AdsHelper=") ||
 							cont.includes("googletag.enableServices()") ||
-							cont.includes("gtag('config'")
-						)
+							cont.includes("gtag('config'"))
 					) {
 						script.textContent = ""
 						script.remove()
-					} else if(cont.includes("Roblox.EventStream.Init")) { // Stops e.png logging
+					} else if (cont.includes("Roblox.EventStream.Init")) {
+						// Stops e.png logging
 						script.textContent = cont.replace(/"[^"]*"/g, `""`)
 					}
 				}
 			}
 		})
-		
+
 		injectScript.call("adblock.js", () => {
 			util.ready(() => {
-				if(window.Roblox?.PrerollPlayer) {
-					window.Roblox.PrerollPlayer.waitForPreroll = x => $.Deferred().resolve(x)
+				if (window.Roblox?.PrerollPlayer) {
+					window.Roblox.PrerollPlayer.waitForPreroll = (x) => $.Deferred().resolve(x)
 				}
 
-				if(window.Roblox?.VideoPreRollDFP) {
+				if (window.Roblox?.VideoPreRollDFP) {
 					window.Roblox.VideoPreRollDFP = null
 				}
 			})
 		})
-	}
+	},
 }

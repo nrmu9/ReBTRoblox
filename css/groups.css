@@ -17,14 +17,21 @@
 }
 
 .btr-redesign group-members-list .container-header.group-members-list-container-header h2 {
-	padding: 5px 0
+	padding: 5px 0;
 }
 
 .btr-redesign group-members-list .dropdown-menu li a:defined {
 	display: flex;
 }
 
-.btr-redesign group-members-list .group-members-list-container-header .group-dropdown .dropdown-menu li a .text-overflow {
+.btr-redesign
+	group-members-list
+	.group-members-list-container-header
+	.group-dropdown
+	.dropdown-menu
+	li
+	a
+	.text-overflow {
 	max-width: none;
 	flex: 1 1 auto;
 }

@@ -21,109 +21,131 @@ interface SettingsModalState {
 
 export const SettingsModal: SettingsModalState = {
 	enabled: false,
-	
+
 	toggle(force) {
 		assert(this.enabled, "not enabled")
 		this.init()
-		
+
 		const visible = typeof force === "boolean" ? force : this.settingsDiv.parentNode !== document.body
 		this.visible = visible
-		
-		if(visible) {
-			document.$watch(">body", body => this.visible && body.appendChild(this.settingsDiv))
-			
-			if(location.hostname === "create.roblox.com") {
+
+		if (visible) {
+			document.$watch(">body", (body) => this.visible && body.appendChild(this.settingsDiv))
+
+			if (location.hostname === "create.roblox.com") {
 				this.settingsDiv.classList.add("btr-dark-theme")
 			} else {
-				const copyThemeFromElement = target => {
-					this.settingsDiv.classList.toggle("btr-light-theme", target.classList.contains("light-theme"))
-					this.settingsDiv.classList.toggle("btr-dark-theme", target.classList.contains("dark-theme"))
+				const copyThemeFromElement = (target) => {
+					this.settingsDiv.classList.toggle(
+						"btr-light-theme",
+						target.classList.contains("light-theme"),
+					)
+					this.settingsDiv.classList.toggle(
+						"btr-dark-theme",
+						target.classList.contains("dark-theme"),
+					)
 				}
-			
-				document.$watch(".light-theme:not(.btr-settings-modal), .dark-theme:not(.btr-settings-modal)", target => {
-					if(this.themeObserver || !this.settingsDiv.parentNode) { return }
 
-					this.themeObserver = new MutationObserver(() => copyThemeFromElement(target))
-					this.themeObserver.observe(target, { attributeFilter: ["class"], attributes: true })
-					copyThemeFromElement(target)
-				})
+				document.$watch(
+					".light-theme:not(.btr-settings-modal), .dark-theme:not(.btr-settings-modal)",
+					(target) => {
+						if (this.themeObserver || !this.settingsDiv.parentNode) {
+							return
+						}
+
+						this.themeObserver = new MutationObserver(() => copyThemeFromElement(target))
+						this.themeObserver.observe(target, { attributeFilter: ["class"], attributes: true })
+						copyThemeFromElement(target)
+					},
+				)
 			}
 
 			const lastContentOpen = sessionStorage.getItem("btr-settings-open")
-			if(lastContentOpen && this.contentDivs[lastContentOpen]) {
+			if (lastContentOpen && this.contentDivs[lastContentOpen]) {
 				this.switchContent(lastContentOpen)
 			} else {
 				this.switchContent("main")
 			}
 		} else {
 			this.switchContent("main")
-			
+
 			sessionStorage.removeItem("btr-settings-open")
 			this.settingsDiv.remove()
 
-			if(this.themeObserver) {
+			if (this.themeObserver) {
 				this.themeObserver.disconnect()
 				this.themeObserver = null
 			}
 		}
 	},
-	
+
 	enable() {
 		this.enabled = true
 		document.$on("click", ".btr-settings-toggle", () => this.toggle())
-		
+
 		// we only want to remember settings visibility when navigating same-origin or through history
-		if(sessionStorage.getItem("btr-settings-open") && performance.getEntriesByType("navigation")[0]?.entryType === "navigate") {
+		if (
+			sessionStorage.getItem("btr-settings-open") &&
+			performance.getEntriesByType("navigation")[0]?.entryType === "navigate"
+		) {
 			let sameOrigin = false
-			
-			try { sameOrigin = new URL(document.referrer).host === location.host }
-			catch(ex) {}
-			
-			if(!sameOrigin) {
+
+			try {
+				sameOrigin = new URL(document.referrer).host === location.host
+			} catch (ex) {}
+
+			if (!sameOrigin) {
 				sessionStorage.removeItem("btr-settings-open")
 			}
 		}
-		
+
 		try {
 			const url = new URL(window.location.href)
 
-			if(url.searchParams.get("btr_settings_open")) {
+			if (url.searchParams.get("btr_settings_open")) {
 				sessionStorage.setItem("btr-settings-open", "true")
 
 				url.searchParams.delete("btr_settings_open")
 				window.history.replaceState(null, "", url.toString())
 			}
-		} catch(ex) {}
+		} catch (ex) {}
 
-		if(sessionStorage.getItem("btr-settings-open")) {
-			try { this.toggle(true) }
-			catch(ex) { console.error(ex) }
+		if (sessionStorage.getItem("btr-settings-open")) {
+			try {
+				this.toggle(true)
+			} catch (ex) {
+				console.error(ex)
+			}
 		}
 	},
-	
+
 	switchContent(name) {
 		assert(this.enabled, "not enabled")
-		
-		if(this.currentContent === name) { return }
+
+		if (this.currentContent === name) {
+			return
+		}
 
 		const lastElem = this.currentContent && this.contentDivs[this.currentContent]
-		if(lastElem) {
+		if (lastElem) {
 			lastElem.classList.remove("selected")
 		}
 
 		const newElem = name && this.contentDivs[name]
-		if(newElem) {
+		if (newElem) {
 			newElem.classList.add("selected")
 		}
 
 		this.currentContent = name
 		sessionStorage.setItem("btr-settings-open", name)
 	},
-	
+
 	init() {
 		assert(this.enabled, "not enabled")
-		if(this.settingsDiv) { return }
-		
+		if (this.settingsDiv) {
+			return
+		}
+
 		this.settingsDiv = html`
 		<div class=btr-settings-modal>
 			<div class=btr-settings>
@@ -260,91 +282,119 @@ export const SettingsModal: SettingsModalState = {
 				</div>
 			</div>
 		</div>`
-		
-		if(!IS_DEV_MODE) {
-			for(const elem of this.settingsDiv.$findAll("[devOnly]")) {
+
+		if (!IS_DEV_MODE) {
+			for (const elem of this.settingsDiv.$findAll("[devOnly]")) {
 				elem.remove()
 			}
 		}
-		
-		if(SETTINGS.loadError) {
-			this.settingsDiv.$find(".btr-settings-header").after(html`<div style="width: 100%; flex: 0 0 auto; white-space: pre-line; padding: 4px; text-align: center; background: red; top: 30px; z-index:1000; font-size: 15px; color: white; font-weight: bold;">Settings failed to load, changes may not save</div>`)
+
+		if (SETTINGS.loadError) {
+			this.settingsDiv
+				.$find(".btr-settings-header")
+				.after(
+					html`<div
+						style="width: 100%; flex: 0 0 auto; white-space: pre-line; padding: 4px; text-align: center; background: red; top: 30px; z-index:1000; font-size: 15px; color: white; font-weight: bold;"
+					>
+						Settings failed to load, changes may not save
+					</div>`,
+				)
 		}
-		
-		if(SHARED_DATA.syncLoadError) {
-			this.settingsDiv.$find(".btr-settings-header").after(html`<div style="width: 100%; flex: 0 0 auto; white-space: pre-line; padding: 4px; text-align: center; background: red; top: 30px; z-index:1000; font-size: 15px; color: white; font-weight: bold;">${SHARED_DATA.syncLoadError}</div>`)
+
+		if (SHARED_DATA.syncLoadError) {
+			this.settingsDiv
+				.$find(".btr-settings-header")
+				.after(
+					html`<div
+						style="width: 100%; flex: 0 0 auto; white-space: pre-line; padding: 4px; text-align: center; background: red; top: 30px; z-index:1000; font-size: 15px; color: white; font-weight: bold;"
+					>
+						${SHARED_DATA.syncLoadError}
+					</div>`,
+				)
 		}
-		
+
 		this.contentDivs = {}
-		
-		for(const elem of this.settingsDiv.$findAll(".btr-settings-content[data-name]")) {
+
+		for (const elem of this.settingsDiv.$findAll(".btr-settings-content[data-name]")) {
 			elem.classList.remove("selected")
 			this.contentDivs[elem.dataset.name] = elem
 		}
-	
-		this.settingsDiv.$on("click", "[btr-tab]:not([disabled])", ev => this.switchContent(ev.currentTarget.getAttribute("btr-tab")))
+
+		this.settingsDiv.$on("click", "[btr-tab]:not([disabled])", (ev) =>
+			this.switchContent(ev.currentTarget.getAttribute("btr-tab")),
+		)
 		this.settingsDiv.$on("click", ".btr-close-subcontent", () => this.switchContent("main"))
 
 		this.settingsDiv.$on("click", "#btr-fix-chat", () => {
-			RobloxApi.chat.getUserConversations(1, 10).then(json => {
-				for(const conversation of json) {
+			RobloxApi.chat.getUserConversations(1, 10).then((json) => {
+				for (const conversation of json) {
 					RobloxApi.chat.markAsRead(conversation.id)
 				}
 			})
 		})
-		
+
 		//
-		
+
 		let labelCounter = 0
-		
-		{ // Navigation Buttons
+
+		{
+			// Navigation Buttons
 			const navButtons = this.settingsDiv.$find(`.btr-settings-content[data-name="navigation"]`)
 			const header = navButtons.$find(`group[label="Header"]`)
 			const sidebar = navButtons.$find(`group[label="Sidebar"]`)
-			
+
 			const onUpdate: any[] = []
-			
+
 			const createCheckbox = (labelText, callback) => {
 				const checkbox = html`<checkbox></checkbox>`
 				checkbox.classList.add("btr-settings-checkbox")
-				
+
 				const labelIndex = labelCounter++
-				const label = html<HTMLLabelElement>`<label for="btr-settings-input-${labelIndex}" title="${labelText}">${labelText}</label>`
-				
-				const input = html<HTMLInputElement>`<input type=checkbox id="btr-settings-input-${labelIndex}">`
-				const resetButton = html`<span class=btr-setting-reset-button></span>`
-				
+				const label = html<HTMLLabelElement>`<label
+					for="btr-settings-input-${labelIndex}"
+					title="${labelText}"
+					>${labelText}</label
+				>`
+
+				const input = html<HTMLInputElement>`<input
+					type="checkbox"
+					id="btr-settings-input-${labelIndex}"
+				/>`
+				const resetButton = html`<span class="btr-setting-reset-button"></span>`
+
 				input.$on("change", () => callback(input.checked))
 				resetButton.$on("click", () => callback(null))
-				
+
 				checkbox.append(input, label, resetButton)
 				return { elem: checkbox, input, resetButton }
 			}
-			
-			for(const element of Object.values(Navigation.elements) as any[]) {
-				if(element.parent) { continue }
-				
-				const checkbox = createCheckbox(element.label || element.name, enabled => {
+
+			for (const element of Object.values(Navigation.elements) as any[]) {
+				if (element.parent) {
+					continue
+				}
+
+				const checkbox = createCheckbox(element.label || element.name, (enabled) => {
 					element.setEnabled(enabled)
 				})
-				
+
 				const parent = element.name.startsWith("header") ? header : sidebar
 				parent.append(checkbox.elem)
-				
+
 				onUpdate.push(() => {
 					checkbox.input.checked = element.enabled
 					checkbox.resetButton.classList.toggle("disabled", element.isDefault)
 				})
-				
-				if(element.settings) {
-					for(const setting of Object.values(element.settings) as any[]) {
-						const settingCheckbox = createCheckbox(setting.label || setting.name, enabled => {
+
+				if (element.settings) {
+					for (const setting of Object.values(element.settings) as any[]) {
+						const settingCheckbox = createCheckbox(setting.label || setting.name, (enabled) => {
 							setting.setEnabled(enabled)
 						})
-						
+
 						settingCheckbox.elem.style.paddingLeft = "20px"
 						parent.append(settingCheckbox.elem)
-						
+
 						onUpdate.push(() => {
 							settingCheckbox.input.checked = setting.enabled
 							settingCheckbox.resetButton.classList.toggle("disabled", setting.isDefault)
@@ -352,18 +402,19 @@ export const SettingsModal: SettingsModalState = {
 					}
 				}
 			}
-			
+
 			const update = () => {
-				for(const fn of onUpdate) {
+				for (const fn of onUpdate) {
 					fn()
 				}
 			}
-			
+
 			SETTINGS.onChange("navigation.elements", update)
 			update()
 		}
-		
-		{ // RobuxToCash
+
+		{
+			// RobuxToCash
 			const currencySelect = this.settingsDiv.$find("#btr-robuxToCash-currency")
 			const rateSelect = this.settingsDiv.$find("#btr-robuxToCash-rate")
 
@@ -371,13 +422,22 @@ export const SettingsModal: SettingsModalState = {
 			rateSelect.replaceChildren()
 
 			const currencies: any[] = Object.values(RobuxToCash.Currencies)
-			
-			for(const currency of currencies.filter(x => !x.usdRate))  {
+
+			for (const currency of currencies.filter((x) => !x.usdRate)) {
 				currencySelect.append(html<HTMLOptionElement>`<option>${currency.name}</option>`)
 			}
-			
-			for(const currency of currencies.filter(x => x.usdRate).sort((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
-				currencySelect.append(html<HTMLOptionElement>`<option title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}" value="${currency.name}">${currency.name}*</option>`)
+
+			for (const currency of currencies
+				.filter((x) => x.usdRate)
+				.sort((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
+				currencySelect.append(
+					html<HTMLOptionElement>`<option
+						title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}"
+						value="${currency.name}"
+					>
+						${currency.name}*
+					</option>`,
+				)
 			}
 
 			const setRate = () => {
@@ -397,39 +457,44 @@ export const SettingsModal: SettingsModalState = {
 				rateSelect.replaceChildren()
 				let selected = false
 
-				for(const option of RobuxToCash.OptionLists[name]) {
+				for (const option of RobuxToCash.OptionLists[name]) {
 					let fullText = ""
-					
-					if(option.name === "none") {
+
+					if (option.name === "none") {
 						fullText = "No currency selected"
 					} else {
-						const display = option.name.includes("devex") ? "DevEx"
-							: option.name.includes("Subscription") ? "Subscription"
-							: option.name.includes("Premium") ? "Premium"
-							: "Regular"
-						
-						const rateText = option.currency.usdRate ?
-							`${option.currency.symbol}${(option.cash / 100).toFixed(option.currency.numFractions)} ≈ US$${(option.usdCash / 100).toFixed(2)} = R$${option.robux}`
+						const display = option.name.includes("devex")
+							? "DevEx"
+							: option.name.includes("Subscription")
+								? "Subscription"
+								: option.name.includes("Premium")
+									? "Premium"
+									: "Regular"
+
+						const rateText = option.currency.usdRate
+							? `${option.currency.symbol}${(option.cash / 100).toFixed(option.currency.numFractions)} ≈ US$${(option.usdCash / 100).toFixed(2)} = R$${option.robux}`
 							: `${option.currency.symbol}${(option.cash / 100).toFixed(option.currency.numFractions)} = R$${option.robux}`
-					
+
 						fullText = `${display} (${rateText})`
 					}
-					
-					rateSelect.append(html<HTMLOptionElement>`<option value="${option.name}">${fullText}</option>`)
 
-					if(option.name === SETTINGS.get("general.robuxToUSDRate")) {
+					rateSelect.append(
+						html<HTMLOptionElement>`<option value="${option.name}">${fullText}</option>`,
+					)
+
+					if (option.name === SETTINGS.get("general.robuxToUSDRate")) {
 						selected = true
 					}
 				}
-				
-				if(selected) {
+
+				if (selected) {
 					rateSelect.value = SETTINGS.get("general.robuxToUSDRate")
 				} else {
 					rateSelect.value = rateSelect.options[0].value
 					setRate()
 				}
-				
-				if(name === "None") {
+
+				if (name === "None") {
 					rateSelect.setAttribute("disabled", "")
 				} else {
 					rateSelect.removeAttribute("disabled")
@@ -440,7 +505,8 @@ export const SettingsModal: SettingsModalState = {
 			updateRate()
 		}
 
-		{ // Reset Settings
+		{
+			// Reset Settings
 			const resetButton = this.settingsDiv.$find("#btr-reset-settings")
 			const resetButtonDefaultText = resetButton.textContent
 			let isResetting = false
@@ -448,14 +514,14 @@ export const SettingsModal: SettingsModalState = {
 			let resetTimer
 
 			resetButton.$on("click", () => {
-				if(!isResetting) {
+				if (!isResetting) {
 					isResetting = true
 
 					resetTimer = 3
 					resetButton.textContent = `Are you sure? (${resetTimer})`
 
 					resetInterval = setInterval(() => {
-						if(--resetTimer > 0) {
+						if (--resetTimer > 0) {
 							resetButton.textContent = `Are you sure? (${resetTimer})`
 							return
 						}
@@ -477,45 +543,45 @@ export const SettingsModal: SettingsModalState = {
 			})
 		}
 
-		// Settings 
+		// Settings
 
 		const settingsDone: Record<string, any> = {}
 		const joinPaths = (group, path) => (!group || path.includes(".") ? path : `${group}.${path}`)
 
-		for(const group of this.settingsDiv.$findAll("group")) {
+		for (const group of this.settingsDiv.$findAll("group")) {
 			const groupPath = group.getAttribute("path") || ""
 
-			const titleContainer = html`<div class=btr-setting-group-title-container></div>`
+			const titleContainer = html`<div class="btr-setting-group-title-container"></div>`
 			const title = html`<h4>${group.getAttribute("label") || ""}</h4>`
 			titleContainer.prepend(title)
 			group.prepend(titleContainer)
 
-			if(group.hasAttribute("minimizable")) {
-				const contentContainer = html`<div class=btr-setting-group-content></div>`
+			if (group.hasAttribute("minimizable")) {
+				const contentContainer = html`<div class="btr-setting-group-content"></div>`
 				titleContainer.after(contentContainer)
 
-				while(contentContainer.nextSibling) {
+				while (contentContainer.nextSibling) {
 					contentContainer.append(contentContainer.nextSibling)
 				}
-				
+
 				title.$on("click", () => {
-					if(group.hasAttribute("minimized")) {
+					if (group.hasAttribute("minimized")) {
 						group.removeAttribute("minimized")
 					} else {
 						group.setAttribute("minimized", "")
 					}
 				})
 			}
-			
-			if(group.hasAttribute("toggleable")) {
+
+			if (group.hasAttribute("toggleable")) {
 				const toggleSetting = group.getAttribute("toggleable") || "enabled"
 				const settingPath = joinPaths(groupPath, toggleSetting)
 				settingsDone[settingPath] = true
 
-				const toggle = html`<div class=btr-settings-enabled-toggle>`
+				const toggle = html`<div class="btr-settings-enabled-toggle"></div>`
 				title.after(toggle)
 
-				const resetButton = html`<span class=btr-setting-reset-button path=${settingPath}></span>`
+				const resetButton = html`<span class="btr-setting-reset-button" path=${settingPath}></span>`
 				toggle.append(resetButton)
 
 				const update = () => {
@@ -533,24 +599,28 @@ export const SettingsModal: SettingsModalState = {
 				update()
 			}
 
-			for(const select of group.$findAll("select[path]")) {
+			for (const select of group.$findAll("select[path]")) {
 				const settingPath = joinPaths(groupPath, select.getAttribute("path"))
 				settingsDone[settingPath] = true
 
-				const wrapper = html`<div class=btr-select></div>`
-				const resetButton = html`<span class=btr-setting-reset-button path=${settingPath}></span>`
+				const wrapper = html`<div class="btr-select"></div>`
+				const resetButton = html`<span class="btr-setting-reset-button" path=${settingPath}></span>`
 
-				if(select.hasAttribute("label")) {
-					wrapper.append(html<HTMLLabelElement>`<label>${select.getAttribute("label") || ""}</label>`, html`<br>`)
+				if (select.hasAttribute("label")) {
+					wrapper.append(
+						html<HTMLLabelElement>`<label>${select.getAttribute("label") || ""}</label>`,
+						html`<br />`,
+					)
 				}
 
 				select.before(wrapper)
 				wrapper.append(select, resetButton)
 
-				const titleOption = select.options[0] && select.options[0].hasAttribute("disabled") ? select.options[0] : null
+				const titleOption =
+					select.options[0] && select.options[0].hasAttribute("disabled") ? select.options[0] : null
 				const titleOptionFormat = titleOption?.textContent ?? ""
 
-				if(titleOption) {
+				if (titleOption) {
 					titleOption.style.display = "none"
 				}
 
@@ -558,95 +628,117 @@ export const SettingsModal: SettingsModalState = {
 					select.value = SETTINGS.get(settingPath)
 
 					const selected = select.selectedOptions[0]
-					if(selected && titleOption && titleOption !== selected) {
-						titleOption.textContent = titleOptionFormat.replace(/%opt%/g, () => selected.textContent)
+					if (selected && titleOption && titleOption !== selected) {
+						titleOption.textContent = titleOptionFormat.replace(
+							/%opt%/g,
+							() => selected.textContent,
+						)
 						select.value = titleOption.value
 					}
 				}
 
 				select.$on("change", () => {
 					const selected = select.selectedOptions[0]
-					if(!selected || selected.hasAttribute("disabled")) { return }
+					if (!selected || selected.hasAttribute("disabled")) {
+						return
+					}
 
 					SETTINGS.set(settingPath, select.value)
 				})
-				
+
 				SETTINGS.onChange(settingPath, update)
 				update()
 
 				const requireAttr = select.getAttribute("require") || "enabled"
 				const requirePath = joinPaths(groupPath, requireAttr.replace(/^!/, ""))
 
-				if(SETTINGS.hasSetting(requirePath)) {
+				if (SETTINGS.hasSetting(requirePath)) {
 					const requireUpdate = () => {
 						let value = SETTINGS.get(requirePath)
-						if(requireAttr.startsWith("!")) { value = !value }
+						if (requireAttr.startsWith("!")) {
+							value = !value
+						}
 
-						if(value) {
+						if (value) {
 							select.removeAttribute("disabled")
 						} else {
 							select.setAttribute("disabled", "")
 						}
 					}
-					
+
 					SETTINGS.onChange(requirePath, requireUpdate)
 					requireUpdate()
 				}
 			}
 
-			for(const checkbox of group.$findAll("checkbox[path]")) {
+			for (const checkbox of group.$findAll("checkbox[path]")) {
 				const settingAttr = checkbox.getAttribute("path")
 				const settingPath = joinPaths(groupPath, settingAttr.replace(/^!/, ""))
 				settingsDone[settingPath] = true
 
 				checkbox.classList.add("btr-settings-checkbox")
 
-				const input = html<HTMLInputElement>`<input type=checkbox>`
+				const input = html<HTMLInputElement>`<input type="checkbox" />`
 				checkbox.prepend(input)
 
 				const labelIndex = labelCounter++
 				input.id = `btr-settings-input-${labelIndex}`
 
-				const labelText = checkbox.hasAttribute("label") ? checkbox.getAttribute("label") : settingPath
-				const label = html<HTMLLabelElement>`<label for=btr-settings-input-${labelIndex} title="${labelText}">${labelText}</label>`
+				const labelText = checkbox.hasAttribute("label")
+					? checkbox.getAttribute("label")
+					: settingPath
+				const label = html<HTMLLabelElement>`<label
+					for="btr-settings-input-${labelIndex}"
+					title="${labelText}"
+					>${labelText}</label
+				>`
 				checkbox.append(label)
 
-				if(SETTINGS.hasSetting(settingPath)) {
+				if (SETTINGS.hasSetting(settingPath)) {
 					input.$on("change", () => {
 						let value = input.checked
-						if(settingAttr.startsWith("!")) { value = !value }
+						if (settingAttr.startsWith("!")) {
+							value = !value
+						}
 
 						SETTINGS.set(settingPath, value)
 					})
 
-					const resetButton = html`<span class=btr-setting-reset-button path=${settingPath}></span>`
+					const resetButton = html`<span
+						class="btr-setting-reset-button"
+						path=${settingPath}
+					></span>`
 					label.after(resetButton)
 
 					const update = () => {
 						let value = !!SETTINGS.get(settingPath)
-						if(settingAttr.startsWith("!")) { value = !value }
+						if (settingAttr.startsWith("!")) {
+							value = !value
+						}
 
 						input.checked = value
 					}
-	
+
 					SETTINGS.onChange(settingPath, update)
 					update()
-	
+
 					const requireAttr = checkbox.getAttribute("require") || "enabled"
 					const requirePath = joinPaths(groupPath, requireAttr.replace(/^!/, ""))
-	
-					if(SETTINGS.hasSetting(requirePath)) {
+
+					if (SETTINGS.hasSetting(requirePath)) {
 						const requireUpdate = () => {
 							let value = SETTINGS.get(requirePath)
-							if(requireAttr.startsWith("!")) { value = !value }
+							if (requireAttr.startsWith("!")) {
+								value = !value
+							}
 
-							if(value) {
+							if (value) {
 								input.removeAttribute("disabled")
 							} else {
 								input.setAttribute("disabled", "")
 							}
 						}
-						
+
 						SETTINGS.onChange(requirePath, requireUpdate)
 						requireUpdate()
 					}
@@ -657,24 +749,36 @@ export const SettingsModal: SettingsModalState = {
 		}
 
 		const wipGroup = this.settingsDiv.$find("#btr-settings-wip")
-		
-		for(const [groupPath, settingsGroup] of Object.entries(SETTINGS.loadedSettings) as [string, any][]) {
-			for(const [settingName, settingValueInfo] of Object.entries(settingsGroup) as [string, any][]) {
+
+		for (const [groupPath, settingsGroup] of Object.entries(SETTINGS.loadedSettings) as [string, any][]) {
+			for (const [settingName, settingValueInfo] of Object.entries(settingsGroup) as [string, any][]) {
 				const defaultValueInfo = DEFAULT_SETTINGS[groupPath][settingName]
 				const settingValue = settingValueInfo.value
 
 				const settingPath = `${groupPath}.${settingName}`
-				if(settingsDone[settingPath] || defaultValueInfo.hidden) { continue }
+				if (settingsDone[settingPath] || defaultValueInfo.hidden) {
+					continue
+				}
 
-				if(typeof settingValue === "boolean") {
+				if (typeof settingValue === "boolean") {
 					const checkbox = html`<checkbox></checkbox>`
-					const input = html<HTMLInputElement>`<input id=btr-settings-input-${labelCounter} type=checkbox>`
-					const label = html<HTMLLabelElement>`<label for=btr-settings-input-${labelCounter++} title="${settingPath}">${settingPath}</label>`
+					const input = html<HTMLInputElement>`<input
+						id="btr-settings-input-${labelCounter}"
+						type="checkbox"
+					/>`
+					const label = html<HTMLLabelElement>`<label
+						for="btr-settings-input-${labelCounter++}"
+						title="${settingPath}"
+						>${settingPath}</label
+					>`
 
 					checkbox.append(input)
 					checkbox.append(label)
 
-					const resetButton = html`<span class=btr-setting-reset-button path=${settingPath}></span>`
+					const resetButton = html`<span
+						class="btr-setting-reset-button"
+						path=${settingPath}
+					></span>`
 					checkbox.append(resetButton)
 
 					wipGroup.append(checkbox)
@@ -689,21 +793,24 @@ export const SettingsModal: SettingsModalState = {
 
 					SETTINGS.onChange(settingPath, update)
 					update()
-				} else if(typeof settingValue === "string" && defaultValueInfo.validValues) {
+				} else if (typeof settingValue === "string" && defaultValueInfo.validValues) {
 					const select = html<HTMLSelectElement>`<select style="width:50%">
 						<option selected disabled>${settingPath}</option>
 					</select>`
-					
-					for(const value of defaultValueInfo.validValues) {
+
+					for (const value of defaultValueInfo.validValues) {
 						select.append(html<HTMLOptionElement>`<option value="${value}">${value}</option>`)
 					}
-					
+
 					wipGroup.append(select)
-					
-					const titleOption = select.options[0] && select.options[0].hasAttribute("disabled") ? select.options[0] : null
+
+					const titleOption =
+						select.options[0] && select.options[0].hasAttribute("disabled")
+							? select.options[0]
+							: null
 					const titleOptionFormat = titleOption?.textContent ?? ""
 
-					if(titleOption) {
+					if (titleOption) {
 						titleOption.style.display = "none"
 					}
 
@@ -711,43 +818,49 @@ export const SettingsModal: SettingsModalState = {
 						select.value = SETTINGS.get(settingPath)
 
 						const selected = select.selectedOptions[0]
-						if(selected && titleOption && titleOption !== selected) {
-							titleOption.textContent = titleOptionFormat.replace(/%opt%/g, () => selected.textContent)
+						if (selected && titleOption && titleOption !== selected) {
+							titleOption.textContent = titleOptionFormat.replace(
+								/%opt%/g,
+								() => selected.textContent,
+							)
 							select.value = titleOption.value
 						}
-						
-						for(const option of select.$findAll<HTMLOptionElement>("option:not([disabled])")) {
-							option.textContent = option === selected ? `${option.value} (selected)` : option.value
+
+						for (const option of select.$findAll<HTMLOptionElement>("option:not([disabled])")) {
+							option.textContent =
+								option === selected ? `${option.value} (selected)` : option.value
 						}
 					}
 
 					select.$on("change", () => {
 						const selected = select.selectedOptions[0]
-						if(!selected || selected.hasAttribute("disabled")) { return }
+						if (!selected || selected.hasAttribute("disabled")) {
+							return
+						}
 
 						SETTINGS.set(settingPath, select.value)
 					})
-					
+
 					SETTINGS.onChange(settingPath, update)
 					update()
 				} else {
-					wipGroup.append(html`<div>${settingPath} (${typeof settingValue})`)
+					wipGroup.append(html`<div>${settingPath} (${typeof settingValue})</div>`)
 				}
 			}
 		}
-		
-		for(const btn of this.settingsDiv.$findAll(".btr-setting-reset-button")) {
-			btn.append(html`<span class=btr-cross></span>`)
+
+		for (const btn of this.settingsDiv.$findAll(".btr-setting-reset-button")) {
+			btn.append(html`<span class="btr-cross"></span>`)
 		}
-		
-		for(const btn of this.settingsDiv.$findAll(".btr-setting-reset-button[path]")) {
+
+		for (const btn of this.settingsDiv.$findAll(".btr-setting-reset-button[path]")) {
 			const settingPath = btn.getAttribute("path")
 
 			const update = () => {
 				btn.classList.toggle("disabled", SETTINGS.getIsDefault(settingPath))
 			}
 
-			btn.$on("click", ev => {
+			btn.$on("click", (ev) => {
 				SETTINGS.reset(settingPath)
 				ev.preventDefault()
 				ev.stopPropagation()
@@ -756,129 +869,144 @@ export const SettingsModal: SettingsModalState = {
 			SETTINGS.onChange(settingPath, update)
 			update()
 		}
-		
+
 		this.robloxExperimentsChanged()
 	},
-	
+
 	experiments: {},
-	
+
 	getSavedExperiments() {
 		const data = SETTINGS.get("general.experiments")
 		let saved
-		
-		try { saved = JSON.parse(data || "{}") }
-		catch(ex) { console.error(ex) }
-		
+
+		try {
+			saved = JSON.parse(data || "{}")
+		} catch (ex) {
+			console.error(ex)
+		}
+
 		return saved instanceof Object && !Array.isArray(saved) ? saved : {}
 	},
-	
+
 	robloxExperimentsChanged() {
-		if(!this.settingsDiv) { return }
-		
+		if (!this.settingsDiv) {
+			return
+		}
+
 		const populate = (experiments: any, defaultToUndefined?: any) => {
-			for(const [experiment, values] of Object.entries(experiments) as [string, any][]) {
+			for (const [experiment, values] of Object.entries(experiments) as [string, any][]) {
 				let group = this.experiments[experiment]
-				
-				if(!group) {
-					const details = html`<details class=group open><summary title=${experiment}>${experiment}</summary><div class=contents></div></details>`
-					
+
+				if (!group) {
+					const details = html`<details class="group" open>
+						<summary title=${experiment}>${experiment}</summary>
+						<div class="contents"></div>
+					</details>`
+
 					group = this.experiments[experiment] = {
 						name: experiment,
 						details: details,
 						contents: details.$find(".contents"),
-						entries: {}
+						entries: {},
 					}
-					
+
 					const keys = Object.keys(this.experiments).sort()
 					const next = this.experiments[keys[keys.indexOf(experiment) + 1]]
-					
-					if(next) {
+
+					if (next) {
 						next.details.before(details)
 					} else {
 						this.settingsDiv.$find("#btr-settings-experiments").append(details)
 					}
 				}
-				
-				for(const [key, value] of Object.entries(values) as [string, any][]) {
+
+				for (const [key, value] of Object.entries(values) as [string, any][]) {
 					let entry = group.entries[key]
-					
-					if(!entry) {
-						const label = html`<div class=name title=${key}>${key}</div>`
-						const resetButton = html`<span class=btr-setting-reset-button><span class=btr-cross></span></span>`
-						const input = html<HTMLInputElement>`<input class=value type=text>`
-						
+
+					if (!entry) {
+						const label = html`<div class="name" title=${key}>${key}</div>`
+						const resetButton = html`<span class="btr-setting-reset-button"
+							><span class="btr-cross"></span
+						></span>`
+						const input = html<HTMLInputElement>`<input class="value" type="text" />`
+
 						const update = (initial?: any) => {
 							resetButton.style.display = input.value ? "" : "none"
-							
+
 							let valid = true
-							
-							if(input.value) {
-								try { JSON.parse(input.value) }
-								catch(ex) { valid = false }
+
+							if (input.value) {
+								try {
+									JSON.parse(input.value)
+								} catch (ex) {
+									valid = false
+								}
 							}
-							
+
 							input.classList.toggle("invalid", !valid)
-							
-							if(initial) { return }
-							
+
+							if (initial) {
+								return
+							}
+
 							injectScript.send("updateExperiment", experiment, key, input.value)
-							
+
 							const data = this.getSavedExperiments()
-							
-							if(input.value) {
+
+							if (input.value) {
 								data[experiment] ??= {}
 								data[experiment][key] = input.value
 							} else {
-								if(data[experiment]) {
+								if (data[experiment]) {
 									delete data[experiment][key]
-									
-									if(Object.keys(data[experiment]).length === 0) {
+
+									if (Object.keys(data[experiment]).length === 0) {
 										delete data[experiment]
 									}
 								}
 							}
-							
+
 							SETTINGS.set("general.experiments", JSON.stringify(data))
 						}
-						
+
 						input.value = this.getSavedExperiments()[experiment]?.[key] || ""
 						update(true)
-						
+
 						resetButton.$on("click", () => {
 							input.value = ""
 							update()
 						})
-						
-						input.$on("keydown", ev => ev.keyCode === 13 && input.blur())
+
+						input.$on("keydown", (ev) => ev.keyCode === 13 && input.blur())
 						input.$on("blur", () => update())
-						
+
 						label.append(resetButton)
-						
+
 						entry = group.entries[key] = {
 							label: label,
 							resetButton: resetButton,
 							input: input,
-							
+
 							experiment: experiment,
-							key: key
+							key: key,
 						}
-						
+
 						const keys = Object.keys(group.entries).sort()
 						const next = group.entries[keys[keys.indexOf(key) + 1]]
-						
-						if(next) {
+
+						if (next) {
 							next.label.before(label, input)
 						} else {
 							group.contents.append(label, input)
 						}
 					}
-					
+
 					entry.input.placeholder = JSON.stringify(defaultToUndefined ? undefined : value)
 				}
 			}
 		}
-		
+
 		populate(this.getSavedExperiments(), true)
 		populate(robloxExperiments)
-	}
+	},
 }

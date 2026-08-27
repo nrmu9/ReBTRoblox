@@ -9,10 +9,8 @@ import { BrickColor } from "@/rbx/Constants"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
 
 export const Explorer = (() => {
-	const GroupOrders = [
-		"Appearance", "Data", "Transform", "Pivot", "Behavior", "Collision", "Part"
-	]
-	
+	const GroupOrders = ["Appearance", "Data", "Transform", "Pivot", "Behavior", "Collision", "Part"]
+
 	/*
 	const HiddenProperties = {
 		UniqueId: true, HistoryId: true,
@@ -40,31 +38,43 @@ export const Explorer = (() => {
 		InternalBodyScale: true, InternalHeadScale: true,
 	}
 	*/
-	
+
 	const RenamedProperties = {
-		Color3uint8: "Color", formFactorRaw: "FormFactor", Health_XML: "Health", xmlRead_MaxDistance_3: "MaxDistance",
-		shape: "Shape", size: "Size", formFactor: "FormFactor", archivable: "Archivable", style: "Style",
-		MeshID: "MeshId", MaterialVariantSerialized: "MaterialVariant", DefinesCapabilities: "Sandboxed"
+		Color3uint8: "Color",
+		formFactorRaw: "FormFactor",
+		Health_XML: "Health",
+		xmlRead_MaxDistance_3: "MaxDistance",
+		shape: "Shape",
+		size: "Size",
+		formFactor: "FormFactor",
+		archivable: "Archivable",
+		style: "Style",
+		MeshID: "MeshId",
+		MaterialVariantSerialized: "MaterialVariant",
+		DefinesCapabilities: "Sandboxed",
 	}
 
-	const fixNum = v => { return Math.round(v * 1e3) / 1e3 }
-	const fixNums = arr => arr.map(x => fixNum(x))
+	const fixNum = (v) => {
+		return Math.round(v * 1e3) / 1e3
+	}
+	const fixNums = (arr) => arr.map((x) => fixNum(x))
 
-	const sortPropertyGroups = (a, b) => (a.Order === b.Order ? (a.Name < b.Name ? -1 : 1) : a.Order - b.Order)
+	const sortPropertyGroups = (a, b) =>
+		a.Order === b.Order ? (a.Name < b.Name ? -1 : 1) : a.Order - b.Order
 	const sortChildren = (a, b) => {
 		const ao = ApiDump.getExplorerOrder(a.inst.ClassName)
 		const bo = ApiDump.getExplorerOrder(b.inst.ClassName)
-		return ao !== bo ? ao - bo : (a.inst.Name < b.inst.Name ? -1 : 1)
+		return ao !== bo ? ao - bo : a.inst.Name < b.inst.Name ? -1 : 1
 	}
-	
+
 	const widthCalcCanvas = document.createElement("canvas")
 	const ctx = widthCalcCanvas.getContext("2d")
 	ctx!.font = `300 12px "Source Sans Pro", Arial, Helvetica, sans-serif`
-	
+
 	const getLineWidth = (text, depth) => {
 		return ctx!.measureText(text).width + 47 + depth * 20
 	}
-	
+
 	return class {
 		[key: string]: any
 
@@ -75,16 +85,16 @@ export const Explorer = (() => {
 			this.sourceViewerTabs = []
 			this.selectedSourceViewerTab = null
 			this.sourceViewerModal = null
-			
+
 			this.modelCounter = 0
 			this.lineHeight = 20
 			this.active = false
-			
+
 			this.currentFilter = ""
 			this.lines = []
-			
+
 			window.explorer = this
-			
+
 			this.filterView = {
 				query: "",
 				model: null as any,
@@ -92,51 +102,51 @@ export const Explorer = (() => {
 				visible: new Set(),
 				open: new Set(),
 				numOpenDescendants: new Map(),
-				maxOpenWidth: new Map()
+				maxOpenWidth: new Map(),
 			}
-			
+
 			this.defaultView = {
 				numOpenDescendants: new Map(),
 				maxOpenWidth: new Map(),
 				open: new Set(),
 			}
-			
+
 			this.loadingText = "Loading"
 
-			const element = this.element = html`
-			<div class=btr-explorer-parent>
-				<div class=btr-explorer>
-					<div class=btr-explorer-header>
-						Explorer
-						<div class=btr-dropdown-container style="display: none">
-							<button class=btr-dropdown-btn>
-								<span class=btr-dropdown-label></span>
-								<span class=icon-down-16x16 style=vertical-align:initial></span>
-							</button>
-							<ul class=btr-dropdown-menu style="position:absolute;display:none">
-							</ul>
+			const element = (this.element = html` <div class="btr-explorer-parent">
+					<div class="btr-explorer">
+						<div class="btr-explorer-header">
+							Explorer
+							<div class="btr-dropdown-container" style="display: none">
+								<button class="btr-dropdown-btn">
+									<span class="btr-dropdown-label"></span>
+									<span class="icon-down-16x16" style="vertical-align:initial"></span>
+								</button>
+								<ul class="btr-dropdown-menu" style="position:absolute;display:none"></ul>
+							</div>
+						</div>
+						<div class="btr-explorer-filter">
+							<input class="btr-explorer-filter-input" type="text" placeholder="Filter model" />
+						</div>
+						<div class="btr-explorer-list" style="display:none">
+							<div class="btr-explorer-inner-list"></div>
+							<div class="btr-explorer-list-status" style="display:none"></div>
+						</div>
+						<div class="btr-explorer-loading" style="text-align:center;margin-top:12px;">
+							${this.loadingText}
 						</div>
 					</div>
-					<div class=btr-explorer-filter>
-						<input class=btr-explorer-filter-input type=text placeholder="Filter model">
-					</div>
-					<div class=btr-explorer-list style=display:none>
-						<div class=btr-explorer-inner-list></div>
-						<div class=btr-explorer-list-status style=display:none></div>
-					</div>
-					<div class=btr-explorer-loading style="text-align:center;margin-top:12px;">${this.loadingText}</div>
-				</div>
-				<div class=btr-properties>
-					<div class=btr-properties-header></div>
-					<div class=btr-properties-container>
+					<div class="btr-properties">
+						<div class="btr-properties-header"></div>
+						<div class="btr-properties-container"></div>
 					</div>
 				</div>
-			</div>"`
-			
+				"`)
+
 			this.dropdown = this.element.$find(".btr-dropdown-container")
 			this.innerList = this.element.$find(".btr-explorer-inner-list")
 			this.listStatus = this.element.$find(".btr-explorer-list-status")
-			
+
 			const dropdownBtn = element.$find(".btr-dropdown-btn")
 			const dropdownMenu = element.$find(".btr-dropdown-menu")
 
@@ -144,34 +154,41 @@ export const Explorer = (() => {
 				this.select([])
 			})
 
-			element.$on("click", ev => {
+			element.$on("click", (ev) => {
 				ev.stopPropagation()
 			})
-			
+
 			this.filterInput = element.$find(".btr-explorer-filter-input")
-			
+
 			this.filterInput.$on("input", () => {
 				this.setFilter(this.filterInput.value)
 			})
 
-			dropdownBtn.$on("click", ev => {
+			dropdownBtn.$on("click", (ev) => {
 				ev.stopPropagation()
 				dropdownMenu.style.display = dropdownMenu.style.display === "none" ? "block" : "none"
 			})
 
-			document.$on("click", ev => {
-				if(dropdownMenu.style.display !== "none" && !dropdownMenu.parentNode.contains(ev.target)) {
-					dropdownMenu.style.display = "none"
-				}
-			}, { capture: true })
+			document.$on(
+				"click",
+				(ev) => {
+					if (
+						dropdownMenu.style.display !== "none" &&
+						!dropdownMenu.parentNode.contains(ev.target)
+					) {
+						dropdownMenu.style.display = "none"
+					}
+				},
+				{ capture: true },
+			)
 
 			this.select([])
 		}
-		
+
 		getRootElement() {
 			return this.sourceViewerModal || this.element
 		}
-		
+
 		setLoadingText(newText) {
 			this.loadingText = newText
 			this.element.$find(".btr-explorer-loading").textContent = newText
@@ -180,11 +197,11 @@ export const Explorer = (() => {
 		closeSourceViewer() {
 			const list0 = this.element.$find(".btr-explorer-list")
 			const list1 = this.element.$find(".btr-properties-list")
-			
+
 			const top0 = list0.scrollTop
 			const top1 = list1.scrollTop
-			
-			if(this.originalParent && document.body.contains(this.originalParent)) {
+
+			if (this.originalParent && document.body.contains(this.originalParent)) {
 				this.originalParent.append(this.element)
 			} else {
 				this.element.remove()
@@ -192,7 +209,7 @@ export const Explorer = (() => {
 
 			list0.scrollTop = top0
 			list1.scrollTop = top1
-			
+
 			this.originalParent = null
 			this.selectedSourceViewerTab = null
 
@@ -207,15 +224,15 @@ export const Explorer = (() => {
 		}
 
 		async openSourceViewer(inst, propName) {
-			if(!this.sourceViewerLoadPromise) {
+			if (!this.sourceViewerLoadPromise) {
 				this.sourceViewerLoadPromise = loadOptionalFeature("sourceViewer").then(async () => {
-					await new Promise(resolve => setTimeout(resolve, 16)) // wait for styles to load in
+					await new Promise((resolve) => setTimeout(resolve, 16)) // wait for styles to load in
 				})
 			}
-			
+
 			await this.sourceViewerLoadPromise
-			
-			if(!this.sourceViewerModal) {
+
+			if (!this.sourceViewerModal) {
 				this.sourceViewerModal = html`
 				<div class=btr-sourceviewer-modal>
 					<div class=btr-sourceviewer-container>
@@ -234,113 +251,120 @@ export const Explorer = (() => {
 					</div>
 				</div>`
 
-				this.sourceViewerModal.$on("mousedown", ev => {
+				this.sourceViewerModal
+					.$on("mousedown", (ev) => {
+						ev.preventDefault()
+						ev.stopImmediatePropagation()
+
+						this.closeSourceViewer()
+					})
+					.$on("click", (ev) => {
+						ev.stopImmediatePropagation()
+					})
+
+				this.sourceViewerModal.$find(".btr-sourceviewer-container").$on("mousedown", (ev) => {
+					ev.stopImmediatePropagation()
+				})
+
+				this.sourceViewerModal.$find(".btr-sourceviewer-settings-button").$on("click", (ev) => {
 					ev.preventDefault()
 					ev.stopImmediatePropagation()
 
-					this.closeSourceViewer()
-				}).$on("click", ev => {
-					ev.stopImmediatePropagation()
-				})
-				
-				this.sourceViewerModal.$find(".btr-sourceviewer-container").$on("mousedown", ev => {
-					ev.stopImmediatePropagation()
-				})
-
-				this.sourceViewerModal.$find(".btr-sourceviewer-settings-button").$on("click", ev => {
-					ev.preventDefault()
-					ev.stopImmediatePropagation()
-					
 					ev.target.classList.toggle("active")
 				})
-				
+
 				const svSettings = {
 					tabwidth: 4,
 					wrapping: true,
-					whitespace: true
+					whitespace: true,
 				}
-				
+
 				try {
 					const data = btrLocalStorage.getItem("svSettings")
-					
-					if(data) {
-						for(const [key, value] of Object.entries(data) as [string, any][]) {
-							if(key in svSettings && typeof value === typeof svSettings[key]) {
+
+					if (data) {
+						for (const [key, value] of Object.entries(data) as [string, any][]) {
+							if (key in svSettings && typeof value === typeof svSettings[key]) {
 								svSettings[key] = value
 							}
 						}
 					}
-				} catch(ex) {
+				} catch (ex) {
 					console.error(ex)
 				}
-				
+
 				const update = (setting?: any) => {
 					btrLocalStorage.setItem("svSettings", svSettings)
-					
+
 					this.sourceViewerModal.$find(".btr-sourceviewer-content").style = `
 					--sv-tabwidth:${svSettings.tabwidth};
 					${svSettings.wrapping ? "" : "--sv-wrapping:pre;"}
 					${svSettings.whitespace ? "" : "--sv-whitespace:none;"};`
 				}
-				
-				for(const setting of Object.keys(svSettings)) {
+
+				for (const setting of Object.keys(svSettings)) {
 					update(setting)
 				}
-				
-				for(const input of this.sourceViewerModal.$findAll(".btr-sourceviewer-setting-value input")) {
+
+				for (const input of this.sourceViewerModal.$findAll(
+					".btr-sourceviewer-setting-value input",
+				)) {
 					const setting = input.dataset.svSetting
-					
-					if(input.type === "checkbox") {
+
+					if (input.type === "checkbox") {
 						input.checked = svSettings[setting]
-						
+
 						input.$on("change", () => {
 							svSettings[setting] = input.checked
 							update(setting)
 						})
 					} else {
 						input.value = svSettings[setting]
-						
+
 						input.$on("change", () => {
 							svSettings[setting] = input.value
 							update(setting)
 						})
 					}
 				}
-				
+
 				document.body.append(this.sourceViewerModal)
 				document.body.style.overflow = "hidden"
-				
+
 				this.element.$find(".btr-properties").classList.add("keepopen")
-				
+
 				const list0 = this.element.$find(".btr-explorer-list")
 				const list1 = this.element.$find(".btr-properties-list")
-				
+
 				const top0 = list0.scrollTop
 				const top1 = list1.scrollTop
 
 				this.originalParent = this.element.parentNode
 				this.sourceViewerModal.$find(".btr-sourceviewer-explorer").append(this.element)
-				
+
 				list0.scrollTop = top0
 				list1.scrollTop = top1
 			}
 
-			let tab = this.sourceViewerTabs.find(x => x.inst === inst && x.propName === propName)
+			let tab = this.sourceViewerTabs.find((x) => x.inst === inst && x.propName === propName)
 
-			if(!tab) {
-				const btn = html`<div class=btr-sourceviewer-tab>${inst.Name}<div class=btr-sourceviewer-tab-close>×</div></div>`
+			if (!tab) {
+				const btn = html`<div class="btr-sourceviewer-tab">
+					${inst.Name}
+					<div class="btr-sourceviewer-tab-close">×</div>
+				</div>`
 				this.sourceViewerModal.$find(".btr-sourceviewer-header").append(btn)
 
-				btn.$on("click", ev => {
+				btn.$on("click", (ev) => {
 					ev.stopPropagation()
 					ev.preventDefault()
 
-					if(this.selectedSourceViewerTab !== tab) {
+					if (this.selectedSourceViewerTab !== tab) {
 						this.openSourceViewer(inst, propName)
 					}
 				})
 
-				btn.$req(".btr-sourceviewer-tab-close").$on("click", ev => {
+				btn.$req(".btr-sourceviewer-tab-close").$on("click", (ev) => {
 					ev.stopPropagation()
 					ev.preventDefault()
 
@@ -349,10 +373,10 @@ export const Explorer = (() => {
 
 					tab.btn.remove()
 
-					if(this.selectedSourceViewerTab === tab) {
+					if (this.selectedSourceViewerTab === tab) {
 						const nextTab = this.sourceViewerTabs[index] || this.sourceViewerTabs[index - 1]
 
-						if(nextTab) {
+						if (nextTab) {
 							this.openSourceViewer(nextTab.inst, nextTab.propName)
 						} else {
 							this.closeSourceViewer()
@@ -364,16 +388,16 @@ export const Explorer = (() => {
 				this.sourceViewerTabs.push(tab)
 			}
 
-			if(this.selectedSourceViewerTab) {
+			if (this.selectedSourceViewerTab) {
 				this.selectedSourceViewerTab.btn.classList.remove("active")
 			}
 
 			tab.btn.classList.add("active")
 			this.selectedSourceViewerTab = tab
-			
+
 			const content = this.sourceViewerModal.$find(".btr-sourceviewer-content")
 			content.replaceChildren()
-			
+
 			const source = inst.Properties[propName]?.value || ""
 			SourceViewer.init(content, source)
 
@@ -386,7 +410,7 @@ export const Explorer = (() => {
 			const propertyContainer = properties.$find(".btr-properties-container")
 			propertyContainer.replaceChildren()
 
-			if(!this.selection.length) {
+			if (!this.selection.length) {
 				header.textContent = "Properties"
 				properties.classList.add("closed")
 				return
@@ -399,40 +423,41 @@ export const Explorer = (() => {
 
 			const hidden = <Record<string, any>>{
 				AttributesSerialize: true,
-				Tags: true
+				Tags: true,
 			}
-			
-			if(!target.DefinesCapabilities) {
+
+			if (!target.DefinesCapabilities) {
 				hidden.Sandboxed = true
 				hidden.Capabilities = true
 			}
-			
-			if(target.SourceAssetId == -1) { // intentional == to account for bigints
+
+			if (target.SourceAssetId == -1) {
+				// intentional == to account for bigints
 				hidden.SourceAssetId = true
 			}
-			
-			if("TopSurface" in target.Properties) {
+
+			if ("TopSurface" in target.Properties) {
 				const sides = ["Back", "Bottom", "Front", "Left", "Right", "Top"]
 				let allSmooth = false
-				
-				for(const side of sides) {
+
+				for (const side of sides) {
 					const valueEntry = target.Properties[`${side}Surface`]
 					const value = valueEntry?.value ?? 0
-					
+
 					hidden[`${side}SurfaceInput`] = true
 					hidden[`${side}ParamA`] = true
 					hidden[`${side}ParamB`] = true
-					
-					if(value !== 0) {
+
+					if (value !== 0) {
 						allSmooth = true
-						
-						if(value === 7 || value === 8) {
+
+						if (value === 7 || value === 8) {
 							const inputValue = target.Properties[`${side}SurfaceInput`]?.value ?? 0
-							
-							if(inputValue === 12) {
+
+							if (inputValue === 12) {
 								hidden[`${side}SurfaceInput`] = false
 								hidden[`${side}ParamB`] = false
-							} else if(inputValue === 13) {
+							} else if (inputValue === 13) {
 								hidden[`${side}SurfaceInput`] = false
 								hidden[`${side}ParamA`] = false
 								hidden[`${side}ParamB`] = false
@@ -440,397 +465,499 @@ export const Explorer = (() => {
 						}
 					}
 				}
-				
-				if(!allSmooth) {
-					for(const side of sides) {
+
+				if (!allSmooth) {
+					for (const side of sides) {
 						hidden[`${side}Surface`] = true
 					}
 				}
 			}
-			
+
 			const groups = {
 				Tags: {
 					Name: "Tags",
 					Order: 1001,
-					Properties: [] as any[]
+					Properties: [] as any[],
 				},
 				Attributes: {
 					Name: "Attributes",
 					Order: 1002,
-					Properties: [] as any[]
-				}
+					Properties: [] as any[],
+				},
 			}
-			
-			for(let [name, prop] of Object.entries(target.Properties) as [string, any][]) {
-				if(RenamedProperties[name] && RenamedProperties[name] in target.Properties) {
+
+			for (let [name, prop] of Object.entries(target.Properties) as [string, any][]) {
+				if (RenamedProperties[name] && RenamedProperties[name] in target.Properties) {
 					continue
 				}
-				
+
 				name = RenamedProperties[name] || name
-				
-				if(/*HiddenProperties[name] ||*/ hidden[name]) {
+
+				if (/*HiddenProperties[name] ||*/ hidden[name]) {
 					continue
 				}
 
 				let group = ApiDump.getPropertyGroup(target.ClassName, name)
-				
-				if(group === "Unknown") {
+
+				if (group === "Unknown") {
 					group = "Data"
 				}
-				
+
 				let groupData = groups[group]
-				if(!groupData) {
+				if (!groupData) {
 					const order = GroupOrders.indexOf(group)
-					
+
 					groupData = groups[group] = {
 						Name: group,
 						Order: order === -1 ? 1000 : order,
-						Properties: []
+						Properties: [],
 					}
 				}
 
 				groupData.Properties.push([name, prop])
 			}
-			
-			if("Tags" in target.Properties && target.Properties.Tags.value.length > 0) {
-				for(const tag of target.Properties.Tags.value.split("\0")) {
+
+			if ("Tags" in target.Properties && target.Properties.Tags.value.length > 0) {
+				for (const tag of target.Properties.Tags.value.split("\0")) {
 					groups.Tags.Properties.push([tag] as any)
 				}
 			}
-			
-			if("AttributesSerialize" in target.Properties && target.Properties.AttributesSerialize.value.length > 0) {
+
+			if (
+				"AttributesSerialize" in target.Properties &&
+				target.Properties.AttributesSerialize.value.length > 0
+			) {
 				const reader = new ByteReader(stringToBuffer(target.Properties.AttributesSerialize.value))
-				
+
 				const numAttributes = reader.UInt32LE()
-				
-				outer:
-				for(let i = 0; i < numAttributes; i++) {
+
+				outer: for (let i = 0; i < numAttributes; i++) {
 					const name = reader.String(reader.UInt32LE())
 					const type = reader.UInt8()
 					let value
-					
-					switch(type) {
-					case 0x02:
-						value = { type: "string", value: reader.String(reader.UInt32LE()) }
-						break
-					case 0x03:
-						value = { type: "bool", value: reader.UInt8() !== 0 }
-						break
-					case 0x04:
-						value = { type: "int", value: reader.Int32LE() }
-						break
-					case 0x05:
-						value = { type: "float", value: reader.FloatLE() }
-						break
-					case 0x06:
-						value = { type: "double", value: reader.DoubleLE() }
-						break
-					case 0x09:
-						value = { type: "UDim", value: [reader.FloatLE(), reader.Int32LE()] }
-						break
-					case 0x0A:
-						value = { type: "UDim2", value: [[reader.FloatLE(), reader.Int32LE()], [reader.FloatLE(), reader.Int32LE()]] }
-						break
-					case 0x0E:
-						value = { type: "BrickColor", value: reader.UInt32LE() }
-						break
-					case 0x0F:
-						value = { type: "Color3", value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE()] }
-						break
-					case 0x10:
-						value = { type: "Vector2", value: [reader.FloatLE(), reader.FloatLE()] }
-						break
-					case 0x11:
-						value = { type: "Vector3", value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE()] }
-						break
-					case 0x14:
-						value = { type: "CFrame", value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE(), 1, 0, 0, 0, 1, 0, 0, 0, 1] }
-						
-						const id = reader.UInt8()
-						
-						if(id === 0) {
-							for(let i = 3; i < 12; i++) {
-								value.value[i] = reader.FloatLE()
+
+					switch (type) {
+						case 0x02:
+							value = { type: "string", value: reader.String(reader.UInt32LE()) }
+							break
+						case 0x03:
+							value = { type: "bool", value: reader.UInt8() !== 0 }
+							break
+						case 0x04:
+							value = { type: "int", value: reader.Int32LE() }
+							break
+						case 0x05:
+							value = { type: "float", value: reader.FloatLE() }
+							break
+						case 0x06:
+							value = { type: "double", value: reader.DoubleLE() }
+							break
+						case 0x09:
+							value = { type: "UDim", value: [reader.FloatLE(), reader.Int32LE()] }
+							break
+						case 0x0a:
+							value = {
+								type: "UDim2",
+								value: [
+									[reader.FloatLE(), reader.Int32LE()],
+									[reader.FloatLE(), reader.Int32LE()],
+								],
 							}
-						} else {
-							const faces = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, 0, 0], [0, -1, 0], [0, 0, -1]]
-							const right = faces[Math.floor((id - 1) / 6)]
-							const up = faces[(id - 1) % 6]
-							const back = [
-								right[1] * up[2] - up[1] * right[2],
-								right[2] * up[0] - up[2] * right[0],
-								right[0] * up[1] - up[0] * right[1]
-							]
-		
-							for(let i = 0; i < 3; i++) {
-								value.value[3 + i * 3] = right[i]
-								value.value[4 + i * 3] = up[i]
-								value.value[5 + i * 3] = back[i]
+							break
+						case 0x0e:
+							value = { type: "BrickColor", value: reader.UInt32LE() }
+							break
+						case 0x0f:
+							value = {
+								type: "Color3",
+								value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE()],
 							}
-						}
-						
-						break
-					case 0x15:
-						value = { type: "EnumAttribute", value: [reader.String(reader.UInt32LE()), reader.UInt32LE()] }
-						break
-					case 0x17:
-						value = { type: "NumberSequence", value: [] }
-						
-						const numberSequenceLength = reader.UInt32LE()
-		
-						for(let i = 0; i < numberSequenceLength; i++) {
-							value.value.push({
-								Envelope: reader.FloatLE(),
-								Time: reader.FloatLE(),
-								Value: reader.FloatLE()
-							})
-						}
-						break
-					case 0x19:
-						value = { type: "ColorSequence", value: [] }
-						
-						const colorSequenceLength = reader.UInt32LE()
-		
-						for(let i = 0; i < colorSequenceLength; i++) {
-							value.value.push({
-								Envelope: reader.FloatLE(),
-								Time: reader.FloatLE(),
-								Value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE()],
-							})
-						}
-						break
-					case 0x1B:
-						value = { type: "NumberRange", value: [reader.FloatLE(), reader.FloatLE()] }
-						break
-					case 0x1C:
-						value = { type: "Rect", value: [[reader.FloatLE(), reader.FloatLE()], [reader.FloatLE(), reader.FloatLE()]] }
-						break
-					case 0x21:
-						value = { type: "Font", value: { Weight: reader.UInt16LE(), Style: reader.UInt8(), Family: reader.String(reader.UInt32LE()), CachedFaceId: reader.String(reader.UInt32LE()) } }
-						break
-					default:
-						console.warn(`Unknown attribute type '${type}' for ${name}`)
-						break outer
+							break
+						case 0x10:
+							value = { type: "Vector2", value: [reader.FloatLE(), reader.FloatLE()] }
+							break
+						case 0x11:
+							value = {
+								type: "Vector3",
+								value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE()],
+							}
+							break
+						case 0x14:
+							value = {
+								type: "CFrame",
+								value: [
+									reader.FloatLE(),
+									reader.FloatLE(),
+									reader.FloatLE(),
+									1,
+									0,
+									0,
+									0,
+									1,
+									0,
+									0,
+									0,
+									1,
+								],
+							}
+
+							const id = reader.UInt8()
+
+							if (id === 0) {
+								for (let i = 3; i < 12; i++) {
+									value.value[i] = reader.FloatLE()
+								}
+							} else {
+								const faces = [
+									[1, 0, 0],
+									[0, 1, 0],
+									[0, 0, 1],
+									[-1, 0, 0],
+									[0, -1, 0],
+									[0, 0, -1],
+								]
+								const right = faces[Math.floor((id - 1) / 6)]
+								const up = faces[(id - 1) % 6]
+								const back = [
+									right[1] * up[2] - up[1] * right[2],
+									right[2] * up[0] - up[2] * right[0],
+									right[0] * up[1] - up[0] * right[1],
+								]
+
+								for (let i = 0; i < 3; i++) {
+									value.value[3 + i * 3] = right[i]
+									value.value[4 + i * 3] = up[i]
+									value.value[5 + i * 3] = back[i]
+								}
+							}
+
+							break
+						case 0x15:
+							value = {
+								type: "EnumAttribute",
+								value: [reader.String(reader.UInt32LE()), reader.UInt32LE()],
+							}
+							break
+						case 0x17:
+							value = { type: "NumberSequence", value: [] }
+
+							const numberSequenceLength = reader.UInt32LE()
+
+							for (let i = 0; i < numberSequenceLength; i++) {
+								value.value.push({
+									Envelope: reader.FloatLE(),
+									Time: reader.FloatLE(),
+									Value: reader.FloatLE(),
+								})
+							}
+							break
+						case 0x19:
+							value = { type: "ColorSequence", value: [] }
+
+							const colorSequenceLength = reader.UInt32LE()
+
+							for (let i = 0; i < colorSequenceLength; i++) {
+								value.value.push({
+									Envelope: reader.FloatLE(),
+									Time: reader.FloatLE(),
+									Value: [reader.FloatLE(), reader.FloatLE(), reader.FloatLE()],
+								})
+							}
+							break
+						case 0x1b:
+							value = { type: "NumberRange", value: [reader.FloatLE(), reader.FloatLE()] }
+							break
+						case 0x1c:
+							value = {
+								type: "Rect",
+								value: [
+									[reader.FloatLE(), reader.FloatLE()],
+									[reader.FloatLE(), reader.FloatLE()],
+								],
+							}
+							break
+						case 0x21:
+							value = {
+								type: "Font",
+								value: {
+									Weight: reader.UInt16LE(),
+									Style: reader.UInt8(),
+									Family: reader.String(reader.UInt32LE()),
+									CachedFaceId: reader.String(reader.UInt32LE()),
+								},
+							}
+							break
+						default:
+							console.warn(`Unknown attribute type '${type}' for ${name}`)
+							break outer
 					}
-					
+
 					groups.Attributes.Properties.push([name, value] as any)
 				}
 			}
 
-			for(const group of Object.values(groups).sort(sortPropertyGroups) as any[]) {
-				const titleButton = html`<div class=btr-property-group><div class=btr-property-group-more></div>${group.Name}</div>`
-				const propertiesList = html`<div class=btr-properties-list></div>`
+			for (const group of Object.values(groups).sort(sortPropertyGroups) as any[]) {
+				const titleButton = html`<div class="btr-property-group">
+					<div class="btr-property-group-more"></div>
+					${group.Name}
+				</div>`
+				const propertiesList = html`<div class="btr-properties-list"></div>`
 				propertyContainer.append(titleButton, propertiesList)
 
 				let lastClick
 
-				titleButton.$req(".btr-property-group-more").$on("click", ev => {
+				titleButton.$req(".btr-property-group-more").$on("click", (ev) => {
 					titleButton.classList.toggle("closed")
 					ev.stopPropagation()
 				})
 
 				titleButton.$on("click", () => {
-					if(lastClick && Date.now() - lastClick < 500) {
+					if (lastClick && Date.now() - lastClick < 500) {
 						lastClick = null
 						titleButton.classList.toggle("closed")
 					} else {
 						lastClick = Date.now()
 					}
 				})
-				
-				if(group.Name === "Attributes") {
+
+				if (group.Name === "Attributes") {
 					group.Properties.sort((a, b) => (a[0].toLowerCase() < b[0].toLowerCase() ? -1 : 1))
 				} else {
 					group.Properties.sort((a, b) => (a[0] < b[0] ? -1 : 1))
 				}
-				
-				if(group.Properties.length === 0) {
-					const cont = html`
-					<div class=btr-property>
-						<div class=btr-property-more></div>
-						<div class="btr-property-name btr-property-readonly" style="grid-column: auto / span 2">No ${group.Name.slice(0, -1)} has been added</div>
+
+				if (group.Properties.length === 0) {
+					const cont = html` <div class="btr-property">
+						<div class="btr-property-more"></div>
+						<div
+							class="btr-property-name btr-property-readonly"
+							style="grid-column: auto / span 2"
+						>
+							No ${group.Name.slice(0, -1)} has been added
+						</div>
 					</div>`
-					
+
 					propertiesList.append(cont)
 				}
-				
-				if(group.Name === "Tags") {
-					for(const [name] of group.Properties) {
-						const cont = html`
-						<div class=btr-property>
-							<div class=btr-property-more></div>
-							<div class=btr-property-name title=${name} style="grid-column: auto / span 2">${name}</div>
+
+				if (group.Name === "Tags") {
+					for (const [name] of group.Properties) {
+						const cont = html` <div class="btr-property">
+							<div class="btr-property-more"></div>
+							<div class="btr-property-name" title=${name} style="grid-column: auto / span 2">
+								${name}
+							</div>
 						</div>`
-						
+
 						propertiesList.append(cont)
 					}
-					
+
 					continue
 				}
-				
-				for(const [name, prop] of group.Properties) {
+
+				for (const [name, prop] of group.Properties) {
 					const value = prop.value
 					let type = prop.type
 
-					if(name === "LinkedSource" && !value) {
+					if (name === "LinkedSource" && !value) {
 						continue
-					} else if(name === "BrickColor" && type === "int") {
+					} else if (name === "BrickColor" && type === "int") {
 						type = "BrickColor"
 					}
 
-					const nameItem = html`<div class=btr-property-name title=${name}>${name}</div>`
-					const valueItem = html`<div class=btr-property-value></div>`
+					const nameItem = html`<div class="btr-property-name" title=${name}>${name}</div>`
+					const valueItem = html`<div class="btr-property-value"></div>`
 
-					if(name === "ClassName" || type === "UniqueId") {
+					if (name === "ClassName" || type === "UniqueId") {
 						nameItem.classList.add("btr-property-readonly")
 						valueItem.classList.add("btr-property-readonly")
 					}
 
-					switch(type) {
-					case "int64":
-					case "int":
-						valueItem.textContent = value
-						break
-					case "float":
-					case "double":
-						valueItem.textContent = String(fixNum(value))
-						break
-					case "string": case "UniqueId": {
-						const input = html<HTMLInputElement>`<input type=text readonly>`
+					switch (type) {
+						case "int64":
+						case "int":
+							valueItem.textContent = value
+							break
+						case "float":
+						case "double":
+							valueItem.textContent = String(fixNum(value))
+							break
+						case "string":
+						case "UniqueId": {
+							const input = html<HTMLInputElement>`<input type="text" readonly />`
 
-						const tooLong = value.length > 120
-						if(tooLong || value.includes("\n") || name.includes("Source")) {
-							input.value = input.title = (tooLong ? value.slice(0, 117) + "..." : value)
+							const tooLong = value.length > 120
+							if (tooLong || value.includes("\n") || name.includes("Source")) {
+								input.value = input.title = tooLong ? value.slice(0, 117) + "..." : value
 
-							const more = html<HTMLAnchorElement>`<a class=more title="View Source">...</a>`
-							more.$on("click", () => this.openSourceViewer(target, name))
-							
-							valueItem.append(more)
-						} else {
-							const id = AssetCache.getAssetIdFromUrl(value)
-							if(id) {
-								const more = html<HTMLAnchorElement>`<a class=more href="https://www.roblox.com/library/${id}/Redirect" target=_blank>🔗</a>`
-								more.title = "Go to asset"
+								const more = html<HTMLAnchorElement>`<a class="more" title="View Source"
+									>...</a
+								>`
+								more.$on("click", () => this.openSourceViewer(target, name))
+
 								valueItem.append(more)
+							} else {
+								const id = AssetCache.getAssetIdFromUrl(value)
+								if (id) {
+									const more = html<HTMLAnchorElement>`<a
+										class="more"
+										href="https://www.roblox.com/library/${id}/Redirect"
+										target="_blank"
+										>🔗</a
+									>`
+									more.title = "Go to asset"
+									valueItem.append(more)
+								}
+
+								input.value = input.title = value
 							}
 
-							input.value = input.title = value
+							valueItem.append(input)
+							break
 						}
+						case "bool": {
+							const input = html<HTMLInputElement>`<input type="checkbox" />`
+							input.checked = value
+							valueItem.append(input)
 
-						valueItem.append(input)
-						break
-					}
-					case "bool": {
-						const input = html<HTMLInputElement>`<input type=checkbox>`
-						input.checked = value
-						valueItem.append(input)
-						
-						input.$on("change", () => input.checked = value)
-						break
-					}
-					case "Instance":
-						valueItem.textContent = value ? value.Name : ""
-						break
-					case "CFrame":
-					case "Vector2":
-					case "Vector3":
-					case "Vector2int16":
-					case "Vector3int16":
-						valueItem.textContent = fixNums(value).join(", ")
-						break
-					case "Color3": {
-						const rgb = value.map(x => Math.round(x * 255))
-						valueItem.textContent = `[${rgb.join(", ")}]`
-						valueItem.prepend(html`<span class=btr-color3-preview style=background-color:rgb(${rgb.join(",")})></span>`)
-						break
-					}
-					case "BrickColor":
-						valueItem.textContent = BrickColor[value]?.name || String(value) + " (Unknown BrickColor)"
-						if(BrickColor[value]) {
-							valueItem.prepend(html`<span class=btr-color3-preview style=background-color:rgb(${BrickColor[value].color.join(",")})></span>`)
+							input.$on("change", () => (input.checked = value))
+							break
 						}
-						break
-					case "EnumAttribute":
-						valueItem.textContent = `${ApiDump.getEnumName(value[0], value[1]) || `Enum.${value[0]} ${value[1]}`}`
-						break
-					case "Enum":
-						valueItem.textContent = `${ApiDump.getPropertyEnumName(target.ClassName, name, value) || value}`
-						break
-					case "Rect2D":
-						valueItem.textContent = `{${fixNums(value[0]).join(", ")}}, {${fixNums(value[1]).join(", ")}}`
-						break
-					case "UDim":
-						valueItem.textContent = `${fixNums(value).join(", ")}`
-						break
-					case "UDim2":
-						valueItem.textContent = `{${fixNums(value[0]).join(", ")}}, {${fixNums(value[1]).join(", ")}}`
-						break
-					case "PhysicalProperties":
-						valueItem.textContent = value ?
-							fixNums([value.Density, value.Friction, value.Elasticity, value.FrictionWeight, value.ElasticityWeight, value.AcousticAbsorption]).join(", ") :
-							"false"
-						break
-					case "Font":
-						valueItem.textContent = `{ Family = ${value.Family}, Weight = ${ApiDump.getEnumName("FontWeight", value.Weight) ?? value.Weight}, Style = ${ApiDump.getEnumName("FontStyle", value.Style) ?? value.Style} }`
-						break
-					case "NumberSequence":
-						valueItem.textContent = value.map(x => `(${fixNums([x.Time, x.Value]).join(", ")})`).join(", ")
-						break
-					case "NumberRange":
-						valueItem.textContent = `${fixNums(value).join(", ")}`
-						break
-					case "ColorSequence":
-						valueItem.textContent = value.map(x => `(${fixNums([x.Time])[0]}, (${fixNums(x.Value).map(num => Math.round(num * 255)).join(", ")}))`).join(", ")
-						break
-					case "Axes":
-					case "Faces":
-						valueItem.textContent = Object.entries(value).filter(x => x[1]).map(x => x[0]).join(", ")
-						break
-					case "Ray":
-						valueItem.textContent = `{${fixNums(value[0]).join(", ")}}, {${fixNums(value[1]).join(", ")}}`
-						break
-					case "Content":
-						const sourceType = ApiDump.getEnumName("ContentSourceType", value.SourceType)
-						
-						if(sourceType === "Uri") {
-							valueItem.textContent = value.Uri
-						} else if(sourceType === "Object") {
-							valueItem.textContent = `{${value.Object}}`
-						} else {
-							valueItem.textContent = sourceType ?? ""
+						case "Instance":
+							valueItem.textContent = value ? value.Name : ""
+							break
+						case "CFrame":
+						case "Vector2":
+						case "Vector3":
+						case "Vector2int16":
+						case "Vector3int16":
+							valueItem.textContent = fixNums(value).join(", ")
+							break
+						case "Color3": {
+							const rgb = value.map((x) => Math.round(x * 255))
+							valueItem.textContent = `[${rgb.join(", ")}]`
+							valueItem.prepend(
+								html`<span
+									class="btr-color3-preview"
+									style="background-color:rgb(${rgb.join(",")})"
+								></span>`,
+							)
+							break
 						}
-						
-						break
-					case "SecurityCapabilities":
-						valueItem.textContent = Object.entries(value).filter(x => x[1]).map(x => x[0]).join(" | ")
-						break
-					default:
-						console.log("Unknown property type", type, name, prop)
-						valueItem.textContent = String(value)
+						case "BrickColor":
+							valueItem.textContent =
+								BrickColor[value]?.name || String(value) + " (Unknown BrickColor)"
+							if (BrickColor[value]) {
+								valueItem.prepend(
+									html`<span
+										class="btr-color3-preview"
+										style="background-color:rgb(${BrickColor[value].color.join(",")})"
+									></span>`,
+								)
+							}
+							break
+						case "EnumAttribute":
+							valueItem.textContent = `${ApiDump.getEnumName(value[0], value[1]) || `Enum.${value[0]} ${value[1]}`}`
+							break
+						case "Enum":
+							valueItem.textContent = `${ApiDump.getPropertyEnumName(target.ClassName, name, value) || value}`
+							break
+						case "Rect2D":
+							valueItem.textContent = `{${fixNums(value[0]).join(", ")}}, {${fixNums(value[1]).join(", ")}}`
+							break
+						case "UDim":
+							valueItem.textContent = `${fixNums(value).join(", ")}`
+							break
+						case "UDim2":
+							valueItem.textContent = `{${fixNums(value[0]).join(", ")}}, {${fixNums(value[1]).join(", ")}}`
+							break
+						case "PhysicalProperties":
+							valueItem.textContent = value
+								? fixNums([
+										value.Density,
+										value.Friction,
+										value.Elasticity,
+										value.FrictionWeight,
+										value.ElasticityWeight,
+										value.AcousticAbsorption,
+									]).join(", ")
+								: "false"
+							break
+						case "Font":
+							valueItem.textContent = `{ Family = ${value.Family}, Weight = ${ApiDump.getEnumName("FontWeight", value.Weight) ?? value.Weight}, Style = ${ApiDump.getEnumName("FontStyle", value.Style) ?? value.Style} }`
+							break
+						case "NumberSequence":
+							valueItem.textContent = value
+								.map((x) => `(${fixNums([x.Time, x.Value]).join(", ")})`)
+								.join(", ")
+							break
+						case "NumberRange":
+							valueItem.textContent = `${fixNums(value).join(", ")}`
+							break
+						case "ColorSequence":
+							valueItem.textContent = value
+								.map(
+									(x) =>
+										`(${fixNums([x.Time])[0]}, (${fixNums(x.Value)
+											.map((num) => Math.round(num * 255))
+											.join(", ")}))`,
+								)
+								.join(", ")
+							break
+						case "Axes":
+						case "Faces":
+							valueItem.textContent = Object.entries(value)
+								.filter((x) => x[1])
+								.map((x) => x[0])
+								.join(", ")
+							break
+						case "Ray":
+							valueItem.textContent = `{${fixNums(value[0]).join(", ")}}, {${fixNums(value[1]).join(", ")}}`
+							break
+						case "Content":
+							const sourceType = ApiDump.getEnumName("ContentSourceType", value.SourceType)
+
+							if (sourceType === "Uri") {
+								valueItem.textContent = value.Uri
+							} else if (sourceType === "Object") {
+								valueItem.textContent = `{${value.Object}}`
+							} else {
+								valueItem.textContent = sourceType ?? ""
+							}
+
+							break
+						case "SecurityCapabilities":
+							valueItem.textContent = Object.entries(value)
+								.filter((x) => x[1])
+								.map((x) => x[0])
+								.join(" | ")
+							break
+						default:
+							console.log("Unknown property type", type, name, prop)
+							valueItem.textContent = String(value)
 					}
 
-					if(!valueItem.title) {
+					if (!valueItem.title) {
 						valueItem.title = valueItem.textContent
 					}
 
-					const cont = html`
-					<div class=btr-property>
-						<div class=btr-property-more></div>
+					const cont = html` <div class="btr-property">
+						<div class="btr-property-more"></div>
 					</div>`
-					
+
 					cont.append(nameItem, valueItem)
 					propertiesList.append(cont)
 				}
 			}
 		}
-		
+
 		select(items) {
 			this.selection.splice(0, this.selection.length)
-			
-			for(const item of items) {
+
+			for (const item of items) {
 				this.selection.push(item)
 			}
-			
+
 			this.updateProperties()
 		}
 
@@ -838,243 +965,251 @@ export const Explorer = (() => {
 			this.filterInput.value = filter // we want leading spaces here so writing isnt jank
 			this.currentFilter = filter.trim()
 		}
-		
+
 		selectModel(model) {
 			this.selectedModel = model
-			
+
 			this.dropdown.$find(".btr-dropdown-menu").style.display = "none"
 			this.dropdown.$find(".btr-dropdown-label").textContent = model.title
-			
+
 			this.element.$find(".btr-explorer-list").style.display = ""
 			this.element.$find(".btr-explorer-loading").style.display = "none"
-			
-			for(const li of this.dropdown.$findAll(`.btr-dropdown-menu > li`)) {
+
+			for (const li of this.dropdown.$findAll(`.btr-dropdown-menu > li`)) {
 				li.classList.toggle("selected", +li.getAttribute("btr-model-id") === model.id)
 			}
-			
+
 			this.setFilter("")
 			this.select([])
 		}
-		
+
 		isItemVisible(item, view) {
-			if(view === this.defaultView) {
+			if (view === this.defaultView) {
 				return true
 			}
-			
+
 			return view.visible.has(item)
 		}
-		
+
 		bubbleItem(item, view, canBubble = true) {
-			if(!this.isItemVisible(item, view)) { return }
-			
+			if (!this.isItemVisible(item, view)) {
+				return
+			}
+
 			let numOpenDescendants = 0
 			let maxOpenWidth = item
 			let shouldBubble = false
-			
-			if(view.open.has(item)) {
-				for(const child of item.children) {
-					if(this.isItemVisible(child, view)) {
+
+			if (view.open.has(item)) {
+				for (const child of item.children) {
+					if (this.isItemVisible(child, view)) {
 						numOpenDescendants += (view.numOpenDescendants.get(child) ?? 0) + 1
-						
-						if(item.width && child.width) {
+
+						if (item.width && child.width) {
 							const childMaxOpenWidth = view.maxOpenWidth.get(child) ?? child
-							
-							if(childMaxOpenWidth.width > maxOpenWidth.width) {
+
+							if (childMaxOpenWidth.width > maxOpenWidth.width) {
 								maxOpenWidth = childMaxOpenWidth
 							}
 						}
 					}
 				}
 			}
-			
+
 			const oldNumOpenDescendants = view.numOpenDescendants.get(item) ?? 0
-			
-			if(numOpenDescendants !== oldNumOpenDescendants) {
+
+			if (numOpenDescendants !== oldNumOpenDescendants) {
 				view.numOpenDescendants.set(item, numOpenDescendants)
 				shouldBubble = true
 			}
-			
-			if(item.width) {
+
+			if (item.width) {
 				const oldMaxOpenWidth = view.maxOpenWidth.get(item) ?? item
-				
-				if(oldMaxOpenWidth !== maxOpenWidth) {
+
+				if (oldMaxOpenWidth !== maxOpenWidth) {
 					view.maxOpenWidth.set(item, maxOpenWidth)
 					shouldBubble = true
 				}
 			}
-			
-			if(canBubble && shouldBubble && item.parent) {
+
+			if (canBubble && shouldBubble && item.parent) {
 				this.bubbleItem(item.parent, view)
 			}
 		}
-		
+
 		createItem(children?: any, open?: any) {
 			const item: Record<string, any> = {
 				numDescendants: 0,
-				children: []
+				children: [],
 			}
-			
-			if(open) {
+
+			if (open) {
 				this.defaultView.open.add(item)
 			}
-			
-			for(const childInst of children) {
+
+			for (const childInst of children) {
 				const child = this.createItem(childInst.Children, open)
 				child.inst = childInst
 				child.parent = item
-				
+
 				this.bubbleItem(child, this.defaultView, false)
-				
+
 				item.numDescendants += child.numDescendants + 1
 				item.children.push(child)
 			}
-			
+
 			item.children.sort(sortChildren)
-			
+
 			this.bubbleItem(item, this.defaultView, false)
 			return item
 		}
-		
+
 		setIsItemOpen(item, bool, view) {
-			if(view.open.has(item) === !!bool) { return }
-			
-			if(bool) {
+			if (view.open.has(item) === !!bool) {
+				return
+			}
+
+			if (bool) {
 				view.open.add(item)
 			} else {
 				view.open.delete(item)
 			}
-			
+
 			this.bubbleItem(item, view)
 		}
-		
-		addModel(title, modelContents, params={}) {
+
+		addModel(title, modelContents, params = {}) {
 			const modelId = this.modelCounter++
-			
+
 			const btn = html`<li btr-model-id="${modelId}"><a title="${title}">${title}</a></li>`
 			const didModelLoad = Array.isArray(modelContents)
-			
+
 			const model = this.createItem(didModelLoad ? modelContents : [], (params as any)?.open ?? true)
 			model.id = modelId
 			model.didLoad = didModelLoad
 			model.isRoot = true
 			model.title = title
-			
+
 			this.setIsItemOpen(model, true, this.defaultView)
-			
+
 			btn.$on("click", () => this.selectModel(model))
-			
+
 			this.dropdown.$find(".btr-dropdown-menu").append(btn)
 			this.models.push(model)
 
-			if(this.models.length === 1) {
+			if (this.models.length === 1) {
 				this.selectModel(model)
 			} else {
 				this.dropdown.style.display = ""
 			}
 		}
-		
+
 		update() {
 			const model = this.selectedModel
-			
-			if(!model) {
+
+			if (!model) {
 				this.innerList.style.display = "none"
 				this.listStatus.style.display = ""
-				
+
 				this.listStatus.textContent = `No model selected`
 				return
 			}
-			
-			if(!model.didLoad) {
+
+			if (!model.didLoad) {
 				this.innerList.style.display = "none"
 				this.listStatus.style.display = ""
-				
+
 				this.listStatus.textContent = `Failed to load model`
 				return
 			}
-			
+
 			this.listStatus.style.display = "none"
 			this.innerList.style.display = ""
-			
+
 			const visibleHeightPx = this.innerList.parentNode.clientHeight
 			const visibleOffsetPx = this.innerList.parentNode.scrollTop
-			
+
 			const addedLines = 5
-			
+
 			const visibleStartOffset = Math.max(0, Math.floor(visibleOffsetPx / this.lineHeight) - addedLines)
-			const visibleEndOffset = visibleStartOffset + Math.ceil(visibleHeightPx / this.lineHeight) + 1 + addedLines
-			
+			const visibleEndOffset =
+				visibleStartOffset + Math.ceil(visibleHeightPx / this.lineHeight) + 1 + addedLines
+
 			const numVisibleLines = visibleEndOffset - visibleStartOffset
-			
-			if(this.lines.length < numVisibleLines) {
-				for(let i = this.lines.length; i < numVisibleLines; i++) {
-					const elem = html`
-					<div class=btr-explorer-item-container>
-						<div class=btr-explorer-item>
-							<div class=btr-explorer-more></div>
-							<div class=btr-explorer-icon></div>
-							<span class=btr-explorer-item-name></span>
+
+			if (this.lines.length < numVisibleLines) {
+				for (let i = this.lines.length; i < numVisibleLines; i++) {
+					const elem = html` <div class="btr-explorer-item-container">
+						<div class="btr-explorer-item">
+							<div class="btr-explorer-more"></div>
+							<div class="btr-explorer-icon"></div>
+							<span class="btr-explorer-item-name"></span>
 						</div>
 					</div>`
-					
+
 					const line = {
 						elem: elem,
 						btn: elem.$req(".btr-explorer-item"),
 						icon: elem.$req(".btr-explorer-icon"),
 						nameLabel: elem.$req(".btr-explorer-item-name"),
-						item: null as any
+						item: null as any,
 					}
-					
+
 					let lastClick = 0
-	
-					line.btn.$on("click", ev => {
+
+					line.btn.$on("click", (ev) => {
 						ev.stopPropagation()
 						ev.stopImmediatePropagation()
 						ev.preventDefault()
-						
-						if(line.item) {
+
+						if (line.item) {
 							this.select([line.item])
-		
-							if(Date.now() - lastClick < 500) {
+
+							if (Date.now() - lastClick < 500) {
 								lastClick = 0
-		
-								switch(line.item.inst.ClassName) {
-								case "Script":
-								case "LocalScript":
-								case "ModuleScript":
-									this.openSourceViewer(line.item.inst, "Source")
-									break
-								default:
-									line.btn.classList.toggle("closed")
+
+								switch (line.item.inst.ClassName) {
+									case "Script":
+									case "LocalScript":
+									case "ModuleScript":
+										this.openSourceViewer(line.item.inst, "Source")
+										break
+									default:
+										line.btn.classList.toggle("closed")
 								}
 							} else {
 								lastClick = Date.now()
 							}
 						}
 					})
-					
-					elem.$req(".btr-explorer-more").$on("click", ev => {
+
+					elem.$req(".btr-explorer-more").$on("click", (ev) => {
 						ev.stopPropagation()
 						ev.stopImmediatePropagation()
 						ev.preventDefault()
-						
-						if(line.item) {
-							this.setIsItemOpen(line.item, !this.activeView.open.has(line.item), this.activeView)
+
+						if (line.item) {
+							this.setIsItemOpen(
+								line.item,
+								!this.activeView.open.has(line.item),
+								this.activeView,
+							)
 						}
 					})
-					
+
 					this.innerList.append(elem)
 					this.lines.push(line)
 				}
-			} else if(this.lines.length > numVisibleLines) {
-				for(let i = numVisibleLines; i <= this.lines.length; i++) {
+			} else if (this.lines.length > numVisibleLines) {
+				for (let i = numVisibleLines; i <= this.lines.length; i++) {
 					const line = this.lines.pop()
 					line.elem.remove()
 				}
 			}
-			
+
 			const filterView = this.filterView
-			
-			if(filterView.query !== this.currentFilter || filterView.model !== model) {
+
+			if (filterView.query !== this.currentFilter || filterView.model !== model) {
 				filterView.query = this.currentFilter
 				filterView.model = model
 				filterView.matches.clear()
@@ -1083,73 +1218,75 @@ export const Explorer = (() => {
 				filterView.open.add(model)
 				filterView.numOpenDescendants.clear()
 				filterView.maxOpenWidth.clear()
-				
-				if(filterView.query) {
+
+				if (filterView.query) {
 					this.filterInput.parentNode.classList.add("loading")
-					
+
 					filterView.running = {
-						words: filterView.query.split(" ").filter(x => x).map(x => x.toLowerCase()),
+						words: filterView.query
+							.split(" ")
+							.filter((x) => x)
+							.map((x) => x.toLowerCase()),
 						current: model,
 						stack: [],
-						index: 0
+						index: 0,
 					}
 				} else {
 					this.filterInput.parentNode.classList.remove("loading")
-					
+
 					delete filterView.running
 				}
 			}
-			
+
 			const view = filterView.query ? filterView : this.defaultView
 			this.activeView = view
-			
-			if(!model.calculatedWidths && !model.doingStuff) {
+
+			if (!model.calculatedWidths && !model.doingStuff) {
 				model.doingStuff = true
-				
+
 				setTimeout(() => {
 					model.doingStuff = false
-					
-					if(!model.widthCalc) {
+
+					if (!model.widthCalc) {
 						model.widthCalc = {
 							stack: [],
 							current: model,
-							index: 0
+							index: 0,
 						}
-						
+
 						model.width = 50
 						model.maxWidth = 50
 					}
-					
+
 					const startTime = performance.now()
 					const endTime = startTime + 4
-					
+
 					const running = model.widthCalc
-					
-					outer:
-					while(performance.now() < endTime) {
-						while(running.index >= running.current.children.length) {
+
+					outer: while (performance.now() < endTime) {
+						while (running.index >= running.current.children.length) {
 							this.bubbleItem(running.current, this.defaultView, false)
-							
-							if(!running.stack.length) {
+
+							if (!running.stack.length) {
 								delete model.widthCalc
 								model.calculatedWidths = true
 								break outer
 							}
-							
+
 							running.index = running.stack.pop()
 							running.current = running.current.parent
 						}
-						
+
 						const item = running.current.children[running.index]
 						running.index += 1
 
 						item.width = getLineWidth(item.inst.Name, running.stack.length)
-						
-						if(item.width > model.maxWidth) {
+
+						if (item.width > model.maxWidth) {
 							model.maxWidth = item.width
 						}
-						
-						if(item.children.length > 0) {
+
+						if (item.children.length > 0) {
 							running.stack.push(running.index)
 							running.current = item
 							running.index = 0
@@ -1157,63 +1294,63 @@ export const Explorer = (() => {
 					}
 				}, 0)
 			}
-			
-			if(view.running && !view.doingStuff) {
+
+			if (view.running && !view.doingStuff) {
 				view.doingStuff = true
-				
+
 				setTimeout(() => {
 					view.doingStuff = false
-					
+
 					const startTime = performance.now()
 					const endTime = startTime + 4
-					
+
 					const running = view.running
-					
-					while(performance.now() < endTime) {
-						while(running.stack.length && running.index >= running.current.children.length) {
+
+					while (performance.now() < endTime) {
+						while (running.stack.length && running.index >= running.current.children.length) {
 							running.index = running.stack.pop()
 							running.current = running.current.parent
 						}
-						
+
 						const item = running.current.children[running.index]
-						
-						if(!item) {
+
+						if (!item) {
 							delete view.running
 							this.filterInput.parentNode.classList.remove("loading")
 							break
 						}
-						
+
 						running.index += 1
-						
+
 						const name = item.inst.Name.toLowerCase()
 						const className = item.inst.ClassName.toLowerCase()
 						let matches = true
-						
-						for(const word of running.words) {
-							if(!name.includes(word) && !className.includes(word)) {
+
+						for (const word of running.words) {
+							if (!name.includes(word) && !className.includes(word)) {
 								matches = false
 								break
 							}
 						}
-						
-						if(matches) {
+
+						if (matches) {
 							view.matches.add(item)
-							
+
 							let bubble = item
-							while(bubble && !view.visible.has(bubble)) {
+							while (bubble && !view.visible.has(bubble)) {
 								view.visible.add(bubble)
 								view.open.add(bubble)
-								
+
 								this.bubbleItem(bubble, view, false)
 								bubble = bubble.parent
 							}
-							
-							if(bubble) {
+
+							if (bubble) {
 								this.bubbleItem(bubble, view, true)
 							}
 						}
-						
-						if(item.children.length > 0) {
+
+						if (item.children.length > 0) {
 							running.stack.push(running.index)
 							running.current = item
 							running.index = 0
@@ -1223,74 +1360,80 @@ export const Explorer = (() => {
 			}
 
 			//
-			
+
 			this.innerList.style.paddingTop = `${visibleStartOffset * this.lineHeight}px`
 			this.innerList.style.height = `${(view.numOpenDescendants.get(model) ?? 0) * this.lineHeight + 4}px`
 			this.innerList.style.width = `${model.calculatedWidths ? (view.maxOpenWidth.get(model) ?? model).width : model.maxWidth}px`
-			
+
 			//
-			
+
 			const setLineItem = (line, item, depth = 0) => {
-				if(item !== line.item) {
+				if (item !== line.item) {
 					line.item = item
-					
-					if(item) {
+
+					if (item) {
 						const icon = ApiDump.getExplorerIconIndex(item.inst.ClassName)
-						
+
 						line.icon.style.backgroundPosition = `-${icon * 16}px 0`
 						line.nameLabel.textContent = item.inst.Name
-						
-						line.btn.classList.toggle("btr-explorer-has-children", item ? item.children.length > 0 : false)
-						
+
+						line.btn.classList.toggle(
+							"btr-explorer-has-children",
+							item ? item.children.length > 0 : false,
+						)
+
 						line.btn.style.paddingLeft = `${depth * 20}px`
 						line.btn.style.display = ""
 					} else {
 						line.btn.style.display = "none"
 					}
 				}
-				
-				line.nameLabel.style.opacity = view.query && !view.matches.has(item) ? (!view.visible.has(item) ? "0.2" : "0.5") : ""
+
+				line.nameLabel.style.opacity =
+					view.query && !view.matches.has(item) ? (!view.visible.has(item) ? "0.2" : "0.5") : ""
 				line.btn.classList.toggle("closed", item ? !this.activeView.open.has(item) : false)
 				line.btn.classList.toggle("selected", item ? this.selection.includes(item) : false)
 			}
-			
+
 			const stack: any[] = []
 			let counter = 0
-			
+
 			let current = model
 			let currentIndex = 0
-			
-			for(let i = 0; i < numVisibleLines; i++) {
+
+			for (let i = 0; i < numVisibleLines; i++) {
 				const itemIndex = visibleStartOffset + i
 				const line = this.lines[i]
 				let selectedItem
-				
-				while(true) {
-					while(stack.length && currentIndex >= current.children.length) {
+
+				while (true) {
+					while (stack.length && currentIndex >= current.children.length) {
 						currentIndex = stack.pop()
 						current = current.parent
 					}
-					
+
 					const item = current.children[currentIndex]
-					if(!item) { break }
-					
-					if(!this.isItemVisible(item, view)) {
+					if (!item) {
+						break
+					}
+
+					if (!this.isItemVisible(item, view)) {
 						currentIndex += 1
 						continue
 					}
-					
-					if(counter >= itemIndex) {
+
+					if (counter >= itemIndex) {
 						selectedItem = item
 						break
 					}
-					
+
 					currentIndex += 1
 					counter += 1
-					
+
 					const numOpenDescendants = view.numOpenDescendants.get(item) ?? 0
-					
-					if(view.open.has(item) && numOpenDescendants > 0) {
-						if(counter + numOpenDescendants <= itemIndex) {
+
+					if (view.open.has(item) && numOpenDescendants > 0) {
+						if (counter + numOpenDescendants <= itemIndex) {
 							counter += numOpenDescendants
 						} else {
 							stack.push(currentIndex)
@@ -1299,27 +1442,27 @@ export const Explorer = (() => {
 						}
 					}
 				}
-				
+
 				setLineItem(line, selectedItem, stack.length)
 			}
 		}
-		
+
 		setActive(bool) {
-			if(this.active !== !!bool) {
+			if (this.active !== !!bool) {
 				this.active = !!bool
-				
-				if(this.active) {
+
+				if (this.active) {
 					const updateLoop = () => {
 						this.raf = requestAnimationFrame(updateLoop)
 						this.update()
 					}
-					
+
 					this.raf = requestAnimationFrame(updateLoop)
 				} else {
 					cancelAnimationFrame(this.raf)
 					this.raf = null
-					
-					if(this.sourceViewerModal) {
+
+					if (this.sourceViewerModal) {
 						this.closeSourceViewer()
 					}
 				}

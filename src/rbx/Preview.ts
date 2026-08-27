@@ -6,7 +6,12 @@ import { SETTINGS } from "@/feat/settings"
 import { AssetCache } from "@/rbx/AssetCache"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { RBXScene } from "@/rbx/Scene"
-import { AccessoryAssetTypeIds, AnimationPreviewAssetTypeIds, WearableAssetTypeIds, loggedInUserPromise } from "@/pages/common"
+import {
+	AccessoryAssetTypeIds,
+	AnimationPreviewAssetTypeIds,
+	WearableAssetTypeIds,
+	loggedInUserPromise,
+} from "@/pages/common"
 import { query } from "@/core/query"
 import { EventEmitter } from "@/rbx/EventEmitter"
 
@@ -14,7 +19,7 @@ const outfitCache: Record<string, any> = {}
 let avatarRulePromise
 
 function getAvatarRules() {
-	if(!avatarRulePromise) {
+	if (!avatarRulePromise) {
 		avatarRulePromise = RobloxApi.avatar.getAvatarRules()
 	}
 
@@ -24,7 +29,7 @@ function getAvatarRules() {
 function solveBodyColors(bodyColor3s) {
 	const bodyColors: Record<string, any> = {}
 
-	for(const [name, value] of Object.entries(bodyColor3s) as [string, any][]) {
+	for (const [name, value] of Object.entries(bodyColor3s) as [string, any][]) {
 		const key = name.slice(0, -6) // remove Color3 from the end
 		bodyColors[key] = `#${value}`
 	}
@@ -33,8 +38,8 @@ function solveBodyColors(bodyColor3s) {
 }
 
 function getOutfitData(id) {
-	if(!outfitCache[id]) {
-		return outfitCache[id] = RobloxApi.avatar.getOutfitDetails(id).then(data => {
+	if (!outfitCache[id]) {
+		return (outfitCache[id] = RobloxApi.avatar.getOutfitDetails(id).then((data) => {
 			data = { ...data }
 
 			data.scales = data.scale
@@ -42,43 +47,43 @@ function getOutfitData(id) {
 
 			data.bodyColors = solveBodyColors(data.bodyColor3s)
 			delete data.bodyColor3s
-			
+
 			return data
-		})
+		}))
 	}
 
 	return outfitCache[id]
 }
 
 function getPlayerAppearance(userId) {
-	if(!outfitCache["user" + userId]) {
-		return outfitCache["user" + userId] = RobloxApi.avatar.getUserAvatar(userId).then(data => {
+	if (!outfitCache["user" + userId]) {
+		return (outfitCache["user" + userId] = RobloxApi.avatar.getUserAvatar(userId).then((data) => {
 			data = { ...data }
-			
+
 			data.bodyColors = solveBodyColors(data.bodyColor3s)
 			delete data.bodyColor3s
-			
+
 			return data
-		})
+		}))
 	}
 
 	return outfitCache["user" + userId]
 }
 
 function getCurrentAppearance() {
-	if(!outfitCache.default) {
-		return outfitCache.default = RobloxApi.avatar.getCurrentAvatar().then(async data => {
-			if(!data || data.errors) {
+	if (!outfitCache.default) {
+		return (outfitCache.default = RobloxApi.avatar.getCurrentAvatar().then(async (data) => {
+			if (!data || data.errors) {
 				return getOutfitData(1116516198)
 			}
-			
+
 			data = { ...data }
-			
+
 			data.bodyColors = solveBodyColors(data.bodyColor3s)
 			delete data.bodyColor3s
-			
+
 			return data
-		})
+		}))
 	}
 
 	return outfitCache.default
@@ -87,7 +92,17 @@ function getCurrentAppearance() {
 const SkippableAssetTypes = [
 	19, // Gear
 	24, // Animation
-	48, 49, 50, 51, 52, 53, 54, 55, 56, 61, 78 // Avatar Animations
+	48,
+	49,
+	50,
+	51,
+	52,
+	53,
+	54,
+	55,
+	56,
+	61,
+	78, // Avatar Animations
 ]
 
 const LayeredAssetTypes = [64, 65, 66, 67, 68, 69, 70, 71, 72]
@@ -109,12 +124,12 @@ class AvatarPreviewer extends EventEmitter {
 		this.scene = new RBXScene.AvatarScene()
 		this.avatar = this.scene.avatar
 
-		this.container = html`<div class=btr-preview-container></div>`
+		this.container = html`<div class="btr-preview-container"></div>`
 		this.container.append(this.scene.canvas)
 
 		this.outfitAssets = new Set()
 		this.previewAssets = new Set()
-		
+
 		this.autoLoadPlayerType = "autoLoadPlayerType" in opts ? !!opts.autoLoadPlayerType : true
 		this.defaultAnimationsDisabled = !!(opts as any).defaultAnimationsDisabled
 		this.initPlayerTypeFromPlayingAnimation = false
@@ -129,19 +144,19 @@ class AvatarPreviewer extends EventEmitter {
 		this.currentAnim = null
 		this.loadingAnim = null
 		this.playingAnim = null
-		
-		this.avatar.on("layeredRequestStateChanged", state => {
+
+		this.avatar.on("layeredRequestStateChanged", (state) => {
 			this.container.classList.toggle("btr-layered-loading", state === "fetching")
 		})
-		
-		const invalidLayeredClothingMarker = html`<div class=btr-invalid-layered>!</div>`
-		
-		this.avatar.on("hasInvalidLayeredClothingChanged", hasInvalidLayeredClothing => {
-			if(this.avatar.hasInvalidAutoSkinnedAccessories && this.canStopAnimationIfAutoSkin) {
+
+		const invalidLayeredClothingMarker = html`<div class="btr-invalid-layered">!</div>`
+
+		this.avatar.on("hasInvalidLayeredClothingChanged", (hasInvalidLayeredClothing) => {
+			if (this.avatar.hasInvalidAutoSkinnedAccessories && this.canStopAnimationIfAutoSkin) {
 				this.stopAnimation()
 			}
-			
-			if(hasInvalidLayeredClothing) {
+
+			if (hasInvalidLayeredClothing) {
 				this.container.append(invalidLayeredClothingMarker)
 			} else {
 				invalidLayeredClothingMarker.remove()
@@ -152,28 +167,28 @@ class AvatarPreviewer extends EventEmitter {
 	//
 
 	setEnabled(bool) {
-		if(this.enabled === !!bool) {
+		if (this.enabled === !!bool) {
 			return
 		}
 
 		this.enabled = !!bool
 
-		if(this.enabled) {
-			if(!this.initialized) {
+		if (this.enabled) {
+			if (!this.initialized) {
 				this.initialized = true
 				this.trigger("init")
 			}
-			
-			if(!this.outfitLoaded) {
-				this._loadOutfit(...<any[]>(this.shouldLoadOutfit ?? []))
+
+			if (!this.outfitLoaded) {
+				this._loadOutfit(...(<any[]>(this.shouldLoadOutfit ?? [])))
 			}
 
-			if(!this.playingAnim) {
-				if(this.avatar.hasInvalidAutoSkinnedAccessories && this.canStopAnimationIfAutoSkin) {
+			if (!this.playingAnim) {
+				if (this.avatar.hasInvalidAutoSkinnedAccessories && this.canStopAnimationIfAutoSkin) {
 					this.stopAnimation()
-				} else if(this.currentAnim) {
+				} else if (this.currentAnim) {
 					this.loadAnimation(this.currentAnim)
-				} else if(!this.defaultAnimationsDisabled) {
+				} else if (!this.defaultAnimationsDisabled) {
 					this.loadDefaultAnimation()
 				}
 			}
@@ -187,15 +202,15 @@ class AvatarPreviewer extends EventEmitter {
 	}
 
 	setPlayerType(playerType) {
-		if(this.playerType === playerType) {
+		if (this.playerType === playerType) {
 			return
 		}
 
 		this.playerType = playerType
 		this.scene.avatar.setPlayerType(playerType)
-		
-		if(this.enabled) {
-			if(!this.currentAnim && !this.defaultAnimationsDisabled) {
+
+		if (this.enabled) {
+			if (!this.currentAnim && !this.defaultAnimationsDisabled) {
 				this.loadDefaultAnimation()
 			}
 		}
@@ -205,9 +220,9 @@ class AvatarPreviewer extends EventEmitter {
 
 	setOutfitAccessoriesVisible(bool) {
 		this.outfitAccessoriesVisible = !!bool
-		
-		for(const asset of this.outfitAssets) {
-			if(AccessoryAssetTypeIds.includes(asset.assetTypeId)) {
+
+		for (const asset of this.outfitAssets) {
+			if (AccessoryAssetTypeIds.includes(asset.assetTypeId)) {
 				asset.setEnabled(this.outfitAccessoriesVisible)
 			}
 		}
@@ -218,7 +233,7 @@ class AvatarPreviewer extends EventEmitter {
 	setOutfit(outfitId: any, outfitType?: any) {
 		this.outfitLoaded = false
 
-		if(this.enabled) {
+		if (this.enabled) {
 			this._loadOutfit(outfitId, outfitType)
 		} else {
 			this.shouldLoadOutfit = [outfitId, outfitType]
@@ -229,20 +244,20 @@ class AvatarPreviewer extends EventEmitter {
 		const [outfitId, outfitType] = args
 		const debounce = performance.now()
 		let outfitPromise
-		
+
 		this.outfitDebounce = debounce
 		delete this.shouldLoadOutfit
 
-		if(outfitType === "Outfit" && outfitId) {
+		if (outfitType === "Outfit" && outfitId) {
 			outfitPromise = getOutfitData(outfitId)
-		} else if(outfitType === "Player" && outfitId) {
+		} else if (outfitType === "Player" && outfitId) {
 			outfitPromise = getPlayerAppearance(outfitId)
 		} else {
 			outfitPromise = getCurrentAppearance()
 		}
-		
-		outfitPromise.then(result => {
-			if(this.outfitDebounce !== debounce) {
+
+		outfitPromise.then((result) => {
+			if (this.outfitDebounce !== debounce) {
 				return
 			}
 
@@ -257,16 +272,16 @@ class AvatarPreviewer extends EventEmitter {
 		this.avatar.setScales(data.scales)
 		this.avatar.setBodyColors(data.bodyColors)
 
-		if(!this.playerType && this.autoLoadPlayerType) {
+		if (!this.playerType && this.autoLoadPlayerType) {
 			this.setPlayerType(data.playerAvatarType)
 		}
-		
-		for(const asset of this.outfitAssets) {
+
+		for (const asset of this.outfitAssets) {
 			asset.remove()
 		}
-		
-		for(const asset of data.assets) {
-			if(!SkippableAssetTypes.includes(asset.assetType.id)) {
+
+		for (const asset of data.assets) {
+			if (!SkippableAssetTypes.includes(asset.assetType.id)) {
 				this.addAsset(asset.id, asset.assetType.id, asset.meta)
 			}
 		}
@@ -278,13 +293,13 @@ class AvatarPreviewer extends EventEmitter {
 	//
 
 	waitForOutfit() {
-		if(this.outfitLoaded) {
+		if (this.outfitLoaded) {
 			return Promise.resolve()
 		}
 
-		return new Promise<void>(resolve => this.once("appearanceLoaded", () => resolve()))
+		return new Promise<void>((resolve) => this.once("appearanceLoaded", () => resolve()))
 	}
-	
+
 	waitForAppearance() {
 		const promises: any[] = []
 
@@ -292,19 +307,19 @@ class AvatarPreviewer extends EventEmitter {
 			this.waitForOutfit().then(() => {
 				this.avatar.startLoadingAssets()
 				return this.avatar.waitForAppearance()
-			})
+			}),
 		)
 
-		if(!this.playingAnim) {
-			if(this.currentAnim) {
+		if (!this.playingAnim) {
+			if (this.currentAnim) {
 				this.loadAnimation(this.currentAnim)
-			} else if(!this.defaultAnimationsDisabled) {
+			} else if (!this.defaultAnimationsDisabled) {
 				this.loadDefaultAnimation()
 			}
 		}
 
-		if(!this.playingAnim && this.loadingAnim) {
-			promises.push(new Promise<void>(resolve => this.once("animationPlayed", () => resolve())))
+		if (!this.playingAnim && this.loadingAnim) {
+			promises.push(new Promise<void>((resolve) => this.once("animationPlayed", () => resolve())))
 		}
 
 		return Promise.all(promises)
@@ -312,16 +327,18 @@ class AvatarPreviewer extends EventEmitter {
 
 	addAsset(assetId, assetTypeId, meta) {
 		const asset = this.avatar.addAsset(assetId, assetTypeId, meta)
-		if(!asset) { return }
+		if (!asset) {
+			return
+		}
 
 		this.outfitAssets.add(asset)
-		
+
 		asset.on("update", () => {
-			if(AccessoryAssetTypeIds.includes(asset.assetTypeId)) {
+			if (AccessoryAssetTypeIds.includes(asset.assetTypeId)) {
 				asset.setEnabled(this.outfitAccessoriesVisible)
 			}
 		})
-		
+
 		asset.once("remove", () => {
 			this.outfitAssets.delete(asset)
 		})
@@ -330,13 +347,17 @@ class AvatarPreviewer extends EventEmitter {
 	}
 
 	addAssetPreview(assetId, assetTypeId, meta) {
-		if(LayeredAssetTypes.includes(assetTypeId)) {
-			if(!meta) { meta = { order: 1, version: 1 } }
-			meta = {...meta, order: 10 }
+		if (LayeredAssetTypes.includes(assetTypeId)) {
+			if (!meta) {
+				meta = { order: 1, version: 1 }
+			}
+			meta = { ...meta, order: 10 }
 		}
-		
+
 		const asset = this.avatar.addAsset(assetId, assetTypeId, meta)
-		if(!asset) { return }
+		if (!asset) {
+			return
+		}
 
 		asset.setPriority(2)
 
@@ -344,7 +365,7 @@ class AvatarPreviewer extends EventEmitter {
 		asset.once("remove", () => {
 			this.previewAssets.delete(asset)
 		})
-		
+
 		return asset
 	}
 
@@ -352,44 +373,47 @@ class AvatarPreviewer extends EventEmitter {
 
 	loadAnimation(assetId: any, fadeIn?: any) {
 		this.loadingAnim = assetId
-		
-		AssetCache.loadAnimation(assetId, data => {
-			if(this.loadingAnim !== assetId) {
+
+		AssetCache.loadAnimation(assetId, (data) => {
+			if (this.loadingAnim !== assetId) {
 				return
 			}
-			
-			if(this.playingAnim) {
+
+			if (this.playingAnim) {
 				this.scene.avatar.animator.stop(this.playingAnim.track, this.playingAnim.fadeSwitch)
 				this.playingAnim = null
 			}
 
 			this.loadingAnim = null
 			this.playingAnim = { id: assetId, data: data }
-			
+
 			this.playingAnim.track = this.scene.avatar.animator.play(data, {
 				fadeIn: fadeIn ?? 0,
 				loop: true,
-				onloop: !this.currentAnim && (() => {
-					if(this.loadingAnim) { return }
-					let animId
-					
-					if(R15Anims.includes(this.playingAnim.id)) {
-						const roll = Math.random()
-						animId = roll < 9 / 11 ? R15Anims[0] : roll < 10 / 11 ? R15Anims[1] : R15Anims[2]
-		
-					} else if(R6Anims.includes(this.playingAnim.id)) {
-						const roll = Math.random()
-						animId = roll < 9 / 10 ? R6Anims[0] : R6Anims[1]
-					}
-					
-					if(animId && animId !== this.playingAnim.id) {
-						this.playingAnim.fadeSwitch = 0.15
-						this.loadAnimation(animId, 0.15)
-					}
-				})
+				onloop:
+					!this.currentAnim &&
+					(() => {
+						if (this.loadingAnim) {
+							return
+						}
+						let animId
+
+						if (R15Anims.includes(this.playingAnim.id)) {
+							const roll = Math.random()
+							animId = roll < 9 / 11 ? R15Anims[0] : roll < 10 / 11 ? R15Anims[1] : R15Anims[2]
+						} else if (R6Anims.includes(this.playingAnim.id)) {
+							const roll = Math.random()
+							animId = roll < 9 / 10 ? R6Anims[0] : R6Anims[1]
+						}
+
+						if (animId && animId !== this.playingAnim.id) {
+							this.playingAnim.fadeSwitch = 0.15
+							this.loadAnimation(animId, 0.15)
+						}
+					}),
 			})
 
-			if(this.currentAnim && this.initPlayerTypeFromPlayingAnimation) {
+			if (this.currentAnim && this.initPlayerTypeFromPlayingAnimation) {
 				this.initPlayerTypeFromPlayingAnimation = false
 				this.setPlayerType(R6AnimParts.some((x: any) => x in data.keyframes) ? "R6" : "R15")
 			}
@@ -402,35 +426,35 @@ class AvatarPreviewer extends EventEmitter {
 		this.stopAnimation()
 		this.canStopAnimationIfAutoSkin = true
 
-		if(this.enabled) {
+		if (this.enabled) {
 			this.loadAnimation(this.playerType === "R15" ? R15Anims[0] : R6Anims[0])
 		}
 	}
-	
+
 	stopAnimation() {
 		this.currentAnim = null
 		this.loadingAnim = null
 		this.canStopAnimationIfAutoSkin = null
 
-		if(this.playingAnim) {
+		if (this.playingAnim) {
 			this.scene.avatar.animator.stop(this.playingAnim.track)
 			this.playingAnim = null
-			
+
 			this.trigger("animationStopped")
 		}
-		
+
 		this.trigger("currentAnimationChanged", null)
 	}
-	
+
 	playAnimation(animId) {
 		this.stopAnimation()
-		
+
 		this.currentAnim = animId
-		
-		if(this.enabled) {
+
+		if (this.enabled) {
 			this.loadAnimation(animId)
 		}
-		
+
 		this.trigger("currentAnimationChanged", animId)
 	}
 }
@@ -446,130 +470,160 @@ export class ItemPreviewer extends AvatarPreviewer {
 		this.isVisible = false
 		this.animMap = {} as Record<string, any>
 
-		const container = html`<div class=btr-preview-container-itempage></div>`
+		const container = html`<div class="btr-preview-container-itempage"></div>`
 		container.append(this.container)
 		this.container = container
-		
-		const typeSwitch = this.typeSwitch = html`
-		<div class="btr-switch btr-playertype-switch" style="position:absolute;top:6px;right:6px">
-			<div class=btr-switch-off>R6</div>
-			<div class=btr-switch-on>R15</div>
-			<input type=checkbox> 
-			<div class=btr-switch-flip>
-				<div class=btr-switch-off>R6</div>
-				<div class=btr-switch-on>R15</div>
-			</div>
-		</div>`
 
-		this.dropdown = html`
-		<div class="input-group-btn btr-dropdown-container" style="position:absolute;top:6px;left:6px;display:none;min-width:100px;max-width:280px;width:auto;">
-			<button type=button class=input-dropdown-btn data-toggle=dropdown>
-				<span class=rbx-selection-label data-bind=label style="overflow:hidden;text-overflow:ellipsis;max-width:230px;"></span>
-				<span class=icon-down-16x16 style="margin-left:8px"></span>
+		const typeSwitch = (this.typeSwitch = html` <div
+			class="btr-switch btr-playertype-switch"
+			style="position:absolute;top:6px;right:6px"
+		>
+			<div class="btr-switch-off">R6</div>
+			<div class="btr-switch-on">R15</div>
+			<input type="checkbox" />
+			<div class="btr-switch-flip">
+				<div class="btr-switch-off">R6</div>
+				<div class="btr-switch-on">R15</div>
+			</div>
+		</div>`)
+
+		this.dropdown = html` <div
+			class="input-group-btn btr-dropdown-container"
+			style="position:absolute;top:6px;left:6px;display:none;min-width:100px;max-width:280px;width:auto;"
+		>
+			<button type="button" class="input-dropdown-btn" data-toggle="dropdown">
+				<span
+					class="rbx-selection-label"
+					data-bind="label"
+					style="overflow:hidden;text-overflow:ellipsis;max-width:230px;"
+				></span>
+				<span class="icon-down-16x16" style="margin-left:8px"></span>
 			</button>
-			<ul data-toggle=dropdown-menu class=dropdown-menu role=menu style="position:relative"></ul>
+			<ul data-toggle="dropdown-menu" class="dropdown-menu" role="menu" style="position:relative"></ul>
 		</div>`
 
 		this.dropdownMenu = this.dropdown.$find(".dropdown-menu")
 
 		this.bundleAlts = {}
-		this.bundleAnims = html`
-		<div class=btr-bundle-animations style=display:none>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=run disabled><div class=btr-anim-icon-run></div></div>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=walk disabled><div class=btr-anim-icon-walk></div></div>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=fall disabled><div class=btr-anim-icon-fall></div></div>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=jump disabled><div class=btr-anim-icon-jump></div></div>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=idle disabled><div class=btr-anim-icon-idle></div></div>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=swim disabled><div class=btr-anim-icon-swim></div></div>
-			<div class="btr-bundle-btn btn-control-xs" data-anim=climb disabled><div class=btr-anim-icon-climb></div></div>
+		this.bundleAnims = html` <div class="btr-bundle-animations" style="display:none">
+			<div class="btr-bundle-btn btn-control-xs" data-anim="run" disabled>
+				<div class="btr-anim-icon-run"></div>
+			</div>
+			<div class="btr-bundle-btn btn-control-xs" data-anim="walk" disabled>
+				<div class="btr-anim-icon-walk"></div>
+			</div>
+			<div class="btr-bundle-btn btn-control-xs" data-anim="fall" disabled>
+				<div class="btr-anim-icon-fall"></div>
+			</div>
+			<div class="btr-bundle-btn btn-control-xs" data-anim="jump" disabled>
+				<div class="btr-anim-icon-jump"></div>
+			</div>
+			<div class="btr-bundle-btn btn-control-xs" data-anim="idle" disabled>
+				<div class="btr-anim-icon-idle"></div>
+			</div>
+			<div class="btr-bundle-btn btn-control-xs" data-anim="swim" disabled>
+				<div class="btr-anim-icon-swim"></div>
+			</div>
+			<div class="btr-bundle-btn btn-control-xs" data-anim="climb" disabled>
+				<div class="btr-anim-icon-climb"></div>
+			</div>
 		</div>`
-		
-		this.animNameLabel = html`<div class=btr-animation-name></div>`
 
-		const buttons = this.buttons = html`
-		<div class=btr-thumb-btn-container>
-			<div class="btr-thumb-btn btn-control-xs btr-hats-btn"><span class=btr-icon-hat></span></div>
-			<div class="btr-thumb-btn btn-control-xs btr-body-btn checked"><span class=btr-icon-body></span></div>
-			<div class="btr-thumb-btn btn-control-xs btr-preview-btn"><span class=btr-icon-preview></span></div>
+		this.animNameLabel = html`<div class="btr-animation-name"></div>`
+
+		const buttons = (this.buttons = html` <div class="btr-thumb-btn-container">
+			<div class="btr-thumb-btn btn-control-xs btr-hats-btn"><span class="btr-icon-hat"></span></div>
+			<div class="btr-thumb-btn btn-control-xs btr-body-btn checked">
+				<span class="btr-icon-body"></span>
+			</div>
+			<div class="btr-thumb-btn btn-control-xs btr-preview-btn">
+				<span class="btr-icon-preview"></span>
+			</div>
 			<div class="btr-thumb-popup btr-body-popup">
+				<div class="btr-body-outfits">
+					<label class="btr-outfit-header">Outfits</label>
 
-				<div class=btr-body-outfits>
-					<label class=btr-outfit-header>Outfits</label>
-
-					<div class="btr-body-outfit-btn selected" data-outfit=current>
-						<div class=btr-body-outfit-icon>
-							<img src="">
+					<div class="btr-body-outfit-btn selected" data-outfit="current">
+						<div class="btr-body-outfit-icon">
+							<img src="" />
 						</div>
-						<span class=btr-body-outfit-title>Current</span>
+						<span class="btr-body-outfit-title">Current</span>
 					</div>
-					<div class=btr-body-outfit-btn data-outfit=bundle style=display:none>
-						<div class=btr-body-outfit-icon>
-							<img src="https://tr.rbxcdn.com/0291e3569377d17f1ea852a773ad56a5/110/110/Decal/Png">
+					<div class="btr-body-outfit-btn" data-outfit="bundle" style="display:none">
+						<div class="btr-body-outfit-icon">
+							<img
+								src="https://tr.rbxcdn.com/0291e3569377d17f1ea852a773ad56a5/110/110/Decal/Png"
+							/>
 						</div>
-						<span class=btr-body-outfit-title>Bundle</span>
+						<span class="btr-body-outfit-title">Bundle</span>
 					</div>
-					<div class=btr-body-outfit-btn data-outfit=default>
-						<div class=btr-body-outfit-icon>
-							<img src="https://tr.rbxcdn.com/cd6c66bb06aa97e00e4d79169e6d74e5/150/150/Avatar/Png">
+					<div class="btr-body-outfit-btn" data-outfit="default">
+						<div class="btr-body-outfit-icon">
+							<img
+								src="https://tr.rbxcdn.com/cd6c66bb06aa97e00e4d79169e6d74e5/150/150/Avatar/Png"
+							/>
 						</div>
-						<span class=btr-body-outfit-title>Default</span>
+						<span class="btr-body-outfit-title">Default</span>
 					</div>
 				</div>
 
 				<div>
 					<label>Height</label>
-					<label class=value>90%</label>
-					<input type=range min=0 max=1 value=0 step=.01 data-target=height>
+					<label class="value">90%</label>
+					<input type="range" min="0" max="1" value="0" step=".01" data-target="height" />
 				</div>
 
 				<div>
 					<label>Width</label>
-					<label class=value>90%</label>
-					<input type=range min=0 max=1 value=0 step=.01 data-target=width>
+					<label class="value">90%</label>
+					<input type="range" min="0" max="1" value="0" step=".01" data-target="width" />
 				</div>
 
 				<div>
 					<label>Head</label>
-					<label class=value>90%</label>
-					<input type=range min=0 max=1 value=0 step=.01 data-target=head>
+					<label class="value">90%</label>
+					<input type="range" min="0" max="1" value="0" step=".01" data-target="head" />
 				</div>
 
 				<div>
 					<label>Body Type</label>
-					<label class=value>90%</label>
-					<input type=range min=0 max=1 value=0 step=.01 data-target=bodyType>
+					<label class="value">90%</label>
+					<input type="range" min="0" max="1" value="0" step=".01" data-target="bodyType" />
 				</div>
 
 				<div>
 					<label>Proportions</label>
-					<label class=value>90%</label>
-					<input type=range min=0 max=1 value=0 step=.01 data-target=proportion>
+					<label class="value">90%</label>
+					<input type="range" min="0" max="1" value="0" step=".01" data-target="proportion" />
 				</div>
 			</div>
-		</div>`
-		
-		loggedInUserPromise.then(userId => {
-			RobloxApi.thumbnails.getAvatarThumbnails([userId]).then(json => {
+		</div>`)
+
+		loggedInUserPromise.then((userId) => {
+			RobloxApi.thumbnails.getAvatarThumbnails([userId]).then((json) => {
 				buttons.$find(`.btr-body-outfit-btn[data-outfit="current"] img`).src = json.data[0].imageUrl
 			})
 		})
-		
+
 		container.append(this.dropdown, this.typeSwitch, this.bundleAnims, this.animNameLabel, this.buttons)
 
 		const bodyPopup = buttons.$find(".btr-body-popup")
 		const inputSliders: any[] = []
 
-		const loadSliders = rules => {
-			for(const input of bodyPopup.$findAll("input")) {
+		const loadSliders = (rules) => {
+			for (const input of bodyPopup.$findAll("input")) {
 				const scaleName = input.dataset.target
 				const rule = rules.scales[scaleName]
 				const label = input.previousElementSibling
 
 				const update = () => {
 					label.textContent = Math.floor(input.value * 100 + 0.5) + "%"
-					
-					if(IS_CHROME) {
-						input.style.setProperty("--btr-input-perc", `${(input.value - input.min) / (input.max - input.min) * 100}%`)
+
+					if (IS_CHROME) {
+						input.style.setProperty(
+							"--btr-input-perc",
+							`${((input.value - input.min) / (input.max - input.min)) * 100}%`,
+						)
 					}
 				}
 
@@ -579,7 +633,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 					const targetScales = this.appearance.scales
 					targetScales[scaleName] = +input.value
 
-					if(scaleName === "width") {
+					if (scaleName === "width") {
 						targetScales.depth = 0.5 + targetScales.width / 2 // What a surprise, undefined scaling behavior...
 					}
 
@@ -596,15 +650,17 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 
 		const updateSliders = () => {
-			if(!this.appearance) { return }
-			
-			for(const slider of inputSliders) {
+			if (!this.appearance) {
+				return
+			}
+
+			for (const slider of inputSliders) {
 				slider.input.value = this.appearance.scales[slider.scaleName]
 				slider.update()
 			}
 		}
-		
-		getAvatarRules().then(rules => {
+
+		getAvatarRules().then((rules) => {
 			loadSliders(rules)
 			updateSliders()
 		})
@@ -614,8 +670,8 @@ export class ItemPreviewer extends AvatarPreviewer {
 		const typeInput = typeSwitch.$find("input")
 		const typeUpdate = () => {
 			typeInput.checked = this.playerType === "R15"
-			
-			for(const input of bodyPopup.$findAll("input")) {
+
+			for (const input of bodyPopup.$findAll("input")) {
 				input.toggleAttribute("disabled", !typeInput.checked)
 			}
 		}
@@ -627,20 +683,24 @@ export class ItemPreviewer extends AvatarPreviewer {
 			this.setPlayerType(typeInput.checked ? "R15" : "R6")
 		})
 
-		buttons.$on("click", ".btr-body-outfit-btn", ev => {
+		buttons.$on("click", ".btr-body-outfit-btn", (ev) => {
 			const self = ev.currentTarget
 			const target = self.dataset.outfit
-			if(!target || self.classList.contains("selected")) { return }
-			if(target === "bundle" && !this.bundleOutfitId) { return }
+			if (!target || self.classList.contains("selected")) {
+				return
+			}
+			if (target === "bundle" && !this.bundleOutfitId) {
+				return
+			}
 
 			this.selectOutfit(target)
 		})
 
 		const disableOrigThumbs = () => {
 			setTimeout(() => {
-				if(this.enabled) {
+				if (this.enabled) {
 					const btn = query<HTMLElement>("#AssetThumbnail .three-dee-animated-icon")
-					if(btn && btn.$find(".icon-pause-fill, .icon-bigstop-fill")) {
+					if (btn && btn.$find(".icon-pause-fill, .icon-bigstop-fill")) {
 						btn.click()
 					}
 				}
@@ -648,20 +708,20 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 
 		ready(disableOrigThumbs)
-		
-		const hatsBtn = this.hatsBtn = buttons.$find(".btr-hats-btn")
+
+		const hatsBtn = (this.hatsBtn = buttons.$find(".btr-hats-btn"))
 		hatsBtn.classList.toggle("checked", this.outfitAccessoriesVisible)
 		hatsBtn.$on("click", () => {
 			this.setOutfitAccessoriesVisible(!this.outfitAccessoriesVisible)
 		})
-		
+
 		const previewBtn = buttons.$find(".btr-preview-btn")
-		
+
 		this.on("enabled", () => {
 			previewBtn.classList.add("checked")
 			this.parent?.classList.add("btr-preview-active")
 			this.parent?.classList.remove("btr-preview-inactive")
-			
+
 			disableOrigThumbs()
 		})
 
@@ -672,101 +732,111 @@ export class ItemPreviewer extends AvatarPreviewer {
 		})
 
 		previewBtn.$on("click", () => this.setEnabled(!this.enabled))
-		
+
 		const animationChanged = () => {
 			const playingAnim = this.getAnimation(this.playingAnim?.id)
 
-			if(playingAnim && playingAnim.animType === "swim") {
-				this.scene.avatarOffset.position.set(0, 0, .5)
+			if (playingAnim && playingAnim.animType === "swim") {
+				this.scene.avatarOffset.position.set(0, 0, 0.5)
 				this.scene.avatarOffset.rotation.set(-Math.PI / 2, 0, 0)
 			} else {
 				this.scene.avatarOffset.position.set(0, 0, 0)
 				this.scene.avatarOffset.rotation.set(0, 0, 0)
 			}
-			
-			const anim = playingAnim || this.getAnimation(this.currentAnim || 0)
-			
-			const label = this.dropdown.$find("[data-bind='label']")
-			label.textContent = !anim ? "" : (anim.isBundleAnim ? "Emotes" : anim.name)
-			label.title = !anim ? "" : (anim.isBundleAnim ? "" : anim.name)
 
-			if(this.hasBundleAnims) {
-				for(const sel of this.bundleAnims.$findAll(".selected")) {
+			const anim = playingAnim || this.getAnimation(this.currentAnim || 0)
+
+			const label = this.dropdown.$find("[data-bind='label']")
+			label.textContent = !anim ? "" : anim.isBundleAnim ? "Emotes" : anim.name
+			label.title = !anim ? "" : anim.isBundleAnim ? "" : anim.name
+
+			if (this.hasBundleAnims) {
+				for (const sel of this.bundleAnims.$findAll(".selected")) {
 					sel.classList.remove("selected")
 				}
 
-				if(anim?.isBundleAnim) {
-					for(const sel of anim.selections) {
+				if (anim?.isBundleAnim) {
+					for (const sel of anim.selections) {
 						sel.classList.add("selected")
 					}
 				}
-				
+
 				this.animNameLabel.textContent = !anim ? "" : anim.name
 			}
 		}
-		
+
 		this.on("animationPlayed", animationChanged)
 		this.on("animationStopped", animationChanged)
 		this.on("currentAnimationChanged", animationChanged)
-		
+
 		this.addBundleAnimation(0, "NONE")
 	}
 
 	selectOutfit(target) {
-		if(this.currentOutfit === target) { return }
-		this.currentOutfit = target
-		
-		switch(target) {
-		case "custom":
-			break
-		case "current":
-			this.setOutfit(null)
-			break
-		case "bundle":
-			this.setOutfit(this.bundleOutfitId, "Outfit")
-			break
-		case "default":
-			this.setOutfit(1116516198, "Outfit")
-			break
-		default:
-			if(target.startsWith("plr-")) {
-				this.setOutfit(+target.slice(4), "Player")
-			}
+		if (this.currentOutfit === target) {
+			return
 		}
-		
-		for(const btn of this.buttons.$findAll(".btr-body-outfit-btn.selected")) {
+		this.currentOutfit = target
+
+		switch (target) {
+			case "custom":
+				break
+			case "current":
+				this.setOutfit(null)
+				break
+			case "bundle":
+				this.setOutfit(this.bundleOutfitId, "Outfit")
+				break
+			case "default":
+				this.setOutfit(1116516198, "Outfit")
+				break
+			default:
+				if (target.startsWith("plr-")) {
+					this.setOutfit(+target.slice(4), "Player")
+				}
+		}
+
+		for (const btn of this.buttons.$findAll(".btr-body-outfit-btn.selected")) {
 			btn.classList.remove("selected")
 		}
 
 		const button = this.buttons.$find(`.btr-body-outfit-btn[data-outfit="${target}"]`)
-		if(button) { button.classList.add("selected") }
+		if (button) {
+			button.classList.add("selected")
+		}
 	}
-	
+
 	setOutfitAccessoriesVisible(bool) {
 		super.setOutfitAccessoriesVisible(bool)
 		this.hatsBtn.classList.toggle("checked", this.outfitAccessoriesVisible)
 	}
-	
+
 	setParent(parent) {
-		if(!parent) { parent = null }
-		if(this.parent === parent) { return }
-		
+		if (!parent) {
+			parent = null
+		}
+		if (this.parent === parent) {
+			return
+		}
+
 		this.parent?.classList.remove("btr-preview-active")
 		this.parent?.classList.remove("btr-preview-inactive")
-		
+
 		this.parent = parent
 		this.updateParent()
 	}
 
 	setVisible(bool) {
-		if(this.isVisible === !!bool) { return }
+		if (this.isVisible === !!bool) {
+			return
+		}
 		this.isVisible = !!bool
-		
+
 		this.updateParent()
 	}
-	
+
 	updateParent() {
-		if(this.isVisible) {
+		if (this.isVisible) {
 			this.parent?.classList.toggle("btr-preview-active", this.enabled)
 			this.parent?.classList.toggle("btr-preview-inactive", !this.enabled)
 			this.parent?.prepend(this.container)
@@ -779,18 +849,18 @@ export class ItemPreviewer extends AvatarPreviewer {
 
 	setBundleOutfit(outfitId) {
 		this.bundleOutfitId = outfitId
-		
+
 		const bundleOutfitBtn = this.buttons.$find(`.btr-body-outfit-btn[data-outfit="bundle"]`)
 
-		if(outfitId) {
+		if (outfitId) {
 			bundleOutfitBtn.style.display = ""
 			bundleOutfitBtn.$find("img").src = ``
-			
+
 			const url = `https://thumbnails.roblox.com/v1/users/outfits?userOutfitIds=${outfitId}&size=150x150&format=Png&isCircular=false`
-			fetch(url).then(async resp => {
+			fetch(url).then(async (resp) => {
 				const result = (await resp.json()).data[0]
-				
-				if(result && result.imageUrl) {
+
+				if (result && result.imageUrl) {
 					bundleOutfitBtn.$find("img").src = result.imageUrl
 				}
 			})
@@ -805,59 +875,65 @@ export class ItemPreviewer extends AvatarPreviewer {
 
 	updateAnimButtons() {
 		let numDropdownAnims = this.dropdownMenu.children.length
-		let numBundleAnims = Object.values(this.animMap).filter((x: any) => x.isBundleAnim && x.assetId !== 0).length
-		
-		if((numDropdownAnims + numBundleAnims) >= 2) {
-			if(!this.hasBundleAnims && numBundleAnims > 0) {
+		let numBundleAnims = Object.values(this.animMap).filter(
+			(x: any) => x.isBundleAnim && x.assetId !== 0,
+		).length
+
+		if (numDropdownAnims + numBundleAnims >= 2) {
+			if (!this.hasBundleAnims && numBundleAnims > 0) {
 				this.hasBundleAnims = true
-				
+
 				this.bundleAnims.style.display = ""
-				this.animNameLabel.textContent = (Object.values(this.animMap) as any[]).find((x: any) => x.assetId === this.currentAnim)?.name || ""
+				this.animNameLabel.textContent =
+					(Object.values(this.animMap) as any[]).find((x: any) => x.assetId === this.currentAnim)
+						?.name || ""
 
 				// Move camera down
 				this.scene.cameraOffset.y -= 1
 			}
-			
-			if(!this.hasDropdown && numDropdownAnims > 0) {
+
+			if (!this.hasDropdown && numDropdownAnims > 0) {
 				this.hasDropdown = true
 				this.dropdown.style.display = ""
 			}
 		} else {
 			this.animNameLabel.textContent = ""
-			
-			if(this.hasBundleAnims) {
+
+			if (this.hasBundleAnims) {
 				this.hasBundleAnims = false
 				this.bundleAnims.style.display = "none"
-				
+
 				// Move camera back up
 				this.scene.cameraOffset.y += 1
 			}
-			
-			if(this.hasDropdown) {
+
+			if (this.hasDropdown) {
 				this.hasDropdown = false
 				this.dropdown.style.display = "none"
 			}
 		}
 	}
-	
+
 	addAnimation(assetId, name) {
 		const anims = Object.values(this.animMap).map((x: any) => x.name)
-		
-		if(anims.includes(name)) {
-			for(let i = 2; i < Infinity; i++) {
+
+		if (anims.includes(name)) {
+			for (let i = 2; i < Infinity; i++) {
 				const newName = `${name} (${i})`
 
-				if(!anims.includes(newName)) {
+				if (!anims.includes(newName)) {
 					name = newName
 					break
 				}
 			}
 		}
 
-		const anim: Record<string, any> = this.animMap[assetId] = { assetId }
+		const anim: Record<string, any> = (this.animMap[assetId] = { assetId })
 		anim.name = name
-		
-		const btn = html`<li><a title="${anim.name}" style="text-overflow:ellipsis;overflow:hidden">${anim.name}</a></li>`
+
+		const btn = html`<li>
+			<a title="${anim.name}" style="text-overflow:ellipsis;overflow:hidden">${anim.name}</a>
+		</li>`
 		btn.$on("click", () => this.playAnimation(anim.assetId))
 
 		this.dropdownMenu.append(btn)
@@ -865,12 +941,12 @@ export class ItemPreviewer extends AvatarPreviewer {
 
 		return anim
 	}
-	
+
 	removeBundleAnimations(animType) {
-		for(const anim of Object.values(this.animMap).filter((x: any) => x.animType === animType) as any[]) {
+		for (const anim of Object.values(this.animMap).filter((x: any) => x.animType === animType) as any[]) {
 			delete this.animMap[anim.assetId]
-			
-			if(anim.isAlt) {
+
+			if (anim.isAlt) {
 				anim.btn.remove()
 			} else {
 				anim.btn.setAttribute("disabled", "")
@@ -884,33 +960,33 @@ export class ItemPreviewer extends AvatarPreviewer {
 		let isAlt = false
 		let altText
 
-		if(animType === "pose") {
+		if (animType === "pose") {
 			isAlt = true
 			altText = "POSE"
 			bundleType = "idle"
-		} else if(animType === "swimidle") {
+		} else if (animType === "swimidle") {
 			isAlt = true
 			altText = "IDLE"
 			bundleType = "swim"
-		} else if(animType === "NONE") {
+		} else if (animType === "NONE") {
 			isAlt = true
 			altText = "NONE"
 			bundleType = "idle"
 		}
 
 		const root = this.bundleAnims.$find(`.btr-bundle-btn[data-anim="${bundleType}"]`)
-		if(!root) {
+		if (!root) {
 			this.addAnimation(assetId, bundleType)
 			return
 		}
-		
+
 		let btn = root
-		
-		if(!isAlt && !root.hasAttribute("disabled")) {
+
+		if (!isAlt && !root.hasAttribute("disabled")) {
 			isAlt = true
 			altText = "ALT"
 		}
-		
+
 		const anim = <Record<string, any>>{
 			assetId: assetId,
 			name: assetName,
@@ -918,23 +994,24 @@ export class ItemPreviewer extends AvatarPreviewer {
 			altText: altText,
 			isAlt: isAlt,
 			isBundleAnim: true,
-			selections: [root]
+			selections: [root],
 		}
-		
+
 		this.animMap[anim.assetId] = anim
 
-		if(isAlt) {
-			const alts = this.bundleAlts[bundleType] = this.bundleAlts[bundleType] || { list: [] }
+		if (isAlt) {
+			const alts = (this.bundleAlts[bundleType] = this.bundleAlts[bundleType] || { list: [] })
 
-			if(!alts.cont) {
-				alts.cont = html`<div class=btr-bundle-alt-container></div>`
+			if (!alts.cont) {
+				alts.cont = html`<div class="btr-bundle-alt-container"></div>`
 				root.prepend(alts.cont)
 			}
 
 			btn = html`<div class="btr-bundle-btn-alt btn-control-xs">${anim.altText}</div>`
 			alts.cont.prepend(btn)
-			
-			if(btn.nextElementSibling?.textContent === "NONE") { // keep NONE as topmost
+
+			if (btn.nextElementSibling?.textContent === "NONE") {
+				// keep NONE as topmost
 				btn.nextElementSibling.after(btn)
 			}
 
@@ -942,23 +1019,23 @@ export class ItemPreviewer extends AvatarPreviewer {
 		} else {
 			btn.removeAttribute("disabled")
 		}
-		
+
 		anim.btn = btn
-		
-		anim.onclick = ev => {
-			if(anim.assetId) {
+
+		anim.onclick = (ev) => {
+			if (anim.assetId) {
 				this.playAnimation(anim.assetId)
 			} else {
 				this.stopAnimation()
 			}
-			
+
 			ev.stopImmediatePropagation()
 			ev.preventDefault()
 		}
-		
+
 		anim.btn.$on("click", anim.onclick)
 		this.updateAnimButtons()
-		
+
 		return anim
 	}
 }
@@ -966,24 +1043,38 @@ export class ItemPreviewer extends AvatarPreviewer {
 export const HoverPreview = (() => {
 	const invalidThumbnails = [
 		`https://t1.rbxcdn.com/2a8edb4fb90f669af867371f927e4b46`,
-		`https://t4.rbxcdn.com/6aa6eb3c8680be7c47f1122f4fb9ebf2`
+		`https://t4.rbxcdn.com/6aa6eb3c8680be7c47f1122f4fb9ebf2`,
 	]
 
 	const ClothingParts = {
 		shirt: [
-			"LowerTorso", "UpperTorso", "Torso",
-			"LeftUpperArm", "LeftLowerArm", "LeftHand", "LeftArm",
-			"RightUpperArm", "RightLowerArm", "RightHand", "RightArm"
+			"LowerTorso",
+			"UpperTorso",
+			"Torso",
+			"LeftUpperArm",
+			"LeftLowerArm",
+			"LeftHand",
+			"LeftArm",
+			"RightUpperArm",
+			"RightLowerArm",
+			"RightHand",
+			"RightArm",
 		],
 		pants: [
-			"LowerTorso", "UpperTorso", "Torso",
-			"LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "LeftLeg",
-			"RightUpperLeg", "RightLowerLeg", "RightFoot", "RightLeg"
+			"LowerTorso",
+			"UpperTorso",
+			"Torso",
+			"LeftUpperLeg",
+			"LeftLowerLeg",
+			"LeftFoot",
+			"LeftLeg",
+			"RightUpperLeg",
+			"RightLowerLeg",
+			"RightFoot",
+			"RightLeg",
 		],
-		tshirt: [
-			"LowerTorso", "UpperTorso", "Torso"
-		],
-		face: ["Head"]
+		tshirt: ["LowerTorso", "UpperTorso", "Torso"],
+		face: ["Head"],
 	}
 
 	const frontCameraRotation = [0.15, 0.25, 0]
@@ -995,57 +1086,61 @@ export const HoverPreview = (() => {
 	let debounceCounter = 0
 	let currentTarget
 
-	const setCameraDir = cameraDir => {
-		if(cameraDir === "Back") {
+	const setCameraDir = (cameraDir) => {
+		if (cameraDir === "Back") {
 			preview.scene.cameraRotation.set(...backCameraRotation)
 		} else {
 			preview.scene.cameraRotation.set(...frontCameraRotation)
 		}
 	}
-	
+
 	const updatePreviewCamera = () => {
 		const addedObjects = new Set()
 		let cameraDir
-		
-		for(const asset of lastPreviewedAssets) {
+
+		for (const asset of lastPreviewedAssets) {
 			const state = asset.get(preview.avatar.playerType)
-			if(!state) { continue }
-			
-			for(const acc of state.accessories) {
-				if(!acc.obj) { continue }
-				
-				if(acc.wrapLayer && preview.scene.avatar.layeredCurrentRequest) {
+			if (!state) {
+				continue
+			}
+
+			for (const acc of state.accessories) {
+				if (!acc.obj) {
 					continue
 				}
-				
+
+				if (acc.wrapLayer && preview.scene.avatar.layeredCurrentRequest) {
+					continue
+				}
+
 				addedObjects.add(acc.obj)
-				
-				if(acc.attachment?.name?.endsWith("BackAttachment")) {
-					if(!cameraDir) {
+
+				if (acc.attachment?.name?.endsWith("BackAttachment")) {
+					if (!cameraDir) {
 						cameraDir = "Back"
 					}
 				} else {
 					cameraDir = "Front"
 				}
 			}
-			
-			for(const bp of state.bodyparts) {
+
+			for (const bp of state.bodyparts) {
 				const part = preview.avatar.parts[bp.target]
-				
-				if(part?.isMesh) {
+
+				if (part?.isMesh) {
 					addedObjects.add(part)
 					cameraDir = "Front"
 				}
 			}
-			
-			for(const clothing of state.clothing) {
+
+			for (const clothing of state.clothing) {
 				const parts = ClothingParts[clothing.target]
-				
-				if(parts) {
-					for(const partName of parts) {
+
+				if (parts) {
+					for (const partName of parts) {
 						const part = preview.avatar.parts[partName]
-						
-						if(part?.isMesh) {
+
+						if (part?.isMesh) {
 							addedObjects.add(part)
 						}
 					}
@@ -1053,55 +1148,58 @@ export const HoverPreview = (() => {
 			}
 		}
 
-		if(!addedObjects.size) {
+		if (!addedObjects.size) {
 			addedObjects.add(preview.avatar.root)
 		}
 
 		//
-		
+
 		const box = new THREE.Box3()
 		const tempVector = new THREE.Vector3()
 
 		const expandBox = () => {
 			preview.avatar.root.updateWorldMatrix(true, true)
-			
-			const expandBy = object => {
-				if(object.geometry instanceof THREE.BufferGeometry && object.geometry.getAttribute("position")) {
+
+			const expandBy = (object) => {
+				if (
+					object.geometry instanceof THREE.BufferGeometry &&
+					object.geometry.getAttribute("position")
+				) {
 					const position = object.geometry.getAttribute("position")
-					
-					for(let i = 0; i < position.count; i++) {
+
+					for (let i = 0; i < position.count; i++) {
 						tempVector.fromBufferAttribute(position, i)
-						
-						if(object.isSkinnedMesh) {
+
+						if (object.isSkinnedMesh) {
 							object.boneTransform(i, tempVector)
 						}
-						
+
 						tempVector.applyMatrix4(object.matrixWorld)
-						
+
 						box.expandByPoint(tempVector)
 					}
 				}
-				
-				for(const child of object.children) {
+
+				for (const child of object.children) {
 					expandBy(child)
 				}
 			}
-			
-			for(const object of addedObjects) {
+
+			for (const object of addedObjects) {
 				expandBy(object)
 			}
 		}
-		
+
 		preview.scene.avatar.animationsDisabled = true
 		preview.scene.update()
 		preview.scene.avatar.animationsDisabled = false
-		
+
 		expandBox()
 
 		preview.scene.cameraFocus.copy(box.max).add(box.min).multiplyScalar(0.5)
 		// preview.scene.cameraFocus.y += (box.max.y - box.min.y) * 0.01
 		preview.scene.cameraZoom = Math.max(2.5, box.max.clone().sub(box.min).length() * 0.9)
-		
+
 		setCameraDir(cameraDir || "Front")
 	}
 
@@ -1109,15 +1207,15 @@ export const HoverPreview = (() => {
 		preview = window.preview = new AvatarPreviewer() as any
 
 		preview.avatar.on("layeredRequestStateChanged", () => {
-			if(preview.container.parentNode) {
+			if (preview.container.parentNode) {
 				updatePreviewCamera()
 			}
 		})
-		
+
 		// preview.container.style.position = "absolute"
 		// preview.container.style.top = "0"
 		preview.container.style.pointerEvents = "none"
-		
+
 		preview.scene.cameraControlsEnabled = false
 		preview.scene.cameraSlideEnabled = false
 		preview.scene.cameraSlide = 0
@@ -1125,13 +1223,15 @@ export const HoverPreview = (() => {
 
 		const rotBtn = html`<span class="btr-hover-preview-camera-rotate"></span>`
 		preview.container.append(rotBtn)
-		
-		rotBtn.$on("mousedown", ev => {
-			if(ev.button !== 0) { return }
+
+		rotBtn.$on("mousedown", (ev) => {
+			if (ev.button !== 0) {
+				return
+			}
 			let reqId
 			let last
 
-			const update = time => {
+			const update = (time) => {
 				const elapsed = time - (last || time)
 				last = time
 
@@ -1140,24 +1240,29 @@ export const HoverPreview = (() => {
 			}
 
 			reqId = requestAnimationFrame(update)
-			
-			const mouseup = ev => {
-				if(ev.button !== 0) { return }
+
+			const mouseup = (ev) => {
+				if (ev.button !== 0) {
+					return
+				}
 				ev.preventDefault()
 				ev.stopImmediatePropagation()
-				
-				document.documentElement
-					.$off("mouseup", mouseup)
-					.$on("click", ev => { // ignore next click event
+
+				document.documentElement.$off("mouseup", mouseup).$on(
+					"click",
+					(ev) => {
+						// ignore next click event
 						ev.preventDefault()
 						ev.stopImmediatePropagation()
-					}, { once: true, capture: true })
-				
+					},
+					{ once: true, capture: true },
+				)
+
 				cancelAnimationFrame(reqId)
 			}
 
 			document.documentElement.$on("mouseup", mouseup)
-			
+
 			ev.preventDefault()
 			ev.stopImmediatePropagation()
 		})
@@ -1167,13 +1272,13 @@ export const HoverPreview = (() => {
 		currentTarget = null
 		debounceCounter++
 
-		if(preview) {
+		if (preview) {
 			preview.setEnabled(false)
-			
+
 			preview.container.parentNode?.classList.remove("btr-preview-container-parent")
 			preview.container.remove()
 
-			while(lastPreviewedAssets.length) {
+			while (lastPreviewedAssets.length) {
 				lastPreviewedAssets.pop().remove()
 			}
 		}
@@ -1181,26 +1286,41 @@ export const HoverPreview = (() => {
 
 	return {
 		register(selector, thumbContSelector) {
-			if(SETTINGS.get("general.hoverPreviewMode") === "never") { return }
+			if (SETTINGS.get("general.hoverPreviewMode") === "never") {
+				return
+			}
 
-			document.$on("mouseover", `${selector} ${thumbContSelector}`, async ev => {
+			document.$on("mouseover", `${selector} ${thumbContSelector}`, async (ev) => {
 				const thumbCont = ev.currentTarget
 
 				const self = thumbCont.closest(selector)
-				if(!self || currentTarget === self) { return }
+				if (!self || currentTarget === self) {
+					return
+				}
 
 				const anchor = self.$find(`a[href*="/catalog/"],a[href*="/library/"],a[href*="/bundles/"]`)
-				if(!anchor) { return }
+				if (!anchor) {
+					return
+				}
 
-				const assetId = parseInt(anchor.href.replace(/^.*\/(?:bundles|catalog|library)\/(\d+)\/?.*$/, "$1"), 10)
-				if(!Number.isSafeInteger(assetId)) { return }
+				const assetId = parseInt(
+					anchor.href.replace(/^.*\/(?:bundles|catalog|library)\/(\d+)\/?.*$/, "$1"),
+					10,
+				)
+				if (!Number.isSafeInteger(assetId)) {
+					return
+				}
 
 				clearTarget()
-				if(invalidAssets[assetId]) { return }
+				if (invalidAssets[assetId]) {
+					return
+				}
 
 				const img = thumbCont.$find("img")
-				if(img && invalidThumbnails.includes(img.src)) { return }
-				
+				if (img && invalidThumbnails.includes(img.src)) {
+					return
+				}
+
 				const isLibraryItem = anchor.href.includes("/library/")
 
 				const debounce = ++debounceCounter
@@ -1209,7 +1329,7 @@ export const HoverPreview = (() => {
 				const mouseLeave = () => {
 					thumbCont.classList.remove("btr-preview-loading")
 
-					if(currentTarget === self) {
+					if (currentTarget === self) {
 						clearTarget()
 					}
 				}
@@ -1221,9 +1341,11 @@ export const HoverPreview = (() => {
 				let playingAnimId
 
 				const finalizeLoad = () => {
-					if(debounceCounter !== debounce) { return }
+					if (debounceCounter !== debounce) {
+						return
+					}
 
-					if(!lastPreviewedAssets.length && !playingAnimId) {
+					if (!lastPreviewedAssets.length && !playingAnimId) {
 						invalidAssets[assetId] = true
 						thumbCont.classList.remove("btr-preview-loading")
 						clearTarget()
@@ -1233,140 +1355,174 @@ export const HoverPreview = (() => {
 					preview.setOutfit(targetOutfitId, "Outfit")
 					preview.initPlayerTypeFromPlayingAnimation = true
 
-					if(preview.appearance) {
+					if (preview.appearance) {
 						preview.setPlayerType(preview.appearance.playerAvatarType)
 					}
 
-					if(playingAnimId) {
+					if (playingAnimId) {
 						preview.playAnimation(playingAnimId)
 					} else {
 						preview.loadDefaultAnimation()
 					}
 
 					preview.waitForAppearance().then(() => {
-						if(debounceCounter !== debounce) { return }
+						if (debounceCounter !== debounce) {
+							return
+						}
 						thumbCont.classList.remove("btr-preview-loading")
 
-						if(!playingAnimId) {
-							const didSomethingChange = lastPreviewedAssets.find(asset => !asset.isEmpty())
+						if (!playingAnimId) {
+							const didSomethingChange = lastPreviewedAssets.find((asset) => !asset.isEmpty())
 
-							if(!didSomethingChange) {
+							if (!didSomethingChange) {
 								invalidAssets[assetId] = true
 								clearTarget()
 								return
 							}
 						}
-						
+
 						updatePreviewCamera()
-						
+
 						thumbCont.append(preview.container)
 						thumbCont.classList.add("btr-preview-container-parent")
 					})
 				}
 
 				const addAssetPreview = (assetId: any, assetTypeId?: any, meta?: any) => {
-					if(!preview) { initPreview() }
+					if (!preview) {
+						initPreview()
+					}
 
-					if(assetTypeId === 24) {
+					if (assetTypeId === 24) {
 						playingAnimId = assetId
 					} else {
 						const asset = preview.addAssetPreview(assetId, assetTypeId, meta)
-						if(!asset) { return }
+						if (!asset) {
+							return
+						}
 
 						lastPreviewedAssets.push(asset)
 					}
-					
-					if(isLibraryItem) {
+
+					if (isLibraryItem) {
 						thumbCont.classList.add("btr-preview-loading")
 					}
 
 					preview.setEnabled(true)
 				}
-				
-				const addItems = async items => {
-					if(debounceCounter !== debounce) { return }
+
+				const addItems = async (items) => {
+					if (debounceCounter !== debounce) {
+						return
+					}
 
 					const outfit = items.find((x: any) => x?.outfitType === "Avatar")
-					if(outfit) {
+					if (outfit) {
 						targetOutfitId = outfit.id
 					}
-					
+
 					let curAnim
-					for(const item of items) {
-						if(!item || item.outfitType) { continue }
-						
-						if(WearableAssetTypeIds.includes(item.AssetTypeId)) {
-							addAssetPreview(item.AssetId, item.AssetTypeId, outfit?.assets.find((x: any) => x.id === item.AssetId)?.meta)
-							
-						} else if(AnimationPreviewAssetTypeIds.includes(item.AssetTypeId)) {
-							if(!curAnim || item.AssetTypeId === 61 || item.AssetTypeId === 51 && curAnim.AssetTypeId !== 61) {
+					for (const item of items) {
+						if (!item || item.outfitType) {
+							continue
+						}
+
+						if (WearableAssetTypeIds.includes(item.AssetTypeId)) {
+							addAssetPreview(
+								item.AssetId,
+								item.AssetTypeId,
+								outfit?.assets.find((x: any) => x.id === item.AssetId)?.meta,
+							)
+						} else if (AnimationPreviewAssetTypeIds.includes(item.AssetTypeId)) {
+							if (
+								!curAnim ||
+								item.AssetTypeId === 61 ||
+								(item.AssetTypeId === 51 && curAnim.AssetTypeId !== 61)
+							) {
 								curAnim = item
 							}
 						}
 					}
 
-					if(curAnim) {
-						if(curAnim.AssetTypeId === 24) { // Animation
+					if (curAnim) {
+						if (curAnim.AssetTypeId === 24) {
+							// Animation
 							addAssetPreview(curAnim.AssetId, 24)
-							
-						} else if(curAnim.AssetTypeId === 61) { // EmoteAnimation
+						} else if (curAnim.AssetTypeId === 61) {
+							// EmoteAnimation
 							const model = await AssetCache.loadModel(curAnim.AssetId)
-							if(debounceCounter !== debounce) { return }
+							if (debounceCounter !== debounce) {
+								return
+							}
 
 							const anim = model.find((x: any) => x.ClassName === "Animation")
 							const animId = anim && AssetCache.getAssetIdFromUrl(anim.AnimationId)
 
-							if(animId) {
+							if (animId) {
 								addAssetPreview(animId, 24)
 							}
-							
 						} else {
 							const model = await AssetCache.loadModel(curAnim.AssetId)
-							if(debounceCounter !== debounce) { return }
+							if (debounceCounter !== debounce) {
+								return
+							}
 
-							const folder = model.find((x: any) => x.Name === "R15Anim" && x.ClassName === "Folder")
-							const group = folder && (folder.Children.find((x: any) => x.Name.toLowerCase().includes("idle")) || folder.Children[0])
-							const anim = group && group.Children
-								.map((x: any) => ({ id: AssetCache.getAssetIdFromUrl(x.AnimationId), weight: x.Children.length && x.Children[0].Value || 0 }))
-								.filter((x: any) => x.id)
-								.reduce((prev, cur) => ((!prev || cur.weight > prev.weight) ? cur : prev))
-							
-							if(anim) {
+							const folder = model.find(
+								(x: any) => x.Name === "R15Anim" && x.ClassName === "Folder",
+							)
+							const group =
+								folder &&
+								(folder.Children.find((x: any) => x.Name.toLowerCase().includes("idle")) ||
+									folder.Children[0])
+							const anim =
+								group &&
+								group.Children.map((x: any) => ({
+									id: AssetCache.getAssetIdFromUrl(x.AnimationId),
+									weight: (x.Children.length && x.Children[0].Value) || 0,
+								}))
+									.filter((x: any) => x.id)
+									.reduce((prev, cur) => (!prev || cur.weight > prev.weight ? cur : prev))
+
+							if (anim) {
 								addAssetPreview(anim.id, 24)
 							}
 						}
 					}
-					
+
 					finalizeLoad()
 				}
-				
-				if(!isLibraryItem) {
+
+				if (!isLibraryItem) {
 					thumbCont.classList.add("btr-preview-loading")
 				}
-				
-				if(isBundle) {
+
+				if (isBundle) {
 					const details = await RobloxApi.catalog.getBundleDetails(assetId)
 					const promises: any[] = []
-					
-					for(const item of details.items) {
-						if(item.type === "Asset") {
-							promises.push(AssetCache.resolveAsset(item.id).then(assetRequest => ({ AssetId: item.id, AssetTypeId: assetRequest.assetTypeId })))
-							
-						} else if(item.type === "UserOutfit") {
+
+					for (const item of details.items) {
+						if (item.type === "Asset") {
+							promises.push(
+								AssetCache.resolveAsset(item.id).then((assetRequest) => ({
+									AssetId: item.id,
+									AssetTypeId: assetRequest.assetTypeId,
+								})),
+							)
+						} else if (item.type === "UserOutfit") {
 							promises.push(RobloxApi.avatar.getOutfitDetails(item.id))
 						}
 					}
-					
+
 					addItems(await Promise.all(promises))
 				} else {
 					const info = await AssetCache.resolveAsset(assetId).then(
-						assetRequest => ({ AssetId: assetId, AssetTypeId: assetRequest.assetTypeId }),
-						() => null
+						(assetRequest) => ({ AssetId: assetId, AssetTypeId: assetRequest.assetTypeId }),
+						() => null,
 					)
-					
+
 					addItems([info])
 				}
 			})
-		}
+		},
 	}
 })()

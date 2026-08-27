@@ -48,19 +48,25 @@ const contains = (root: Element | Document, element: Element): boolean =>
 	root === document || root === element || (root as Element).contains(element)
 
 const deliver = (registration: Registration, element: Element): void => {
-	if(registration.disposed || registration.seen.has(element)) { return }
+	if (registration.disposed || registration.seen.has(element)) {
+		return
+	}
 
 	// The stylesheet is global, so an animation event can arrive for a node
 	// outside a root-scoped watcher.
-	if(!contains(registration.root, element)) { return }
+	if (!contains(registration.root, element)) {
+		return
+	}
 
 	registration.seen.add(element)
 
-	if(registration.once) { dispose(registration) }
+	if (registration.once) {
+		dispose(registration)
+	}
 
 	try {
 		registration.handler(element)
-	} catch(err) {
+	} catch (err) {
 		console.error(`[btr] hook handler failed for "${registration.selector}"`, err)
 	}
 }
@@ -70,38 +76,46 @@ const sweep = (registration: Registration): void => {
 
 	try {
 		found = registration.root.querySelectorAll(registration.selector)
-	} catch(err) {
+	} catch (err) {
 		console.error(`[btr] invalid selector "${registration.selector}"`, err)
 		dispose(registration)
 		return
 	}
 
-	for(const element of found) {
+	for (const element of found) {
 		deliver(registration, element)
-		if(registration.disposed) { return }
+		if (registration.disposed) {
+			return
+		}
 	}
 }
 
 const flush = (): void => {
 	pending = false
 
-	for(const registration of [...registrations.values()]) {
-		if(!registration.disposed) { sweep(registration) }
+	for (const registration of [...registrations.values()]) {
+		if (!registration.disposed) {
+			sweep(registration)
+		}
 	}
 }
 
 const onAnimationStart = (event: AnimationEvent): void => {
-	if(!event.animationName.startsWith(ANIMATION_PREFIX)) { return }
+	if (!event.animationName.startsWith(ANIMATION_PREFIX)) {
+		return
+	}
 
 	const registration = registrations.get(event.animationName)
 
-	if(registration && event.target instanceof Element) {
+	if (registration && event.target instanceof Element) {
 		deliver(registration, event.target)
 	}
 }
 
 const ensureSheet = (): CSSStyleSheet => {
-	if(sheet) { return sheet }
+	if (sheet) {
+		return sheet
+	}
 
 	const style = document.createElement("style")
 	style.dataset.btrHook = ""
@@ -112,7 +126,9 @@ const ensureSheet = (): CSSStyleSheet => {
 	document.addEventListener("animationstart", onAnimationStart, true)
 
 	observer = new MutationObserver(() => {
-		if(pending) { return }
+		if (pending) {
+			return
+		}
 
 		pending = true
 		queueMicrotask(flush)
@@ -124,15 +140,19 @@ const ensureSheet = (): CSSStyleSheet => {
 }
 
 const dispose = (registration: Registration): void => {
-	if(registration.disposed) { return }
+	if (registration.disposed) {
+		return
+	}
 
 	registration.disposed = true
 	registrations.delete(registration.animation)
 
-	if(!sheet || !registration.styled) { return }
+	if (!sheet || !registration.styled) {
+		return
+	}
 
-	for(let index = sheet.cssRules.length - 1; index >= 0; index--) {
-		if(sheet.cssRules[index].cssText.includes(registration.animation)) {
+	for (let index = sheet.cssRules.length - 1; index >= 0; index--) {
+		if (sheet.cssRules[index].cssText.includes(registration.animation)) {
 			sheet.deleteRule(index)
 		}
 	}
@@ -148,7 +168,7 @@ export const watch = (selector: string, handler: Handler, options: WatchOptions 
 		seen: new WeakSet(),
 		animation: `${ANIMATION_PREFIX}${nextId++}`,
 		styled: false,
-		disposed: false
+		disposed: false,
 	}
 
 	registrations.set(registration.animation, registration)
@@ -157,25 +177,27 @@ export const watch = (selector: string, handler: Handler, options: WatchOptions 
 
 	// A stylesheet cannot express :scope, so root-relative selectors rely on the
 	// observer path alone.
-	if(!registration.selector.includes(":scope")) {
+	if (!registration.selector.includes(":scope")) {
 		try {
 			target.insertRule(
 				`@keyframes ${registration.animation}{from{outline-color:rgba(0,0,0,0)}to{outline-color:rgba(0,0,0,0)}}`,
-				target.cssRules.length
+				target.cssRules.length,
 			)
 
 			target.insertRule(
 				`${registration.selector}{animation-duration:.0001s;animation-name:${registration.animation}}`,
-				target.cssRules.length
+				target.cssRules.length,
 			)
 
 			registration.styled = true
-		} catch(err) {
+		} catch (err) {
 			console.error(`[btr] could not install rule for "${registration.selector}"`, err)
 		}
 	}
 
-	if(options.existing ?? true) { sweep(registration) }
+	if (options.existing ?? true) {
+		sweep(registration)
+	}
 
 	options.signal?.addEventListener("abort", () => dispose(registration), { once: true })
 
@@ -183,7 +205,10 @@ export const watch = (selector: string, handler: Handler, options: WatchOptions 
 }
 
 /** Resolves with the first element matching selector. */
-export const waitFor = (selector: string, options: WatchOptions & { timeout?: number } = {}): Promise<Element> =>
+export const waitFor = (
+	selector: string,
+	options: WatchOptions & { timeout?: number } = {},
+): Promise<Element> =>
 	new Promise((resolve, reject) => {
 		// Delivery is synchronous for elements already present, so neither the
 		// disposer nor the timer can be a const referenced from the handler.
@@ -197,27 +222,37 @@ export const waitFor = (selector: string, options: WatchOptions & { timeout?: nu
 			clearTimeout(timer)
 		}
 
-		dispose = watch(selector, element => {
-			if(settled) { return }
+		dispose = watch(
+			selector,
+			(element) => {
+				if (settled) {
+					return
+				}
 
-			finish()
-			resolve(element)
-		}, { ...options, once: true })
+				finish()
+				resolve(element)
+			},
+			{ ...options, once: true },
+		)
 
-		if(settled) {
+		if (settled) {
 			dispose()
 			return
 		}
 
-		if(options.timeout) {
+		if (options.timeout) {
 			timer = setTimeout(() => {
 				finish()
 				reject(new Error(`timed out waiting for "${selector}"`))
 			}, options.timeout)
 		}
 
-		options.signal?.addEventListener("abort", () => {
-			finish()
-			reject(new Error("aborted"))
-		}, { once: true })
+		options.signal?.addEventListener(
+			"abort",
+			() => {
+				finish()
+				reject(new Error("aborted"))
+			},
+			{ once: true },
+		)
 	})

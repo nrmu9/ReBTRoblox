@@ -1,24 +1,28 @@
 import { watch, waitFor } from "@/core/hook"
 
-const results: { name: string, pass: boolean, detail: string }[] = []
+const results: { name: string; pass: boolean; detail: string }[] = []
 const check = (name: string, pass: boolean, detail = "") => results.push({ name, pass, detail })
-const tick = () => new Promise(r => setTimeout(r, 10))
+const tick = () => new Promise((r) => setTimeout(r, 10))
 
 const add = (cls: string, hidden = false) => {
 	const el = document.createElement("div")
 	el.className = cls
-	if(hidden) { el.style.display = "none" }
+	if (hidden) {
+		el.style.display = "none"
+	}
 	document.body.append(el)
 	return el
 }
 
 const report = (extra = "") => {
-	const lines = results.map(r => (r.pass ? "PASS " : "FAIL ") + r.name + (r.detail ? " (" + r.detail + ")" : ""))
+	const lines = results.map(
+		(r) => (r.pass ? "PASS " : "FAIL ") + r.name + (r.detail ? " (" + r.detail + ")" : ""),
+	)
 	const out = document.createElement("pre")
 	out.id = "results"
 	out.textContent = lines.join("\n") + extra
 	document.body.append(out)
-	document.title = extra ? "ERROR" : results.every(r => r.pass) ? "ALL PASS" : "SOME FAIL"
+	document.title = extra ? "ERROR" : results.every((r) => r.pass) ? "ALL PASS" : "SOME FAIL"
 }
 
 const run = async () => {
@@ -65,14 +69,14 @@ const run = async () => {
 		setTimeout(() => add("t-wait"), 50)
 		await pending
 		check("waitFor resolves", true)
-	} catch(err) {
+	} catch (err) {
 		check("waitFor resolves", false, String(err))
 	}
 
 	try {
 		await waitFor(".t-never", { timeout: 100 })
 		check("waitFor times out", false, "resolved unexpectedly")
-	} catch(err) {
+	} catch (err) {
 		check("waitFor times out", true)
 	}
 
@@ -83,9 +87,13 @@ const run = async () => {
 	const during = sheet.cssRules.length
 	stop2()
 	const restored = sheet.cssRules.length
-	check("css rules added and removed", during === before + 2 && restored === before, before + "/" + during + "/" + restored)
+	check(
+		"css rules added and removed",
+		during === before + 2 && restored === before,
+		before + "/" + during + "/" + restored,
+	)
 
 	report()
 }
 
-run().catch(err => report("\nTHREW: " + String((err && err.stack) || err)))
+run().catch((err) => report("\nTHREW: " + String((err && err.stack) || err)))

@@ -1,29 +1,29 @@
 body.btr-embed {
 	margin: 0 !important;
 	padding: 0 !important;
-	
+
 	.container-main {
 		margin: 0 !important;
 		padding: 0 !important;
-		
+
 		.content {
 			margin: 0 !important;
 			padding: 0 !important;
 			max-width: none !important;
-			
+
 			.category-tabs {
 				padding-bottom: 60px;
 			}
 		}
 	}
-	
+
 	> *:not(#wrap),
-	#wrap>*:not(.container-main),
+	#wrap > *:not(.container-main),
 	.SystemAlert,
 	.recommendations-container,
 	.alert-info,
 	.alert-container,
-	.page-content>h1,
+	.page-content > h1,
 	.current-items .container-header .header-content:has(.get-more) {
 		display: none !important;
 	}
@@ -33,6 +33,6 @@ body .page-content {
 	padding-top: 16px;
 }
 
-.btr-it-checkbox input[type="checkbox"]+label:before {
-	background-color:white;
+.btr-it-checkbox input[type="checkbox"] + label:before {
+	background-color: white;
 }

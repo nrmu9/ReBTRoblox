@@ -66,7 +66,8 @@ html body .btr-badges-container {
 	margin-bottom: 18px;
 }
 
-html body .btr-badges-container .badge-row { /* Badge height + 10px */
+html body .btr-badges-container .badge-row {
+	/* Badge height + 10px */
 	min-height: 110px;
 	max-height: unset; /* Regular height */
 	height: auto;
@@ -75,7 +76,8 @@ html body .btr-badges-container .badge-row { /* Badge height + 10px */
 html body .btr-badges-container .badge-row .badge-image,
 html body .btr-badges-container .badge-row .badge-image img,
 html body .btr-badges-container .badge-row .badge-image thumbnail-2d,
-html body .btr-badges-container .badge-row .badge-image .badge-image-container { /* Regular size is 150x150 */
+html body .btr-badges-container .badge-row .badge-image .badge-image-container {
+	/* Regular size is 150x150 */
 	width: 100px !important;
 	height: 100px !important;
 }
@@ -86,38 +88,38 @@ html body .btr-badges-container .badge-row .badge-content {
 	padding-left: 4px;
 	display: flex;
 	flex-direction: row;
-	
+
 	.badge-data-container {
 		flex: 1 1 auto;
-		
+
 		.btr-desc-content {
 			position: relative;
 			height: 66px;
-			
+
 			margin: 4px 0px;
 			font-size: 14px;
-			
+
 			white-space: pre-line;
 			word-wrap: break-word;
-			
+
 			overflow: hidden;
-			
+
 			&.btr-desc-overflow {
 				height: 46px;
-				
+
 				&.btr-desc-open {
 					height: auto;
 				}
 			}
 		}
-		
+
 		.btr-badge-more {
 			display: block;
 			margin-top: -9px;
 			font-size: 14px;
 			user-select: none;
 		}
-		
+
 		.btr-unlock-date {
 			display: block;
 			opacity: 0.3;
@@ -130,7 +132,7 @@ html body .btr-badges-container .badge-row .badge-stats-container {
 	flex: 1 0 fit-content;
 	height: 100px;
 	margin: 0;
-	
+
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -139,7 +141,7 @@ html body .btr-badges-container .badge-row .badge-stats-container {
 html body .btr-badges-container.btr-compact-stats .badge-row .badge-stats-container {
 	min-width: 200px;
 	margin: 0;
-	
+
 	display: grid;
 	grid: repeat(3, 33.333%) / max-content auto;
 }
@@ -174,13 +176,12 @@ html body .btr-badges-container.btr-compact-stats .badge-row .badge-stats-contai
 	margin: 0;
 }
 
-
 html body .btr-badges-container .badge-row {
 	transition: opacity 1s;
 }
 
 html body .btr-badges-container .badge-row.btr-notowned {
-	opacity: .5;
+	opacity: 0.5;
 }
 
 html body .btr-badges-container .badge-row.btr-badgeownedloading:before {
@@ -235,7 +236,7 @@ html body .btr-universe-box {
 .btr-gamedetails .server-list-section:not(#rbx-private-running-games) .card-list .card-item {
 	min-height: unset; /* we do scaling on the grid level now, no need for this */
 	width: 100%;
-	
+
 	row-gap: 12px; /* looked a bit bad with no gap at all */
 }
 
@@ -260,13 +261,14 @@ html body .btr-universe-box {
 
 /* Developer Store */
 
-#store .store-cards { /* Fix stuff breaking when price or robuxtocash wraps to next line */
+#store .store-cards {
+	/* Fix stuff breaking when price or robuxtocash wraps to next line */
 	display: flex;
 	flex-wrap: wrap;
 }
 
 #store .store-cards .store-card {
-	border: 1px solid #E3E3E3;
+	border: 1px solid #e3e3e3;
 }
 
 .dark-theme.btr-gamedetails #store .store-cards .store-card {

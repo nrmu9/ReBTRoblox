@@ -28,7 +28,8 @@ html {
 
 #header span[class^="icon-nav-"],
 #header #nav-robux,
-#header .icon-logo, #header .icon-logo-r {
+#header .icon-logo,
+#header .icon-logo-r {
 	filter: invert(0.5) brightness(10);
 }
 

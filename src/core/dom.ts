@@ -11,7 +11,9 @@ export const setImmediate = <A extends unknown[]>(fn: (...args: A) => void, ...a
 
 	void resolved.then(() => {
 		const pending = immediates.get(key)
-		if(!pending) { return }
+		if (!pending) {
+			return
+		}
 
 		immediates.delete(key)
 		pending()
@@ -36,19 +38,22 @@ const domListeners: (DomListener & { callback: () => void })[] = []
 let domObserver: MutationObserver | null = null
 
 const flushDom = (): void => {
-	for(let index = domListeners.length; index--;) {
+	for (let index = domListeners.length; index--;) {
 		const listener = domListeners[index]
 
-		if(!listener.connected) {
+		if (!listener.connected) {
 			domListeners.splice(index, 1)
 			continue
 		}
 
-		try { listener.callback() }
-		catch(err) { console.error("[btr] onDomChanged listener failed", err) }
+		try {
+			listener.callback()
+		} catch (err) {
+			console.error("[btr] onDomChanged listener failed", err)
+		}
 	}
 
-	if(!domListeners.length) {
+	if (!domListeners.length) {
 		domObserver?.disconnect()
 		domObserver = null
 	}
@@ -58,10 +63,12 @@ export const onDomChanged = (callback: () => void): DomListener => {
 	const listener = {
 		callback,
 		connected: true,
-		disconnect() { this.connected = false }
+		disconnect() {
+			this.connected = false
+		},
 	}
 
-	if(!domObserver) {
+	if (!domObserver) {
 		domObserver = new MutationObserver(flushDom)
 		domObserver.observe(document.documentElement, { childList: true, subtree: true })
 	}

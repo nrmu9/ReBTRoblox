@@ -10,15 +10,17 @@ import { off, on } from "@/core/events"
 import { onRemove, watch, watchAll } from "@/core/watch"
 
 const define = (targets: any[], props: Record<string, unknown>): void => {
-	for(const target of targets) {
-		if(!target?.prototype) { continue }
+	for (const target of targets) {
+		if (!target?.prototype) {
+			continue
+		}
 
-		for(const [name, value] of Object.entries(props) as [string, any][]) {
+		for (const [name, value] of Object.entries(props) as [string, any][]) {
 			Object.defineProperty(target.prototype, name, {
 				value,
 				writable: true,
 				configurable: true,
-				enumerable: false
+				enumerable: false,
 			})
 		}
 	}
@@ -31,27 +33,49 @@ export const installExtensions = (): void => {
 	const scope = self as any
 
 	// A MV3 service worker has no DOM constructors to extend.
-	if(typeof Element === "undefined") { return }
+	if (typeof Element === "undefined") {
+		return
+	}
 
 	define([scope.EventTarget, EventTarget], {
-		$on(this: EventTarget, ...args: any[]) { return (on as any)(this, ...args) },
-		$off(this: EventTarget, ...args: any[]) { return (off as any)(this, ...args) }
+		$on(this: EventTarget, ...args: any[]) {
+			return (on as any)(this, ...args)
+		},
+		$off(this: EventTarget, ...args: any[]) {
+			return (off as any)(this, ...args)
+		},
 	})
 
 	define([scope.Element, Element, scope.Document, Document, scope.DocumentFragment, DocumentFragment], {
-		$find(this: ParentNode, selector: string) { return find(this, selector) },
-		$req(this: ParentNode, selector: string) { return req(this, selector) },
-		$findAll(this: ParentNode, selector: string) { return findAll(this, selector) },
-		$watch(this: ParentNode, ...args: any[]) { return (watch as any)(this, ...args) },
-		$watchAll(this: ParentNode, ...args: any[]) { return (watchAll as any)(this, ...args) }
+		$find(this: ParentNode, selector: string) {
+			return find(this, selector)
+		},
+		$req(this: ParentNode, selector: string) {
+			return req(this, selector)
+		},
+		$findAll(this: ParentNode, selector: string) {
+			return findAll(this, selector)
+		},
+		$watch(this: ParentNode, ...args: any[]) {
+			return (watch as any)(this, ...args)
+		},
+		$watchAll(this: ParentNode, ...args: any[]) {
+			return (watchAll as any)(this, ...args)
+		},
 	})
 
 	define([scope.Node, Node], {
-		$onRemove(this: Node, callback: () => void) { return onRemove(this, callback) }
+		$onRemove(this: Node, callback: () => void) {
+			return onRemove(this, callback)
+		},
 	})
 
 	define([scope.Date, Date], {
-		$format(this: Date, format: string) { return dateFormat(this, format) },
-		$since(this: Date, relativeTo?: any, short?: boolean) { return dateSince(this, relativeTo, short) }
+		$format(this: Date, format: string) {
+			return dateFormat(this, format)
+		},
+		$since(this: Date, relativeTo?: any, short?: boolean) {
+			return dateSince(this, relativeTo, short)
+		},
 	})
 }

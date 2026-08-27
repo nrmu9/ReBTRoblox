@@ -13,7 +13,8 @@ export const findAll = <T extends Element = Element>(self: ParentNode, selector:
 
 /** Document-wide query, the bare $(selector) / $.all(selector) of the legacy API. */
 export const query = <T extends Element = Element>(selector: string): T | null => find<T>(document, selector)
-export const queryAll = <T extends Element = Element>(selector: string): NodeListOf<T> => findAll<T>(document, selector)
+export const queryAll = <T extends Element = Element>(selector: string): NodeListOf<T> =>
+	findAll<T>(document, selector)
 /** Document-wide query that throws when the element is absent. */
 export const queryReq = <T extends Element = HTMLElement>(selector: string): T => req<T>(document, selector)
 
@@ -27,7 +28,9 @@ export const queryReq = <T extends Element = HTMLElement>(selector: string): T =
 export const req = <T extends Element = HTMLElement>(self: ParentNode, selector: string): T => {
 	const found = find<T>(self, selector)
 
-	if(!found) { throw new Error(`No element matches "${selector}"`) }
+	if (!found) {
+		throw new Error(`No element matches "${selector}"`)
+	}
 
 	return found
 }

@@ -57,7 +57,7 @@ export const AssetType = {
 	EyebrowAccessory: 76,
 	EyelashAccessory: 77,
 	MoodAnimation: 78,
-	DynamicHead: 79
+	DynamicHead: 79,
 }
 
 export const BrickColor = {
@@ -268,5 +268,5 @@ export const BrickColor = {
 	1029: { name: "Pastel yellow", color: [255, 255, 204] },
 	1030: { name: "Pastel brown", color: [255, 204, 153] },
 	1031: { name: "Royal purple", color: [98, 37, 209] },
-	1032: { name: "Hot pink", color: [255, 0, 191] }
+	1032: { name: "Hot pink", color: [255, 0, 191] },
 }

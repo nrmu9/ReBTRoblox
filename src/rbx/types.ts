@@ -35,7 +35,8 @@ export interface Listed<T> {
 
 //
 
-export type ThumbnailState = "Completed" | "Pending" | "Blocked" | "Error" | "InReview" | "TemporarilyUnavailable"
+export type ThumbnailState =
+	"Completed" | "Pending" | "Blocked" | "Error" | "InReview" | "TemporarilyUnavailable"
 
 export interface Thumbnail {
 	targetId: number
@@ -97,7 +98,7 @@ export interface AssetDetails {
 	Name: string
 	Description?: string
 	AssetTypeId: number
-	Creator?: { Id: UserId, Name: string, CreatorType?: string, CreatorTargetId?: number }
+	Creator?: { Id: UserId; Name: string; CreatorType?: string; CreatorTargetId?: number }
 	IsForSale?: boolean
 	PriceInRobux?: number | null
 	Created?: string
@@ -128,8 +129,8 @@ export interface BundleDetails {
 	name: string
 	description?: string
 	bundleType?: string
-	items?: { id: AssetId, name: string, type: string }[]
-	creator?: { id: UserId, name: string, type: string }
+	items?: { id: AssetId; name: string; type: string }[]
+	creator?: { id: UserId; name: string; type: string }
 }
 
 //
@@ -151,7 +152,7 @@ export interface GameDetails {
 	rootPlaceId: PlaceId
 	name: string
 	description?: string | null
-	creator: { id: number, name: string, type: string }
+	creator: { id: number; name: string; type: string }
 	playing?: number
 	visits?: number
 	maxPlayers?: number
@@ -169,7 +170,7 @@ export interface BadgeDetails {
 	displayName?: string
 	enabled?: boolean
 	iconImageId?: AssetId
-	awardingUniverse?: { id: UniverseId, name: string, rootPlaceId: PlaceId }
+	awardingUniverse?: { id: UniverseId; name: string; rootPlaceId: PlaceId }
 }
 
 export interface AwardedDate {
@@ -181,10 +182,10 @@ export interface AwardedDate {
 
 export interface AvatarRules {
 	playerAvatarTypes?: string[]
-	scales?: Record<string, { min: number, max: number, increment: number }>
-	bodyColorsPalette?: { brickColorId: number, name: string, hexColor: string }[]
-	basicBodyColorsPalette?: { brickColorId: number, name: string, hexColor: string }[]
-	wearableAssetTypes?: { maxNumber: number, id: number, name: string }[]
+	scales?: Record<string, { min: number; max: number; increment: number }>
+	bodyColorsPalette?: { brickColorId: number; name: string; hexColor: string }[]
+	basicBodyColorsPalette?: { brickColorId: number; name: string; hexColor: string }[]
+	wearableAssetTypes?: { maxNumber: number; id: number; name: string }[]
 }
 
 export interface AvatarBodyColors {
@@ -201,7 +202,7 @@ export interface AvatarDefinition {
 	playerAvatarType?: string
 	bodyColors?: AvatarBodyColors
 	bodyColor3s?: Record<string, string>
-	assets?: { id: AssetId, name: string, assetType: { id: number, name: string } }[]
+	assets?: { id: AssetId; name: string; assetType: { id: number; name: string } }[]
 }
 
 export interface OutfitDetails extends AvatarDefinition {
@@ -217,12 +218,12 @@ export interface GamePassDetails {
 	Description?: string
 	IsForSale?: boolean
 	PriceInRobux?: number | null
-	Creator?: { Id: UserId, Name: string }
+	Creator?: { Id: UserId; Name: string }
 }
 
 export interface GroupRole {
-	group: { id: GroupId, name: string, memberCount?: number }
-	role: { id: number, name: string, rank: number }
+	group: { id: GroupId; name: string; memberCount?: number }
+	role: { id: number; name: string; rank: number }
 }
 
 export interface GroupRolesResponse {
@@ -242,7 +243,7 @@ export interface InventoryItem {
 export interface AssetOwner {
 	id: number
 	serialNumber?: number | null
-	owner: { id: UserId, type: string, name: string } | null
+	owner: { id: UserId; type: string; name: string } | null
 	created?: string
 	updated?: string
 }
@@ -251,7 +252,7 @@ export interface AssetOwner {
 
 export interface PrivateMessage {
 	id: number
-	sender: { id: UserId, name: string, displayName?: string }
+	sender: { id: UserId; name: string; displayName?: string }
 	subject: string
 	body: string
 	created: string
@@ -266,5 +267,5 @@ export interface UnreadCount {
 export interface Conversation {
 	id: number
 	title?: string
-	participants?: { targetId: UserId, name: string }[]
+	participants?: { targetId: UserId; name: string }[]
 }

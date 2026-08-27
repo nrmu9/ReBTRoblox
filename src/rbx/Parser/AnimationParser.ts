@@ -36,14 +36,14 @@ export const RBXAnimationParser = {
 	CFrameToQuat(cf: number[]) {
 		const trace = cf[3] + cf[7] + cf[11]
 		let qw, qx, qy, qz
-		
-		if(trace > 0) {
+
+		if (trace > 0) {
 			const S = Math.sqrt(1 + trace) * 2
 			qw = S / 4
 			qx = (cf[10] - cf[8]) / S
 			qy = (cf[5] - cf[9]) / S
 			qz = (cf[6] - cf[4]) / S
-		} else if ((cf[3] > cf[7]) && (cf[3] > cf[11])) {
+		} else if (cf[3] > cf[7] && cf[3] > cf[11]) {
 			const S = Math.sqrt(1.0 + cf[3] - cf[7] - cf[11]) * 2
 			qw = (cf[10] - cf[8]) / S
 			qx = S / 4
@@ -67,133 +67,145 @@ export const RBXAnimationParser = {
 	},
 
 	parse(sequence: any) {
-		if(Array.isArray(sequence)) { sequence = sequence[0] }
+		if (Array.isArray(sequence)) {
+			sequence = sequence[0]
+		}
 		assert(sequence instanceof RBXInstance, "sequence is not an Instance")
-		
+
 		const priority = sequence.Priority ?? 1000 // 1000 is Core, the lowest priority
-			
+
 		const result: Record<string, any> = {
 			priority: (priority === 1000 ? -1 : priority) + 1,
 			loop: !!sequence.Loop,
 			length: 0,
-			keyframes: {}
+			keyframes: {},
 		}
-		
-		if(sequence.ClassName === "KeyframeSequence") {
+
+		if (sequence.ClassName === "KeyframeSequence") {
 			result.authoredHipHeight = sequence.AuthoredHipHeight ?? null
-			
-			for(const keyframe of sequence.Children) {
-				if(keyframe.ClassName !== "Keyframe") { continue }
-				
-				if(keyframe.Time > result.length) {
+
+			for (const keyframe of sequence.Children) {
+				if (keyframe.ClassName !== "Keyframe") {
+					continue
+				}
+
+				if (keyframe.Time > result.length) {
 					result.length = keyframe.Time
 				}
-				
-				for(const rootPose of keyframe.Children) {
-					if(rootPose.ClassName === "Pose") {
+
+				for (const rootPose of keyframe.Children) {
+					if (rootPose.ClassName === "Pose") {
 						this.parsePoses(result, rootPose, keyframe.Time)
 					}
 				}
 			}
-			
-			for(const keyframes of Object.values(result.keyframes) as any[]) {
-				(keyframes as any[]).sort((a, b) => a.time - b.time)
+
+			for (const keyframes of Object.values(result.keyframes) as any[]) {
+				;(keyframes as any[]).sort((a, b) => a.time - b.time)
 			}
-		} else if(sequence.ClassName === "CurveAnimation") {
+		} else if (sequence.ClassName === "CurveAnimation") {
 			result.isCurveAnimation = true
-			
-			for(const child of sequence.Children) {
+
+			for (const child of sequence.Children) {
 				this.parseCurves(result, child)
 			}
-			
 		} else {
 			throw new TypeError(`Invalid instance of class '${sequence.ClassName}' passed to parseAnimation`)
 		}
 
 		return result
 	},
-	
-	parseCurves(result: Record<string, any>, target: any) {
-		for(const child of target.Children) {
-			if(child.ClassName === "Folder") {
-				this.parseCurves(result, child)
-				
-			} else if(child.ClassName === "Vector3Curve" && child.Name === "Position" || child.ClassName === "EulerRotationCurve" && child.Name === "Rotation") {
-				const curveType = child.Name.toLowerCase()
-				
-				const keyframeName = `${target.Parent.Name}.${target.Name}`
-				const keyframes: Record<string, any> = result.keyframes[keyframeName] = result.keyframes[keyframeName] ?? {}
 
-				if(curveType === "position") {
+	parseCurves(result: Record<string, any>, target: any) {
+		for (const child of target.Children) {
+			if (child.ClassName === "Folder") {
+				this.parseCurves(result, child)
+			} else if (
+				(child.ClassName === "Vector3Curve" && child.Name === "Position") ||
+				(child.ClassName === "EulerRotationCurve" && child.Name === "Rotation")
+			) {
+				const curveType = child.Name.toLowerCase()
+
+				const keyframeName = `${target.Parent.Name}.${target.Name}`
+				const keyframes: Record<string, any> = (result.keyframes[keyframeName] =
+					result.keyframes[keyframeName] ?? {})
+
+				if (curveType === "position") {
 					keyframes.position = { x: [], y: [], z: [] }
-					
-				} else if(curveType === "rotation") {
-					keyframes.rotationOrder = ["XYZ", "XZY", "YZX", "YXZ", "ZXY", "ZYX"][child.RotationOrder ?? 0]
+				} else if (curveType === "rotation") {
+					keyframes.rotationOrder = ["XYZ", "XZY", "YZX", "YXZ", "ZXY", "ZYX"][
+						child.RotationOrder ?? 0
+					]
 					keyframes.rotation = { x: [], y: [], z: [] }
 				}
-				
-				for(const component of child.Children) {
-					if(component.ClassName !== "FloatCurve" || !component.ValuesAndTimes) { continue }
-					
+
+				for (const component of child.Children) {
+					if (component.ClassName !== "FloatCurve" || !component.ValuesAndTimes) {
+						continue
+					}
+
 					const curves = keyframes[curveType][component.Name.toLowerCase()]
-					if(!curves) { continue }
-					
+					if (!curves) {
+						continue
+					}
+
 					const reader = new ByteReader(stringToBuffer(component.ValuesAndTimes))
-					
+
 					reader.Jump(4)
 					const valueCount = reader.UInt32LE()
-					
-					for(let i = 0; i < valueCount; i++) {
+
+					for (let i = 0; i < valueCount; i++) {
 						curves[i] = {
 							time: -1,
 							interpolationMode: reader.UInt8(),
 							flags: reader.UInt8(),
 							value: reader.FloatLE(),
 							left_tangent: reader.FloatLE(),
-							right_tangent: reader.FloatLE()
+							right_tangent: reader.FloatLE(),
 						}
 					}
-					
+
 					reader.Jump(4)
 					const timeCount = reader.UInt32LE()
-					
+
 					assert(timeCount == valueCount, "value and time count do not match")
-					
-					for(let i = 0; i < timeCount; i++) {
-						const time = curves[i].time = reader.UInt32LE() / 2400
-						
-						if(time > result.length) {
+
+					for (let i = 0; i < timeCount; i++) {
+						const time = (curves[i].time = reader.UInt32LE() / 2400)
+
+						if (time > result.length) {
 							result.length = time
 						}
 					}
 				}
 			}
-			
 		}
 	},
 
 	parsePoses(result: Record<string, any>, rootPose: any, time: number) {
-		for(const pose of rootPose.Children) {
-			if(pose.ClassName !== "Pose") { continue }
-			
-			if(pose.Weight > 0) {
+		for (const pose of rootPose.Children) {
+			if (pose.ClassName !== "Pose") {
+				continue
+			}
+
+			if (pose.Weight > 0) {
 				const name = `${rootPose.Name}.${pose.Name}`
 				const cf = pose.CFrame
-				
-				if(!result.keyframes[name]) {
+
+				if (!result.keyframes[name]) {
 					result.keyframes[name] = []
 				}
-				
+
 				result.keyframes[name].push({
 					time: time,
 					pos: [cf[0], cf[1], cf[2]],
 					rot: this.CFrameToQuat(cf),
 					easingdir: pose.EasingDirection,
-					easingstyle: pose.EasingStyle
+					easingstyle: pose.EasingStyle,
 				})
 			}
-			
+
 			this.parsePoses(result, pose, time)
 		}
-	}
+	},
 }

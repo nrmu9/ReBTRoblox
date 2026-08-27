@@ -4,7 +4,7 @@
 	button.text-link {
 		margin: 0 !important;
 	}
-	
+
 	.btr-advanced-button {
 		margin: 0 !important;
 		clear: both;
@@ -22,7 +22,7 @@ html body.btr-avatar-refinement .left-wrapper {
 	height: auto;
 	clear: both;
 	max-height: max(600px, calc(100vh - 260px));
-	
+
 	display: flex;
 	flex-direction: column;
 }
@@ -31,7 +31,7 @@ html body.btr-avatar-refinement .btr-avatar-refinement-container {
 	margin-top: 20px;
 	padding-right: 10px;
 	padding-bottom: 10px;
-	
+
 	overflow-x: visible;
 	overflow-y: auto;
 }
@@ -62,32 +62,36 @@ html body.btr-avatar-refinement .btr-avatar-refinement-container input[type="ran
 	height: 12px;
 }
 
-
-html body.btr-avatar-refinement.dark-theme .btr-avatar-refinement-container input[type=range]::-webkit-slider-runnable-track {
+html
+	body.btr-avatar-refinement.dark-theme
+	.btr-avatar-refinement-container
+	input[type="range"]::-webkit-slider-runnable-track {
 	--btr-input-bg: #111214;
 }
 
-html body.btr-avatar-refinement .btr-avatar-refinement-container input[type=range]::-webkit-slider-runnable-track {
+html
+	body.btr-avatar-refinement
+	.btr-avatar-refinement-container
+	input[type="range"]::-webkit-slider-runnable-track {
 	--btr-input-bg: #e3e3e3;
 	--btr-input-progress: #00a2ff;
-	
+
 	background: linear-gradient(
 		to right,
 		var(--btr-input-progress) 0%,
 		var(--btr-input-progress) var(--btr-input-perc, 0.01%),
 		var(--btr-input-bg) var(--btr-input-perc, 0.01%),
 		var(--btr-input-bg) 100%
-	)
+	);
 }
-
 
 /* Custom color selector */
 
 .btr-color-selector {
 	position: relative;
-	
+
 	--max-size: 300px;
-	
+
 	width: 100%;
 	height: 0;
 	max-width: var(--max-size);

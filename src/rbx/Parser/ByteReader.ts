@@ -5,172 +5,225 @@ export class ByteReader extends Uint8Array {
 	[key: string]: any
 
 	static Converter = new DataView(new ArrayBuffer(8))
-	
+
 	index = 0
 	view: DataView
 
 	// Permissive signature: Uint8Array methods like subarray construct via species.
 	constructor(...args: any[]) {
-		if(args[0] instanceof Uint8Array) {
+		if (args[0] instanceof Uint8Array) {
 			args[1] = args[0].byteOffset
 			args[2] = args[0].byteLength
 			args[0] = args[0].buffer
 		}
 
-		assert(args[0] instanceof ArrayBuffer || args[0] instanceof window.ArrayBuffer, "buffer is not an ArrayBuffer")
+		assert(
+			args[0] instanceof ArrayBuffer || args[0] instanceof window.ArrayBuffer,
+			"buffer is not an ArrayBuffer",
+		)
 		super(...(args as [ArrayBuffer, number?, number?]))
 
 		this.view = new DataView(this.buffer as ArrayBuffer, this.byteOffset, this.byteLength)
 	}
 
-	SetIndex(n: number): void { this.index = n }
-	GetIndex() { return this.index }
-	GetRemaining() { return this.length - this.index }
-	GetLength() { return this.length }
-	Jump(n: number): void { this.index += n }
+	SetIndex(n: number): void {
+		this.index = n
+	}
+	GetIndex() {
+		return this.index
+	}
+	GetRemaining() {
+		return this.length - this.index
+	}
+	GetLength() {
+		return this.length
+	}
+	Jump(n: number): void {
+		this.index += n
+	}
 
 	Array(n: number): Uint8Array {
 		const result = new Uint8Array(this.buffer, this.byteOffset + this.index, n)
 		this.index += n
 		return result
 	}
-	
+
 	Match(match: string | ArrayLike<number>): boolean {
 		let index = this.index
-		
-		if(typeof match === "string") {
-			for(let i = 0; i < match.length; i++) {
-				if(match.charCodeAt(i) !== this[index++]) {
+
+		if (typeof match === "string") {
+			for (let i = 0; i < match.length; i++) {
+				if (match.charCodeAt(i) !== this[index++]) {
 					return false
 				}
 			}
 		} else {
-			for(let i = 0; i < match.length; i++) {
-				if(match[i] !== this[index++]) {
+			for (let i = 0; i < match.length; i++) {
+				if (match[i] !== this[index++]) {
 					return false
 				}
 			}
 		}
-		
+
 		this.index += match.length
 		return true
 	}
 
-	Byte() { return this.view.getUint8(this.index++) }
-	UInt8() { return this.view.getUint8(this.index++) }
-	UInt16LE() { return this.view.getUint16((this.index += 2) - 2, true) }
-	UInt16BE() { return this.view.getUint16((this.index += 2) - 2, false) }
-	UInt32LE() { return this.view.getUint32((this.index += 4) - 4, true) }
-	PeekUInt32LE() { return this.view.getUint32(this.index, true) }
-	UInt32BE() { return this.view.getUint32((this.index += 4) - 4, false) }
-	UInt64LE() { return this.view.getBigUint64((this.index += 8) - 8, true) }
-	UInt64BE() { return this.view.getBigUint64((this.index += 8) - 8, false) }
+	Byte() {
+		return this.view.getUint8(this.index++)
+	}
+	UInt8() {
+		return this.view.getUint8(this.index++)
+	}
+	UInt16LE() {
+		return this.view.getUint16((this.index += 2) - 2, true)
+	}
+	UInt16BE() {
+		return this.view.getUint16((this.index += 2) - 2, false)
+	}
+	UInt32LE() {
+		return this.view.getUint32((this.index += 4) - 4, true)
+	}
+	PeekUInt32LE() {
+		return this.view.getUint32(this.index, true)
+	}
+	UInt32BE() {
+		return this.view.getUint32((this.index += 4) - 4, false)
+	}
+	UInt64LE() {
+		return this.view.getBigUint64((this.index += 8) - 8, true)
+	}
+	UInt64BE() {
+		return this.view.getBigUint64((this.index += 8) - 8, false)
+	}
 
-	Int8() { return this.view.getInt8(this.index++) }
-	Int16LE() { return this.view.getInt16((this.index += 2) - 2, true) }
-	Int16BE() { return this.view.getInt16((this.index += 2) - 2, false) }
-	Int32LE() { return this.view.getInt32((this.index += 4) - 4, true) }
-	Int32BE() { return this.view.getInt32((this.index += 4) - 4, false) }
-	Int64LE() { return this.view.getBigInt64((this.index += 8) - 8, true) }
-	Int64BE() { return this.view.getBigInt64((this.index += 8) - 8, false) }
-	
-	FloatLE() { return this.view.getFloat32((this.index += 4) - 4, true) }
-	FloatBE() { return this.view.getFloat32((this.index += 4) - 4, false) }
-	DoubleLE() { return this.view.getFloat64((this.index += 8) - 8, true) }
-	DoubleBE() { return this.view.getFloat64((this.index += 8) - 8, false) }
+	Int8() {
+		return this.view.getInt8(this.index++)
+	}
+	Int16LE() {
+		return this.view.getInt16((this.index += 2) - 2, true)
+	}
+	Int16BE() {
+		return this.view.getInt16((this.index += 2) - 2, false)
+	}
+	Int32LE() {
+		return this.view.getInt32((this.index += 4) - 4, true)
+	}
+	Int32BE() {
+		return this.view.getInt32((this.index += 4) - 4, false)
+	}
+	Int64LE() {
+		return this.view.getBigInt64((this.index += 8) - 8, true)
+	}
+	Int64BE() {
+		return this.view.getBigInt64((this.index += 8) - 8, false)
+	}
 
-	String(n: number): string { return bufferToString(this.Array(n)) }
+	FloatLE() {
+		return this.view.getFloat32((this.index += 4) - 4, true)
+	}
+	FloatBE() {
+		return this.view.getFloat32((this.index += 4) - 4, false)
+	}
+	DoubleLE() {
+		return this.view.getFloat64((this.index += 8) - 8, true)
+	}
+	DoubleBE() {
+		return this.view.getFloat64((this.index += 8) - 8, false)
+	}
+
+	String(n: number): string {
+		return bufferToString(this.Array(n))
+	}
 
 	// Compression
-	
+
 	Zstd(comLength: number, decomLength: number, output?: Uint8Array): Uint8Array {
 		assert(this.GetRemaining() >= comLength, "[ByteReader.Zstd] unexpected eof")
-		
-		if(!output || output.length < decomLength) {
+
+		if (!output || output.length < decomLength) {
 			output = new Uint8Array(decomLength)
-		} else if(output.length > decomLength) {
+		} else if (output.length > decomLength) {
 			output = output.subarray(0, decomLength)
 		}
-		
+
 		fzstd.decompress(this.subarray(this.index, this.index + comLength), output)
-		
+
 		return output
 	}
-	
+
 	LZ4(comLength: number, decomLength: number, output?: Uint8Array): Uint8Array {
 		assert(this.GetRemaining() >= comLength, "[ByteReader.LZ4] unexpected eof")
-		
-		if(!output || output.length < decomLength) {
+
+		if (!output || output.length < decomLength) {
 			output = new Uint8Array(decomLength)
-		} else if(output.length > decomLength) {
+		} else if (output.length > decomLength) {
 			output = output.subarray(0, decomLength)
 		}
-		
+
 		const endIndex = this.index + comLength
 		let outputIndex = 0
 		let lastByte = 0
 
-		while(true) {
+		while (true) {
 			const token = this[this.index++]
 			let literalLength = token >> 4
 
-			if(literalLength === 0xF) {
+			if (literalLength === 0xf) {
 				do {
 					lastByte = this[this.index++]
 					literalLength += lastByte
-				} while(lastByte === 0xFF)
+				} while (lastByte === 0xff)
 			}
-			
+
 			assert(this.index + literalLength <= endIndex, "[ByteReader.LZ4] unexpected eof")
 
-			for(let i = 0; i < literalLength; i++) {
+			for (let i = 0; i < literalLength; i++) {
 				output[outputIndex++] = this[this.index++]
 			}
-			
-			if(this.index === endIndex) {
+
+			if (this.index === endIndex) {
 				break
 			}
 
 			let matchIndex = outputIndex - this.UInt16LE()
-			let matchLength = token & 0xF
+			let matchLength = token & 0xf
 
-			if(matchLength === 0xF) {
+			if (matchLength === 0xf) {
 				do {
 					lastByte = this[this.index++]
 					matchLength += lastByte
-				} while(lastByte === 0xFF)
+				} while (lastByte === 0xff)
 			}
-			
+
 			matchLength += 4 // Minimum match is 4 bytes, so 4 is added to the length
-			
+
 			assert(outputIndex + matchLength <= decomLength, "[ByteReader.LZ4] output size mismatch")
-			
-			for(let i = 0; i < matchLength; i++) {
+
+			for (let i = 0; i < matchLength; i++) {
 				output[outputIndex++] = output[matchIndex++]
 			}
 		}
 
 		assert(this.index === endIndex, "[ByteReader.LZ4] input size mismatch")
 		assert(outputIndex === decomLength, "[ByteReader.LZ4] output size mismatch")
-		
+
 		return output
 	}
 
 	// Interleaved
-	
+
 	RBXInterleavedUInt16(count: number, result: number[]): number[] {
-		for(let i = 0; i < count; i++) {
-			result[i] =
-				this[this.index + i + count * 0] * 256 +
-				this[this.index + i + count * 1]
+		for (let i = 0; i < count; i++) {
+			result[i] = this[this.index + i + count * 0] * 256 + this[this.index + i + count * 1]
 		}
 
 		this.Jump(count * 2)
 		return result
 	}
-	
+
 	RBXInterleavedUInt32(count: number, result: number[]): number[] {
-		for(let i = 0; i < count; i++) {
+		for (let i = 0; i < count; i++) {
 			result[i] =
 				this[this.index + i + count * 0] * 16777216 +
 				this[this.index + i + count * 1] * 65536 +
@@ -181,82 +234,95 @@ export class ByteReader extends Uint8Array {
 		this.Jump(count * 4)
 		return result
 	}
-	
+
 	RBXInterleavedUInt64(count: number, result: bigint[]) {
-		for(let i = 0; i < count; i++) {
-			result[i] = BigInt(
-				this[this.index + i + count * 0] * 16777216 +
-				this[this.index + i + count * 1] * 65536 +
-				this[this.index + i + count * 2] * 256 +
-				this[this.index + i + count * 3]
-			) << 32n | BigInt(
-				this[this.index + i + count * 4] * 16777216 +
-				this[this.index + i + count * 5] * 65536 +
-				this[this.index + i + count * 6] * 256 +
-				this[this.index + i + count * 7]
-			)
+		for (let i = 0; i < count; i++) {
+			result[i] =
+				(BigInt(
+					this[this.index + i + count * 0] * 16777216 +
+						this[this.index + i + count * 1] * 65536 +
+						this[this.index + i + count * 2] * 256 +
+						this[this.index + i + count * 3],
+				) <<
+					32n) |
+				BigInt(
+					this[this.index + i + count * 4] * 16777216 +
+						this[this.index + i + count * 5] * 65536 +
+						this[this.index + i + count * 6] * 256 +
+						this[this.index + i + count * 7],
+				)
 		}
 
 		this.Jump(count * 8)
 		return result
 	}
-	
+
 	RBXInterleavedInt16(count: number, result: number[]): number[] {
 		this.RBXInterleavedUInt16(count, result)
-		
-		for(let i = 0; i < count; i++) {
+
+		for (let i = 0; i < count; i++) {
 			const value = result[i]
-			result[i] = (value % 2 ? -(value + 1) / 2 : value / 2)
+			result[i] = value % 2 ? -(value + 1) / 2 : value / 2
 		}
-		
+
 		return result
 	}
 
 	RBXInterleavedInt32(count: number, result: number[]): number[] {
 		this.RBXInterleavedUInt32(count, result)
-		
-		for(let i = 0; i < count; i++) {
+
+		for (let i = 0; i < count; i++) {
 			const value = result[i]
-			result[i] = (value % 2 ? -(value + 1) / 2 : value / 2)
+			result[i] = value % 2 ? -(value + 1) / 2 : value / 2
 		}
-		
+
 		return result
 	}
-	
+
 	RBXInterleavedInt64(count: number, result: bigint[]) {
 		this.RBXInterleavedUInt64(count, result)
-		
-		for(let i = 0; i < count; i++) {
+
+		for (let i = 0; i < count; i++) {
 			const value = result[i]
-			result[i] = (value % 2n ? -(value + 1n) / 2n : value / 2n)
+			result[i] = value % 2n ? -(value + 1n) / 2n : value / 2n
 		}
-		
+
 		return result
 	}
 
 	RBXInterleavedFloat(count: number, result: number[]): number[] {
 		this.RBXInterleavedUInt32(count, result)
-		
-		for(let i = 0; i < count; i++) {
+
+		for (let i = 0; i < count; i++) {
 			const uint32 = result[i]
-			ByteReader.Converter.setUint32(0, uint32 << 31 | uint32 >>> 1)
-			result[i] =  ByteReader.Converter.getFloat32(0)
+			ByteReader.Converter.setUint32(0, (uint32 << 31) | (uint32 >>> 1))
+			result[i] = ByteReader.Converter.getFloat32(0)
 		}
-		
+
 		return result
 	}
 }
 
 {
 	const peekMethods = [
-		"Byte", "UInt8", "UInt16LE", "UInt16BE", "UInt32LE", "UInt32BE",
-		"FloatLE", "FloatBE", "DoubleLE", "DoubleBE", "Array", "String"
+		"Byte",
+		"UInt8",
+		"UInt16LE",
+		"UInt16BE",
+		"UInt32LE",
+		"UInt32BE",
+		"FloatLE",
+		"FloatBE",
+		"DoubleLE",
+		"DoubleBE",
+		"Array",
+		"String",
 	]
-	
-	for(const key of peekMethods) {
+
+	for (const key of peekMethods) {
 		const fn = ByteReader.prototype[key]
-		
-		ByteReader.prototype["Peek" + key] = function(...args) {
+
+		ByteReader.prototype["Peek" + key] = function (...args) {
 			const index = this.GetIndex()
 			const result = fn.apply(this, args)
 			this.SetIndex(index)

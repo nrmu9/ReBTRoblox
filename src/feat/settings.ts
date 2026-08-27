@@ -22,18 +22,18 @@ export const DEFAULT_SETTINGS = {
 		hoverPreview: { value: true },
 		hoverPreviewMode: { value: "always", validValues: ["always", "never"] },
 		previewLayeredClothing: { value: true },
-		
+
 		cacheRobuxAmount: { value: true },
 		higherRobuxPrecision: { value: true },
 		enableContextMenus: { value: true },
-		
+
 		fixFirefoxLocalStorageIssue: { value: false },
-		experiments: { value: "", hidden: true }
+		experiments: { value: "", hidden: true },
 	},
 	create: {
 		enabled: { value: true, version: 2 },
 		assetOptions: { value: false },
-		downloadVersion: { value: true }
+		downloadVersion: { value: true },
 	},
 	home: {
 		friendsShowUsername: { value: false },
@@ -42,26 +42,26 @@ export const DEFAULT_SETTINGS = {
 		favoritesAtTop: { value: false },
 		hideFriendActivity: { value: false },
 		instantGameHoverAction: { value: false },
-		showRecommendationPlayerCount: { value: true }
+		showRecommendationPlayerCount: { value: true },
 	},
 	messages: {
-		enabled: { value: true }
+		enabled: { value: true },
 	},
 	navigation: {
 		enabled: { value: true },
 		noHamburger: { value: true },
-		elements: { value: "", hidden: true }
+		elements: { value: "", hidden: true },
 	},
 	avatar: {
 		enabled: { value: true },
 		removeAccessoryLimits: { value: true },
 		removeLayeredLimits: { value: true },
 		fullRangeBodyColors: { value: true },
-		assetRefinement: { value: false }
+		assetRefinement: { value: false },
 	},
 	catalog: {
 		enabled: { value: true },
-		showOwnedAssets: { value: false }
+		showOwnedAssets: { value: false },
 	},
 	itemdetails: {
 		enabled: { value: true },
@@ -75,14 +75,14 @@ export const DEFAULT_SETTINGS = {
 		showSales: { value: true },
 		showCreatedAndUpdated: { value: true },
 
-		addOwnersList: { value: true, hidden: true }
+		addOwnersList: { value: true, hidden: true },
 	},
 	gamedetails: {
 		enabled: { value: true },
 		showBadgeOwned: { value: true },
 		addServerPager: { value: true },
 		showServerRegion: { value: "none", validValues: ["none", "ping", "region", "both", "combined"] },
-		compactBadgeStats: { value: true }
+		compactBadgeStats: { value: true },
 	},
 	groups: {
 		enabled: { value: true },
@@ -90,7 +90,7 @@ export const DEFAULT_SETTINGS = {
 	},
 	inventory: {
 		enabled: { value: true },
-		inventoryTools: { value: true }
+		inventoryTools: { value: true },
 	},
 	profile: {
 		enabled: { value: true },
@@ -98,9 +98,9 @@ export const DEFAULT_SETTINGS = {
 	},
 }
 
-for(const list of Object.values(DEFAULT_SETTINGS) as any[]) {
-	if(list instanceof Object) {
-		for(const setting of Object.values(list) as any[]) {
+for (const list of Object.values(DEFAULT_SETTINGS) as any[]) {
+	if (list instanceof Object) {
+		for (const setting of Object.values(list) as any[]) {
 			setting.default = true
 		}
 	}
@@ -109,53 +109,58 @@ for(const list of Object.values(DEFAULT_SETTINGS) as any[]) {
 export const SETTINGS: Record<string, any> = {
 	_onChangeListeners: [],
 	_loadPromise: deferredPromise<unknown>(),
-	
+
 	firstLoad: false,
 	loaded: false,
-	
-	loadedSettings: JSON.parse(JSON.stringify(
-		DEFAULT_SETTINGS,
-		(key, value) => (key === "validValues" ? undefined : value)
-	)),
-	
+
+	loadedSettings: JSON.parse(
+		JSON.stringify(DEFAULT_SETTINGS, (key, value) => (key === "validValues" ? undefined : value)),
+	),
+
 	_save() {
-		if(IS_BACKGROUND_PAGE && this.loaded && !this.loadError) {
+		if (IS_BACKGROUND_PAGE && this.loaded && !this.loadError) {
 			STORAGE.set({ settings: this.loadedSettings })
 		}
 	},
-	
+
 	_load(data) {
-		if(data && data._version === DEFAULT_SETTINGS._version) {
-			for(const [groupName, group] of Object.entries(data) as [string, any][]) {
-				if(!(group instanceof Object)) { continue }
-				
-				for(const [settingName, loadedSetting] of Object.entries(group) as [string, any][]) {
+		if (data && data._version === DEFAULT_SETTINGS._version) {
+			for (const [groupName, group] of Object.entries(data) as [string, any][]) {
+				if (!(group instanceof Object)) {
+					continue
+				}
+
+				for (const [settingName, loadedSetting] of Object.entries(group) as [string, any][]) {
 					const settingPath = `${groupName}.${settingName}`
 					const defaultSetting = this._getSetting(settingPath, DEFAULT_SETTINGS)
-					
-					if(defaultSetting && !loadedSetting.default && loadedSetting.version === defaultSetting.version) {
+
+					if (
+						defaultSetting &&
+						!loadedSetting.default &&
+						loadedSetting.version === defaultSetting.version
+					) {
 						this._set(settingPath, loadedSetting.value, loadedSetting.default, false)
 					}
 				}
 			}
 		}
 
-		if(IS_BACKGROUND_PAGE) {
+		if (IS_BACKGROUND_PAGE) {
 			this._save()
 		}
-		
-		if(!this.loaded) {
+
+		if (!this.loaded) {
 			this.loaded = true
 			this._loadPromise.$resolve(this.loadedSettings)
 		}
 	},
 
 	load(fn) {
-		if(!this.firstLoad) {
+		if (!this.firstLoad) {
 			this.firstLoad = true
-			
-			if(IS_BACKGROUND_PAGE) {
-				STORAGE.get(["settings"], data => {
+
+			if (IS_BACKGROUND_PAGE) {
+				STORAGE.get(["settings"], (data) => {
 					this.loadError = chrome.runtime.lastError
 					this._load(data?.settings)
 				})
@@ -164,16 +169,18 @@ export const SETTINGS: Record<string, any> = {
 
 		this._loadPromise.then(fn)
 	},
-	
+
 	serialize() {
-		if(!this.loaded) { throw new Error("Settings are not loaded") }
-		
+		if (!this.loaded) {
+			throw new Error("Settings are not loaded")
+		}
+
 		const settings = JSON.parse(JSON.stringify(this.loadedSettings))
 		delete settings._version
 
 		// Change settings to be name: value
-		for(const group of Object.values(settings) as any[]) {
-			for(const [name, setting] of Object.entries(group) as [string, any][]) {
+		for (const group of Object.values(settings) as any[]) {
+			for (const [name, setting] of Object.entries(group) as [string, any][]) {
 				group[name] = setting.value
 			}
 		}
@@ -183,18 +190,20 @@ export const SETTINGS: Record<string, any> = {
 
 	_getSetting(path, root) {
 		const index = path.indexOf(".")
-		if(index === -1) { return }
+		if (index === -1) {
+			return
+		}
 
 		const groupName = path.slice(0, index)
 		const settingName = path.slice(index + 1)
 
 		const group = root[groupName]
-		if(!(group instanceof Object)) {
+		if (!(group instanceof Object)) {
 			return
 		}
 
 		const setting = group[settingName]
-		if(!(setting instanceof Object && "value" in setting)) {
+		if (!(setting instanceof Object && "value" in setting)) {
 			return
 		}
 
@@ -204,16 +213,16 @@ export const SETTINGS: Record<string, any> = {
 	_isValid(settingPath, value) {
 		const setting = this._getSetting(settingPath, this.loadedSettings)
 
-		if(!setting) {
+		if (!setting) {
 			return false // Invalid setting
 		}
 
-		if(typeof value !== typeof setting.value) {
+		if (typeof value !== typeof setting.value) {
 			return false // Type mismatch
 		}
 
 		const defaultSetting = this._getSetting(settingPath, DEFAULT_SETTINGS)
-		if(defaultSetting.validValues && !defaultSetting.validValues.includes(value)) {
+		if (defaultSetting.validValues && !defaultSetting.validValues.includes(value)) {
 			return false // Invalid value
 		}
 
@@ -221,32 +230,38 @@ export const SETTINGS: Record<string, any> = {
 	},
 
 	_set(settingPath, value, isDefault = false, shouldSave = false) {
-		if(!this._isValid(settingPath, value)) {
+		if (!this._isValid(settingPath, value)) {
 			return false
 		}
 
 		const setting = this._getSetting(settingPath, this.loadedSettings)
 
-		if(setting.value === value && !!isDefault === setting.default) {
+		if (setting.value === value && !!isDefault === setting.default) {
 			return false
 		}
 
 		setting.value = value
 		setting.default = !!isDefault
 
-		if(this.loaded) {
-			if(shouldSave) {
-				if(IS_BACKGROUND_PAGE) {
+		if (this.loaded) {
+			if (shouldSave) {
+				if (IS_BACKGROUND_PAGE) {
 					this._save()
 				} else {
 					backgroundScript.send("setSetting", { path: settingPath, value, default: !!isDefault })
 				}
 			}
 
-			const listeners = [...(this._onChangeListeners[settingPath] ?? []), ...(this._onChangeListeners["*"] ?? [])]
-			for(const fn of listeners) {
-				try { fn(setting.value, setting.default) }
-				catch(ex) { console.error(ex) }
+			const listeners = [
+				...(this._onChangeListeners[settingPath] ?? []),
+				...(this._onChangeListeners["*"] ?? []),
+			]
+			for (const fn of listeners) {
+				try {
+					fn(setting.value, setting.default)
+				} catch (ex) {
+					console.error(ex)
+				}
 			}
 		}
 
@@ -256,12 +271,14 @@ export const SETTINGS: Record<string, any> = {
 	hasSetting(settingPath) {
 		return !!this._getSetting(settingPath, this.loadedSettings)
 	},
-	
+
 	get(settingPath) {
-		if(!this.loaded) { throw new Error("Settings are not loaded") }
-		
+		if (!this.loaded) {
+			throw new Error("Settings are not loaded")
+		}
+
 		const setting = this._getSetting(settingPath, this.loadedSettings)
-		if(!setting) {
+		if (!setting) {
 			throw new TypeError(`'${settingPath}' is not a valid setting`)
 		}
 
@@ -269,9 +286,11 @@ export const SETTINGS: Record<string, any> = {
 	},
 
 	set(settingPath, value) {
-		if(!this.loaded) { throw new Error("Settings are not loaded") }
+		if (!this.loaded) {
+			throw new Error("Settings are not loaded")
+		}
 
-		if(!this._isValid(settingPath, value)) {
+		if (!this._isValid(settingPath, value)) {
 			throw new Error(`Invalid value '${typeof value} ${String(value)}' to '${settingPath}'`)
 		}
 
@@ -279,64 +298,72 @@ export const SETTINGS: Record<string, any> = {
 	},
 
 	getIsDefault(settingPath) {
-		if(!this.loaded) { throw new Error("Settings are not loaded") }
-		
+		if (!this.loaded) {
+			throw new Error("Settings are not loaded")
+		}
+
 		const setting = this._getSetting(settingPath, this.loadedSettings)
-		if(!setting) {
+		if (!setting) {
 			throw new TypeError(`'${settingPath}' is not a valid setting`)
 		}
 
 		return setting.default
 	},
-	
+
 	reset(settingPath) {
-		if(!this.loaded) { throw new Error("Settings are not loaded") }
+		if (!this.loaded) {
+			throw new Error("Settings are not loaded")
+		}
 
 		const defaultSetting = this._getSetting(settingPath, DEFAULT_SETTINGS)
-		if(!defaultSetting) {
+		if (!defaultSetting) {
 			throw new TypeError(`'${settingPath}' is not a valid setting`)
 		}
 
 		const value = defaultSetting.value
-		if(!this._isValid(settingPath, value)) {
+		if (!this._isValid(settingPath, value)) {
 			throw new Error(`Invalid value '${typeof value} ${String(value)}' to '${settingPath}'`)
 		}
 
 		this._set(settingPath, value, true, true)
 	},
-	
-	resetToDefault() {
-		if(!this.loaded) { throw new Error("Settings are not loaded") }
 
-		for(const [groupName, group] of Object.entries(DEFAULT_SETTINGS) as [string, any][]) {
-			if(!(group instanceof Object)) { continue }
-			
-			for(const [settingName, setting] of Object.entries(group) as [string, any][]) {
+	resetToDefault() {
+		if (!this.loaded) {
+			throw new Error("Settings are not loaded")
+		}
+
+		for (const [groupName, group] of Object.entries(DEFAULT_SETTINGS) as [string, any][]) {
+			if (!(group instanceof Object)) {
+				continue
+			}
+
+			for (const [settingName, setting] of Object.entries(group) as [string, any][]) {
 				this._set(`${groupName}.${settingName}`, setting.value, true, true)
 			}
 		}
 
-		if(IS_BACKGROUND_PAGE) {
+		if (IS_BACKGROUND_PAGE) {
 			this.loadError = false
 			this._save()
 		}
 	},
 
 	onChange(settingPath, fn) {
-		if(settingPath instanceof Function) {
+		if (settingPath instanceof Function) {
 			fn = settingPath
 			settingPath = "*"
 		}
-		
-		if(!this._onChangeListeners[settingPath]) {
+
+		if (!this._onChangeListeners[settingPath]) {
 			this._onChangeListeners[settingPath] = []
 		}
 
 		this._onChangeListeners[settingPath].push(fn)
-	}
+	},
 }
 
-if(IS_BACKGROUND_PAGE) {
+if (IS_BACKGROUND_PAGE) {
 	contentScript.listen({
 		setSetting(data, respond) {
 			SETTINGS.load(() => {
@@ -344,14 +371,16 @@ if(IS_BACKGROUND_PAGE) {
 			})
 
 			respond()
-		}
+		},
 	})
-	
+
 	SETTINGS.load(() => SHARED_DATA.set("settings", SETTINGS.loadedSettings))
 	SETTINGS.onChange(() => SHARED_DATA.set("settings", SETTINGS.loadedSettings))
 } else {
 	SHARED_DATA.load(() => {
-		if(!SHARED_DATA.get("settings")) { return }
+		if (!SHARED_DATA.get("settings")) {
+			return
+		}
 		SETTINGS._load(SHARED_DATA.get("settings"))
 	})
 }

@@ -83,21 +83,27 @@ declare global {
 
 		hijackConstructor(
 			filter: (props: any) => boolean,
-			handler: (target: any, thisArg: any, args: any[]) => any
+			handler: (target: any, thisArg: any, args: any[]) => any,
 		): ReactConstructorHook
 
 		hijackUseState(
 			filter: (value: any, index: number) => boolean,
 			transform: (value: any, initial: any) => any,
-			permanent?: boolean
+			permanent?: boolean,
 		): void
 
 		hijackUseStateGlobal(
 			filter: (value: any, index: number) => boolean,
-			transform: (value: any, initial: any) => any
+			transform: (value: any, initial: any) => any,
 		): void
 
-		queryElement(targets: any, queries: ReactSelector, depth?: number, mustMatchRoot?: boolean, all?: boolean): any
+		queryElement(
+			targets: any,
+			queries: ReactSelector,
+			depth?: number,
+			mustMatchRoot?: boolean,
+			all?: boolean,
+		): any
 		querySelector(element: any, selectors: ReactSelector, depth?: number, path?: boolean): any
 		querySelectorAll(element: any, selectors: ReactSelector, depth?: number, path?: boolean): any
 		selectorMatches(elem: any, selectors: ReactSelector): boolean
@@ -157,7 +163,11 @@ declare global {
 		$req<T extends Element = HTMLElement>(selector: string): T
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
-		$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
+		$watchAll(
+			selector: string,
+			callback: (element: Element, stop: () => void) => void,
+			props?: WatchProps,
+		): Watcher
 	}
 
 	interface Document {
@@ -165,7 +175,11 @@ declare global {
 		$req<T extends Element = HTMLElement>(selector: string): T
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
-		$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
+		$watchAll(
+			selector: string,
+			callback: (element: Element, stop: () => void) => void,
+			props?: WatchProps,
+		): Watcher
 	}
 
 	interface DocumentFragment {

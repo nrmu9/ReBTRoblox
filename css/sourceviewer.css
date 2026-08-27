@@ -40,13 +40,13 @@
 .btr-sourceviewer-header {
 	position: relative;
 	padding-right: 25px;
-	
+
 	color: #000;
 	font-size: 12px;
-	
+
 	grid-area: header;
-	background: #F2F2F2;
-	border: 1px solid #B6B6B6;
+	background: #f2f2f2;
+	border: 1px solid #b6b6b6;
 
 	margin-right: 1.5px;
 }
@@ -55,8 +55,8 @@
 	display: inline-flex;
 	height: 100%;
 
-	background: #F2F2F2;
-	border-right: 1px solid #B6B6B6;
+	background: #f2f2f2;
+	border-right: 1px solid #b6b6b6;
 
 	justify-content: center;
 	align-items: center;
@@ -74,11 +74,11 @@
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-tab:hover {
-	background: #E4EEFE;
+	background: #e4eefe;
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-tab.active {
-	background: linear-gradient(to top, #FFF 0px, #FFF 20px, #B6B6B6 20px, #B6B6B6 21px, transparent 21px);
+	background: linear-gradient(to top, #fff 0px, #fff 20px, #b6b6b6 20px, #b6b6b6 21px, transparent 21px);
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-tab-close {
@@ -90,16 +90,16 @@
 	height: 15px;
 
 	margin-left: 2px;
-	
+
 	font-size: 16px;
 	font-weight: 500;
 
-	color: #7F7F7F;
+	color: #7f7f7f;
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-tab-close:hover {
-	background: #E4EEFE;
-	color: #C7C7C7;
+	background: #e4eefe;
+	color: #c7c7c7;
 }
 
 /* */
@@ -110,14 +110,14 @@
 	top: 0;
 	width: 25px;
 	height: 100%;
-	border-left: 1px solid #B6B6B6;
-	
+	border-left: 1px solid #b6b6b6;
+
 	user-select: none;
 	cursor: pointer;
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-settings-button:hover {
-	background: #E4EEFE;
+	background: #e4eefe;
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-settings-button.active {
@@ -134,7 +134,7 @@
 	font-size: 18px;
 	left: 0;
 	top: 2px;
-	
+
 	user-select: none;
 	pointer-events: none;
 }
@@ -143,26 +143,26 @@
 	position: absolute;
 	top: 100%;
 	right: -1px;
-	
+
 	width: 240px;
 	z-index: 2;
-	
-	
+
 	background: white;
-	border: 1px solid #B6B6B6;
-	
+	border: 1px solid #b6b6b6;
+
 	display: none;
 	grid: auto-flow / max-content auto;
-	
+
 	cursor: default;
 	user-select: none;
 }
 
-.btr-sourceviewer-settings, .btr-sourceviewer-settings * {
+.btr-sourceviewer-settings,
+.btr-sourceviewer-settings * {
 	font-size: 12px !important;
 	color: black !important;
 	font-weight: 300 !important;
-	font-family: "Source Sans Pro",Arial,Helvetica,sans-serif !important;
+	font-family: "Source Sans Pro", Arial, Helvetica, sans-serif !important;
 }
 
 .btr-sourceviewer-header .btr-sourceviewer-settings-button.active + .btr-sourceviewer-settings {
@@ -170,7 +170,7 @@
 }
 
 .btr-sourceviewer-setting-label {
-	border-right: 1px solid #B6B6B6;
+	border-right: 1px solid #b6b6b6;
 	padding: 4px 8px;
 }
 
@@ -180,7 +180,7 @@
 
 .btr-sourceviewer-setting-label:not(:nth-child(-n + 2)),
 .btr-sourceviewer-setting-value:not(:nth-child(-n + 2)) {
-	border-top: 1px solid #B6B6B6;
+	border-top: 1px solid #b6b6b6;
 }
 
 .btr-sourceviewer-setting-value input[type="number"] {
@@ -199,7 +199,6 @@
 	padding: 0;
 	margin-left: 5px;
 	height: 100%;
-	
 }
 
 /* */
@@ -207,7 +206,7 @@
 .btr-sourceviewer-content {
 	grid-area: content;
 	background: #fff;
-	border: 1px solid #B6B6B6;
+	border: 1px solid #b6b6b6;
 	border-top: none;
 
 	margin-right: 1.5px;
@@ -243,7 +242,8 @@
 
 /* */
 
-.btr-sourceviewer-source-container, .btr-sourceviewer-source-container * {
+.btr-sourceviewer-source-container,
+.btr-sourceviewer-source-container * {
 	font-family: "Courier New" !important;
 	font-size: 14px !important;
 	font-weight: 300;
@@ -261,7 +261,7 @@
 
 	tab-size: var(--sv-tabwidth, 4);
 	-moz-tab-size: var(--sv-tabwidth, 4);
-	
+
 	display: flex;
 	flex-direction: row;
 	user-select: none;
@@ -273,10 +273,10 @@
 }
 
 .btr-sourceviewer-source-container > .btr-sourceviewer-linenumbers {
-	background: #DDDDDD;
+	background: #dddddd;
 	padding-left: 12px;
 	padding-right: 4px;
-	
+
 	text-align: right;
 	white-space: nowrap;
 
@@ -286,8 +286,8 @@
 
 .btr-sourceviewer-source-container > .btr-sourceviewer-scopes {
 	flex: 0 0 auto;
-	
-	background: #FAFAFA;
+
+	background: #fafafa;
 	width: 14px;
 
 	user-select: none;
@@ -303,7 +303,7 @@
 
 	cursor: text;
 	user-select: text;
-	
+
 	outline: none !important; /* Weird chrome outline */
 }
 
@@ -359,7 +359,7 @@
 	width: 6px;
 	height: 6px;
 
-	border: 0 solid #7F7F7F;
+	border: 0 solid #7f7f7f;
 	border-width: 0 1px 1px 0;
 
 	transform: rotate(45deg);
@@ -391,11 +391,11 @@
 	position: absolute;
 	display: var(--sv-whitespace, "inline");
 	width: 100%;
-	
+
 	text-align: center;
 	content: "\2192";
 	opacity: 0.25;
-	
+
 	user-select: none;
 	pointer-events: none;
 }
@@ -404,22 +404,46 @@
 	position: absolute;
 	display: var(--sv-whitespace, "inline");
 	width: 100%;
-	
+
 	text-align: center;
 	content: "\B7";
 	opacity: 0.3;
-	
+
 	user-select: none;
 	pointer-events: none;
 }
 
-.btr-sourceviewer-source-container .btr-sourceviewer-string { color: rgb(127, 0, 127); }
-.btr-sourceviewer-source-container .btr-sourceviewer-comment { color: rgb(0, 127, 9); }
-.btr-sourceviewer-source-container .btr-sourceviewer-keyword { color: rgb(0, 0, 127); font-weight: bold; }
-.btr-sourceviewer-source-container .btr-sourceviewer-global { color: rgb(0, 0, 127); text-shadow: 0px 0px 0.1px rgba(0, 0, 127, 0.5); }
-.btr-sourceviewer-source-container .btr-sourceviewer-property { color: rgb(72, 92, 142); }
-.btr-sourceviewer-source-container .btr-sourceviewer-method { color: rgb(0, 116, 189); }
-.btr-sourceviewer-source-container .btr-sourceviewer-number { color: rgb(0, 127, 127); }
-.btr-sourceviewer-source-container .btr-sourceviewer-operator { color: rgb(127, 127, 0); }
-.btr-sourceviewer-source-container .btr-sourceviewer-nilbool { color: rgb(0, 127, 127); font-weight: bold; }
-.btr-sourceviewer-source-container .btr-sourceviewer-attribute { color: rgb(0, 0, 127); font-weight: bold; }
+.btr-sourceviewer-source-container .btr-sourceviewer-string {
+	color: rgb(127, 0, 127);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-comment {
+	color: rgb(0, 127, 9);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-keyword {
+	color: rgb(0, 0, 127);
+	font-weight: bold;
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-global {
+	color: rgb(0, 0, 127);
+	text-shadow: 0px 0px 0.1px rgba(0, 0, 127, 0.5);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-property {
+	color: rgb(72, 92, 142);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-method {
+	color: rgb(0, 116, 189);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-number {
+	color: rgb(0, 127, 127);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-operator {
+	color: rgb(127, 127, 0);
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-nilbool {
+	color: rgb(0, 127, 127);
+	font-weight: bold;
+}
+.btr-sourceviewer-source-container .btr-sourceviewer-attribute {
+	color: rgb(0, 0, 127);
+	font-weight: bold;
+}

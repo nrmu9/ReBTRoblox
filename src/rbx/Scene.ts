@@ -18,21 +18,21 @@ export const RBXScene = (() => {
 			this.cameraSlideEnabled = true
 			this.cameraFocus = new THREE.Vector3(0, 4, 0)
 			this.cameraOffset = new THREE.Vector3(0, 0, 0)
-			this.cameraRotation = new THREE.Euler(.05, 0, 0, "YXZ")
+			this.cameraRotation = new THREE.Euler(0.05, 0, 0, "YXZ")
 			this.cameraDir = new THREE.Vector3(0, 0, 1)
 			this.prevDragEvent = null
 			this.isDragging = false
 
-			const renderer = this.renderer = new THREE.WebGLRenderer({
+			const renderer = (this.renderer = new THREE.WebGLRenderer({
 				antialias: true,
-				alpha: true
-			})
+				alpha: true,
+			}))
 
 			renderer.setClearAlpha(0)
 			renderer.shadowMap.enabled = true
 			renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-			const canvas = this.canvas = renderer.domElement
+			const canvas = (this.canvas = renderer.domElement)
 			canvas.style = `
 			user-select: none !important;
 			-moz-user-select: none !important;
@@ -45,13 +45,13 @@ export const RBXScene = (() => {
 			width: 100% !important;
 			height: 100% !important;`
 
-			const scene = this.scene = new THREE.Scene()
+			const scene = (this.scene = new THREE.Scene())
 			this.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100)
-			
-			const ambientLight = new THREE.AmbientLight(0x7F7F7F)
+
+			const ambientLight = new THREE.AmbientLight(0x7f7f7f)
 			scene.add(ambientLight)
 
-			const sunLight = new THREE.DirectionalLight(0xACACAC)
+			const sunLight = new THREE.DirectionalLight(0xacacac)
 			sunLight.position.set(-0.474891931, 0.822536945, 0.312906593).multiplyScalar(15)
 			sunLight.castShadow = true
 			sunLight.shadow.mapSize.width = 256
@@ -73,79 +73,91 @@ export const RBXScene = (() => {
 				{
 					target: canvas,
 					events: {
-						mousedown: event => {
-							if(!this.cameraControlsEnabled) { return }
+						mousedown: (event) => {
+							if (!this.cameraControlsEnabled) {
+								return
+							}
 
-							if(!this.isDragging && (event.button >= 0 && event.button <= 2)) {
+							if (!this.isDragging && event.button >= 0 && event.button <= 2) {
 								this.prevDragEvent = event
 								this.isDragging = true
 								this.dragButton = event.button
 							}
 
-							if(document.activeElement) {
-								(document.activeElement as HTMLElement | null)?.blur()
+							if (document.activeElement) {
+								;(document.activeElement as HTMLElement | null)?.blur()
 							}
 
 							event.preventDefault()
 						},
-						contextmenu: event => {
-							if(!this.cameraControlsEnabled) { return }
+						contextmenu: (event) => {
+							if (!this.cameraControlsEnabled) {
+								return
+							}
 							event.preventDefault()
 						},
-						wheel: event => {
-							if(!this.cameraControlsEnabled) { return }
-							
+						wheel: (event) => {
+							if (!this.cameraControlsEnabled) {
+								return
+							}
+
 							const deltaY = event.deltaY
 
-							if(deltaY > 0) {
+							if (deltaY > 0) {
 								this.cameraZoom = Math.min(this.cameraMaxZoom, this.cameraZoom + 1)
-							} else if(deltaY < 0) {
+							} else if (deltaY < 0) {
 								this.cameraZoom = Math.max(this.cameraMinZoom, this.cameraZoom - 1)
 							}
 
 							event.preventDefault()
-						}
-					}
+						},
+					},
 				},
 				{
 					target: window,
 					events: {
-						mousemove: event => {
-							if(!this.cameraControlsEnabled) { return }
-							
-							if(!this.isDragging) { return }
+						mousemove: (event) => {
+							if (!this.cameraControlsEnabled) {
+								return
+							}
+
+							if (!this.isDragging) {
+								return
+							}
 							const moveX = event.clientX - this.prevDragEvent.clientX
 							const moveY = event.clientY - this.prevDragEvent.clientY
 							this.prevDragEvent = event
-							
-							if(this.dragButton === 1) {
-								this.cameraSlide += this.cameraZoom * moveY / this.canvas.clientHeight
-								
+
+							if (this.dragButton === 1) {
+								this.cameraSlide += (this.cameraZoom * moveY) / this.canvas.clientHeight
 							} else {
-								const rotX = this.cameraRotation.x + 2 * Math.PI * moveY / this.canvas.clientHeight
+								const rotX =
+									this.cameraRotation.x + (2 * Math.PI * moveY) / this.canvas.clientHeight
 								this.cameraRotation.x = Math.max(-1.4, Math.min(1.4, rotX))
-								this.cameraRotation.y -= 2 * Math.PI * moveX / this.canvas.clientWidth
+								this.cameraRotation.y -= (2 * Math.PI * moveX) / this.canvas.clientWidth
 							}
 						},
-						mouseup: event => {
-							if(this.isDragging && event.button === this.dragButton) {
+						mouseup: (event) => {
+							if (this.isDragging && event.button === this.dragButton) {
 								this.isDragging = false
 							}
 						},
-						contextmenu: event => {
-							if(!this.cameraControlsEnabled) { return }
-							
-							if(event.button === 2 && event.button === this.dragButton) {
+						contextmenu: (event) => {
+							if (!this.cameraControlsEnabled) {
+								return
+							}
+
+							if (event.button === 2 && event.button === this.dragButton) {
 								this.dragButton = null
 								event.preventDefault()
 							}
-						}
-					}
-				}
+						},
+					},
+				},
 			]
-			
-			for(const listener of this.listeners) {
-				for(const params of Object.entries(listener.events)) {
+
+			for (const listener of this.listeners) {
+				for (const params of Object.entries(listener.events)) {
 					listener.target.addEventListener(...params)
 				}
 			}
@@ -153,12 +165,12 @@ export const RBXScene = (() => {
 
 		update() {
 			const parent = this.canvas.parentNode
-			if(parent) {
+			if (parent) {
 				const width = parent.clientWidth
 				const height = parent.clientHeight
 				const res = this._prevRes
 
-				if(width !== res.width || height !== res.height) {
+				if (width !== res.width || height !== res.height) {
 					res.width = width
 					res.height = height
 
@@ -167,41 +179,41 @@ export const RBXScene = (() => {
 					this.camera.updateProjectionMatrix()
 				}
 			}
-				
+
 			this.cameraDir.set(0, 0, 1).applyEuler(this.cameraRotation)
-			
+
 			//
-			if(this.cameraSlideEnabled) {
+			if (this.cameraSlideEnabled) {
 				let minSlide = 2
 				let maxSlide = 5.5
-				
-				if(this.avatar.playerType === "R15" && this.avatar.joints.LowerTorso) {
+
+				if (this.avatar.playerType === "R15" && this.avatar.joints.LowerTorso) {
 					maxSlide =
-						this.avatar.hipHeight
-						+ this.avatar.parts.HumanoidRootPart.rbxSize[1] / 2
-						+ this.avatar.joints.LowerTorso.bakedC0.elements[13]
-						+ this.avatar.joints.LowerTorso.bakedC1Inverse.elements[13]
-						+ this.avatar.joints.Head.bakedC0.elements[13]
-						+ this.avatar.joints.Head.bakedC1Inverse.elements[13]
-						+ 1
+						this.avatar.hipHeight +
+						this.avatar.parts.HumanoidRootPart.rbxSize[1] / 2 +
+						this.avatar.joints.LowerTorso.bakedC0.elements[13] +
+						this.avatar.joints.LowerTorso.bakedC1Inverse.elements[13] +
+						this.avatar.joints.Head.bakedC0.elements[13] +
+						this.avatar.joints.Head.bakedC1Inverse.elements[13] +
+						1
 				}
-				
+
 				minSlide -= this.cameraFocus.y + this.cameraOffset.y
 				maxSlide -= this.cameraFocus.y + this.cameraOffset.y
-				
+
 				this.cameraSlide = Math.max(minSlide, Math.min(maxSlide, this.cameraSlide))
 			}
 			//
-			
+
 			const focus = this.cameraFocus.clone()
 			focus.add(this.cameraOffset)
 			focus.y += this.cameraSlide
-			
+
 			this.camera.position.copy(focus).addScaledVector(this.cameraDir, -this.cameraZoom)
 			this.camera.lookAt(focus)
 
 			const groundDiff = 0.2 - this.camera.position.y
-			if(this.cameraDir.y > 0 && groundDiff > 0) {
+			if (this.cameraDir.y > 0 && groundDiff > 0) {
 				this.camera.position.addScaledVector(this.cameraDir, groundDiff / this.cameraDir.y)
 			}
 		}
@@ -211,18 +223,22 @@ export const RBXScene = (() => {
 		}
 
 		remove() {
-			if(this.started) { this.stop() }
+			if (this.started) {
+				this.stop()
+			}
 			this.canvas.remove()
-			
-			for(const listener of this.listeners) {
-				for(const params of Object.entries(listener.events)) {
+
+			for (const listener of this.listeners) {
+				for (const params of Object.entries(listener.events)) {
 					listener.target.removeEventListener(...params)
 				}
 			}
 		}
 
 		start() {
-			if(this.started) { return }
+			if (this.started) {
+				return
+			}
 			this.started = true
 
 			const innerUpdate = () => {
@@ -235,7 +251,9 @@ export const RBXScene = (() => {
 		}
 
 		stop() {
-			if(!this.started) { return }
+			if (!this.started) {
+				return
+			}
 			this.started = false
 
 			cancelAnimationFrame(this._afId)
@@ -248,46 +266,43 @@ export const RBXScene = (() => {
 
 		constructor() {
 			super()
-			
-			const avatar = this.avatar = new RBXAvatar.Avatar()
+
+			const avatar = (this.avatar = new RBXAvatar.Avatar())
 			this.scene.add(avatar.root)
-			
+
 			this.avatarOffset = {
 				position: new THREE.Vector3(),
-				rotation: new THREE.Euler()
+				rotation: new THREE.Euler(),
 			}
-			
+
 			const stand = new THREE.Mesh(
-				new THREE.CylinderGeometry(2.5, 2.5, .1, 48),
-				new THREE.MeshLambertMaterial({ color: 0xB7A760 })
+				new THREE.CylinderGeometry(2.5, 2.5, 0.1, 48),
+				new THREE.MeshLambertMaterial({ color: 0xb7a760 }),
 			)
 			stand.frustumCulled = false
-			stand.position.y = .05
+			stand.position.y = 0.05
 			stand.receiveShadow = true
 			this.scene.add(stand)
-			
+
 			const groundMat = new THREE.ShadowMaterial()
 			groundMat.opacity = 0.5
 
-			const ground = new THREE.Mesh(
-				new THREE.PlaneGeometry(200, 200),
-				groundMat
-			)
+			const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), groundMat)
 			ground.frustumCulled = false
 			ground.rotation.x = -Math.PI / 2
-			ground.position.y = .001
+			ground.position.y = 0.001
 			ground.receiveShadow = true
 			this.scene.add(ground)
-			
+
 			this.renderer.clippingPlanes.push(new THREE.Plane(new THREE.Vector3(0, 1, 0)))
 		}
 
 		update() {
 			super.update()
-			
+
 			this.avatar.offset.set(0, 0.1, 0).add(this.avatarOffset.position)
 			this.avatar.offsetRot.copy(this.avatarOffset.rotation)
-			
+
 			this.avatar.update()
 			this.trigger("update")
 		}
@@ -295,7 +310,7 @@ export const RBXScene = (() => {
 		start() {
 			super.start()
 
-			if(!this.hasInit) {
+			if (!this.hasInit) {
 				this.hasInit = true
 				this.avatar.init()
 			}
@@ -304,6 +319,6 @@ export const RBXScene = (() => {
 
 	return {
 		Scene,
-		AvatarScene
+		AvatarScene,
 	}
 })()
