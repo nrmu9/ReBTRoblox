@@ -176,16 +176,18 @@ body.btr-hide-chat #chat-container {
    is collapsed, which is what the old compact chat did. Collapsed is detected
    structurally, by the body being unmounted, because the classes do not change. */
 body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) {
-	width: 72px !important;
+	width: 100px !important;
 	min-width: 0 !important;
 }
 
-/* The header carries the height, so it keeps its own and only the new chat
-   button goes; the title still fits and stays the thing you click. */
+/* The new chat button is what gave the header its height, so it keeps its own
+   once that goes, and the title centres in what is left of the row. */
 body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div:first-child {
 	height: 48px;
+}
+
+body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div:first-child > div:first-child {
 	justify-content: center;
-	padding: 0;
 }
 
 body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div:first-child > button {
