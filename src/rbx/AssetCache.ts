@@ -1,15 +1,24 @@
 import { loadOptionalFeature } from "@/feat/loadfeature"
-import { bufferToString } from "@/core/util"
+import { assert, bufferToString } from "@/core/util"
 import { RBXAnimationParser } from "@/rbx/Parser/AnimationParser"
 import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
 import { RBXModelParser } from "@/rbx/Parser/ModelParser"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
+/** A resolved asset location, plus how it was asked for. */
+interface AssetRequest {
+	strict?: boolean
+	location?: string
+	id?: number
+	hash?: string
+	[key: string]: any
+}
+
 export const AssetCache = (() => {
 	const resolveCache: Record<string, any> = {}
 	const cdnCache: Record<string, any> = {}
 
-	function resolveAssetUrlParams(request, strict = false) {
+	function resolveAssetUrlParams(request: any, strict = false) {
 		let url = request.trim()
 
 		if (url.startsWith("rbxassetid://")) {
@@ -18,7 +27,7 @@ export const AssetCache = (() => {
 			url = `https://www.roblox.com/${url.slice(10)}`
 		}
 
-		let urlParams
+		let urlParams: URLSearchParams | undefined
 		let urlInfo
 
 		try {
@@ -70,14 +79,14 @@ export const AssetCache = (() => {
 				params = null
 			}
 
-			let resolvePromise
+			let resolvePromise: Promise<AssetRequest> & { assetRequest?: AssetRequest }
 
 			if (
 				!strict &&
 				typeof request === "string" &&
 				/^https?:\/\/[^/]+\.rbxcdn\.com\/*[0-9a-fA-F]{32}/i.test(request)
 			) {
-				const assetRequest: Record<string, any> = {
+				const assetRequest: AssetRequest = {
 					strict,
 					request,
 					params,
@@ -91,17 +100,20 @@ export const AssetCache = (() => {
 				resolvePromise = AssetCache.resolveAsset(strict, request, params)
 			}
 
+			assert(resolvePromise.assetRequest, "resolveAsset did not attach its request")
 			const cacheKey = resolvePromise.assetRequest.cacheKey
 			let methodPromise = methodCache[cacheKey]
 
 			if (!methodPromise) {
 				methodPromise = resolvePromise
-					.then((assetRequest) =>
-						AssetCache.loadDirect(assetRequest.location, params).then((buffer) =>
-							constructor(buffer, assetRequest),
-						),
-					)
-					.catch((err) => {
+					.then((assetRequest: AssetRequest) => {
+						assert(assetRequest.location, "resolved asset has no location")
+
+						return AssetCache.loadDirect(assetRequest.location, params).then(
+							(buffer: ArrayBuffer) => constructor(buffer, assetRequest),
+						)
+					})
+					.catch((err: unknown) => {
 						console.error(err)
 						return null
 					})
@@ -127,7 +139,7 @@ export const AssetCache = (() => {
 				strict = false
 			}
 
-			let urlParams
+			let urlParams: URLSearchParams | undefined
 
 			if (!strict && Number.isSafeInteger(+request)) {
 				urlParams = new URLSearchParams({ id: request })
@@ -137,6 +149,7 @@ export const AssetCache = (() => {
 				urlParams = resolveAssetUrlParams(request, strict)
 			}
 
+			assert(urlParams, `Invalid request ${request}`)
 			let cacheKey = urlParams.toString()
 
 			if (params?.format) {
@@ -149,7 +162,7 @@ export const AssetCache = (() => {
 			let resolvePromise = resolveCache[cacheKey]
 
 			if (!resolvePromise) {
-				const assetRequest: Record<string, any> = {
+				const assetRequest: AssetRequest = {
 					strict,
 					request,
 					params,
@@ -162,7 +175,7 @@ export const AssetCache = (() => {
 						format: params?.format,
 						browserAssetRequest: params?.browserAssetRequest,
 					})
-					.then((json) => {
+					.then((json: any) => {
 						if (!json?.locations?.length) {
 							throw new Error(`Unable to download asset "${JSON.stringify(assetRequest)}"`)
 						}
@@ -182,7 +195,7 @@ export const AssetCache = (() => {
 
 			return resolvePromise
 		},
-		loadDirect: (cdnUrl, params) => {
+		loadDirect: (cdnUrl: string, params: any) => {
 			if (cdnCache[cdnUrl]) {
 				return cdnCache[cdnUrl]
 			}
@@ -206,10 +219,10 @@ export const AssetCache = (() => {
 			return cdnPromise
 		},
 
-		loadAnimation: createMethod(async (buffer, assetRequest) => {
+		loadAnimation: createMethod(async (buffer: ArrayBuffer, assetRequest: AssetRequest) => {
 			await loadOptionalFeature("parser")
 
-			const findSequence = (array) => {
+			const findSequence = (array: any[]): any => {
 				for (const inst of array) {
 					if (inst.ClassName === "KeyframeSequence" || inst.ClassName === "CurveAnimation") {
 						return inst
@@ -233,7 +246,7 @@ export const AssetCache = (() => {
 
 			return RBXAnimationParser.parse(findSequence(RBXModelParser.parse(buffer).result))
 		}),
-		loadModel: createMethod(async (buffer, assetRequest) => {
+		loadModel: createMethod(async (buffer: ArrayBuffer, assetRequest: AssetRequest) => {
 			await loadOptionalFeature("parser")
 
 			if (assetRequest.params?.async) {
@@ -245,13 +258,13 @@ export const AssetCache = (() => {
 
 			return RBXModelParser.parse(buffer).result
 		}),
-		loadMesh: createMethod(async (buffer, assetRequest) => {
+		loadMesh: createMethod(async (buffer: ArrayBuffer, assetRequest: AssetRequest) => {
 			await loadOptionalFeature("parser")
 			return RBXMeshParser.parse(buffer)
 		}),
 
 		loadImage: createMethod(
-			(buffer, assetRequest) =>
+			(buffer: ArrayBuffer, assetRequest: AssetRequest) =>
 				new Promise((resolve, reject) => {
 					const src = URL.createObjectURL(new Blob([new Uint8Array(buffer)], { type: "image/png" }))
 
@@ -265,10 +278,10 @@ export const AssetCache = (() => {
 					}
 				}),
 		),
-		loadBuffer: createMethod((buffer, assetRequest) => buffer),
-		loadText: createMethod((buffer, assetRequest) => bufferToString(buffer)),
+		loadBuffer: createMethod((buffer: ArrayBuffer, assetRequest: AssetRequest) => buffer),
+		loadText: createMethod((buffer: ArrayBuffer, assetRequest: AssetRequest) => bufferToString(buffer)),
 
-		getHashUrl(hash, prefix = "c") {
+		getHashUrl(hash: string, prefix = "c") {
 			let code = 31
 
 			for (let n = 0; n < hash.length; n++) {
@@ -277,17 +290,17 @@ export const AssetCache = (() => {
 
 			return `https://${prefix}${code % 8}.rbxcdn.com/${hash}`
 		},
-		toAssetUrl(id) {
+		toAssetUrl(id: number) {
 			return `https://assetdelivery.roblox.com/v1/asset/?id=${id}`
 		},
-		isValidAssetUrl(url) {
+		isValidAssetUrl(url: string) {
 			try {
 				return (resolveAssetUrlParams(url, true), true)
 			} catch {}
 
 			return false
 		},
-		getAssetIdFromUrl(url) {
+		getAssetIdFromUrl(url: string) {
 			try {
 				return resolveAssetUrlParams(url, true).get("id") ?? null
 			} catch {}

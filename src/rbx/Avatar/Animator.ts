@@ -1,6 +1,44 @@
+/** A parsed animation clip. Keyframe data stays loose: it comes from the parser. */
+interface AnimationClip {
+	loop?: boolean
+	priority?: number
+	[key: string]: any
+}
+
+/** Options for play(), or a bare number meaning fadeIn. */
+interface PlayParams {
+	fadeIn?: number
+	fadeOut?: number
+	loop?: boolean
+	priority?: number
+	weight?: number
+	speed?: number
+	onstop?: (anim: AnimationClip) => void
+	onloop?: (anim: AnimationClip) => void
+}
+
+/** One clip currently playing, held in priority order. */
+interface PlayingAnimation {
+	playing: boolean
+	anim: AnimationClip
+	loop?: boolean
+	priority: number
+	weight: number
+	speed: number
+	fadeOutDuration: number
+	timePosition: number
+	previousUpdate: number
+	removed?: boolean
+	onstop?: (anim: AnimationClip) => void
+	onloop?: (anim: AnimationClip) => void
+	fadeIn?: { duration: number; elapsed: number }
+	fadeOut?: { duration: number; elapsed: number }
+	[key: string]: any
+}
+
 import * as THREE from "three"
 export const RBXAnimator = (() => {
-	const bounce = (x) =>
+	const bounce = (x: number) =>
 		x < 0.36363636
 			? 7.5625 * x ** 2
 			: x < 0.72727272
@@ -12,46 +50,46 @@ export const RBXAnimator = (() => {
 	const EasingStyles = [
 		[
 			// Linear
-			(x) => x, // In
-			(x) => x, // Out
-			(x) => x, // InOut
+			(x: number) => x, // In
+			(x: number) => x, // Out
+			(x: number) => x, // InOut
 		],
 		[
 			// Constant
-			(x) => (x > 0 ? 1 : 0),
-			(x) => (x >= 1 ? 1 : 0),
-			(x) => (x >= 0.5 ? 1 : 0),
+			(x: number) => (x > 0 ? 1 : 0),
+			(x: number) => (x >= 1 ? 1 : 0),
+			(x: number) => (x >= 0.5 ? 1 : 0),
 		],
 		[
 			// Elastic
-			(x) => -(2 ** (-10 * (1 - x))) * Math.sin(20.944 * (0.925 - x)),
-			(x) => 2 ** (-10 * x) * Math.sin(20.944 * (x - 0.075)) + 1,
-			(x) =>
+			(x: number) => -(2 ** (-10 * (1 - x))) * Math.sin(20.944 * (0.925 - x)),
+			(x: number) => 2 ** (-10 * x) * Math.sin(20.944 * (x - 0.075)) + 1,
+			(x: number) =>
 				x < 0.5
 					? -0.5 * 2 ** (-10 * (1 - 2 * x)) * Math.sin(13.9626 * (0.8875 - 2 * x))
 					: 1 + 0.5 * 2 ** (-10 * (2 * x - 1)) * Math.sin(13.9626 * (2 * x - 1.1125)),
 		],
 		[
 			// Cubic
-			(x) => 1 - (1 - x) ** 3,
-			(x) => x ** 3,
-			(x) => (x < 0.5 ? 4 * x ** 3 : 1 - 4 * (1 - x) ** 3),
+			(x: number) => 1 - (1 - x) ** 3,
+			(x: number) => x ** 3,
+			(x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - 4 * (1 - x) ** 3),
 		],
 		[
 			// Bounce
-			(x) => 1 - bounce(1 - x),
-			(x) => bounce(x),
-			(x) => (x < 0.5 ? 0.5 - 0.5 * bounce(1 - 2 * x) : 1 - 0.5 * bounce(2 - 2 * x)),
+			(x: number) => 1 - bounce(1 - x),
+			(x: number) => bounce(x),
+			(x: number) => (x < 0.5 ? 0.5 - 0.5 * bounce(1 - 2 * x) : 1 - 0.5 * bounce(2 - 2 * x)),
 		],
 		[
 			// CubicV2
-			(x) => x ** 3,
-			(x) => 1 - (1 - x) ** 3,
-			(x) => (x < 0.5 ? 4 * x ** 3 : 1 - 4 * (1 - x) ** 3),
+			(x: number) => x ** 3,
+			(x: number) => 1 - (1 - x) ** 3,
+			(x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - 4 * (1 - x) ** 3),
 		],
 	]
 
-	const eulerToQuat = (x, y, z, order) => {
+	const eulerToQuat = (x: number, y: number, z: number, order: string) => {
 		// https://github.com/mrdoob/three.js/blob/master/src/math/Quaternion.js
 
 		// http://www.mathworks.com/matlabcentral/fileexchange/
@@ -127,7 +165,7 @@ export const RBXAnimator = (() => {
 			this.transforms = new Map()
 		}
 
-		stop(info, fadeOut) {
+		stop(info: PlayingAnimation, fadeOut?: number) {
 			const index = this.animations.indexOf(info)
 			if (index === -1) {
 				return
@@ -151,17 +189,17 @@ export const RBXAnimator = (() => {
 			}
 		}
 
-		play(anim, params) {
+		play(anim: AnimationClip, params?: PlayParams | number) {
 			if (typeof params === "number") {
 				params = { fadeIn: params }
 			}
 
-			const info = <Record<string, any>>{
+			const info: PlayingAnimation = {
 				playing: true,
 				anim: anim,
 
 				loop: params?.loop ?? anim.loop,
-				priority: params?.priority ?? anim.priority,
+				priority: params?.priority ?? anim.priority ?? 0,
 
 				weight: params?.weight ?? 1,
 				speed: params?.speed ?? 1,
@@ -186,7 +224,7 @@ export const RBXAnimator = (() => {
 				}
 			}
 
-			const index = this.animations.findIndex((x) => x.priority >= info.priority)
+			const index = this.animations.findIndex((x: PlayingAnimation) => x.priority >= info.priority)
 
 			if (index !== -1) {
 				this.animations.splice(index, 0, info)
@@ -197,7 +235,7 @@ export const RBXAnimator = (() => {
 			return info
 		}
 
-		getJointTransform(parentName, name) {
+		getJointTransform(parentName: string, name: string) {
 			return this.transforms.get(`${parentName}.${name}`)
 		}
 
@@ -317,9 +355,11 @@ export const RBXAnimator = (() => {
 						const pos = { x: 0, y: 0, z: 0 }
 						const rot = { x: 0, y: 0, z: 0 }
 
-						const set = (input, output) => {
+						const set = (input: Record<string, any>, output: Record<string, number>) => {
 							for (const [key, keyframes] of Object.entries(input) as [string, any][]) {
-								const index = keyframes.findIndex((x) => x.time > info.timePosition)
+								const index = keyframes.findIndex(
+									(x: { time: number }) => x.time > info.timePosition,
+								)
 
 								if (index === 0 || keyframes.length === 0) {
 									continue
@@ -370,7 +410,7 @@ export const RBXAnimator = (() => {
 							)),
 						)
 					} else {
-						const index = keyframes.findIndex((x) => x.time > info.timePosition)
+						const index = keyframes.findIndex((x: { time: number }) => x.time > info.timePosition)
 
 						if (index === 0 || keyframes.length === 0) {
 							continue

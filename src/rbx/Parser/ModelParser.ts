@@ -40,7 +40,7 @@ const RBXDataTypes = [
 ]
 
 const RBXInstanceUtils = {
-	findFirstChild(target, name, recursive = false) {
+	findFirstChild(target: RBXInstance | RBXInstance[], name: string, recursive = false) {
 		const children = target instanceof RBXInstance ? target.Children : target
 
 		for (const child of children) {
@@ -53,7 +53,7 @@ const RBXInstanceUtils = {
 			const arrays = [children]
 
 			while (arrays.length) {
-				for (const desc of arrays.shift()) {
+				for (const desc of arrays.shift() ?? []) {
 					if (desc.getProperty("Name") === name) {
 						return desc
 					}
@@ -68,7 +68,7 @@ const RBXInstanceUtils = {
 		return null
 	},
 
-	findFirstChildOfClass(target, className, recursive = false) {
+	findFirstChildOfClass(target: RBXInstance | RBXInstance[], className: string, recursive = false) {
 		const children = target instanceof RBXInstance ? target.Children : target
 
 		for (const child of children) {
@@ -81,7 +81,7 @@ const RBXInstanceUtils = {
 			const arrays = [children]
 
 			while (arrays.length) {
-				for (const desc of arrays.shift()) {
+				for (const desc of arrays.shift() ?? []) {
 					if (desc.getProperty("ClassName") === className) {
 						return desc
 					}
@@ -331,7 +331,7 @@ const RBXBinaryParser = {
 		return parser
 	},
 
-	parseMETA(parser, chunk) {
+	parseMETA(parser: BinaryParserState, chunk: ByteReader) {
 		const count = chunk.UInt32LE()
 
 		for (let i = 0; i < count; i++) {
@@ -343,7 +343,7 @@ const RBXBinaryParser = {
 		assertWarn(chunk.GetRemaining() === 0, "[RBXBinaryParser] META chunk has extra data")
 	},
 
-	parseSSTR(parser, chunk) {
+	parseSSTR(parser: BinaryParserState, chunk: ByteReader) {
 		const version = chunk.UInt32LE()
 
 		if (version === 0) {
@@ -363,7 +363,7 @@ const RBXBinaryParser = {
 		}
 	},
 
-	parseINST(parser, chunk) {
+	parseINST(parser: BinaryParserState, chunk: ByteReader) {
 		const typeId = chunk.UInt32LE()
 		const className = chunk.String(chunk.UInt32LE())
 		const isService = chunk.UInt8()
@@ -416,14 +416,14 @@ const RBXBinaryParser = {
 		)
 	},
 
-	parsePROP(parser, chunk) {
+	parsePROP(parser: BinaryParserState, chunk: ByteReader) {
 		const type = parser.types[chunk.UInt32LE()]
 		const name = chunk.String(chunk.UInt32LE())
 
 		assert(chunk.GetRemaining() > 0, "[RBXBinaryParser] PROP chunk is empty??")
 
 		const count = type.instances.length
-		const parseProperties = (values) => {
+		const parseProperties = (values: any) => {
 			const typeIndex = chunk.UInt8()
 			const typeName = RBXDataTypes[typeIndex] || "Unknown"
 			let valueType = typeName
@@ -540,7 +540,7 @@ const RBXBinaryParser = {
 					const vecX = chunk.RBXInterleavedUInt16(count, parser.arrays[parser.arrayIndex++])
 					const vecY = chunk.RBXInterleavedUInt16(count, parser.arrays[parser.arrayIndex++])
 
-					const int16be = (x) => (((x << 8) | (x >>> 8)) & 0x7fff) - ((x << 8) & 0x8000)
+					const int16be = (x: any) => (((x << 8) | (x >>> 8)) & 0x7fff) - ((x << 8) & 0x8000)
 
 					for (let i = 0; i < count; i++) {
 						values[i] = [int16be(vecX[i]), int16be(vecY[i])]
@@ -552,7 +552,7 @@ const RBXBinaryParser = {
 					const vecY = chunk.RBXInterleavedUInt16(count, parser.arrays[parser.arrayIndex++])
 					const vecZ = chunk.RBXInterleavedUInt16(count, parser.arrays[parser.arrayIndex++])
 
-					const int16be = (x) => (((x << 8) | (x >>> 8)) & 0x7fff) - ((x << 8) & 0x8000)
+					const int16be = (x: any) => (((x << 8) | (x >>> 8)) & 0x7fff) - ((x << 8) & 0x8000)
 
 					for (let i = 0; i < count; i++) {
 						values[i] = [int16be(vecX[i]), int16be(vecY[i]), int16be(vecZ[i])]
@@ -854,7 +854,7 @@ const RBXBinaryParser = {
 		)
 	},
 
-	parsePRNT(parser, chunk) {
+	parsePRNT(parser: BinaryParserState, chunk: ByteReader) {
 		chunk.UInt8()
 		const count = chunk.UInt32LE()
 
@@ -883,13 +883,13 @@ const RBXBinaryParser = {
 }
 
 const RBXXmlParser = {
-	escapeXml(value) {
+	escapeXml(value: any) {
 		return value
 			.replace(/&amp;/g, "&amp;&amp;")
 			.replace(/&#((?!0?0?38;)\d{1,4}|(?!0?0?26;)x[0-9a-fA-F]{1,4});/g, "&amp;#$1;")
 	},
 
-	unescapeXml(value) {
+	unescapeXml(value: any) {
 		if (value.startsWith("<![CDATA[")) {
 			// https://github.com/niklasvh/base64-arraybuffer/blob/master/src/index.ts
 
@@ -900,7 +900,7 @@ const RBXXmlParser = {
 				lookup[chars.charCodeAt(i)] = i
 			}
 
-			const decodeBase64 = (base64, startIndex, endIndex) => {
+			const decodeBase64 = (base64: string, startIndex: number, endIndex: number) => {
 				let bufferLength = base64.length * 0.75
 				let len = endIndex - startIndex
 				let i = startIndex
@@ -937,10 +937,13 @@ const RBXXmlParser = {
 		}
 
 		return value
-			.replace(/(?<!&)((?:&{2})*)&#(\d{1,4}|x[0-9a-fA-F]{1,4});/g, (_, prefix, inner) => {
-				const byte = inner[0] === "x" ? parseInt(inner.slice(1), 16) : parseInt(inner, 10)
-				return `${prefix}${String.fromCharCode(byte)}`
-			})
+			.replace(
+				/(?<!&)((?:&{2})*)&#(\d{1,4}|x[0-9a-fA-F]{1,4});/g,
+				(_: string, prefix: string, inner: string) => {
+					const byte = inner[0] === "x" ? parseInt(inner.slice(1), 16) : parseInt(inner, 10)
+					return `${prefix}${String.fromCharCode(byte)}`
+				},
+			)
 			.replace(/&&/g, "&")
 	},
 
@@ -987,7 +990,7 @@ const RBXXmlParser = {
 		return parser
 	},
 
-	parseSharedStrings(parser, sharedStrings) {
+	parseSharedStrings(parser: XmlParserState, sharedStrings: any) {
 		for (const child of Object.values(sharedStrings.children) as any[]) {
 			if (child.nodeName !== "SharedString") {
 				continue
@@ -1007,7 +1010,7 @@ const RBXXmlParser = {
 		}
 	},
 
-	parseItem(parser, node) {
+	parseItem(parser: XmlParserState, node: any) {
 		const inst = new RBXInstance(node.className)
 		const referent = node.getAttribute("referent")
 
@@ -1039,8 +1042,8 @@ const RBXXmlParser = {
 		return inst
 	},
 
-	parseProperties(parser, inst, targetNode) {
-		const getChildren = (node) => {
+	parseProperties(parser: XmlParserState, inst: RBXInstance, targetNode: any) {
+		const getChildren = (node: any) => {
 			const children: Record<string, any> = {}
 
 			for (const child of node.children) {
