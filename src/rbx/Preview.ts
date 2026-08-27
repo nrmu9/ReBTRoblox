@@ -638,7 +638,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		const disableOrigThumbs = () => {
 			setTimeout(() => {
 				if(this.enabled) {
-					const btn = (query("#AssetThumbnail .three-dee-animated-icon") as any)
+					const btn = query<HTMLElement>("#AssetThumbnail .three-dee-animated-icon")
 					if(btn && btn.$find(".icon-pause-fill, .icon-bigstop-fill")) {
 						btn.click()
 					}

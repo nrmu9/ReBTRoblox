@@ -23,7 +23,7 @@ class MarkAllAsReadAction {
 	}
 	
 	setButtonText(text) {
-		const elem = (query(".btr-markAllAsReadInbox") as any)
+		const elem = query(".btr-markAllAsReadInbox")
 		
 		if(elem) {
 			elem.textContent = text

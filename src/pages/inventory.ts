@@ -125,7 +125,7 @@ pageInit.inventory = () => {
 		let lastPressed: any = null
 
 		const updateButtons = function() {
-			(query(".btr-it-btn") as any)?.classList.toggle("disabled", !(query(".btr-it-box:checked") as any))
+			query(".btr-it-btn")?.classList.toggle("disabled", !query(".btr-it-box:checked"))
 		}
 
 		injectScript.listen("inventoryUpdateEnd", updateButtons)
@@ -164,7 +164,7 @@ pageInit.inventory = () => {
 					const value = !checkbox.checked
 
 					for(let i = from; i <= to; i++) {
-						const box = (query(`#btr-it-box${i}`) as any)
+						const box = query<HTMLInputElement>(`#btr-it-box${i}`)
 						if(box) { box.checked = value }
 					}
 					
@@ -175,7 +175,7 @@ pageInit.inventory = () => {
 				lastPressed = id
 			})
 			.$on("click", ".item-card-link", () => {
-				if((query(".btr-it-box:checked") as any) != null) { return false }
+				if(query(".btr-it-box:checked") != null) { return false }
 			})
 			.$on("click", ".btr-it-remove", () => {
 				if(isRemoving) { return }

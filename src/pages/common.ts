@@ -921,7 +921,7 @@ export const initPreview = async (assetId, assetTypeId, isBundle) => {
 		)
 	} else {
 		assetPromises.push(
-			addAsset(assetId, assetTypeId, (query("#item-container") as any)?.dataset.itemName || "Asset", undefined)
+			addAsset(assetId, assetTypeId, query<HTMLElement>("#item-container")?.dataset.itemName || "Asset", undefined)
 		)
 	}
 	
@@ -1082,8 +1082,8 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 	const downloadButton = btnCont.$req<HTMLAnchorElement>("a")
 
 	const download = (data: any, fileType?: any) => {
-		const title = (query("#item-container .item-name-container h2") as any)
-		const fileName = `${title && formatUrlName(title.textContent, "") || assetId.toString()}.${fileType || getAssetFileType(assetTypeId, data)}`
+		const title = query("#item-container .item-name-container h2")
+		const fileName = `${title && formatUrlName(title.textContent ?? "", "") || assetId.toString()}.${fileType || getAssetFileType(assetTypeId, data)}`
 
 		const blobUrl = URL.createObjectURL(new Blob([data], { type: "binary/octet-stream" }))
 		startDownload(blobUrl, fileName)

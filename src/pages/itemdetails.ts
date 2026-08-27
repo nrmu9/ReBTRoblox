@@ -396,13 +396,13 @@ pageInit.itemdetails = () => {
 						const oldLabel = Array.from(queryAll("#item-details .wait-for-i18n-format-render")).find((x: any) => !isNaN(Date.parse(x.textContent)))
 						
 						if(oldLabel) {
-							(oldLabel as any).parentNode.remove()
+							oldLabel.parentElement?.remove()
 						}
 					} else {
-						const oldLabel = (query("#item-details .date-time-i18n") as any)
+						const oldLabel = query("#item-details .date-time-i18n")
 						
 						if(oldLabel) {
-							oldLabel.closest(".field-content")?.parentNode.remove()
+							oldLabel.closest(".field-content")?.parentElement?.remove()
 						}
 					}
 					

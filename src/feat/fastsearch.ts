@@ -206,17 +206,29 @@ export const btrFastSearch = {
 			return matches
 		}
 
-		const getInfo = () => {
-			const search = (query("#navbar-universal-search, .navbar-search") as any)
-			if(!search) { return {} }
+		/** Everything the search box needs, resolved together. */
+		interface SearchInfo {
+			search: HTMLElement
+			input: HTMLInputElement
+			container: HTMLElement
+			list: HTMLElement
+			selectedClass: string
+		}
+
+		// All or nothing: returning a bare {} on failure made every caller probe
+		// a different field to find out whether the lookup had worked.
+		const getInfo = (): SearchInfo | null => {
+			const search = query<HTMLElement>("#navbar-universal-search, .navbar-search")
+			if(!search) { return null }
 			
-			const input = search.$find("input")
-			if(!input) { return {} }
+			const input = search.$find<HTMLInputElement>("input")
+			if(!input) { return null }
 			
 			const container = search.$find("#btr-fastsearch-container")
-			if(!container) { return {} }
+			if(!container) { return null }
 			
-			const list = container.parentNode
+			const list = container.parentElement
+			if(!list) { return null }
 			
 			return {
 				search, input, container, list,
@@ -225,8 +237,10 @@ export const btrFastSearch = {
 		}
 
 		const clearResults = () => {
-			const { list, container, selectedClass } = getInfo()
-			if(!list) { return }
+			const info = getInfo()
+			if(!info) { return }
+
+			const { list, container, selectedClass } = info
 			
 			for(const li of container.$findAll(`>li`)) {
 				li.remove()
@@ -238,8 +252,10 @@ export const btrFastSearch = {
 		}
 
 		const reloadSearchResults = preserveSelection => {
-			const { container, list, selectedClass } = getInfo()
-			if(!container) { return }
+			const info = getInfo()
+			if(!info) { return }
+
+			const { container, list, selectedClass } = info
 			
 			const now = Date.now()
 			lastResultsLoaded = now
@@ -482,8 +498,10 @@ export const btrFastSearch = {
 		
 		const keyDown = ev => {
 			if(ev.keyCode === 38 || ev.keyCode === 40 || ev.keyCode === 9) {
-				const { list, container, selectedClass } = getInfo()
-				if(!list) { return }
+				const info = getInfo()
+				if(!info) { return }
+
+				const { list, container, selectedClass } = info
 				
 				const selected = list.$find(`.${selectedClass}`)
 				if(!selected) {
@@ -540,15 +558,17 @@ export const btrFastSearch = {
 		
 		const keyUp = ev => {
 			if(ev.keyCode === 13) {
-				const { container, selectedClass } = getInfo()
-				if(!container) { return }
+				const info = getInfo()
+				if(!info) { return }
+
+				const { container, selectedClass } = info
 				
 				const selected = container.$find(`.${selectedClass}`)
 				if(!selected) { return }
 				
-				const url = selected.$find("a")?.href
+				const url = selected.$find<HTMLAnchorElement>("a")?.href
 				if(url) {
-					window.location = url
+					window.location.href = url
 				}
 
 				ev.stopImmediatePropagation()
@@ -558,8 +578,10 @@ export const btrFastSearch = {
 		}
 		
 		const update = () => {
-			const { input } = getInfo()
-			if(!input) { return }
+			const info = getInfo()
+			if(!info) { return }
+
+			const { input } = info
 			
 			updateSearch(input.value.toLowerCase())
 		}
@@ -572,8 +594,10 @@ export const btrFastSearch = {
 			setTimeout(() => {
 				requesting = false
 				
-				const { list, container, selectedClass } = getInfo()
-				if(!list) { return }
+				const info = getInfo()
+				if(!info) { return }
+
+				const { list, container, selectedClass } = info
 				
 				const selectedResult = container.$find(`>.${selectedClass}`)
 				const selectedDefault = list.$find(`>.${selectedClass}`)

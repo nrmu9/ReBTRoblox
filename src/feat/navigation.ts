@@ -281,7 +281,7 @@ export const Navigation = {
 				node.style.display = this.enabled ? "" : "none"
 				if(!this.enabled) { return }
 				
-				const orig = (query("#nav-friends") as any)
+				const orig = query<HTMLAnchorElement>("#nav-friends")
 				const origNotif = orig?.$find(".notification")
 				
 				const notif = node.$find(".btr-nav-notif")
@@ -313,7 +313,7 @@ export const Navigation = {
 				node.style.display = this.enabled ? "" : "none"
 				if(!this.enabled) { return }
 				
-				const orig = (query("#nav-message") as any)
+				const orig = query<HTMLAnchorElement>("#nav-message")
 				const origNotif = orig?.$find(".notification")
 				
 				const notif = node.$find(".btr-nav-notif")
