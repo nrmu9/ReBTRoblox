@@ -2,6 +2,7 @@ node_modules/
 dist/
 artifacts/
 
-# Local credentials, never committed.
+# Local only notes and credentials, never committed.
 .env
 .env.*
+RELEASING.md
