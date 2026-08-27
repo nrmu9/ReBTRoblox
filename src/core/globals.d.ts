@@ -140,12 +140,9 @@ declare global {
 	const settings: any
 	const ReBTRoblox: any
 	const Mui: any
-	const HoverPreview: any
 	const insertCSS: any
 	const removeCSS: any
 	const robloxExperiments: any
-	const ItemPreviewer: any
-	const Explorer: any
 	const RBXScene: any
 	const RBXAvatar: any
 

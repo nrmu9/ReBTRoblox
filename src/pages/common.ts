@@ -925,7 +925,7 @@ export const initPreview = async (assetId: number, assetTypeId: number | null, i
 	}
 
 	const loadPreview = onceFn(async () => {
-		const { ItemPreviewer } = (await loadOptionalFeature("previewer")) as any
+		const { ItemPreviewer } = await loadOptionalFeature("previewer")
 		preview = new ItemPreviewer()
 
 		if (currentOutfitId) {

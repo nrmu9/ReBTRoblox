@@ -7,12 +7,17 @@
 
 import { insertCSS } from "@/core/page"
 
-const loaders: Record<string, () => Promise<unknown>> = {
+const loaders = {
 	previewer: () => import("@/rbx/Preview"),
 	explorer: () => import("@/rbx/Explorer"),
 	sourceViewer: () => import("@/feat/sourceViewer"),
 	parser: () => import("@/rbx/Parser/ModelParser"),
 }
+
+type FeatureName = keyof typeof loaders
+
+/** What the module actually resolves to, so callers get its exports typed. */
+type Feature<K extends FeatureName> = Awaited<ReturnType<(typeof loaders)[K]>>
 
 const styles: Record<string, string[]> = {
 	sourceViewer: ["css/sourceviewer.css"],
@@ -20,7 +25,7 @@ const styles: Record<string, string[]> = {
 
 const pending: Record<string, Promise<unknown>> = {}
 
-export const loadOptionalFeature = (name: string): Promise<unknown> => {
+export const loadOptionalFeature = <K extends FeatureName>(name: K): Promise<Feature<K>> => {
 	const loader = loaders[name]
 
 	if (!loader) {
@@ -35,5 +40,5 @@ export const loadOptionalFeature = (name: string): Promise<unknown> => {
 		pending[name] = loader()
 	}
 
-	return pending[name]
+	return pending[name] as Promise<Feature<K>>
 }

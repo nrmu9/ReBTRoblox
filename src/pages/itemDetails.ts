@@ -46,7 +46,7 @@ pageInit.itemdetails = () => {
 	}
 
 	if (SETTINGS.get("general.hoverPreview")) {
-		loadOptionalFeature("previewer").then(() => {
+		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
 			HoverPreview.register(".item-card", ".item-card-thumb-container")
 		})
 	}
