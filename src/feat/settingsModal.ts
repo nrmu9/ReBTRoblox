@@ -376,6 +376,7 @@ export const SettingsModal: SettingsModalState = {
 				"navigation.elements",
 				"messages.markAllAsRead",
 				"messages.pageJump",
+				"general.hoverPreviewMode",
 				"itemdetails.itemPreviewer",
 				"itemdetails.explorerButton",
 				"itemdetails.downloadButton",

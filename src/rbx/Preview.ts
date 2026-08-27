@@ -1288,11 +1288,14 @@ export const HoverPreview = (() => {
 
 	return {
 		register(selector: string, thumbContSelector: string) {
-			if (SETTINGS.get("general.hoverPreviewMode") === "never") {
-				return
-			}
-
 			document.$on("mouseover", `${selector} ${thumbContSelector}`, async (ev) => {
+				// Checked here rather than at registration: the listener is delegated
+				// and cannot be detached, so testing it per event is what lets the
+				// mode change without a reload.
+				if (SETTINGS.get("general.hoverPreviewMode") === "never") {
+					return
+				}
+
 				const thumbCont = ev.currentTarget
 
 				const self = thumbCont.closest(selector)
