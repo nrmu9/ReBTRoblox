@@ -6,7 +6,6 @@ dist/
 js/
 
 # Vendored third party code.
-lib/
 res/
 
 *.min.js
