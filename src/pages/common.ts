@@ -1351,7 +1351,9 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			"#item-container .item-name-container h2, #item-details-container h1, .item-name-container h1",
 		)
 
-		return heading?.textContent?.trim() || query<HTMLMetaElement>('meta[property="og:title"]')?.content || ""
+		return (
+			heading?.textContent?.trim() || query<HTMLMetaElement>('meta[property="og:title"]')?.content || ""
+		)
 	}
 
 	const download = (data: any, fileType?: any, suffix?: string) => {
@@ -1505,7 +1507,11 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			const popoverTemplate = html` <div class="rbx-popover-content" data-toggle="popover-btr-download">
 				<ul class="dropdown-menu" role="menu">
 					<li>
-						<a class="btr-download" format="avatar_meshpart_accessory" suffix="meshpart" href="${assetUrl}"
+						<a
+							class="btr-download"
+							format="avatar_meshpart_accessory"
+							suffix="meshpart"
+							href="${assetUrl}"
 							>Download MeshPart</a
 						>
 					</li>
@@ -1739,7 +1745,6 @@ pageInit.www = () => {
 
 	void btrVoiceStatus.init()
 
-
 	if (SETTINGS.get("general.cacheRobuxAmount")) {
 		injectScript.call("cacheRobuxAmount", () => {
 			reactHook.hijackConstructor(
@@ -1921,9 +1926,7 @@ pageInit.www = () => {
 
 		document.body?.classList.toggle("btr-hide-chat", hidden)
 		document.body?.classList.toggle("btr-minimize-chat", minimized)
-
 	}
-
 
 	bodyWatcher.$watch("#chat-container", applyChatSettings)
 	bodyWatcher.$watchAll(".react-chat-root", applyChatSettings, { continuous: true })

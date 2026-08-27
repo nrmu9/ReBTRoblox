@@ -2292,7 +2292,8 @@ const startInject = () => {
 
 				const isBypassed = (assetTypeId: any) =>
 					bypassEnabled() &&
-					(accessoryAssetTypeIds.includes(+assetTypeId) || layeredAssetTypeIds.includes(+assetTypeId))
+					(accessoryAssetTypeIds.includes(+assetTypeId) ||
+						layeredAssetTypeIds.includes(+assetTypeId))
 
 				// Roblox added category caps (Tops, Bottoms, Outerwear all allow 1) that
 				// short circuit before maxNumber is read, and the table holding them is
@@ -2540,7 +2541,8 @@ const startInject = () => {
 						const action = reactHook.queryElement(
 							result,
 							(elem: any) =>
-								elem.props?.variant === "Emphasis" && typeof elem.props?.onClick === "function",
+								elem.props?.variant === "Emphasis" &&
+								typeof elem.props?.onClick === "function",
 						)
 
 						if (action) {

@@ -71,7 +71,10 @@ export const RBXAvatar = (() => {
 	 * parts are rigid and get the flag toggled off. Omit is needed because three
 	 * declares that flag readonly true.
 	 */
-	type RigMesh = Omit<THREE.SkinnedMesh, "isSkinnedMesh" | "boundingBox" | "boundingSphere" | "material"> & {
+	type RigMesh = Omit<
+		THREE.SkinnedMesh,
+		"isSkinnedMesh" | "boundingBox" | "boundingSphere" | "material"
+	> & {
 		isSkinnedMesh: boolean
 		/** Rig parts are always built with exactly one standard material. */
 		material: THREE.MeshStandardMaterial

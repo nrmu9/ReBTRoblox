@@ -154,7 +154,10 @@ const build = (dump, metadata, previous) => {
 		return index
 	}
 
-	const enums = dump.Enums.map((e) => [e.Name, e.Items.sort((a, b) => a.Value - b.Value).map((i) => i.Name)])
+	const enums = dump.Enums.map((e) => [
+		e.Name,
+		e.Items.sort((a, b) => a.Value - b.Value).map((i) => i.Name),
+	])
 	const enumIndex = {}
 	enums.forEach(([name], i) => (enumIndex[name] = i))
 
@@ -192,7 +195,11 @@ const build = (dump, metadata, previous) => {
 	const previousMembers = {}
 	for (const entry of previous?.Classes ?? []) {
 		const hasSuper = typeof entry[1] === "number"
-		const members = hasSuper ? entry[2] : entry[1] instanceof Object && !Array.isArray(entry[1]) ? entry[1] : null
+		const members = hasSuper
+			? entry[2]
+			: entry[1] instanceof Object && !Array.isArray(entry[1])
+				? entry[1]
+				: null
 		if (members) {
 			previousMembers[entry[0]] = { members, categories: previous.Categories, enums: previous.Enums }
 		}
@@ -286,7 +293,9 @@ const main = async () => {
 		metadata = parseReflectionMetadata(xml.toString("utf8"))
 		log(`  ${Object.keys(metadata).length} classes carry explorer metadata`)
 	} catch (err) {
-		log(`  could not read it (${err.message}); explorer order and icons will be kept from the existing file`)
+		log(
+			`  could not read it (${err.message}); explorer order and icons will be kept from the existing file`,
+		)
 	}
 
 	const previous = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : null
@@ -347,7 +356,7 @@ const main = async () => {
 		const tiles = Math.floor(width / height)
 		const maxIcon = Math.max(
 			-1,
-			...data.Classes.map((c) => (Array.isArray(c[3]) ? c[3][1] : Array.isArray(c[2]) ? c[2][1] : -1))
+			...data.Classes.map((c) => (Array.isArray(c[3]) ? c[3][1] : Array.isArray(c[2]) ? c[2][1] : -1)),
 		)
 
 		log(`  ${width}x${height}, ${tiles} tiles; highest index in use is ${maxIcon}`)

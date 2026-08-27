@@ -84,19 +84,20 @@ const formatRemaining = (ms: number): string => {
 
 // A status readout rather than a control, so it is not a link and carries none
 // of the navbar's clickable styling.
-const buildItem = () => html` <li id="btr-navbar-voice" class="navbar-icon-item">
-	<span class="btr-voice-status">
-		<svg class="btr-voice-icon" viewBox="0 0 24 24" aria-hidden="true">
-			<path d="M12 3a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0v-5A2.5 2.5 0 0 1 12 3Z"></path>
-			<path
-				class="btr-voice-stroke"
-				d="M6.75 10.5a5.25 5.25 0 0 0 10.5 0M12 15.75v3.5M9 19.25h6"
-			></path>
-			<path class="btr-voice-stroke btr-voice-slash" d="M4.5 4.5 19.5 19.5"></path>
-		</svg>
-		<span class="btr-voice-timer"></span>
-	</span>
-</li>`
+const buildItem = () =>
+	html` <li id="btr-navbar-voice" class="navbar-icon-item">
+		<span class="btr-voice-status">
+			<svg class="btr-voice-icon" viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M12 3a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0v-5A2.5 2.5 0 0 1 12 3Z"></path>
+				<path
+					class="btr-voice-stroke"
+					d="M6.75 10.5a5.25 5.25 0 0 0 10.5 0M12 15.75v3.5M9 19.25h6"
+				></path>
+				<path class="btr-voice-stroke btr-voice-slash" d="M4.5 4.5 19.5 19.5"></path>
+			</svg>
+			<span class="btr-voice-timer"></span>
+		</span>
+	</li>`
 
 let item: HTMLElement | null = null
 let state: VoiceState | null = null

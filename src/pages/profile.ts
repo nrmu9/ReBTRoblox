@@ -1228,22 +1228,20 @@ pageInit.profile = () => {
 				newCont.$req(".btr-profile-inventory").style.display = ""
 
 				ready(() => {
-					newCont
-						.$req(".placeholder-inventory")
-						.replaceWith(
-							// The inventory page frame busts:
-							//   if (top.location != self.location) top.location = self.location.href
-							// which navigated the whole tab to the inventory instead of
-							// embedding it. Sandboxing blocks top navigation, and allowing it
-							// only on user activation keeps links inside the frame working
-							// while the automatic redirect, which has no activation, is denied.
-							html<HTMLIFrameElement>`<iframe
-								id="btr-injected-inventory"
-								src="/users/${userId}/inventory"
-								scrolling="no"
-								sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation"
-							></iframe>`,
-						)
+					newCont.$req(".placeholder-inventory").replaceWith(
+						// The inventory page frame busts:
+						//   if (top.location != self.location) top.location = self.location.href
+						// which navigated the whole tab to the inventory instead of
+						// embedding it. Sandboxing blocks top navigation, and allowing it
+						// only on user activation keeps links inside the frame working
+						// while the automatic redirect, which has no activation, is denied.
+						html<HTMLIFrameElement>`<iframe
+							id="btr-injected-inventory"
+							src="/users/${userId}/inventory"
+							scrolling="no"
+							sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation"
+						></iframe>`,
+					)
 				})
 			}
 

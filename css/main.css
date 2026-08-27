@@ -270,7 +270,11 @@ body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div
 	height: 48px;
 }
 
-body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div:first-child > div:first-child {
+body.btr-minimize-chat
+	.react-chat-root
+	section:not(:has(> :nth-child(2)))
+	> div:first-child
+	> div:first-child {
 	justify-content: center;
 }
 
@@ -557,7 +561,6 @@ body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div
 	--btr-explorer-divider: #34383c;
 	--btr-explorer-shadow: rgba(0, 0, 0, 0.55);
 }
-
 
 .btr-explorer-button-container {
 	position: relative;
