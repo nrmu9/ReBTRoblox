@@ -120,9 +120,12 @@ jobs:
             "${args[@]}"
 
           if [ "$AMO_CHANNEL" = "listed" ]; then
-            # Nothing comes back to attach: the store is the download for
-            # firefox, so the release carries only what the store does not.
-            rm -f artifacts/*-firefox.xpi
+            # Nothing signed comes back until a reviewer approves, so the store
+            # is the install for firefox. The build still ships for nightly,
+            # developer edition and about:debugging, but says in its own name
+            # that it will not install in release firefox.
+            unsigned="$(ls artifacts/*-firefox.xpi)"
+            mv "$unsigned" "${unsigned%-firefox.xpi}-firefox-unsigned.xpi"
             echo "submitted to the add-ons store for review"
           else
             # The signed build lands on top of the unsigned one. The name is
@@ -155,9 +158,45 @@ jobs:
           sha256sum * > SHA256SUMS
           cat SHA256SUMS
 
+      # Says which file to take, because the answer differs per channel and
+      # picking the wrong one means an .xpi release firefox refuses to install.
+      - name: Write the install note
+        run: |
+          slug="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
+
+          # Read from what was actually produced rather than from the config,
+          # so a release with no credentials cannot claim to be signed.
+          signed=""
+          if [ -f artifacts/*-firefox.xpi ] 2>/dev/null; then
+            if unzip -l artifacts/*-firefox.xpi | grep -q "META-INF/mozilla.rsa"; then
+              signed="yes"
+            fi
+          fi
+
+          {
+            if [ -n "$signed" ]; then
+              echo "The \`.xpi\` below is signed by Mozilla and installs in Firefox"
+              echo "directly. Open it with Firefox, or drag it onto the browser."
+            elif [ "$AMO_CHANNEL" = "listed" ]; then
+              echo "Install for Firefox from"
+              echo "[addons.mozilla.org](https://addons.mozilla.org/firefox/addon/$slug/)."
+              echo
+              echo "The \`-unsigned.xpi\` below is the same build without Mozilla's"
+              echo "signature. Release Firefox will not install it; it is there for"
+              echo "Nightly, Developer Edition, \`about:debugging\`, and inspection."
+            else
+              echo "The \`.xpi\` below is **not signed**. Release Firefox will not"
+              echo "install it; it is there for Nightly, Developer Edition and"
+              echo "\`about:debugging\`."
+            fi
+          } > "$RUNNER_TEMP/NOTE.md"
+
+          cat "$RUNNER_TEMP/NOTE.md"
+
       - uses: softprops/action-gh-release@v3
         with:
           files: artifacts/*
+          body_path: ${{ runner.temp }}/NOTE.md
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
