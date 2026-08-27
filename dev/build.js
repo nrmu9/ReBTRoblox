@@ -119,8 +119,12 @@ const shared = {
 	bundle: true,
 	outdir: path.join(OUT, "js"),
 	target: "firefox128",
-	sourcemap: dev ? "inline" : false,
-	minify: !dev,
+	// Dev builds are minified too, with sourcemaps in separate files rather than
+	// inlined. An unminified eager bundle was roughly seven times the size, which
+	// delayed the content script past the point where Roblox has already rendered,
+	// so page hooks registered too late to catch anything.
+	sourcemap: dev ? "linked" : false,
+	minify: true,
 	legalComments: "none",
 	logLevel: "info",
 	alias: { "@": path.join(ROOT, "src") },
