@@ -258,7 +258,7 @@ export const SETTINGS: Record<string, any> = {
 			]
 			for (const fn of listeners) {
 				try {
-					fn(setting.value, setting.default)
+					fn(setting.value, setting.default, settingPath)
 				} catch (ex) {
 					console.error(ex)
 				}
@@ -294,7 +294,9 @@ export const SETTINGS: Record<string, any> = {
 			throw new Error(`Invalid value '${typeof value} ${String(value)}' to '${settingPath}'`)
 		}
 
-		this._set(settingPath, value, false, true)
+		const defaultSetting = this._getSetting(settingPath, DEFAULT_SETTINGS)
+
+		this._set(settingPath, value, defaultSetting?.value === value, true)
 	},
 
 	getIsDefault(settingPath: string) {

@@ -349,15 +349,59 @@ export const SettingsModal: SettingsModalState = {
 			const reloadButton: HTMLButtonElement | null = this.settingsDiv.$find(".btr-settings-reload")
 
 			if (reloadButton) {
+				// What the page actually booted with. Anything the user changes and
+				// then changes back needs no reload, so the prompt has to compare
+				// against this rather than just counting changes.
+				const bootValues = new Map<string, any>()
+
+				const collect = (group: any, prefix: string) => {
+					for (const [key, value] of Object.entries(group) as [string, any][]) {
+						if (key.startsWith("_") || !(value instanceof Object)) {
+							continue
+						}
+
+						if ("value" in value) {
+							bootValues.set(prefix + key, value.value)
+						} else {
+							collect(value, prefix + key + ".")
+						}
+					}
+				}
+
+				collect(SETTINGS.loadedSettings, "")
+
+				const dirty = new Set<string>()
+
 				reloadButton.$on("click", () => location.reload())
 
-				SETTINGS.onChange((settingPath: string) => {
-					if (APPLIES_LIVE.has(settingPath) || !reloadButton.hidden) {
+				SETTINGS.onChange((value: any, _isDefault: boolean, settingPath: string) => {
+					if (!settingPath || APPLIES_LIVE.has(settingPath)) {
 						return
 					}
 
-					reloadButton.hidden = false
-					requestAnimationFrame(() => reloadButton.classList.add("visible"))
+					if (bootValues.has(settingPath) && bootValues.get(settingPath) === value) {
+						dirty.delete(settingPath)
+					} else {
+						dirty.add(settingPath)
+					}
+
+					const needed = dirty.size > 0
+
+					if (needed === !reloadButton.hidden) {
+						return
+					}
+
+					if (needed) {
+						reloadButton.hidden = false
+						requestAnimationFrame(() => reloadButton.classList.add("visible"))
+					} else {
+						reloadButton.classList.remove("visible")
+						setTimeout(() => {
+							if (!dirty.size) {
+								reloadButton.hidden = true
+							}
+						}, 160)
+					}
 				})
 			}
 		}
