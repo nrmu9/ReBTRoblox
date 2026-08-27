@@ -1,3 +1,4 @@
+import type { RGB } from "@/rbx/types"
 export const AssetType = {
 	Image: 1,
 	TShirt: 2,
@@ -60,7 +61,7 @@ export const AssetType = {
 	DynamicHead: 79,
 }
 
-export const BrickColor: Record<number, { name: string; color: number[] }> = {
+export const BrickColor: Record<number, { name: string; color: RGB }> = {
 	1: { name: "White", color: [242, 243, 243] },
 	2: { name: "Grey", color: [161, 165, 162] },
 	3: { name: "Light yellow", color: [249, 233, 153] },

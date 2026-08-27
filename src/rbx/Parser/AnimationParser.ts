@@ -1,5 +1,6 @@
 import { assert, stringToBuffer } from "@/core/util"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
+import type { CFrameTuple, QuatTuple } from "@/rbx/types"
 import { RBXInstance } from "@/rbx/Parser/ModelParser"
 
 /*
@@ -33,7 +34,7 @@ FloatCurve.ValuesAndtimes {
 */
 
 export const RBXAnimationParser = {
-	CFrameToQuat(cf: number[]) {
+	CFrameToQuat(cf: CFrameTuple): QuatTuple {
 		const trace = cf[3] + cf[7] + cf[11]
 		let qw, qx, qy, qz
 
@@ -190,7 +191,7 @@ export const RBXAnimationParser = {
 
 			if (pose.Weight > 0) {
 				const name = `${rootPose.Name}.${pose.Name}`
-				const cf = pose.CFrame
+				const cf = pose.CFrame as CFrameTuple
 
 				if (!result.keyframes[name]) {
 					result.keyframes[name] = []

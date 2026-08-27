@@ -3,7 +3,12 @@ import { SERIALIZE_SRC, serialize } from "@/dev/serialize"
 const BRIDGE = "http://127.0.0.1:8787"
 const TAB_MATCHES = ["*://www.roblox.com/*", "*://web.roblox.com/*", "*://create.roblox.com/*"]
 
-type Result = { ok: boolean; value?: unknown; error?: string; tab?: { id?: number | undefined; url?: string | undefined } }
+type Result = {
+	ok: boolean
+	value?: unknown
+	error?: string
+	tab?: { id?: number | undefined; url?: string | undefined }
+}
 type Job = { id: number; target: string; code: string; idle?: boolean }
 
 const post = (path: string, data: unknown) =>

@@ -5,6 +5,38 @@
 // would claim guarantees Roblox has not made, and the point of these types is to
 // fail loudly when a response Roblox changed stops matching what we consume.
 
+// Fixed-shape numeric data. These arrive from the parsers as plain arrays, but
+// their length is fixed by the format, so saying so lets indexing be checked
+// rather than assumed.
+
+/** Roblox CFrame: position xyz followed by a row major 3x3 rotation. */
+export type CFrameTuple = readonly [
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+	number,
+]
+
+/** A quaternion, x y z w. */
+export type QuatTuple = readonly [number, number, number, number]
+
+/** A position or scale, x y z. */
+export type Vector3Tuple = readonly [number, number, number]
+
+/** A uv rectangle: x, y, width, height. */
+export type UVBox = readonly [number, number, number, number]
+
+/** Colour channels, 0 to 255. */
+export type RGB = readonly [number, number, number]
+
 export type AssetId = number
 export type UserId = number
 export type PlaceId = number

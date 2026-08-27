@@ -20,6 +20,7 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 import { AccessoryAssetTypeIds } from "@/pages/common"
 import { EventEmitter } from "@/rbx/EventEmitter"
 import type { Mesh } from "@/rbx/Parser/MeshParser"
+import type { CFrameTuple, UVBox } from "@/rbx/types"
 
 export const RBXAvatar = (() => {
 	function getFirstLod(mesh: Mesh) {
@@ -155,7 +156,7 @@ export const RBXAvatar = (() => {
 				for (const [i, meshBone] of Object.entries(mesh.bones) as [string, any][]) {
 					const bone = {
 						name: meshBone.name,
-						cframe: CFrameToMatrix4(...(<any[]>meshBone.cframe)),
+						cframe: CFrameToMatrix4(...(meshBone.cframe as CFrameTuple)),
 						count: boneCount[i] ?? 0,
 
 						matrixWorld: new THREE.Matrix4(),
@@ -237,7 +238,7 @@ export const RBXAvatar = (() => {
 		obj.visible = false
 	}
 
-	function CFrameToMatrix4(...cf: any[]) {
+	function CFrameToMatrix4(...cf: CFrameTuple) {
 		const [x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22] = cf
 		return new THREE.Matrix4().fromArray([
 			r00,
@@ -868,7 +869,7 @@ export const RBXAvatar = (() => {
 				if (wrapTarget) {
 					bp.wrapTarget = {
 						cageMeshId: wrapTarget.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...(<any[]>wrapTarget.CageOrigin)),
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...(wrapTarget.CageOrigin as CFrameTuple)),
 						stiffness: wrapTarget.Stiffness ?? 0,
 					}
 				}
@@ -880,7 +881,7 @@ export const RBXAvatar = (() => {
 
 					bp.attachments.push({
 						target: inst.Name,
-						cframe: RBXAvatar.CFrameToMatrix4(...(<any[]>inst.CFrame)),
+						cframe: RBXAvatar.CFrameToMatrix4(...(inst.CFrame as CFrameTuple)),
 
 						part: part.Name,
 						scaleType: scaleType,
@@ -914,7 +915,7 @@ export const RBXAvatar = (() => {
 				opacity: 1 - (hanInst.Transparency || 0),
 
 				legacyHatCFrame: accInst.AttachmentPoint
-					? RBXAvatar.CFrameToMatrix4(...(<any[]>accInst.AttachmentPoint)).invert()
+					? RBXAvatar.CFrameToMatrix4(...(accInst.AttachmentPoint as CFrameTuple)).invert()
 					: new THREE.Matrix4(),
 				scaleType: scaleType,
 			}
@@ -923,7 +924,7 @@ export const RBXAvatar = (() => {
 				if (att.ClassName === "Attachment") {
 					acc.attachments.push({
 						name: att.Name,
-						cframe: RBXAvatar.CFrameToMatrix4(...(<any[]>att.CFrame)).invert(),
+						cframe: RBXAvatar.CFrameToMatrix4(...(att.CFrame as CFrameTuple)).invert(),
 					})
 				}
 			}
@@ -955,9 +956,9 @@ export const RBXAvatar = (() => {
 					// Enabled defaults to true for some ungodly reason
 					acc.wrapLayer = {
 						cageMeshId: wrapLayer.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...(<any[]>wrapLayer.CageOrigin)),
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...(wrapLayer.CageOrigin as CFrameTuple)),
 						refMeshId: wrapLayer.ReferenceMeshId ?? "",
-						refOrigin: RBXAvatar.CFrameToMatrix4(...(<any[]>wrapLayer.ReferenceOrigin)),
+						refOrigin: RBXAvatar.CFrameToMatrix4(...(wrapLayer.ReferenceOrigin as CFrameTuple)),
 						puffiness: wrapLayer.Puffiness ?? 0,
 						order: wrapLayer.Order ?? 0,
 						autoSkin: wrapLayer.AutoSkin ?? 0,
@@ -2782,7 +2783,7 @@ export const RBXAvatar = (() => {
 			const vertex = new THREE.Matrix4()
 
 			// Resolve bodyparts
-			const uvBoxes: Record<string, number[]> = {
+			const uvBoxes: Record<string, UVBox> = {
 				full: [0, 0, 1, 1],
 				torso: [0 / 916, 296 / 568, 388 / 916, 272 / 568],
 				head: [132 / 916, 0 / 568, 256 / 916, 296 / 568],
@@ -2792,7 +2793,7 @@ export const RBXAvatar = (() => {
 				rightleg: [652 / 916, 0 / 568, 264 / 916, 284 / 568],
 			}
 
-			const getGroupMatch = (mesh: Mesh, group: any, box: any) => {
+			const getGroupMatch = (mesh: Mesh, group: any, box: UVBox) => {
 				if (group.uvs.length !== mesh.uvs.length) {
 					return null
 				}
@@ -2814,7 +2815,7 @@ export const RBXAvatar = (() => {
 				return true
 			}
 
-			const getGroupMatchPartial = (mesh: Mesh, group: any, box: any) => {
+			const getGroupMatchPartial = (mesh: Mesh, group: any, box: UVBox) => {
 				if (group.uvs.length > mesh.uvs.length) {
 					return null
 				}

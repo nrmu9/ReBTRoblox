@@ -1,4 +1,5 @@
 import { AssetCache } from "@/rbx/AssetCache"
+import type { CFrameTuple } from "@/rbx/types"
 import { RBXAvatar } from "@/rbx/Avatar/Avatar"
 
 export const RBXAvatarRigs = (() => {
@@ -21,11 +22,13 @@ export const RBXAvatarRigs = (() => {
 
 			for (const item of part.Children) {
 				if (item.ClassName === "Attachment" && !item.Name.endsWith("RigAttachment")) {
-					partData.attachments[item.Name] = RBXAvatar.CFrameToMatrix4(...(<any[]>item.CFrame))
+					partData.attachments[item.Name] = RBXAvatar.CFrameToMatrix4(
+						...(item.CFrame as CFrameTuple),
+					)
 				} else if (item.ClassName === "WrapTarget") {
 					partData.wrapTarget = {
 						cageMeshId: item.CageMeshId ?? "",
-						cageOrigin: RBXAvatar.CFrameToMatrix4(...(<any[]>item.CageOrigin)),
+						cageOrigin: RBXAvatar.CFrameToMatrix4(...(item.CageOrigin as CFrameTuple)),
 						stiffness: item.Stiffness ?? 0,
 					}
 				} else if (item.ClassName === "Motor6D") {
@@ -33,18 +36,18 @@ export const RBXAvatarRigs = (() => {
 					const part1Data = recursePart(item.Part1)
 
 					part1Data.JointName = item.Name
-					part1Data.C0 = RBXAvatar.CFrameToMatrix4(...(<any[]>item.C0))
-					part1Data.C1 = RBXAvatar.CFrameToMatrix4(...(<any[]>item.C1))
+					part1Data.C0 = RBXAvatar.CFrameToMatrix4(...(item.C0 as CFrameTuple))
+					part1Data.C1 = RBXAvatar.CFrameToMatrix4(...(item.C1 as CFrameTuple))
 
 					part0Data.children.push(part1Data)
 
 					if (item.Name === "Root" || item.Name === "Neck") {
 						part0Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(
-							...(<any[]>item.C0),
+							...(item.C0 as CFrameTuple),
 						)
 					} else {
 						part1Data.attachments[`${item.Name}RigAttachment`] = RBXAvatar.CFrameToMatrix4(
-							...(<any[]>item.C1),
+							...(item.C1 as CFrameTuple),
 						)
 					}
 				}
