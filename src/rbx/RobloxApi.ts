@@ -441,25 +441,6 @@ export const RobloxApi = {
 				},
 			).then((res) => res.json()),
 	},
-	chat: {
-		getUserConversations: (pageNumber = 1, pageSize = 10) =>
-			xsrfFetch(
-				`https://chat.roblox.com/v2/get-user-conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-				{
-					credentials: "include",
-					xsrf: true,
-				},
-			).then((res) => res.json()),
-
-		markAsRead: (conversationId: number) =>
-			xsrfFetch(`https://chat.roblox.com/v2/mark-as-read`, {
-				method: "POST",
-				credentials: "include",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ conversationId: conversationId }),
-				xsrf: true,
-			}).then((res) => res.json()),
-	},
 	develop: {},
 	economy: {
 		getAssetDetails: cacheResult(10e3, (assetId: AssetId) =>

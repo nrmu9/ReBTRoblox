@@ -6,7 +6,6 @@ import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxtocash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/shareddata"
-import { RobloxApi } from "@/rbx/RobloxApi"
 import { robloxExperiments } from "@/pages/common"
 
 interface SettingsModalState {
@@ -234,7 +233,6 @@ export const SettingsModal: SettingsModalState = {
 							<summary>Roblox Experiment Editor</summary>
 						</details>
 						<div style="margin-top: 12px; float:right; width: 100%; clear:both">
-							<button id=btr-fix-chat class=btn-control-xs style=float:left>Fix invis chat messages</button>
 							<button id=btr-reset-settings class=btn-control-xs style=float:right>Reset settings to default</button>
 						</div>
 					</group>
@@ -326,14 +324,6 @@ export const SettingsModal: SettingsModalState = {
 			this.switchContent((ev.currentTarget as HTMLElement).getAttribute("btr-tab")),
 		)
 		this.settingsDiv.$on("click", ".btr-close-subcontent", () => this.switchContent("main"))
-
-		this.settingsDiv.$on("click", "#btr-fix-chat", () => {
-			RobloxApi.chat.getUserConversations(1, 10).then((json) => {
-				for (const conversation of json) {
-					RobloxApi.chat.markAsRead(conversation.id)
-				}
-			})
-		})
 
 		//
 
