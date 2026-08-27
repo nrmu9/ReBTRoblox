@@ -108,7 +108,7 @@ const OwnerAssetCache = {
 				cursor: populate ? cursor || "" : "",
 			})
 
-			newItems = json.data.map((x) => x.id)
+			newItems = json.data.map((x: any) => x.id)
 			nextPageCursor = json.nextPageCursor
 		} else {
 			newItems = []
@@ -126,7 +126,7 @@ const OwnerAssetCache = {
 					cursor: populate ? cursor[index] || "" : "",
 				})
 
-				newItems.push(...json.data.map((x) => x.assetId))
+				newItems.push(...json.data.map((x: any) => x.assetId))
 
 				if (json.nextPageCursor) {
 					nextPageCursor[index] = json.nextPageCursor
@@ -141,7 +141,7 @@ const OwnerAssetCache = {
 		return [newItems, nextPageCursor]
 	},
 
-	async update(onchange) {
+	async update(onchange: (...args: any[]) => void) {
 		if (loggedInUser === -1) {
 			return
 		}
@@ -341,7 +341,7 @@ pageInit.catalog = () => {
 	if (SETTINGS.get("catalog.showOwnedAssets")) {
 		let currentRequest
 
-		injectScript.listen("checkOwnedAsset", (assetId) => {
+		injectScript.listen("checkOwnedAsset", (assetId: number) => {
 			if (!currentRequest) {
 				currentRequest = []
 
@@ -360,7 +360,7 @@ pageInit.catalog = () => {
 					}
 
 					injectScript.send("updateOwnedAssets", initData)
-					OwnerAssetCache.update((changes) => injectScript.send("updateOwnedAssets", changes))
+					OwnerAssetCache.update((changes: any) => injectScript.send("updateOwnedAssets", changes))
 
 					currentRequest = null
 				})
@@ -372,7 +372,7 @@ pageInit.catalog = () => {
 		injectScript.call("showOwnedAssets", () => {
 			const ownedAssets: Record<string, any> = {}
 
-			contentScript.listen("updateOwnedAssets", (changes) => {
+			contentScript.listen("updateOwnedAssets", (changes: any) => {
 				for (const [assetId, isOwned] of Object.entries(changes) as [string, any][]) {
 					ownedAssets[+assetId]?.set(isOwned)
 				}

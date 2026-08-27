@@ -96,7 +96,7 @@ pageInit.itemdetails = () => {
 		document
 			.$watch("#content")
 			.$then()
-			.$watch(">#item-details-container, >#item-container", (container) => {
+			.$watch(">#item-details-container, >#item-container", (container: HTMLElement) => {
 				const isReactItemDetails = container.id === "item-details-container"
 
 				// if(SETTINGS.get("itemdetails.addOwnersList")) {
@@ -341,158 +341,161 @@ pageInit.itemdetails = () => {
 				// 	})
 				// }
 
-				container.$watch("#type-content, .item-type-field-container .field-content", (typeField) => {
-					const isNewStyle = !typeField.classList.contains("field-content")
+				container.$watch(
+					"#type-content, .item-type-field-container .field-content",
+					(typeField: any) => {
+						const isNewStyle = !typeField.classList.contains("field-content")
 
-					const createRow = (label, content) => {
-						return isReactItemDetails
-							? html` <div class="clearfix item-info-row-container" style="display:none">
-									<div
-										class="font-header-1 text-subheader text-label text-overflow row-label"
-									>
-										${label}
-									</div>
-									<span class="btr-row-value font-body text">${content}</span>
-								</div>`
-							: isNewStyle
-								? html` <div class="clearfix item-field-container" style="display:none">
+						const createRow = (label: string, content: HTMLElement | string) => {
+							return isReactItemDetails
+								? html` <div class="clearfix item-info-row-container" style="display:none">
 										<div
-											class="font-header-1 text-subheader text-label text-overflow field-label"
+											class="font-header-1 text-subheader text-label text-overflow row-label"
 										>
 											${label}
 										</div>
 										<span class="btr-row-value font-body text">${content}</span>
 									</div>`
-								: html` <div class="clearfix item-field-container" style="display:none">
-										<div class="text-label text-overflow field-label">${label}</div>
-										<span class="btr-row-value field-content">${content}</span>
-									</div>`
-					}
+								: isNewStyle
+									? html` <div class="clearfix item-field-container" style="display:none">
+											<div
+												class="font-header-1 text-subheader text-label text-overflow field-label"
+											>
+												${label}
+											</div>
+											<span class="btr-row-value font-body text">${content}</span>
+										</div>`
+									: html` <div class="clearfix item-field-container" style="display:none">
+											<div class="text-label text-overflow field-label">${label}</div>
+											<span class="btr-row-value field-content">${content}</span>
+										</div>`
+						}
 
-					if (SETTINGS.get("itemdetails.showSales") && category !== "bundles") {
-						const salesContainer = createRow("Sales", "")
+						if (SETTINGS.get("itemdetails.showSales") && category !== "bundles") {
+							const salesContainer = createRow("Sales", "")
 
-						typeField.parentNode.after(salesContainer)
+							typeField.parentNode.after(salesContainer)
 
-						const show = (sales?: any) => {
-							if (typeof sales === "number") {
-								salesContainer.$req(".btr-row-value").textContent = formatNumber(sales)
+							const show = (sales?: any) => {
+								if (typeof sales === "number") {
+									salesContainer.$req(".btr-row-value").textContent = formatNumber(sales)
+								}
+								salesContainer.style.display = ""
 							}
-							salesContainer.style.display = ""
+
+							const hide = () => {
+								salesContainer.style.display = "none"
+							}
+
+							let canConfigure = false
+
+							document.$watch("#configure-item", () => {
+								canConfigure = true
+								show()
+							})
+
+							if (category === "game-pass") {
+								RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data: any) => {
+									const sales = data?.Sales
+
+									if (Number.isSafeInteger(sales) && (canConfigure || sales > 0)) {
+										show(sales)
+									} else {
+										hide()
+									}
+								})
+							} else if (category === "badges") {
+								salesContainer.$req(".text-label").textContent = "Awarded"
+								show()
+
+								RobloxApi.badges.getBadgeDetails(assetId).then((data: any) => {
+									const numAwarded = data?.statistics?.awardedCount
+
+									if (Number.isSafeInteger(numAwarded)) {
+										show(numAwarded)
+									} else {
+										hide()
+									}
+								})
+							} else {
+								RobloxApi.economy.getAssetDetails(assetId).then((data: any) => {
+									const sales = data?.Sales
+
+									if (Number.isSafeInteger(sales) && (canConfigure || sales > 0)) {
+										show(sales)
+									} else {
+										hide()
+									}
+								})
+							}
 						}
 
-						const hide = () => {
-							salesContainer.style.display = "none"
-						}
+						if (SETTINGS.get("itemdetails.showCreatedAndUpdated") && category !== "bundles") {
+							// remove old created/updated label
+							if (isReactItemDetails) {
+								const oldLabel = Array.from(
+									queryAll("#item-details .wait-for-i18n-format-render"),
+								).find((x: any) => !isNaN(Date.parse(x.textContent)))
 
-						let canConfigure = false
+								if (oldLabel) {
+									oldLabel.parentElement?.remove()
+								}
+							} else {
+								const oldLabel = query("#item-details .date-time-i18n")
 
-						document.$watch("#configure-item", () => {
-							canConfigure = true
+								if (oldLabel) {
+									oldLabel.closest(".field-content")?.parentElement?.remove()
+								}
+							}
+
+							const createdContainer = createRow("Created", "")
+							const updatedContainer = createRow("Updated", "")
+
+							typeField.parentNode.after(createdContainer, updatedContainer)
+
+							const show = (created?: any, updated?: any) => {
+								if (created) {
+									createdContainer.$req(".btr-row-value").textContent = new Date(
+										created,
+									).$format("MMM DD, YYYY h:mm:ss A")
+								}
+								if (updated) {
+									updatedContainer.$req(".btr-row-value").textContent = new Date(
+										updated,
+									).$format("MMM DD, YYYY h:mm:ss A")
+								}
+								createdContainer.style.display = ""
+								updatedContainer.style.display = ""
+							}
+
 							show()
-						})
 
-						if (category === "game-pass") {
-							RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data: any) => {
-								const sales = data?.Sales
-
-								if (Number.isSafeInteger(sales) && (canConfigure || sales > 0)) {
-									show(sales)
-								} else {
-									hide()
-								}
-							})
-						} else if (category === "badges") {
-							salesContainer.$req(".text-label").textContent = "Awarded"
-							show()
-
-							RobloxApi.badges.getBadgeDetails(assetId).then((data: any) => {
-								const numAwarded = data?.statistics?.awardedCount
-
-								if (Number.isSafeInteger(numAwarded)) {
-									show(numAwarded)
-								} else {
-									hide()
-								}
-							})
-						} else {
-							RobloxApi.economy.getAssetDetails(assetId).then((data: any) => {
-								const sales = data?.Sales
-
-								if (Number.isSafeInteger(sales) && (canConfigure || sales > 0)) {
-									show(sales)
-								} else {
-									hide()
-								}
-							})
-						}
-					}
-
-					if (SETTINGS.get("itemdetails.showCreatedAndUpdated") && category !== "bundles") {
-						// remove old created/updated label
-						if (isReactItemDetails) {
-							const oldLabel = Array.from(
-								queryAll("#item-details .wait-for-i18n-format-render"),
-							).find((x: any) => !isNaN(Date.parse(x.textContent)))
-
-							if (oldLabel) {
-								oldLabel.parentElement?.remove()
-							}
-						} else {
-							const oldLabel = query("#item-details .date-time-i18n")
-
-							if (oldLabel) {
-								oldLabel.closest(".field-content")?.parentElement?.remove()
+							if (category === "game-pass") {
+								RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data: any) => {
+									show(data.Created, data.Updated)
+								})
+							} else if (category === "badges") {
+								RobloxApi.badges.getBadgeDetails(assetId).then((data: any) => {
+									show(data.created, data.updated)
+								})
+							} else {
+								RobloxApi.economy.getAssetDetails(assetId).then((data: any) => {
+									show(data.Created, data.Updated)
+								})
 							}
 						}
-
-						const createdContainer = createRow("Created", "")
-						const updatedContainer = createRow("Updated", "")
-
-						typeField.parentNode.after(createdContainer, updatedContainer)
-
-						const show = (created?: any, updated?: any) => {
-							if (created) {
-								createdContainer.$req(".btr-row-value").textContent = new Date(
-									created,
-								).$format("MMM DD, YYYY h:mm:ss A")
-							}
-							if (updated) {
-								updatedContainer.$req(".btr-row-value").textContent = new Date(
-									updated,
-								).$format("MMM DD, YYYY h:mm:ss A")
-							}
-							createdContainer.style.display = ""
-							updatedContainer.style.display = ""
-						}
-
-						show()
-
-						if (category === "game-pass") {
-							RobloxApi.gamepasses.getGamepassProductInfo(assetId).then((data: any) => {
-								show(data.Created, data.Updated)
-							})
-						} else if (category === "badges") {
-							RobloxApi.badges.getBadgeDetails(assetId).then((data: any) => {
-								show(data.created, data.updated)
-							})
-						} else {
-							RobloxApi.economy.getAssetDetails(assetId).then((data: any) => {
-								show(data.Created, data.Updated)
-							})
-						}
-					}
-				})
+					},
+				)
 
 				if (isReactItemDetails) {
 					// modern item details page
 
-					container.$watch(".btr-buttons", (buttons) => {
-						const assetId = +buttons.dataset.btrAssetId
+					container.$watch(".btr-buttons", (buttons: HTMLElement) => {
+						const assetId = +buttons.dataset.btrAssetId!
 						const itemType = buttons.dataset.btrItemType
 
 						const isBundle = itemType === "Bundle"
-						const assetTypeId = isBundle ? null : +buttons.dataset.btrAssetTypeId
+						const assetTypeId = isBundle ? null : +buttons.dataset.btrAssetTypeId!
 
 						initPreview(assetId, assetTypeId, isBundle).then((preview) => {
 							if (!preview) {

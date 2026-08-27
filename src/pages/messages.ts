@@ -22,7 +22,7 @@ class MarkAllAsReadAction {
 		this.running = false
 	}
 
-	setButtonText(text) {
+	setButtonText(text: string) {
 		const elem = query(".btr-markAllAsReadInbox")
 
 		if (elem) {
@@ -30,7 +30,7 @@ class MarkAllAsReadAction {
 		}
 	}
 
-	async markAsRead(messageIds) {
+	async markAsRead(messageIds: any[]) {
 		if (!messageIds.length) {
 			return
 		}
@@ -39,7 +39,7 @@ class MarkAllAsReadAction {
 		return tryFetch()
 	}
 
-	async loadPage(pageNum) {
+	async loadPage(pageNum: number) {
 		const tryFetch = () => RobloxApi.privatemessages.getMessages(pageNum).catch(tryFetch)
 
 		return tryFetch().then(async (json: any) => {

@@ -17,13 +17,13 @@ pageInit.create = () => {
 	injectScript.call("hijackAuth", () => {
 		let didSendFirstAuth = false
 
-		hijackXHR((request) => {
+		hijackXHR((request: any) => {
 			if (
 				!didSendFirstAuth &&
 				request.method === "GET" &&
 				request.url === `https://users.roblox.com/v1/users/authenticated`
 			) {
-				request.onResponse.push((json) => {
+				request.onResponse.push((json: any) => {
 					if (!didSendFirstAuth) {
 						didSendFirstAuth = true
 						contentScript.send("onFirstAuth", json)
@@ -35,7 +35,7 @@ pageInit.create = () => {
 
 	injectScript.listen(
 		"onFirstAuth",
-		(json) => {
+		(json: any) => {
 			const userId = json?.id ?? -1
 
 			setLoggedInUser(Number.isSafeInteger(userId) ? userId : -1)
@@ -57,18 +57,18 @@ pageInit.create = () => {
 			moduleHandlers: [] as any[],
 			objects: {} as Record<string, any>,
 
-			onModule(fn) {
+			onModule(fn: (...args: any[]) => void) {
 				this.moduleHandlers.push(fn)
 			},
 
-			onProperty(keys, fn) {
+			onProperty(keys: string[], fn: (...args: any[]) => void) {
 				if (!Array.isArray(keys)) {
 					keys = [keys]
 				}
 
 				const callback =
 					keys.length >= 2
-						? (obj) => {
+						? (obj: any) => {
 								for (const key of keys) {
 									if (!Object.hasOwn(obj, key)) {
 										return
@@ -136,8 +136,8 @@ pageInit.create = () => {
 			},
 
 			init() {
-				onSet(window, "webpackChunk_N_E", (chunks) => {
-					const addChunk = (chunk) => {
+				onSet(window, "webpackChunk_N_E", (chunks: any) => {
+					const addChunk = (chunk: any) => {
 						for (const id of Object.keys(chunk)) {
 							hijackFunction(chunk, id, (target: any, thisArg: any, args: any[]) => {
 								const result = target.apply(thisArg, args)
@@ -164,7 +164,7 @@ pageInit.create = () => {
 						}
 					}
 
-					const override = (pushfn) =>
+					const override = (pushfn: (...args: any[]) => void) =>
 						new Proxy(pushfn, {
 							apply: (target: any, thisArg: any, args: any[]) => {
 								for (const chunk of args) {
@@ -207,7 +207,7 @@ pageInit.create = () => {
 
 		objects.Mui = {}
 
-		webpackHook.onModule((module, target) => {
+		webpackHook.onModule((module: any, target: any) => {
 			if ("jsx" in module && "jsxs" in module) {
 				hijackFunction(module, "jsx", reactHook.onCreateElement.bind(reactHook))
 				hijackFunction(module, "jsxs", reactHook.onCreateElement.bind(reactHook))

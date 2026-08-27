@@ -22,7 +22,7 @@ interface SettingsModalState {
 export const SettingsModal: SettingsModalState = {
 	enabled: false,
 
-	toggle(force) {
+	toggle(force: boolean) {
 		assert(this.enabled, "not enabled")
 		this.init()
 
@@ -348,7 +348,7 @@ export const SettingsModal: SettingsModalState = {
 
 			const onUpdate: any[] = []
 
-			const createCheckbox = (labelText, callback) => {
+			const createCheckbox = (labelText: string, callback: (...args: any[]) => void) => {
 				const checkbox = html`<checkbox></checkbox>`
 				checkbox.classList.add("btr-settings-checkbox")
 
@@ -377,7 +377,7 @@ export const SettingsModal: SettingsModalState = {
 					continue
 				}
 
-				const checkbox = createCheckbox(element.label || element.name, (enabled) => {
+				const checkbox = createCheckbox(element.label || element.name, (enabled: boolean) => {
 					element.setEnabled(enabled)
 				})
 
@@ -391,9 +391,12 @@ export const SettingsModal: SettingsModalState = {
 
 				if (element.settings) {
 					for (const setting of Object.values(element.settings) as any[]) {
-						const settingCheckbox = createCheckbox(setting.label || setting.name, (enabled) => {
-							setting.setEnabled(enabled)
-						})
+						const settingCheckbox = createCheckbox(
+							setting.label || setting.name,
+							(enabled: boolean) => {
+								setting.setEnabled(enabled)
+							},
+						)
 
 						settingCheckbox.elem.style.paddingLeft = "20px"
 						parent.append(settingCheckbox.elem)
@@ -549,7 +552,8 @@ export const SettingsModal: SettingsModalState = {
 		// Settings
 
 		const settingsDone: Record<string, any> = {}
-		const joinPaths = (group, path: string) => (!group || path.includes(".") ? path : `${group}.${path}`)
+		const joinPaths = (group: any, path: string) =>
+			!group || path.includes(".") ? path : `${group}.${path}`
 
 		for (const group of this.settingsDiv.$findAll("group")) {
 			const groupPath = group.getAttribute("path") || ""

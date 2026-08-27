@@ -56,7 +56,7 @@ pageInit.profile = () => {
 			}
 		})
 
-		hijackXHR((request) => {
+		hijackXHR((request: any) => {
 			if (request.url === "https://apis.roblox.com/profile-platform-api/v1/profiles/get") {
 				request.onResponse.push((json: any) => {
 					contentScript.send("profileData", json)
@@ -83,9 +83,9 @@ pageInit.profile = () => {
 	onPageLoad((userIdString) => {
 		const userId = Number.parseInt(userIdString, 10)
 
-		document.$watch("body", (body) => body.classList.add("btr-profile"))
+		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-profile"))
 
-		document.$watch(".profile-platform-container", async (profileContainer) => {
+		document.$watch(".profile-platform-container", async (profileContainer: HTMLElement) => {
 			await profileContainer.$watch(">*").$promise() // wait for first child
 
 			const newCont = html` <div class="btr-profile-container">
@@ -189,17 +189,17 @@ pageInit.profile = () => {
 			const profileDataPromise = (profileDataPromises[userIdString] ??= deferredPromise<unknown>())
 
 			profileContainer
-				.$watch(".profile-tabs", (tabs) => {
-					tabs.parentNode.style.display = "none"
+				.$watch(".profile-tabs", (tabs: HTMLElement) => {
+					tabs.parentElement!.style.display = "none"
 				})
-				.$watch("#friends-carousel-container", (friends) => {
+				.$watch("#friends-carousel-container", (friends: any) => {
 					newCont.$req(".placeholder-friends").after(friends)
 
-					friends.$watch(">*", (cont) => {
+					friends.$watch(">*", (cont: HTMLElement) => {
 						newCont.$req(".placeholder-friends").remove()
 					})
 				})
-				.$watch(".user-profile-header", (header) => {
+				.$watch(".user-profile-header", (header: HTMLElement) => {
 					const target = header.$find("> .flex-nowrap > a.radius-circle")
 
 					if (target) {
@@ -216,17 +216,17 @@ pageInit.profile = () => {
 						</a>`
 
 						btn.$on("click", () => {
-							profileContainer.$find(".description-content+.more-btn").click()
+							profileContainer.$req(".description-content+.more-btn").click()
 						})
 
-						target.parentNode.append(btn)
+						target.parentElement!.append(btn)
 
 						header.$watch(".description-content", () => {
 							btn.style.opacity = ""
 						})
 					}
 
-					header.$watch(".avatar-status", (_status) => {
+					header.$watch(".avatar-status", (_status: any) => {
 						const statusDiv = html`<div class="btr-header-status-parent text-body-large"></div>`
 						const cont = _status.parentNode
 						cont.append(statusDiv)
@@ -274,11 +274,11 @@ pageInit.profile = () => {
 						update()
 					})
 				})
-				.$watch(".profile-currently-wearing", (wearing) => {
+				.$watch(".profile-currently-wearing", (wearing: any) => {
 					const toggleItems = html`<span class="btr-toggle-items btn-control btn-control-sm"
 						>Show Items</span
 					>`
-					profileContainer.$find(".profile-avatar-left").parentNode.append(toggleItems)
+					profileContainer.$req(".profile-avatar-left").parentElement!.append(toggleItems)
 
 					const clone = wearing.cloneNode(false)
 					clone.classList.add(
@@ -290,7 +290,7 @@ pageInit.profile = () => {
 					clone.append(...wearing.childNodes)
 					toggleItems.after(clone)
 
-					const onClick = (ev) => {
+					const onClick = (ev: Event) => {
 						if (!ev.composedPath().includes(clone) && ev.target !== toggleItems) {
 							toggle()
 						}
@@ -311,13 +311,13 @@ pageInit.profile = () => {
 
 					toggleItems.$on("click", toggle)
 				})
-				.$watch(".profile-store", (store) => {
+				.$watch(".profile-store", (store: any) => {
 					const clone = store.cloneNode(false)
 					clone.append(...store.childNodes)
 
 					newCont.$req(".placeholder-store").replaceWith(clone)
 				})
-				.$watch(".profile-collections", (collections) => {
+				.$watch(".profile-collections", (collections: any) => {
 					const clone = collections.cloneNode(false)
 					clone.append(...collections.childNodes)
 
@@ -573,7 +573,7 @@ pageInit.profile = () => {
 						list.replaceChildren()
 
 						const thumbs: Record<string, any> = {}
-						const groups = json.data.sort((a, b) =>
+						const groups = json.data.sort((a: any, b: any) =>
 							a.isPrimaryGroup ? -1 : b.isPrimaryGroup ? 1 : 0,
 						)
 
@@ -864,9 +864,9 @@ pageInit.profile = () => {
 					}
 				}
 
-				const onclick = (ev) => {
+				const onclick = (ev: Event) => {
 					ev.preventDefault()
-					const cat = +ev.currentTarget.getAttribute("data-value")
+					const cat = +(ev.currentTarget as HTMLElement).getAttribute("data-value")!
 					if (Number.isSafeInteger(cat)) {
 						loadPage(cat, 1)
 					}
@@ -897,7 +897,7 @@ pageInit.profile = () => {
 
 				const items: any[] = []
 
-				const transition = (item: any, open, instant = false) => {
+				const transition = (item: any, open: boolean, instant = false) => {
 					const content = item.$req(".btr-game-content")
 					const height = content.scrollHeight
 
@@ -1041,7 +1041,7 @@ pageInit.profile = () => {
 
 						injectScript.call(
 							"setupGamePopovers",
-							(selector) => {
+							(selector: string) => {
 								Roblox?.BootstrapWidgets?.SetupPopover(null, null, selector)
 							},
 							`[data-bind='btr-placedrop-${universeId}']`,
@@ -1056,7 +1056,7 @@ pageInit.profile = () => {
 						item.$req<HTMLImageElement>(".btr-game-thumb").src = thumb.thumbnails?.[0]?.imageUrl
 					})
 
-					RobloxApi.games.getGameDetails.batch(universeId).then(async (_gameDetails) => {
+					RobloxApi.games.getGameDetails.batch(universeId).then(async (_gameDetails: any) => {
 						const gameDetails = _gameDetails.data.find((x: any) => x.id === universeId)
 						const placeId = gameDetails.rootPlaceId
 
@@ -1132,7 +1132,7 @@ pageInit.profile = () => {
 						const desc = item.$req(".btr-game-desc-content")
 						desc.textContent = placeDetails.description
 
-						injectScript.call("linkify", (target) => $(target).linkify(), desc)
+						injectScript.call("linkify", (target: any) => $(target).linkify(), desc)
 
 						if (desc.scrollHeight > desc.offsetHeight) {
 							const descToggle = html`<span class="btr-toggle-description">Show More</span>`
@@ -1201,7 +1201,7 @@ pageInit.profile = () => {
 				document.body.$on("click", ".btr-btn-edit-place", (ev) => {
 					injectScript.call(
 						"profileEditPlace",
-						(gameId, placeId: number) => {
+						(gameId: number, placeId: number) => {
 							Roblox.GameLauncher.editGameInStudio(placeId, gameId)
 						},
 						+ev.currentTarget.dataset.gameid!,
@@ -1241,7 +1241,7 @@ pageInit.profile = () => {
 			profileContainer.after(newCont)
 		})
 
-		document.$watch(".profile-container", (angularContainer) => {
+		document.$watch(".profile-container", (angularContainer: HTMLElement) => {
 			// rescue necessary elements and then remove the angular container to stop stuff from loading
 			const friends = angularContainer.$find("#friends-carousel-container")
 			if (friends) {

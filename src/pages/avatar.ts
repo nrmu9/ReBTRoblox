@@ -157,8 +157,8 @@ pageInit.avatar = () => {
 		})
 
 		injectScript.call("assetRefinement", () => {
-			onSet(window, "Roblox", (Roblox) => {
-				onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService) => {
+			onSet(window, "Roblox", (Roblox: any) => {
+				onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
 					let wearingAssets
 					let avatarRules
 
@@ -207,7 +207,7 @@ pageInit.avatar = () => {
 									}
 								}
 
-								$scope.btrUpdateItem = (item) => {
+								$scope.btrUpdateItem = (item: any) => {
 									if (item.meta?.scale && item.btrScale) {
 										item.meta.scale.X = item.btrScale
 										item.meta.scale.Y = item.btrScale
@@ -230,14 +230,14 @@ pageInit.avatar = () => {
 
 								$scope.$on(
 									avatarConstantService.events.wornAssetsChanged,
-									(event: Event, assetIds) => {
+									(event: Event, assetIds: number[]) => {
 										$scope.btrRefreshWearingAssets()
 									},
 								)
 
 								$scope.$on(
 									avatarConstantService.events.avatarRulesLoaded,
-									(event: Event, rules) => {
+									(event: Event, rules: any) => {
 										$scope.btrAvatarRules = avatarRules = rules
 										$scope.btrBounds = {}
 
@@ -248,7 +248,7 @@ pageInit.avatar = () => {
 												avatarRules.accessoryRefinementUpperBounds[assetTypeName]
 
 											const wearableAssetType = avatarRules.wearableAssetTypes.find(
-												(x) => x.name.replace(/\s/, "") === assetTypeName,
+												(x: any) => x.name.replace(/\s/, "") === assetTypeName,
 											)
 											const assetBounds = ($scope.btrBounds[wearableAssetType?.id] = {})
 
@@ -312,7 +312,7 @@ pageInit.avatar = () => {
 				)
 			})
 
-			hijackXHR((request) => {
+			hijackXHR((request: any) => {
 				if (request.url.endsWith("/set-body-colors")) {
 					request.onResponse.push(() => {
 						contentScript.send("updateBodyColors")
@@ -321,7 +321,7 @@ pageInit.avatar = () => {
 			})
 		})
 
-		document.$watch("#bodyColors", async (cont) => {
+		document.$watch("#bodyColors", async (cont: HTMLElement) => {
 			const bodyColor3s = (await RobloxApi.avatar.getCurrentAvatar()).bodyColor3s
 
 			const selector = html`
@@ -380,7 +380,7 @@ pageInit.avatar = () => {
 
 			injectScript.listen("updateBodyColors", updateBodyColors)
 
-			cont.$find(".section-content").prepend(
+			cont.$req(".section-content").prepend(
 				selector,
 				html`<hr style="margin-top:40px;margin-bottom:30px;" />`,
 			)

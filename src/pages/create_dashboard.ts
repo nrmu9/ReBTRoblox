@@ -15,7 +15,7 @@ pageInit.create_dashboard = () => {
 			const { webpackHook } = BTRoblox
 			const { objects } = webpackHook
 
-			const Link = (url, entry) =>
+			const Link = (url: string, entry: any) =>
 				objects.jsx("a", {
 					href: url,
 					style: { all: "unset", display: "contents" },
@@ -357,7 +357,7 @@ pageInit.create_dashboard = () => {
 			const fileExt = document.location.href.includes("/creations/experiences/") ? "rbxl" : "rbxm"
 			const fileName = `${placeName}-${assetVersionNumber}.${fileExt}`
 
-			AssetCache.loadBuffer({ id: assetId, version: assetVersionNumber }, (buffer) => {
+			AssetCache.loadBuffer({ id: assetId, version: assetVersionNumber }, (buffer: any) => {
 				const blobUrl = URL.createObjectURL(new Blob([buffer], { type: "application/octet-stream" }))
 				startDownload(blobUrl, fileName)
 				URL.revokeObjectURL(blobUrl)

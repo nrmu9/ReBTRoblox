@@ -58,7 +58,7 @@ export const SHARED_DATA = {
 					allFrames: details.all_frames,
 					runAt: details.run_at,
 				})
-				.then((payloadScript) => {
+				.then((payloadScript: any) => {
 					if (this.payloadIndex === thisIndex) {
 						this.payloadScript = payloadScript
 					} else {
@@ -68,11 +68,11 @@ export const SHARED_DATA = {
 		}
 	},
 
-	get(key) {
+	get(key: string) {
 		return this.data[key]
 	},
 
-	set(key, value) {
+	set(key: string, value: any) {
 		this.data[key] = value
 
 		if (IS_BACKGROUND_PAGE && this._loaded) {
@@ -80,14 +80,14 @@ export const SHARED_DATA = {
 		}
 	},
 
-	load(fn) {
+	load(fn: (...args: any[]) => void) {
 		this._loadPromise.then(fn)
 	},
 
 	async init() {
 		if (IS_BACKGROUND_PAGE) {
 			contentScript.listen({
-				getSharedData: (_, respond) => {
+				getSharedData: (_: any, respond: (value?: any) => void) => {
 					respond(this.data)
 				},
 			})
@@ -126,7 +126,7 @@ export const SHARED_DATA = {
 						: `BTRoblox is currently experiencing issues on the Brave browser.\nSome features may not work properly for the time being.`
 
 				dataPayload = await new Promise((resolve) =>
-					backgroundScript.send("getSharedData", (data) => resolve(data)),
+					backgroundScript.send("getSharedData", (data: any) => resolve(data)),
 				)
 			}
 

@@ -71,8 +71,8 @@ pageInit.groups = () => {
 			})
 
 			angularHook.hijackModule("groupPayouts", {
-				groupPayouts(component) {
-					component.bindings.layout = "="
+				groupPayouts(component: HTMLElement) {
+					;(component as any).bindings.layout = "="
 				},
 				groupPayoutsController(target: any, thisArg: any, args: any[], argsMap: any) {
 					const result = target.apply(thisArg, args)
@@ -89,7 +89,7 @@ pageInit.groups = () => {
 
 								try {
 									result.then(
-										(recipients) =>
+										(recipients: any) =>
 											(controller.layout.btrPayoutsEnabled = recipients.length > 0),
 										() => (controller.layout.btrPayoutsEnabled = false),
 									)
@@ -182,7 +182,7 @@ pageInit.groups = () => {
 	})
 
 	onPageLoad(() => {
-		document.$watch("body", (body) => {
+		document.$watch("body", (body: HTMLElement) => {
 			document.body.classList.toggle("btr-redesign", SETTINGS.get("groups.modifyLayout"))
 		})
 	})

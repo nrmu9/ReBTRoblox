@@ -5,17 +5,17 @@ import { SETTINGS } from "@/feat/settings"
 pageInit.home = () => {
 	if (SETTINGS.get("home.favoritesAtTop")) {
 		injectScript.call("favoritesAtTop", () => {
-			hijackXHR((request) => {
+			hijackXHR((request: any) => {
 				if (
 					request.method === "POST" &&
 					request.url.match(
 						/^https:\/\/apis\.roblox\.com\/discovery-api\/omni-recommendation(-metadata)?$/i,
 					)
 				) {
-					request.onResponse.push((json) => {
+					request.onResponse.push((json: any) => {
 						if (settings.home.favoritesAtTop && json?.sorts) {
-							const favoritesSort = json.sorts.find((x) => x.topicId === 100000001)
-							const continueSort = json.sorts.find((x) => x.topicId === 100000003)
+							const favoritesSort = json.sorts.find((x: any) => x.topicId === 100000001)
+							const continueSort = json.sorts.find((x: any) => x.topicId === 100000003)
 
 							if (favoritesSort) {
 								json.sorts.splice(json.sorts.indexOf(favoritesSort), 1)

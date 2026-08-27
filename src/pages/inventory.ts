@@ -18,8 +18,8 @@ pageInit.inventory = () => {
 
 		if (iframe?.contentWindow === window) {
 			document
-				.$watch("head", (head) => head.append(html`<base target="_top"></base>`))
-				.$watch("body", (body) => {
+				.$watch("head", (head: HTMLElement) => head.append(html`<base target="_top"></base>`))
+				.$watch("body", (body: HTMLElement) => {
 					body.classList.add("btr-embed")
 
 					let requested = false
@@ -46,7 +46,7 @@ pageInit.inventory = () => {
 					})
 				})
 				.$then()
-				.$watch("#chat-container", (chat) => chat.remove())
+				.$watch("#chat-container", (chat: any) => chat.remove())
 
 			//
 
@@ -230,7 +230,7 @@ pageInit.inventory = () => {
 
 				let itemsLeft = items.length
 
-				function removeItem(index) {
+				function removeItem(index: number) {
 					const item = items[index]
 					if (!item) {
 						return
@@ -269,7 +269,7 @@ pageInit.inventory = () => {
 					if (item.assetType === "badges") {
 						RobloxApi.badges.deleteBadge(item.assetId).then(done)
 					} else {
-						RobloxApi.economy.getAssetDetails(item.assetId).then((data) => {
+						RobloxApi.economy.getAssetDetails(item.assetId).then((data: any) => {
 							if (validAssetTypes.indexOf(data.AssetTypeId) === -1) {
 								return console.log("Bad assetType", data)
 							}
