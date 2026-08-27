@@ -4,7 +4,9 @@
 	"description": "A fork of BTRoblox that continues the original after it was abandoned, fixing the features that had stopped working.",
 	"author": "nrmu9, AntiBoomz",
 	"icons": {
+		"32": "res/icon_32.png",
 		"48": "res/icon_48.png",
+		"64": "res/icon_64.png",
 		"96": "res/icon_96.png",
 		"128": "res/icon_128.png"
 	},

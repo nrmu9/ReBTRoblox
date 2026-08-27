@@ -6,3 +6,4 @@ artifacts/
 .env
 .env.*
 RELEASING.md
+AMO-LISTING.md
