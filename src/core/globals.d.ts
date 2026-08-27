@@ -6,7 +6,7 @@ declare global {
 
 	// Page world: provided by Roblox itself or by inject.js, and reached from
 	// stringified closures passed to injectScript.call. $ there is Roblox's
-	// jQuery, not BTRoblox's.
+	// jQuery, not ReBTRoblox's.
 	const Roblox: any
 	const util: any
 	const cloneInto: any
@@ -136,7 +136,7 @@ declare global {
 	const hijackXHR: any
 	const onSet: any
 	const settings: any
-	const BTRoblox: any
+	const ReBTRoblox: any
 	const Mui: any
 	const HoverPreview: any
 	const insertCSS: any
@@ -151,7 +151,7 @@ declare global {
 		next?: any
 		explorer?: any
 		preview?: any
-		BTRoblox?: any
+		ReBTRoblox?: any
 		scene?: any
 		Roblox?: any
 		jQuery?: any

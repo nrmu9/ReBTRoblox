@@ -3,7 +3,7 @@ const manifest = chrome.runtime.getManifest()
 export const IS_MANIFEST_V3 = manifest.manifest_version === 3
 export const IS_FIREFOX = "browser_specific_settings" in manifest
 export const IS_CHROME = !IS_FIREFOX
-export const IS_DEV_MODE = manifest.short_name === "BTRoblox_DEV"
+export const IS_DEV_MODE = manifest.short_name === "ReBTRoblox_DEV"
 
 const scope = self as typeof self & { window?: unknown }
 const legacyExtension = chrome.extension as typeof chrome.extension & {

@@ -39,9 +39,9 @@ browserAction.onClicked.addListener((tab: chrome.tabs.Tab) => {
 		{
 			target: { tabId: tab.id! },
 			func: () => {
-				// window.BTRoblox is published by the content entry; the bundle no
+				// window.ReBTRoblox is published by the content entry; the bundle no
 				// longer leaks these as content-script globals.
-				const btr = (window as any).BTRoblox
+				const btr = (window as any).ReBTRoblox
 
 				if (btr?.SettingsModal?.enabled) {
 					btr.SETTINGS.load(() => btr.SettingsModal.toggle(true))

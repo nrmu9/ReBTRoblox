@@ -1,4 +1,4 @@
-BTRoblox
+ReBTRoblox
 ========
 
-BTRoblox does not collect any personal data.
+ReBTRoblox does not collect any personal data.

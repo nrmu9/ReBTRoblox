@@ -130,7 +130,7 @@ const run = async () => {
 	const only = (args.find((arg) => arg.startsWith("--target=")) || "").split("=")[1]
 	const targets = only ? [only] : Object.keys(EXTENSIONS)
 
-	const { version } = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
+	const { name: pkgName, version } = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
 
 	for (const target of targets) {
 		if (!EXTENSIONS[target]) {
@@ -146,7 +146,7 @@ const run = async () => {
 	for (const target of targets) {
 		await build(target)
 
-		const name = `btroblox-${version}-${target}.${EXTENSIONS[target]}`
+		const name = `${pkgName}-${version}-${target}.${EXTENSIONS[target]}`
 		const archive = zip(collect(DIST))
 
 		fs.writeFileSync(path.join(OUT, name), archive)

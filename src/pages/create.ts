@@ -228,14 +228,14 @@ pageInit.create = () => {
 			}
 		})
 
-		BTRoblox.webpackHook = webpackHook
+		ReBTRoblox.webpackHook = webpackHook
 
 		webpackHook.init()
 	})
 
 	// Add settings
 	injectScript.call("createAddBTRSettings", () => {
-		const { webpackHook } = BTRoblox
+		const { webpackHook } = ReBTRoblox
 		const { objects } = webpackHook
 
 		reactHook.hijackConstructor(

@@ -53,7 +53,7 @@ export const SHARED_DATA = {
 					excludeMatches: details.exclude_matches,
 					js: [
 						{
-							code: `const SHARED_DATA_PAYLOAD = ${dataString}; window.BTRoblox?.SHARED_DATA?.payloadPromise?.$resolve()`,
+							code: `const SHARED_DATA_PAYLOAD = ${dataString}; window.ReBTRoblox?.SHARED_DATA?.payloadPromise?.$resolve()`,
 						},
 					],
 					allFrames: details.all_frames,
@@ -123,8 +123,8 @@ export const SHARED_DATA = {
 
 				this.syncLoadError =
 					typeof (navigator as any).brave === "undefined"
-						? `BTRoblox failed to initialize properly for an unknown reason.\nSome features may not work properly for the time being.`
-						: `BTRoblox is currently experiencing issues on the Brave browser.\nSome features may not work properly for the time being.`
+						? `ReBTRoblox failed to initialize properly for an unknown reason.\nSome features may not work properly for the time being.`
+						: `ReBTRoblox is currently experiencing issues on the Brave browser.\nSome features may not work properly for the time being.`
 
 				dataPayload = await new Promise((resolve) =>
 					backgroundScript.send("getSharedData", (data: any) => resolve(data)),
@@ -149,7 +149,7 @@ export const SHARED_DATA = {
 // Published so the registered payload script, which cannot see module scope,
 // can resolve payloadPromise once it defines SHARED_DATA_PAYLOAD.
 if (!IS_BACKGROUND_PAGE) {
-	window.BTRoblox = Object.assign(window.BTRoblox ?? {}, { SHARED_DATA })
+	window.ReBTRoblox = Object.assign(window.ReBTRoblox ?? {}, { SHARED_DATA })
 }
 
 if (IS_BACKGROUND_PAGE) {

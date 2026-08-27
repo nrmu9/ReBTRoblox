@@ -12,7 +12,7 @@ export interface StorageGetOptions {
 }
 
 export const btrLocalStorage = {
-	keyPrefix: "BTRoblox:",
+	keyPrefix: "ReBTRoblox:",
 
 	setItem(key: string, value: unknown, params?: StorageSetOptions): boolean {
 		key = this.keyPrefix + key
@@ -91,7 +91,7 @@ export const btrLocalStorage = {
 			if (
 				key.startsWith("btrLayeredCache-") ||
 				key.startsWith("btr-") ||
-				key === "BTRoblox:homeShowSecondRow"
+				key === "ReBTRoblox:homeShowSecondRow"
 			) {
 				// Remove legacy data
 				if (key === "btr-sv-settings") {

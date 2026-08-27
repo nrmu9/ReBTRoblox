@@ -1,6 +1,6 @@
 "use strict"
 
-// Local eval bridge for the BTRoblox DEV build. No dependencies.
+// Local eval bridge for the ReBTRoblox DEV build. No dependencies.
 
 const http = require("node:http")
 

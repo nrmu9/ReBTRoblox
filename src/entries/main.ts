@@ -47,7 +47,7 @@ installExtensions()
 
 // The background page reaches these through chrome.scripting.executeScript,
 // which cannot see module scope.
-window.BTRoblox = Object.assign(window.BTRoblox ?? {}, { SETTINGS, SettingsModal })
+window.ReBTRoblox = Object.assign(window.ReBTRoblox ?? {}, { SETTINGS, SettingsModal })
 
 if (IS_DEV_MODE) {
 	void import("@/dev/probe").then(({ startDevProbe }) => startDevProbe())
@@ -168,8 +168,8 @@ backgroundScript.send("checkPermissions", (hasPermissions: boolean) => {
 			id="btr-permission-banner"
 			style="position:fixed;width:100%;height:24px;left:0;top:40px;background:red;color:white;cursor:pointer;z-index:100000;text-align:center;user-select:none;"
 		>
-			BTRoblox needs some permissions to work properly. Click here or click the extension button to fix
-			the issue.
+			ReBTRoblox needs some permissions to work properly. Click here or click the extension button to
+			fix the issue.
 		</div>`
 
 		document.$watch(">body").$then((body) => body.append(alert))
@@ -183,7 +183,7 @@ backgroundScript.send("checkPermissions", (hasPermissions: boolean) => {
 				})
 			})
 		} else {
-			alert.textContent = `BTRoblox needs some permissions to work properly. Click the extension button to fix the issue.`
+			alert.textContent = `ReBTRoblox needs some permissions to work properly. Click the extension button to fix the issue.`
 			alert.style.cursor = ""
 		}
 	}

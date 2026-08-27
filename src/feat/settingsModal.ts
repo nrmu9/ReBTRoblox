@@ -178,7 +178,7 @@ export const SettingsModal: SettingsModalState = {
 		<div class=btr-settings-modal>
 			<div class=btr-settings>
 				<div class=btr-settings-header>
-					<div class=btr-settings-header-title>BTRoblox</div>
+					<div class=btr-settings-header-title>ReBTRoblox</div>
 					<div style="flex: 1 1 auto"></div>
 					<div class="btr-settings-header-close btr-settings-toggle">✖</div>
 				</div>

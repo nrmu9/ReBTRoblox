@@ -12,7 +12,7 @@ pageInit.create_dashboard = () => {
 	// Adjust options menu items
 	if (SETTINGS.get("create.assetOptions")) {
 		injectScript.call("createAssetOptions", () => {
-			const { webpackHook } = BTRoblox
+			const { webpackHook } = ReBTRoblox
 			const { objects } = webpackHook
 
 			const Link = (url: string, entry: any) =>
@@ -252,7 +252,7 @@ pageInit.create_dashboard = () => {
 	// Add download option to version history
 	if (SETTINGS.get("create.downloadVersion")) {
 		injectScript.call("createDownloadVersion", () => {
-			const { webpackHook } = BTRoblox
+			const { webpackHook } = ReBTRoblox
 			const { objects } = webpackHook
 
 			reactHook.hijackConstructor(

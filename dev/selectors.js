@@ -1,7 +1,7 @@
 "use strict"
 
 // Pulls the Roblox-targeting selectors out of the source so they can be checked
-// against live pages. BTRoblox's own markup is skipped: it is ours, so it cannot
+// against live pages. ReBTRoblox's own markup is skipped: it is ours, so it cannot
 // drift out from under us.
 
 const fs = require("node:fs")

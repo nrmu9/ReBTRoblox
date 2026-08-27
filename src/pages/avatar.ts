@@ -168,7 +168,7 @@ pageInit.avatar = () => {
 						(target: any, thisArg: any, args: any[]) => {
 							if (args[0] === "btrGetWearingAssets") {
 								wearingAssets = args[1]
-								throw "BTRoblox: abort (this should never be visible)"
+								throw "ReBTRoblox: abort (this should never be visible)"
 							}
 
 							return target.apply(thisArg, args)

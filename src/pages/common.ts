@@ -569,7 +569,7 @@ const initReactFriends = () => {
 								if (carouselName === "WebHomeFriendsCarousel") {
 									const isTwoLines = value.length < friendsList.length
 									localStorage.setItem(
-										"BTRoblox:homeFriendsIsTwoLines",
+										"ReBTRoblox:homeFriendsIsTwoLines",
 										isTwoLines ? "true" : "false",
 									)
 
@@ -603,7 +603,7 @@ const initReactFriends = () => {
 					if (carouselName === "WebHomeFriendsCarousel") {
 						if (
 							!friendsList &&
-							localStorage.getItem("BTRoblox:homeFriendsIsTwoLines") === "true"
+							localStorage.getItem("ReBTRoblox:homeFriendsIsTwoLines") === "true"
 						) {
 							try {
 								result.props.className = `${result.props.className ?? ""} btr-friends-loading-two-lines`
@@ -1758,10 +1758,10 @@ pageInit.www = () => {
 
 						if (props.isGetCurrencyCallDone && props.isExperimentCallDone) {
 							if (Number.isSafeInteger(props.robuxAmount)) {
-								localStorage.setItem("BTRoblox:cachedRobux", props.robuxAmount)
+								localStorage.setItem("ReBTRoblox:cachedRobux", props.robuxAmount)
 							}
 						} else {
-							const cachedRobux = localStorage.getItem("BTRoblox:cachedRobux")
+							const cachedRobux = localStorage.getItem("ReBTRoblox:cachedRobux")
 
 							if (cachedRobux) {
 								props.isExperimentCallDone = true

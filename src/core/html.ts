@@ -1,5 +1,18 @@
 import { assert } from "@/core/util"
 
+/**
+ * Builds a detached <template> from a tagged literal.
+ *
+ * Interpolated values never reach the html parser. Each one is replaced by a
+ * `!btrN!` marker first, the markup is parsed with only those markers in it,
+ * and the values are substituted afterwards by walking the parsed tree and
+ * writing them into text nodes and attribute values, where they stay data. So
+ * a value cannot introduce an element or an attribute however it is written,
+ * and the innerHTML below only ever sees literals from this codebase.
+ *
+ * AMO's scanner flags that assignment as an unsafe innerHTML anyway, since it
+ * cannot see where the string came from.
+ */
 export const htmltemplate = function (
 	pieces: TemplateStringsArray | string,
 	...args: unknown[]

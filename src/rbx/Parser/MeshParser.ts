@@ -439,7 +439,7 @@ export const RBXMeshParser = {
 
 							assertWarn(
 								stream.GetRemaining() === 0,
-								"[BTRoblox] Draco bitstream has extra data",
+								"[ReBTRoblox] Draco bitstream has extra data",
 							)
 
 							for (const attribute of data.attributes) {
@@ -478,7 +478,7 @@ export const RBXMeshParser = {
 										)
 										break
 									default:
-										console.warn("[BTRoblox] Unknown draco attribute", attribute)
+										console.warn("[ReBTRoblox] Unknown draco attribute", attribute)
 								}
 							}
 

@@ -1,12 +1,12 @@
 {
-	"name": "BTRoblox - Making Roblox Better",
-	"short_name": "BTRoblox",
+	"name": "ReBTRoblox - Recontinuation",
+	"short_name": "ReBTRoblox",
 	"description": "Enhance your Roblox experience!",
 	"author": "nrmu9, AntiBoomz",
 	"icons": {
 		"128": "res/icon_128.png"
 	},
-	"action_title": "Open BTRoblox Settings",
+	"action_title": "Open ReBTRoblox Settings",
 	"permissions": ["contextMenus", "scripting", "storage"],
 	"host_permissions": ["*://*.roblox.com/", "*://*.rbxcdn.com/"],
 	"web_accessible_resources": ["/res/*", "/css/*"],
