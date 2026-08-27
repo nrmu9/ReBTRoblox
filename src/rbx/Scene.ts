@@ -44,7 +44,11 @@ export const RBXScene = (() => {
 			renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 			renderer.setClearAlpha(0)
 			renderer.shadowMap.enabled = true
-			renderer.shadowMap.type = THREE.PCFSoftShadowMap
+			// three removed PCFSoftShadowMap: WebGLShadowMap warns and silently swaps
+			// in PCFShadowMap, so this is what has actually been rendering. The soft
+			// variant now lives behind VSMShadowMap, which needs its own blur tuning
+			// and looks different, so switching to it should be a deliberate change.
+			renderer.shadowMap.type = THREE.PCFShadowMap
 
 			const canvas = (this.canvas = renderer.domElement)
 			canvas.style = `
