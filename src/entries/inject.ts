@@ -2563,35 +2563,6 @@ const startInject = () => {
 					},
 				)
 			},
-			smallChatButton: () => {
-				angularHook.hijackModule("chat", {
-					chatController(target: any, thisArg: any, args: any[], argsMap: any) {
-						const result = target.apply(thisArg, args)
-
-						try {
-							const { $scope, chatUtility } = argsMap
-
-							const library = $scope.chatLibrary
-							const width = library.chatLayout.widthOfChat
-
-							$scope.$watch(
-								() => library.chatLayout.collapsed,
-								(value: any) => {
-									library.chatLayout.widthOfChat = value ? 54 + 6 : width
-									chatUtility.updateDialogsPosition(library)
-								},
-							)
-						} catch (ex) {
-							console.error(ex)
-							if (IS_DEV_MODE) {
-								alert("hijackAngular Error")
-							}
-						}
-
-						return result
-					},
-				})
-			},
 			experiments: () => {
 				const modified: Record<string, any> = {}
 				const initial: Record<string, any> = {}
@@ -4351,7 +4322,6 @@ const startInject = () => {
 			"higherRobuxPrecision",
 			"hideFriendActivity",
 			"ignoreR6Warning",
-			"smallChatButton",
 			"hijackAuth",
 			"webpackHook",
 			"removeAccessoryLimits",

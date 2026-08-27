@@ -161,27 +161,27 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	}
 }
 
-/* New Chat */
+/* Chat.
 
-.btr-small-chat-button.chat-container.collapsed .chat-main {
-	width: 54px;
+   Roblox rebuilt this in react and dropped the collapsed state the old rules
+   worked against, so hiding and minimising target the react widget. Minimised
+   means collapsed to its header, which the header itself toggles back open. */
+
+body.btr-hide-chat .react-chat-root,
+body.btr-hide-chat #chat-container {
+	display: none !important;
 }
 
-.btr-small-chat-button.chat-container #chat-group-create-btn {
-	display: none;
+body.btr-minimize-chat .react-chat-root:not(.btr-chat-open) {
+	height: auto !important;
 }
 
-.btr-small-chat-button.chat-container #chat-friend-list {
-	max-height: 362px;
+body.btr-minimize-chat .react-chat-root:not(.btr-chat-open) section > *:not(:first-child) {
+	display: none !important;
 }
 
-.btr-small-chat-button.chat-container .chat-main .chat-header .notification-red {
-	margin: -10px -16px 0 0;
-}
-
-.btr-small-chat-button.chat-container.collapsed .chat-header .chat-header-title {
-	height: 16px;
-	overflow: hidden;
+body.btr-minimize-chat .react-chat-root section > div:first-child {
+	cursor: pointer;
 }
 
 /* Sidebar Blog Feed */

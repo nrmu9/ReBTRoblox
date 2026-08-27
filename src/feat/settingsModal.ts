@@ -376,6 +376,8 @@ export const SettingsModal: SettingsModalState = {
 				"navigation.elements",
 				"messages.markAllAsRead",
 				"messages.pageJump",
+				"general.hideChat",
+				"general.smallChatButton",
 				"general.hoverPreviewMode",
 				"itemdetails.itemPreviewer",
 				"itemdetails.explorerButton",

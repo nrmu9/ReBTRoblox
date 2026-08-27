@@ -1887,45 +1887,40 @@ pageInit.www = () => {
 
 	// Chat
 
-	if (SETTINGS.get("general.hideChat")) {
-		bodyWatcher.$watch("#chat-container", (cont: HTMLElement) => cont.remove())
-	} else {
-		if (SETTINGS.get("general.smallChatButton")) {
-			bodyWatcher.$watch("#chat-container", (cont: HTMLElement) =>
-				cont.classList.add("btr-small-chat-button"),
-			)
+	// Roblox replaced the angular chat with a react one, so the old container is
+	// just a leftover shell and hiding it no longer hides anything. Both settings
+	// target the react widget now.
+	const applyChatSettings = () => {
+		const hidden = SETTINGS.get("general.hideChat")
+		const minimized = !hidden && SETTINGS.get("general.smallChatButton")
 
-			injectScript.call("smallChatButton", () => {
-				angularHook.hijackModule("chat", {
-					chatController(target: any, thisArg: any, args: any[], argsMap: any) {
-						const result = target.apply(thisArg, args)
+		document.body?.classList.toggle("btr-hide-chat", hidden)
+		document.body?.classList.toggle("btr-minimize-chat", minimized)
 
-						try {
-							const { $scope, chatUtility } = argsMap
-
-							const library = $scope.chatLibrary
-							const width = library.chatLayout.widthOfChat
-
-							$scope.$watch(
-								() => library.chatLayout.collapsed,
-								(value: any) => {
-									library.chatLayout.widthOfChat = value ? 54 + 6 : width
-									chatUtility.updateDialogsPosition(library)
-								},
-							)
-						} catch (ex) {
-							console.error(ex)
-							if (IS_DEV_MODE) {
-								alert("hijackAngular Error")
-							}
-						}
-
-						return result
-					},
-				})
-			})
-		}
 	}
+
+	// Collapsed to its header, the chat would have no way back open, so the
+	// header toggles it. React rerenders the widget, so this is delegated.
+	document.$on("click", ".react-chat-root section > div:first-child", (event: Event) => {
+		if (!SETTINGS.get("general.smallChatButton") || SETTINGS.get("general.hideChat")) {
+			return
+		}
+
+		// The new chat button in the header has its own job.
+		if ((event.target as HTMLElement).closest("button")) {
+			return
+		}
+
+		;(event.currentTarget as HTMLElement).closest(".react-chat-root")?.classList.toggle("btr-chat-open")
+	})
+
+	bodyWatcher.$watch("#chat-container", applyChatSettings)
+	bodyWatcher.$watchAll(".react-chat-root", applyChatSettings, { continuous: true })
+
+	SETTINGS.onChange("general.hideChat", applyChatSettings)
+	SETTINGS.onChange("general.smallChatButton", applyChatSettings)
+
+	applyChatSettings()
 
 	// Experiments
 
