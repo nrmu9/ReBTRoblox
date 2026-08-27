@@ -29,10 +29,21 @@ export const SettingsModal: SettingsModalState = {
 		this.visible = visible
 
 		if (visible) {
-			document.$watch(
-				">body",
-				(body: HTMLElement) => this.visible && body.appendChild(this.settingsDiv),
-			)
+			document.$watch(">body", (body: HTMLElement) => {
+				if (!this.visible) {
+					return
+				}
+
+				body.appendChild(this.settingsDiv)
+
+				// The open class has to land on a later frame than the mount, or the
+				// starting state never paints and there is nothing to transition from.
+				requestAnimationFrame(() => {
+					if (this.visible) {
+						this.settingsDiv.classList.add("btr-settings-open")
+					}
+				})
+			})
 
 			if (location.hostname === "create.roblox.com") {
 				this.settingsDiv.classList.add("btr-dark-theme")
@@ -72,7 +83,19 @@ export const SettingsModal: SettingsModalState = {
 			this.switchContent("main")
 
 			sessionStorage.removeItem("btr-settings-open")
-			this.settingsDiv.remove()
+
+			// Stay mounted until the fade out finishes. transitionend alone would
+			// strand the node if the animation never runs, so a timer backs it up.
+			this.settingsDiv.classList.remove("btr-settings-open")
+
+			const unmount = () => {
+				if (!this.visible) {
+					this.settingsDiv.remove()
+				}
+			}
+
+			this.settingsDiv.addEventListener("transitionend", unmount, { once: true })
+			setTimeout(unmount, 250)
 
 			if (this.themeObserver) {
 				this.themeObserver.disconnect()

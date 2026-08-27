@@ -1,3 +1,34 @@
+/* Roblox publishes its design tokens on :root and swaps them with the site
+   theme, so the modal borrows them directly and only carries fallbacks for
+   surfaces that predate them, like create.roblox.com. That is what keeps this
+   looking like the rest of the site instead of approximating it. */
+.btr-settings-modal {
+	--btr-modal-surface: var(--color-surface-100, #ffffff);
+	--btr-modal-raised: var(--color-surface-200, #f2f4f5);
+	--btr-modal-sunken: var(--color-surface-300, #e8ebed);
+	--btr-modal-text: var(--color-content-default, #393b3d);
+	--btr-modal-text-strong: var(--color-content-emphasis, #191919);
+	--btr-modal-text-muted: var(--color-content-muted, #6b6f76);
+	--btr-modal-stroke: var(--color-stroke-default, rgba(25, 25, 25, 0.12));
+	--btr-modal-hover: var(--color-state-hover, rgba(25, 25, 25, 0.06));
+	--btr-modal-accent: var(--color-content-link, #00a2ff);
+	--btr-modal-radius: var(--radius-medium, 8px);
+	--btr-modal-radius-sm: var(--radius-small, 4px);
+	--btr-modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.btr-settings-modal.btr-dark-theme {
+	--btr-modal-surface: var(--color-surface-100, #232527);
+	--btr-modal-raised: var(--color-surface-200, #2b2d31);
+	--btr-modal-sunken: var(--color-surface-300, #34373c);
+	--btr-modal-text: var(--color-content-default, #e4e4e4);
+	--btr-modal-text-strong: var(--color-content-emphasis, #ffffff);
+	--btr-modal-text-muted: var(--color-content-muted, #a8adb8);
+	--btr-modal-stroke: var(--color-stroke-default, rgba(208, 217, 251, 0.12));
+	--btr-modal-hover: var(--color-state-hover, rgba(208, 217, 251, 0.08));
+	--btr-modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
 .btr-settings-modal {
 	position: fixed;
 	display: flex;
@@ -15,7 +46,7 @@
 	pointer-events: none;
 	z-index: 10000;
 
-	color: #191919;
+	color: var(--btr-modal-text);
 }
 
 .btr-settings-modal,
@@ -32,11 +63,11 @@
 	height: auto;
 	max-height: 90%;
 
-	background: white;
-	box-shadow: 0 -5px 20px rgba(25, 25, 25, 0.15);
+	background: var(--btr-modal-surface);
+	box-shadow: var(--btr-modal-shadow);
 
-	color: #191919;
-	border-radius: 3px;
+	color: var(--btr-modal-text);
+	border-radius: var(--btr-modal-radius);
 
 	overflow: hidden;
 	overscroll-behavior: contain;
@@ -45,24 +76,14 @@
 	position: relative;
 }
 
-.btr-dark-theme .btr-settings {
-	background: #232527;
-	box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.3);
-	color: white;
-}
-
 .btr-settings-header {
 	flex: 0 0 auto;
 	display: flex;
 	height: 30px;
 	align-items: center;
-	background: #000;
-	color: rgb(203, 203, 203);
-}
-
-.btr-light-theme .btr-settings-header {
-	background: #dee1e3;
-	color: #393b3d;
+	background: var(--btr-modal-raised);
+	color: var(--btr-modal-text-strong);
+	border-bottom: 1px solid var(--btr-modal-stroke);
 }
 
 .btr-dark-theme .btr-settings-header {
@@ -227,7 +248,7 @@
 	padding: 0 6px;
 
 	padding-right: 4px;
-	border-top: 1px solid #e8e8e8;
+	border-top: 1px solid var(--btr-modal-stroke);
 }
 
 .btr-dark-theme .btr-settings-footer {
@@ -369,7 +390,7 @@
 }
 
 #btr-settings-main group:not(:first-child) {
-	border-top: 1px solid #e8e8e8;
+	border-top: 1px solid var(--btr-modal-stroke);
 }
 
 .btr-settings-content group .btr-setting-group-title-container {
@@ -764,5 +785,34 @@
 	.btr-setting-reset-button {
 		margin: 0;
 		right: 2px;
+	}
+}
+
+/* The modal is mounted and unmounted rather than toggled, so the open class is
+   added a frame after mounting and the unmount waits for the fade out. */
+.btr-settings-modal {
+	opacity: 0;
+	transition: opacity 140ms ease;
+}
+
+.btr-settings-modal.btr-settings-open {
+	opacity: 1;
+}
+
+.btr-settings-modal .btr-settings {
+	transform: translateY(10px) scale(0.985);
+	transition:
+		transform 170ms cubic-bezier(0.2, 0, 0.2, 1),
+		opacity 170ms ease;
+}
+
+.btr-settings-modal.btr-settings-open .btr-settings {
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-settings-modal,
+	.btr-settings-modal .btr-settings {
+		transition: none;
 	}
 }
