@@ -18,7 +18,10 @@
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"lint": "oxlint",
-		"lint:fix": "oxlint --fix"
+		"lint:fix": "oxlint --fix",
+		"package": "node dev/package.js",
+		"package:firefox": "node dev/package.js --target=firefox",
+		"package:chrome": "node dev/package.js --target=chrome"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.2.7",
