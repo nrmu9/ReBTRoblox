@@ -43,7 +43,7 @@ const TARGETS = {
 			manifest.browser_action = { default_title: shared.action_title }
 			manifest.browser_specific_settings = {
 				gecko: {
-					id: "btroblox@antiboomz.com",
+					id: "btroblox@nrmu.eu",
 					strict_min_version: "128.0",
 					data_collection_permissions: { required: ["none"] },
 				},
