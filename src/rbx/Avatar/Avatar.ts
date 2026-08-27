@@ -20,7 +20,7 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 import { AccessoryAssetTypeIds } from "@/pages/common"
 import { EventEmitter } from "@/rbx/EventEmitter"
 import type { Mesh } from "@/rbx/Parser/MeshParser"
-import type { CFrameTuple, UVBox } from "@/rbx/types"
+import type { CFrameTuple, UVBox, Vector3Tuple } from "@/rbx/types"
 
 export const RBXAvatar = (() => {
 	function getFirstLod(mesh: Mesh) {
@@ -71,8 +71,10 @@ export const RBXAvatar = (() => {
 	 * parts are rigid and get the flag toggled off. Omit is needed because three
 	 * declares that flag readonly true.
 	 */
-	type RigMesh = Omit<THREE.SkinnedMesh, "isSkinnedMesh" | "boundingBox" | "boundingSphere"> & {
+	type RigMesh = Omit<THREE.SkinnedMesh, "isSkinnedMesh" | "boundingBox" | "boundingSphere" | "material"> & {
 		isSkinnedMesh: boolean
+		/** Rig parts are always built with exactly one standard material. */
+		material: THREE.MeshStandardMaterial
 		boundingBox: THREE.Box3 | null
 		boundingSphere: THREE.Sphere | null
 		rbxBodypart?: any
@@ -82,15 +84,48 @@ export const RBXAvatar = (() => {
 		rbxMesh?: any
 		rbxMeshId?: any
 		rbxMeshLoading?: any
-		rbxOrigSize?: any
-		rbxScale?: any
+		rbxOrigSize: Vector3Tuple
+		rbxScale: Vector3Tuple
 		rbxScaleMod?: any
 		rbxScaleType?: any
-		rbxSize?: any
+		rbxSize: Vector3Tuple
 		layeredMatrix?: any
 		matrixNoScale?: any
 		skinnedNoScale?: any
 		skinnedPoseMatrix?: any
+		[key: string]: any
+	}
+
+	/** A node in the rig tree. HumanoidRootPart is a bare Group, the rest are meshes. */
+	type RigPart = RigMesh
+
+	/** One Motor6D. Roblox CFrames arrive as matrices, so every C value is one. */
+	type RigJoint = {
+		origC0: THREE.Matrix4
+		origC1: THREE.Matrix4
+		C0: THREE.Matrix4
+		C1Inverse: THREE.Matrix4
+		bakedC0: THREE.Matrix4
+		bakedC1Inverse: THREE.Matrix4
+		transform: THREE.Matrix4
+		layeredMatrix: THREE.Matrix4
+		matrixNoScale: THREE.Matrix4
+		skinnedNoScale: THREE.Matrix4
+		skinnedPoseMatrix: THREE.Matrix4
+		parent?: RigJoint
+		name: string
+		part0: RigPart
+		part1: RigPart
+		[key: string]: any
+	}
+
+	/** A named attachment point, positioned relative to the part that owns it. */
+	type RigAttachment = {
+		origCFrame: THREE.Matrix4
+		cframe: THREE.Matrix4
+		bakedCFrame: THREE.Matrix4
+		parent: RigPart
+		name: string
 		[key: string]: any
 	}
 
@@ -1070,6 +1105,15 @@ export const RBXAvatar = (() => {
 	class Avatar extends EventEmitter {
 		[key: string]: any
 
+		// Declared so the rig containers keep their element type through
+		// Object.values, which the index signature above otherwise widens away.
+		// declare emits nothing, which matters because ES2022 class fields would
+		// otherwise define these as undefined after the constructor sets them.
+		declare parts: Record<string, RigPart>
+		declare joints: Record<string, RigJoint>
+		declare attachments: Record<string, RigAttachment>
+		declare sortedJointsArray: RigJoint[]
+
 		constructor() {
 			super()
 			this.root = new THREE.Group()
@@ -1451,7 +1495,7 @@ export const RBXAvatar = (() => {
 			}
 
 			// Update parts
-			for (const part of Object.values(this.parts) as any[]) {
+			for (const part of Object.values(this.parts)) {
 				part.matrix.copy(part.matrixNoScale).scale(part.scale)
 				part.matrixWorldNeedsUpdate = true
 			}
@@ -1496,7 +1540,7 @@ export const RBXAvatar = (() => {
 			}
 
 			// Update bones
-			for (const part of Object.values(this.parts) as any[]) {
+			for (const part of Object.values(this.parts)) {
 				if (part.rbxBones) {
 					this.updateBones(part)
 					part.skeleton.btr_apply()
@@ -1753,7 +1797,7 @@ export const RBXAvatar = (() => {
 				}
 
 				for (const child of tree.children) {
-					const joint = (joints[child.name] = <Record<string, any>>{
+					const joint = (joints[child.name] = <RigJoint>{
 						origC0: child.C0,
 						origC1: child.C1,
 
@@ -1893,7 +1937,7 @@ export const RBXAvatar = (() => {
 			}
 
 			// Update parts
-			for (const part of Object.values(this.parts) as any[]) {
+			for (const part of Object.values(this.parts)) {
 				const bodypart = bodypartOverride[part.name] || part.rbxDefaultBodypart
 
 				if (part.rbxBodypart !== bodypart) {
@@ -1981,11 +2025,12 @@ export const RBXAvatar = (() => {
 				]
 
 				if (bodypart.pbrEnabled) {
-					material.map = this.textures.pbr[part.name]
+					const pbrMap = this.textures.pbr[part.name]
+					material.map = pbrMap
 					material.needsUpdate = true
 
 					// only draw bodycolor if alphamode = 0
-					material.map.setSourceEnabled(0, bodypart.pbrAlphaMode === 0)
+					pbrMap.setSourceEnabled(0, bodypart.pbrAlphaMode === 0)
 
 					if (bodypart.pbrAlphaMode === 1) {
 						// Transparent
@@ -2041,7 +2086,7 @@ export const RBXAvatar = (() => {
 			// Humanoid scaling
 			const updateSizes = () => {
 				// Scale parts
-				for (const part of Object.values(this.parts) as any[]) {
+				for (const part of Object.values(this.parts)) {
 					const scaleMod = part.rbxScaleMod
 
 					part.rbxSize = part.rbxBodypart.size || part.rbxOrigSize
@@ -2067,13 +2112,13 @@ export const RBXAvatar = (() => {
 				}
 
 				// Scale joints
-				for (const joint of Object.values(this.joints) as any[]) {
+				for (const joint of Object.values(this.joints)) {
 					scalePosition(joint.bakedC0.copy(joint.C0), joint.part0.rbxScaleMod)
 					scalePosition(joint.bakedC1Inverse.copy(joint.C1Inverse), joint.part1.rbxScaleMod)
 				}
 
 				// Scale attachments
-				for (const att of Object.values(this.attachments) as any[]) {
+				for (const att of Object.values(this.attachments)) {
 					scalePosition(att.bakedCFrame.copy(att.cframe), att.parent.rbxScaleMod)
 				}
 
@@ -2445,7 +2490,7 @@ export const RBXAvatar = (() => {
 
 			const bodyparts: any[] = []
 
-			for (const part of Object.values(this.parts) as any[]) {
+			for (const part of Object.values(this.parts)) {
 				const bodypart = part.rbxBodypart
 
 				if (bodypart.asset) {
@@ -2494,7 +2539,7 @@ export const RBXAvatar = (() => {
 					this.layeredCurrentRequest = null
 
 					// reset bodyparts
-					for (const part of Object.values(this.parts) as any[]) {
+					for (const part of Object.values(this.parts)) {
 						if (part.rbxLayered) {
 							applyMesh(part, part.rbxMesh)
 						}
@@ -2524,7 +2569,7 @@ export const RBXAvatar = (() => {
 			this.layeredCurrentRequest = request
 
 			// reset bodyparts
-			for (const part of Object.values(this.parts) as any[]) {
+			for (const part of Object.values(this.parts)) {
 				if (part.rbxLayered) {
 					applyMesh(part, part.rbxMesh)
 				}
@@ -2850,7 +2895,7 @@ export const RBXAvatar = (() => {
 			const playerGroups = groups.filter((x) => x.name.startsWith("Player"))
 			let numEmptyPartsAccepted = 15 - playerGroups.length
 
-			for (const part of Object.values(this.parts) as any[]) {
+			for (const part of Object.values(this.parts)) {
 				const mesh = part.rbxMesh
 				if (!mesh) {
 					continue
