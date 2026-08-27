@@ -1,5 +1,12 @@
 import { IS_DEV_MODE } from "@/core/env"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
+import { assert } from "@/core/util"
+
+/**
+ * Any indexable numeric buffer. Draco writes into plain arrays and typed
+ * arrays interchangeably, so the shared shape is what matters, not which.
+ */
+type NumArray = { [index: number]: number, length: number }
 
 export interface DracoAttribute {
 	attributeType: number
@@ -9,6 +16,21 @@ export interface DracoAttribute {
 	uniqueId: number
 	decoderType: number | null
 	values?: ArrayLike<number>
+
+	// Assigned while decoding, per prediction scheme. Declared because the index
+	// signature below resolves to unknown, which is correct for anything we have
+	// not modelled but wrong for the fields the decoder itself writes.
+	output?: NumArray
+	input?: NumArray
+	predictionScheme?: number
+	predictionTransformType?: number
+	wrapMin?: number
+	wrapMax?: number
+	octaMaxQ?: number
+	flipNormals?: NumArray
+	isCreaseEdge?: NumArray
+	texOrientations?: NumArray
+
 	[key: string]: unknown
 }
 
@@ -463,7 +485,7 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodePredictionData(stream, parser, decoder, attribute, numValues, numComponents, predictionScheme, predictionTransformType) {
+	decodePredictionData(stream: ByteReader, parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute, numValues: number, numComponents: number, predictionScheme: number, predictionTransformType: number) {
 		// DecodePredictionData
 		
 		if(predictionScheme === MESH_PREDICTION_CONSTRAINED_MULTI_PARALLELOGRAM) {
@@ -525,17 +547,18 @@ export const DracoBitstream = {
 		}	
 	},
 	
-	computeOriginalValues(parser, decoder, attribute, numValues, numComponents, predictionScheme, predictionTransformType, output) {
+	computeOriginalValues(parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute, numValues: number, numComponents: number, predictionScheme: number, predictionTransformType: number, output: NumArray) {
 		// ComputeOriginalValues
 		let computeOriginalValue
 		
 		if(predictionTransformType === PREDICTION_TRANSFORM_WRAP) {
 			const wrapMax = attribute.wrapMax
 			const wrapMin = attribute.wrapMin
+			assert(wrapMax !== undefined && wrapMin !== undefined, "draco: missing wrap range")
 			
 			const maxDif = 1 + wrapMax - wrapMin
 			
-			computeOriginalValue = (predictedArray, predictedIndex,  corrArray, corrIndex,  outputArray, outputIndex) => {
+			computeOriginalValue = (predictedArray: NumArray, predictedIndex: number,  corrArray: NumArray, corrIndex: number,  outputArray: NumArray, outputIndex: number) => {
 				for(let i = 0; i < numComponents; i++) {
 					let value = Math.max(wrapMin, Math.min(wrapMax, predictedArray[predictedIndex + i])) + corrArray[corrIndex + i]
 					
@@ -547,6 +570,7 @@ export const DracoBitstream = {
 			}
 			
 		} else if(predictionTransformType === PREDICTION_TRANSFORM_NORMAL_OCTAHEDRON_CANONICALIZED) {
+			assert(attribute.octaMaxQ !== undefined, "draco: missing octahedral quantization")
 			let maxQuantizedValue = (1 << attribute.octaMaxQ) - 1
 			let maxValue = maxQuantizedValue - 1
 			let centerValue = maxValue / 2
@@ -626,17 +650,17 @@ export const DracoBitstream = {
 				}
 			}
 			
-			const addAsUnsigned = (a, b) => {
+			const addAsUnsigned = (a: number, b: number) => {
 				return (a >= 0 ? a : 4294967296 + a) + (b >= 0 ? b : 4294967296 + b)
 			}
 			
-			const modMax = x => {
+			const modMax = (x: number) => {
 				return x > centerValue ? x - maxQuantizedValue
 					: x < -centerValue ? x + maxQuantizedValue
 					: x
 			}
 			
-			computeOriginalValue = (predictedArray, predictedIndex,  corrArray, corrIndex,  outputArray, outputIndex) => {
+			computeOriginalValue = (predictedArray: NumArray, predictedIndex: number,  corrArray: NumArray, corrIndex: number,  outputArray: NumArray, outputIndex: number) => {
 				let pred = [
 					predictedArray[predictedIndex + 0] - centerValue,
 					predictedArray[predictedIndex + 1] - centerValue
@@ -678,7 +702,7 @@ export const DracoBitstream = {
 			}
 			
 		} else {
-			computeOriginalValue = (predictedArray, predictedIndex,  corrArray, corrIndex,  outputArray, outputIndex) => {
+			computeOriginalValue = (predictedArray: NumArray, predictedIndex: number,  corrArray: NumArray, corrIndex: number,  outputArray: NumArray, outputIndex: number) => {
 				for(let i = 0; i < numComponents; i++) {
 					outputArray[outputIndex + i] = predictedArray[predictedIndex + i] + corrArray[corrIndex + i]
 				}
@@ -710,13 +734,15 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodeAndTransformAttribute_Quantized(stream, parser, decoder, attribute) {
+	decodeAndTransformAttribute_Quantized(stream: ByteReader, parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute) {
 		// SequentialQuantizationAttributeDecoder::DecodeQuantizedDataInfo()
 		// AttributeQuantizationTransform::DecodeParameters
 		const numComponents = attribute.numComponents
+		assert(decoder.pointIds, "draco: decoder has no point ids")
 		const numValues = decoder.pointIds.length * numComponents
 		
 		const output = attribute.output
+		assert(output, "draco: attribute has no output buffer")
 		const minValues: number[] = []
 		
 		for(let i = 0; i < numComponents; i++) {
@@ -736,9 +762,11 @@ export const DracoBitstream = {
 		}
 	},
 	
-	decodeAndTransformAttribute_Normals(stream, parser, decoder, attribute) {
+	decodeAndTransformAttribute_Normals(stream: ByteReader, parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute) {
+		assert(decoder.pointIds, "draco: decoder has no point ids")
 		const numValues = decoder.pointIds.length * 2
 		const input = attribute.output
+		assert(input, "draco: attribute has no output buffer")
 		
 		const output: number[] = attribute.output = []
 		
@@ -773,8 +801,9 @@ export const DracoBitstream = {
 		}
 	},
 	
-	transformAttribute_Generic(parser, decoder, attribute) {
+	transformAttribute_Generic(parser: DracoParser, decoder: DracoDecoder, attribute: DracoAttribute) {
 		const output = attribute.output
+		assert(output, "draco: attribute has no output buffer")
 		
 		if(attribute.dataType === 9) { // DT_FLOAT32
 			for(let i = 0; i < output.length; i++) {
@@ -783,19 +812,19 @@ export const DracoBitstream = {
 			}
 		} else if(attribute.dataType === 10) { // DT_FLOAT64
 			for(let i = 0; i < output.length; i++) {
-				ByteReader.Converter.setBigUint64(0, output[i], true)
+				ByteReader.Converter.setBigUint64(0, BigInt(output[i]), true)
 				output[i] = ByteReader.Converter.getFloat64(0, true)
 			}
 		} else if(attribute.dataType === 11) { // DT_BOOL
 			for(let i = 0; i < output.length; i++) {
-				output[i] = output[i] !== 0
+				output[i] = output[i] !== 0 ? 1 : 0
 			}
 		}
 	},
 	
 	//
 	
-	LEB128(stream) {
+	LEB128(stream: ByteReader) {
 		let result = 0
 		let shift = 0
 		let value
@@ -969,7 +998,7 @@ export const DracoBitstream = {
 		}
 	},
 	
-	readBits(stream, parser, n) {
+	readBits(stream: ByteReader, parser: DracoParser, n: number) {
 		while(parser.bits_length < n) {
 			const byte = stream.UInt8()
 			
@@ -990,7 +1019,7 @@ export const DracoBitstream = {
 		return value
 	},
 	
-	flushBits(parser) {
+	flushBits(parser: DracoParser) {
 		parser.bits_value = 0
 		parser.bits_length = 0
 	},

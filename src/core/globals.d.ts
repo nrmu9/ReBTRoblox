@@ -46,8 +46,8 @@ declare global {
 		readonly classList: ReactWrappedClassList
 		[index: number]: ReactElementLike
 
-		matches(selector: any): boolean
-		find(selector: any): ReactWrapped | null
+		matches(selector: ReactSelector): boolean
+		find(selector: ReactSelector): ReactWrapped | null
 		parent(): ReactWrapped | null
 		prepend(elem: any): void
 		append(elem: any): void
@@ -58,6 +58,13 @@ declare global {
 
 		[key: string]: any
 	}
+
+	/**
+	 * What the react queries accept: a parsed string selector, or a predicate
+	 * run against each candidate element.
+	 */
+	type ReactPredicate = (elem: ReactElementLike) => boolean
+	type ReactSelector = string | ReactPredicate | readonly (string | ReactPredicate)[]
 
 	interface ReactConstructorHook {
 		index: number
@@ -90,10 +97,10 @@ declare global {
 			transform: (value: any, initial: any) => any
 		): void
 
-		queryElement(targets: any, queries: any, depth?: number, mustMatchRoot?: boolean, all?: boolean): any
-		querySelector(element: any, selectors: any, depth?: number, path?: boolean): any
-		querySelectorAll(element: any, selectors: any, depth?: number, path?: boolean): any
-		selectorMatches(elem: any, selectors: any): boolean
+		queryElement(targets: any, queries: ReactSelector, depth?: number, mustMatchRoot?: boolean, all?: boolean): any
+		querySelector(element: any, selectors: ReactSelector, depth?: number, path?: boolean): any
+		querySelectorAll(element: any, selectors: ReactSelector, depth?: number, path?: boolean): any
+		selectorMatches(elem: any, selectors: ReactSelector): boolean
 		parseReactStringSelector(selector: string): any[]
 		parseReactSelector(selectors: any): any
 
