@@ -1025,12 +1025,14 @@ for (const [name, currency] of Object.entries(RobuxToCash.Currencies) as [string
 	currency.name = name
 	currency.numFractions = 2
 
-	if (!currency.symbol || (currency.usdRate && (currency.symbol === "$" || currency.symbol === "£"))) {
-		currency.symbol = `${name} `
+	if (name === "None") {
+		// Leave the symbol empty. The defaulting below keys off a falsy symbol,
+		// so None would otherwise render as a literal "None " prefix.
+		continue
 	}
 
-	if (name === "None") {
-		continue
+	if (!currency.symbol || (currency.usdRate && (currency.symbol === "$" || currency.symbol === "£"))) {
+		currency.symbol = `${name} `
 	}
 
 	try {

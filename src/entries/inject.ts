@@ -275,6 +275,10 @@ const startInject = () => {
 			getSelectedOption() {
 				return this.selectedRobuxToCashOption
 			},
+			isEnabled() {
+				const option = this.getSelectedOption()
+				return !!option && option.name !== "none"
+			},
 			convert(robux: number) {
 				const option = this.getSelectedOption()
 
@@ -2103,7 +2107,7 @@ const startInject = () => {
 
 					const robux = parseInt(originalText.replace(/\D/g, ""), 10)
 
-					if (Number.isSafeInteger(robux)) {
+					if (Number.isSafeInteger(robux) && RobuxToCash.isEnabled()) {
 						const cash = RobuxToCash.convert(robux)
 
 						elem.append(
@@ -2123,7 +2127,7 @@ const startInject = () => {
 
 					const robux = parseInt(originalText.replace(/\D/g, ""), 10)
 
-					if (Number.isSafeInteger(robux)) {
+					if (Number.isSafeInteger(robux) && RobuxToCash.isEnabled()) {
 						const cash = RobuxToCash.convert(robux)
 
 						elem.append(
@@ -2143,7 +2147,7 @@ const startInject = () => {
 
 					const robux = parseInt(originalText.replace(/\D/g, ""), 10)
 
-					if (Number.isSafeInteger(robux)) {
+					if (Number.isSafeInteger(robux) && RobuxToCash.isEnabled()) {
 						const cash = RobuxToCash.convert(robux)
 
 						elem.append(
@@ -2158,7 +2162,7 @@ const startInject = () => {
 				reactHook.inject(".icon-robux-container", (elem: any) => {
 					const child = elem.find((x: any) => "amount" in x.props)
 
-					if (child) {
+					if (child && RobuxToCash.isEnabled()) {
 						const cash = RobuxToCash.convert(child[0].props.amount ?? 0)
 
 						child.after(
@@ -4178,7 +4182,7 @@ const startInject = () => {
 					if (Array.isArray(list)) {
 						const robux = parseInt(list.at(-1).replace(/\D/g, ""), 10)
 
-						if (Number.isSafeInteger(robux)) {
+						if (Number.isSafeInteger(robux) && RobuxToCash.isEnabled()) {
 							const cash = RobuxToCash.convert(robux)
 
 							list.push(
