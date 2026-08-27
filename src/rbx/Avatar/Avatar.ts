@@ -19,9 +19,10 @@ import { AssetType, BrickColor } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { AccessoryAssetTypeIds } from "@/pages/common"
 import { EventEmitter } from "@/rbx/EventEmitter"
+import type { Mesh } from "@/rbx/Parser/MeshParser"
 
 export const RBXAvatar = (() => {
-	function getFirstLod(mesh) {
+	function getFirstLod(mesh: Mesh) {
 		if (!mesh.firstLod && mesh.lods.length > 2) {
 			const firstLod = (mesh.firstLod = {
 				...mesh,
@@ -38,7 +39,7 @@ export const RBXAvatar = (() => {
 			maxVertex += 1
 
 			if (maxVertex < firstLod.vertices.length / 3) {
-				if (firstLod.skinIndices) {
+				if (firstLod.skinIndices && firstLod.skinWeights) {
 					firstLod.skinIndices = firstLod.skinIndices.subarray(0, maxVertex * 4)
 					firstLod.skinWeights = firstLod.skinWeights.subarray(0, maxVertex * 4)
 				}
@@ -94,7 +95,7 @@ export const RBXAvatar = (() => {
 		}
 	}
 
-	function applyMesh(obj, mesh) {
+	function applyMesh(obj: any, mesh: Mesh) {
 		const geom = obj.geometry
 
 		if (obj instanceof THREE.SkinnedMesh) {
@@ -103,7 +104,7 @@ export const RBXAvatar = (() => {
 				delete (obj as any).skeleton
 			}
 
-			if (mesh.bones) {
+			if (mesh.bones && mesh.skinIndices && mesh.skinWeights) {
 				const bones: any[] = []
 
 				const skinned = obj as any
@@ -179,7 +180,7 @@ export const RBXAvatar = (() => {
 		obj.visible = true
 	}
 
-	function clearGeometry(obj) {
+	function clearGeometry(obj: any) {
 		const geom = obj.geometry
 
 		if (obj instanceof THREE.SkinnedMesh) {
@@ -229,7 +230,7 @@ export const RBXAvatar = (() => {
 		])
 	}
 
-	const scalePosition = (matrix, scale) => {
+	const scalePosition = (matrix: any, scale: any) => {
 		const elements = matrix.elements
 		elements[12] *= scale.x
 		elements[13] *= scale.y
@@ -237,11 +238,11 @@ export const RBXAvatar = (() => {
 		return matrix
 	}
 
-	function solidColorDataURL(r, g, b) {
+	function solidColorDataURL(r: number, g: number, b: number) {
 		return `data:image/gif;base64,R0lGODlhAQABAPAA${btoa(String.fromCharCode(0, r, g, b, 255, 255))}/yH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==`
 	}
 
-	function createImage(src) {
+	function createImage(src: string) {
 		const img = new Image()
 		img.src = src
 		img.crossOrigin = "anonymous"
@@ -251,7 +252,7 @@ export const RBXAvatar = (() => {
 		return img
 	}
 
-	function createTexture(img) {
+	function createTexture(img: HTMLImageElement) {
 		const texture = new THREE.Texture(img)
 		texture.minFilter = THREE.LinearFilter
 		texture.wrapS = THREE.RepeatWrapping
@@ -288,7 +289,7 @@ export const RBXAvatar = (() => {
 			return emptyImage
 		}
 
-		drawImage(ctx, canvas) {
+		drawImage(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
 			if (this._value instanceof Image) {
 				ctx.drawImage(
 					this._value,
@@ -313,7 +314,7 @@ export const RBXAvatar = (() => {
 			return this._value
 		}
 
-		setValue(value) {
+		setValue(value: any) {
 			if (this._value !== (value || null)) {
 				this._value = value || null
 				this.update()
@@ -322,13 +323,13 @@ export const RBXAvatar = (() => {
 			return this
 		}
 
-		setHex(hex) {
+		setHex(hex: string) {
 			return this.setValue(hex[0] !== "#" ? "#" + hex : hex)
 		}
-		setRGB(r, g, b) {
+		setRGB(r: number, g: number, b: number) {
 			return this.setValue("#" + new THREE.Color(r, g, b).getHexString())
 		}
-		setImage(img) {
+		setImage(img: HTMLImageElement | null) {
 			return this.setValue(img)
 		}
 
@@ -342,11 +343,11 @@ export const RBXAvatar = (() => {
 			}
 		}
 
-		onUpdate(listener) {
+		onUpdate(listener: (...args: any[]) => void) {
 			this.listeners.push(listener)
 		}
 
-		removeOnUpdate(listener) {
+		removeOnUpdate(listener: (...args: any[]) => void) {
 			const index = this.listeners.indexOf(listener)
 
 			if (index !== -1) {
@@ -358,7 +359,7 @@ export const RBXAvatar = (() => {
 	class MergeTexture extends THREE.Texture {
 		[key: string]: any
 
-		constructor(width, height, ...sources) {
+		constructor(width: number, height: number, ...sources: any[]) {
 			const canvas = document.createElement("canvas")
 			canvas.width = width
 			canvas.height = height
@@ -373,7 +374,7 @@ export const RBXAvatar = (() => {
 			this.context = canvas.getContext("2d")
 			this.stack = []
 
-			this.sourceListener = (source) => {
+			this.sourceListener = (source: any) => {
 				for (const entry of this.stack) {
 					if (entry.source === source) {
 						entry.dirty = true
@@ -394,7 +395,7 @@ export const RBXAvatar = (() => {
 			this.requestUpdate()
 		}
 
-		setSourceEnabled(index, isEnabled) {
+		setSourceEnabled(index: number, isEnabled: boolean) {
 			const entry = this.stack[index]
 
 			if (entry.enabled !== isEnabled) {
@@ -411,7 +412,7 @@ export const RBXAvatar = (() => {
 		update() {
 			this.btrNeedsUpdate = false
 
-			if (!this.stack.some((x) => x.dirty)) {
+			if (!this.stack.some((x: any) => x.dirty)) {
 				return
 			}
 
@@ -441,7 +442,7 @@ export const RBXAvatar = (() => {
 		"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=",
 	)
 
-	const LocalAssets = {
+	const LocalAssets: Record<string, string> = {
 		"res/previewer/characterModels.rbxm": "rbxassetid://11829118051&version=1",
 		"res/previewer/face.png": "rbxassetid://2957705858",
 
@@ -462,7 +463,7 @@ export const RBXAvatar = (() => {
 
 	const BodyPartEnum = [null, "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"]
 	const R15FolderPriority = ["R15ArtistIntent", "R15", "R15Fixed"]
-	const HeadMeshes = {
+	const HeadMeshes: Record<string, string> = {
 		"rbxasset://avatar/heads/head.mesh": "rbxassetid://2957715294",
 		"rbxasset://avatar/heads/headA.mesh": "rbxassetid://2957717479",
 		"rbxasset://avatar/heads/headB.mesh": "rbxassetid://2957719621",
@@ -495,7 +496,7 @@ export const RBXAvatar = (() => {
 	class AvatarAsset extends EventEmitter {
 		[key: string]: any
 
-		constructor(assetId, assetTypeId, meta) {
+		constructor(assetId: number, assetTypeId: number, meta: any) {
 			assert(Number.isSafeInteger(assetTypeId), "no assetTypeId")
 			super()
 
@@ -559,7 +560,7 @@ export const RBXAvatar = (() => {
 			return this.states[requestKey]
 		}
 
-		load(...loadParams) {
+		load(...loadParams: any[]) {
 			const state = this.get(...(<any[]>loadParams))
 			if (!state) {
 				return null
@@ -570,7 +571,7 @@ export const RBXAvatar = (() => {
 			}
 			state.loading = true
 
-			const finish = (success) => {
+			const finish = (success: boolean) => {
 				state.loading = false
 				state.loaded = true
 
@@ -580,7 +581,7 @@ export const RBXAvatar = (() => {
 				state.loadPromise.$resolve()
 			}
 
-			AssetCache.loadModel(this.id, state.request, (model) => {
+			AssetCache.loadModel(this.id, state.request, (model: any) => {
 				if (!this.active) {
 					return
 				}
@@ -680,7 +681,7 @@ export const RBXAvatar = (() => {
 			return state
 		}
 
-		setEnabled(enabled) {
+		setEnabled(enabled: boolean) {
 			if (this.enabled !== !!enabled) {
 				this.enabled = !!enabled
 				if (this.active) {
@@ -689,7 +690,7 @@ export const RBXAvatar = (() => {
 			}
 		}
 
-		setPriority(priority) {
+		setPriority(priority: number) {
 			this.priority = priority
 			if (this.active) {
 				this.trigger("update")
@@ -704,7 +705,7 @@ export const RBXAvatar = (() => {
 			this.trigger("remove")
 		}
 
-		validateAndPreload(assetType, assetUrl) {
+		validateAndPreload(assetType: any, assetUrl: string | null) {
 			if (!assetUrl || !AssetCache.isValidAssetUrl(assetUrl) || !this.loaders) {
 				return null
 			}
@@ -723,8 +724,8 @@ export const RBXAvatar = (() => {
 			return assetUrl
 		}
 
-		loadHeadR6(state, mesh) {
-			const scaleTypeValue = mesh.Children.find((x) => x.Name === "AvatarPartScaleType")
+		loadHeadR6(state: any, mesh: any) {
+			const scaleTypeValue = mesh.Children.find((x: any) => x.Name === "AvatarPartScaleType")
 			const scaleType = scaleTypeValue ? scaleTypeValue.Value : null
 
 			const bp = <Record<string, any>>{
@@ -758,7 +759,7 @@ export const RBXAvatar = (() => {
 			state.bodyparts.push(bp)
 		}
 
-		loadBodyPartsR6(state, charmeshes) {
+		loadBodyPartsR6(state: any, charmeshes: any) {
 			for (const charmesh of charmeshes) {
 				const target = BodyPartEnum[charmesh.BodyPart]
 				if (!target) {
@@ -787,13 +788,13 @@ export const RBXAvatar = (() => {
 			}
 		}
 
-		loadBodyPartsR15(state, parts) {
+		loadBodyPartsR15(state: any, parts: any) {
 			for (const part of parts) {
 				if (part.ClassName !== "MeshPart") {
 					continue
 				}
 
-				const scaleTypeValue = part.Children.find((x) => x.Name === "AvatarPartScaleType")
+				const scaleTypeValue = part.Children.find((x: any) => x.Name === "AvatarPartScaleType")
 				const scaleType = scaleTypeValue ? scaleTypeValue.Value : null
 
 				const size = part.Size || part.size
@@ -815,11 +816,11 @@ export const RBXAvatar = (() => {
 
 				if (this.assetTypeId === AssetType.Head || this.assetTypeId === AssetType.DynamicHead) {
 					bp.disableFace = !part.Children.find(
-						(x) => x.ClassName === "Decal" && x.Name.toLowerCase() === "face",
+						(x: any) => x.ClassName === "Decal" && x.Name.toLowerCase() === "face",
 					)
 				}
 
-				const surfaceAppearance = part.Children.find((x) => x.ClassName === "SurfaceAppearance")
+				const surfaceAppearance = part.Children.find((x: any) => x.ClassName === "SurfaceAppearance")
 
 				if (surfaceAppearance) {
 					bp.pbrEnabled = true
@@ -833,7 +834,7 @@ export const RBXAvatar = (() => {
 					bp.texId = this.validateAndPreload("Image", part.TextureID || part.TextureId)
 				}
 
-				const wrapTarget = part.Children.find((x) => x.ClassName === "WrapTarget")
+				const wrapTarget = part.Children.find((x: any) => x.ClassName === "WrapTarget")
 
 				if (wrapTarget) {
 					bp.wrapTarget = {
@@ -861,13 +862,13 @@ export const RBXAvatar = (() => {
 			}
 		}
 
-		loadAccessory(state, accInst) {
-			const hanInst = accInst.Children.find((x) => x.Name === "Handle")
+		loadAccessory(state: any, accInst: any) {
+			const hanInst = accInst.Children.find((x: any) => x.Name === "Handle")
 			if (!hanInst) {
 				return
 			}
 
-			const scaleTypeValue = hanInst.Children.find((x) => x.Name === "AvatarPartScaleType")
+			const scaleTypeValue = hanInst.Children.find((x: any) => x.Name === "AvatarPartScaleType")
 			const scaleType = scaleTypeValue ? scaleTypeValue.Value : null
 
 			let baseColor = hanInst.Color || hanInst.Color3uint8
@@ -905,7 +906,9 @@ export const RBXAvatar = (() => {
 				acc.scale = [size[0] / initialSize[0], size[1] / initialSize[1], size[2] / initialSize[2]]
 				acc.meshId = this.validateAndPreload("Mesh", hanInst.MeshID || hanInst.MeshId)
 
-				const surfaceAppearance = hanInst.Children.find((x) => x.ClassName === "SurfaceAppearance")
+				const surfaceAppearance = hanInst.Children.find(
+					(x: any) => x.ClassName === "SurfaceAppearance",
+				)
 				if (surfaceAppearance) {
 					acc.pbrEnabled = true
 					acc.pbrAlphaMode = surfaceAppearance.AlphaMode ?? 0
@@ -918,7 +921,7 @@ export const RBXAvatar = (() => {
 					acc.texId = this.validateAndPreload("Image", hanInst.TextureID || hanInst.TextureId)
 				}
 
-				const wrapLayer = hanInst.Children.find((x) => x.ClassName === "WrapLayer")
+				const wrapLayer = hanInst.Children.find((x: any) => x.ClassName === "WrapLayer")
 				if (wrapLayer && wrapLayer.Enabled !== false) {
 					// Enabled defaults to true for some ungodly reason
 					acc.wrapLayer = {
@@ -932,7 +935,7 @@ export const RBXAvatar = (() => {
 					}
 				}
 			} else {
-				const meshInst = hanInst.Children.find((x) => x.ClassName === "SpecialMesh")
+				const meshInst = hanInst.Children.find((x: any) => x.ClassName === "SpecialMesh")
 				if (!meshInst) {
 					return
 				}
@@ -967,7 +970,7 @@ export const RBXAvatar = (() => {
 		"UpperTorso",
 	]
 
-	const ScaleMods = {
+	const ScaleMods: Record<string, Record<string, any>> = {
 		Default: {
 			LeftFoot: new THREE.Vector3(1.0789999961853027, 1.2669999599456787, 1.128999948501587),
 			LeftHand: new THREE.Vector3(1.065999984741211, 1.1740000247955322, 1.2309999465942383),
@@ -1025,7 +1028,7 @@ export const RBXAvatar = (() => {
 	const tempVector = new THREE.Vector3()
 	const tempEuler = new THREE.Euler()
 
-	let compositeRenderer
+	let compositeRenderer: THREE.WebGLRenderer | undefined
 
 	const invalidRenderMetaAssetIds: Record<string, any> = {}
 	const invalidLayeredAssetIds: Record<string, any> = {}
@@ -1048,9 +1051,9 @@ export const RBXAvatar = (() => {
 			this.activeMaterials = []
 			this.sortedJointsArray = []
 			this.accessories = []
-			this.attachments = {}
-			this.joints = {}
-			this.parts = {}
+			this.attachments = {} as Record<string, any>
+			this.joints = {} as Record<string, any>
+			this.parts = {} as Record<string, any>
 
 			this.playerType = null
 			this.hipHeight = 2
@@ -1090,14 +1093,14 @@ export const RBXAvatar = (() => {
 			}
 			this.hasInit = true
 
-			const sources = (this.sources = {
+			const sources: Record<string, any> = (this.sources = {
 				pants: new MergeSource(),
 				shirt: new MergeSource(),
 				tshirt: new MergeSource(),
 				face: new MergeSource(),
 
 				bodyColors: {
-					R6: new MergeSource((ctx) => {
+					R6: new MergeSource((ctx: CanvasRenderingContext2D) => {
 						ctx.fillStyle = this.bodyColors.torso
 						ctx.fillRect(0, 0, 192, 448)
 						ctx.fillRect(194, 322, 272, 76)
@@ -1140,11 +1143,11 @@ export const RBXAvatar = (() => {
 				base: {},
 			})
 
-			const textures = (this.textures = {
+			const textures: Record<string, any> = (this.textures = {
 				pbr: {},
 			})
 
-			const composites = (this.composites = {
+			const composites: Record<string, any> = (this.composites = {
 				r6: new RBXComposites.R6Composite(sources),
 				torso: new RBXComposites.R15TorsoComposite(sources),
 				leftArm: new RBXComposites.R15LeftArmComposite(sources),
@@ -1266,7 +1269,7 @@ export const RBXAvatar = (() => {
 			}
 		}
 
-		addAsset(assetId, assetTypeId, meta = null) {
+		addAsset(assetId: number, assetTypeId: number, meta = null) {
 			const asset = new AvatarAsset(assetId, assetTypeId, meta)
 			this.assets.push(asset)
 
@@ -1531,7 +1534,7 @@ export const RBXAvatar = (() => {
 			})
 		}
 
-		setScales(scales) {
+		setScales(scales: any) {
 			for (const name of Object.keys(this.scales)) {
 				if (name in scales) {
 					this.scales[name] = scales[name]
@@ -1542,7 +1545,7 @@ export const RBXAvatar = (() => {
 			this.shouldRefreshLayeredClothing = true
 		}
 
-		setBodyColors(bodyColors) {
+		setBodyColors(bodyColors: any) {
 			this.bodyColors = bodyColors
 
 			this.sources?.bodyColors.R6.update()
@@ -1552,7 +1555,7 @@ export const RBXAvatar = (() => {
 			}
 		}
 
-		setPlayerType(playerType) {
+		setPlayerType(playerType: string) {
 			if (this.playerType === playerType) {
 				return
 			}
@@ -1640,7 +1643,7 @@ export const RBXAvatar = (() => {
 
 			//
 
-			const recDispose = (tar) => {
+			const recDispose = (tar: any) => {
 				if (tar.isMesh) {
 					if (tar.geometry) {
 						tar.geometry.dispose()
@@ -1665,12 +1668,12 @@ export const RBXAvatar = (() => {
 
 			this.sortedJointsArray = []
 
-			const attachments = (this.attachments = {})
-			const joints = (this.joints = {})
-			const parts = (this.parts = {})
+			const attachments: Record<string, any> = (this.attachments = {})
+			const joints: Record<string, any> = (this.joints = {})
+			const parts: Record<string, any> = (this.parts = {})
 
 			const CreateModel = (tree: any, parentJoint?: any) => {
-				let obj
+				let obj: any
 
 				if (tree.name !== "HumanoidRootPart") {
 					obj = new THREE.SkinnedMesh(
@@ -1826,7 +1829,7 @@ export const RBXAvatar = (() => {
 					source.setImage(null)
 
 					if (texId) {
-						AssetCache.loadImage(true, texId, (img) => {
+						AssetCache.loadImage(true, texId, (img: HTMLImageElement) => {
 							if (source.rbxTexId === texId) {
 								source.setImage(img)
 							}
@@ -1900,7 +1903,7 @@ export const RBXAvatar = (() => {
 					if (meshId) {
 						part.rbxMeshLoading = meshId
 
-						AssetCache.loadMesh(true, meshId, (mesh) => {
+						AssetCache.loadMesh(true, meshId, (mesh: Mesh) => {
 							if (part.rbxMeshLoading === meshId) {
 								delete part.rbxMeshLoading
 								part.rbxMesh = getFirstLod(mesh)
@@ -1973,7 +1976,7 @@ export const RBXAvatar = (() => {
 						continue
 					}
 
-					const setImage = (img) => {
+					const setImage = (img: HTMLImageElement | null) => {
 						if (prop) {
 							target[prop]?.dispose()
 							target[prop] = null
@@ -1992,7 +1995,7 @@ export const RBXAvatar = (() => {
 					setImage(null)
 
 					if (texId) {
-						AssetCache.loadImage(true, texId, (img) => {
+						AssetCache.loadImage(true, texId, (img: HTMLImageElement) => {
 							if (target[key] === texId) {
 								setImage(img)
 							}
@@ -2167,7 +2170,7 @@ export const RBXAvatar = (() => {
 
 				if (!acc.obj) {
 					const opacity = acc.opacity ?? 1
-					let material
+					let material!: THREE.MeshStandardMaterial
 
 					if (acc.pbrEnabled) {
 						const background = new MergeSource()
@@ -2184,27 +2187,27 @@ export const RBXAvatar = (() => {
 						})
 
 						if (acc.colorMapId) {
-							AssetCache.loadImage(true, acc.colorMapId, (img) => {
+							AssetCache.loadImage(true, acc.colorMapId, (img: HTMLImageElement) => {
 								texture.setImage(img)
 							})
 						}
 
 						if (acc.normalMapId) {
-							AssetCache.loadImage(true, acc.normalMapId, (img) => {
+							AssetCache.loadImage(true, acc.normalMapId, (img: HTMLImageElement) => {
 								material.normalMap = createTexture(img)
 								material.needsUpdate = true
 							})
 						}
 
 						if (acc.metalnessMapId) {
-							AssetCache.loadImage(true, acc.metalnessMapId, (img) => {
+							AssetCache.loadImage(true, acc.metalnessMapId, (img: HTMLImageElement) => {
 								material.metalnessMap = createTexture(img)
 								material.needsUpdate = true
 							})
 						}
 
 						if (acc.roughnessMapId) {
-							AssetCache.loadImage(true, acc.roughnessMapId, (img) => {
+							AssetCache.loadImage(true, acc.roughnessMapId, (img: HTMLImageElement) => {
 								material.roughnessMap = createTexture(img)
 								material.needsUpdate = true
 							})
@@ -2219,7 +2222,7 @@ export const RBXAvatar = (() => {
 						})
 
 						if (acc.texId) {
-							AssetCache.loadImage(true, acc.texId, (img) => {
+							AssetCache.loadImage(true, acc.texId, (img: HTMLImageElement) => {
 								material.map = new MergeTexture(256, 256, img)
 								material.needsUpdate = true
 							})
@@ -2250,7 +2253,7 @@ export const RBXAvatar = (() => {
 					if (acc.meshId) {
 						obj.rbxMeshLoading = acc.meshId
 
-						AssetCache.loadMesh(true, acc.meshId, (mesh) => {
+						AssetCache.loadMesh(true, acc.meshId, (mesh: Mesh) => {
 							delete obj.rbxMeshLoading
 							obj.rbxMesh = getFirstLod(mesh)
 
@@ -2387,7 +2390,7 @@ export const RBXAvatar = (() => {
 						const index = accessories.findIndex(
 							(x) =>
 								!this.accessories.find(
-									(acc2) =>
+									(acc2: any) =>
 										acc2.asset.id === x.id && acc2.asset.priority > acc.asset.priority,
 								),
 						)
@@ -2522,7 +2525,7 @@ export const RBXAvatar = (() => {
 			})
 		}
 
-		async _fetchLayeredClothing(request) {
+		async _fetchLayeredClothing(request: any) {
 			let objHash = btrLocalStorage.getItem<string>(`btrLayeredCache-${request.hash}`)
 
 			if (!objHash) {
@@ -2641,7 +2644,7 @@ export const RBXAvatar = (() => {
 			const groups: any[] = []
 
 			let vertexCounter = 1
-			let group
+			let group: any
 
 			for (const line of lines) {
 				if (line.startsWith("g ")) {
@@ -2750,7 +2753,7 @@ export const RBXAvatar = (() => {
 			const vertex = new THREE.Matrix4()
 
 			// Resolve bodyparts
-			const uvBoxes = {
+			const uvBoxes: Record<string, number[]> = {
 				full: [0, 0, 1, 1],
 				torso: [0 / 916, 296 / 568, 388 / 916, 272 / 568],
 				head: [132 / 916, 0 / 568, 256 / 916, 296 / 568],
@@ -2760,7 +2763,7 @@ export const RBXAvatar = (() => {
 				rightleg: [652 / 916, 0 / 568, 264 / 916, 284 / 568],
 			}
 
-			const getGroupMatch = (mesh, group, box) => {
+			const getGroupMatch = (mesh: Mesh, group: any, box: any) => {
 				if (group.uvs.length !== mesh.uvs.length) {
 					return null
 				}
@@ -2782,7 +2785,7 @@ export const RBXAvatar = (() => {
 				return true
 			}
 
-			const getGroupMatchPartial = (mesh, group, box) => {
+			const getGroupMatchPartial = (mesh: Mesh, group: any, box: any) => {
 				if (group.uvs.length > mesh.uvs.length) {
 					return null
 				}
@@ -2967,7 +2970,7 @@ export const RBXAvatar = (() => {
 			let numEmptyAccessoriesAccepted = request.accessories.length - handleGroups.length
 
 			for (const acc of this.accessories) {
-				if (!acc.obj.rbxMesh || !request.accessories.find((x) => x.id === acc.asset.id)) {
+				if (!acc.obj.rbxMesh || !request.accessories.find((x: any) => x.id === acc.asset.id)) {
 					continue
 				}
 
@@ -2987,7 +2990,7 @@ export const RBXAvatar = (() => {
 					matches.length === 0 &&
 					acc.wrapLayer.autoSkin &&
 					!this.accessories.find(
-						(x) => x !== acc && x.wrapLayer && x.rbxMesh?.uvs.length === mesh.uvs.length,
+						(x: any) => x !== acc && x.wrapLayer && x.rbxMesh?.uvs.length === mesh.uvs.length,
 					)
 
 				if (doAutoSkinHack) {

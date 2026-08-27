@@ -21,6 +21,9 @@ export interface Mesh {
 	skinIndices?: Uint16Array
 	skinWeights?: Float32Array
 	bones?: MeshBone[]
+
+	/** Highest detail level, extracted lazily by the avatar when lods allow. */
+	firstLod?: Mesh
 }
 
 export const RBXMeshParser = {

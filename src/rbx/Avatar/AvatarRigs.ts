@@ -2,10 +2,10 @@ import { AssetCache } from "@/rbx/AssetCache"
 import { RBXAvatar } from "@/rbx/Avatar/Avatar"
 
 export const RBXAvatarRigs = (() => {
-	const RecurseTree = (model) => {
+	const RecurseTree = (model: any) => {
 		const parts: Record<string, any> = {}
 
-		const recursePart = (part) => {
+		const recursePart = (part: any) => {
 			if (part.Name in parts) {
 				return parts[part.Name]
 			}
@@ -88,9 +88,9 @@ export const RBXAvatarRigs = (() => {
 				new Promise<void>((resolve) => {
 					const path = RBXAvatar.LocalAssets["res/previewer/characterModels.rbxm"]
 
-					AssetCache.loadModel(true, path, (model) => {
-						this.R6Tree = RecurseTree(model.find((x) => x.Name === "R6"))
-						this.R15Tree = RecurseTree(model.find((x) => x.Name === "R15"))
+					AssetCache.loadModel(true, path, (model: any[]) => {
+						this.R6Tree = RecurseTree(model.find((x: any) => x.Name === "R6"))
+						this.R15Tree = RecurseTree(model.find((x: any) => x.Name === "R15"))
 
 						this.loaded = true
 						resolve()
