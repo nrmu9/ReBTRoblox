@@ -158,18 +158,6 @@ export const SettingsModal: SettingsModalState = {
 				</div>
 				<div class="btr-settings-content selected" id=btr-settings-main data-name=main>
 					<group label=General path=general>
-						<div>
-							<select path=theme>
-								<option selected disabled>Select Theme: (%opt%)</option>
-								<option value=default>Default</option>
-								<option value=simblk>Simply Black</option>
-								<option value=sky>Sky</option>
-								<option value=red>Red</option>
-							</select>
-
-							<checkbox devOnly label="Theme Hot Reload" path=themeHotReload></checkbox>
-						</div>
-
 						<checkbox label="Hide Ads" path=hideAds></checkbox>
 						<checkbox label="Fast User Search" path=general.fastSearch></checkbox>
 						<div>

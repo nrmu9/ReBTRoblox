@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS = {
 	loadError: undefined as unknown,
 	_version: 2,
 	general: {
-		theme: { value: "default", validValues: ["default", "simblk", "sky", "red"] },
+		theme: { value: "default", validValues: ["default", "simblk", "sky", "red"], hidden: true },
 		themeHotReload: { value: false, hidden: true },
 
 		hideAds: { value: false },
