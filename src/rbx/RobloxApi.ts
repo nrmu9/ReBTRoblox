@@ -12,6 +12,7 @@ import type {
 	UniverseId,
 	UrlParams,
 	UserId,
+	VoiceSettingsResponse,
 } from "@/rbx/types"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { IS_BACKGROUND_PAGE } from "@/core/env"
@@ -691,6 +692,12 @@ export const RobloxApi = {
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ userIds, fields }),
+			}).then((res) => res.json()),
+	},
+	voice: {
+		getSettings: (): Promise<VoiceSettingsResponse> =>
+			xsrfFetch(`https://voice.roblox.com/v1/settings`, {
+				credentials: "include",
 			}).then((res) => res.json()),
 	},
 	toolboxService: {

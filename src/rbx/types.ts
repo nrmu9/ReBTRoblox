@@ -301,3 +301,24 @@ export interface Conversation {
 	title?: string
 	participants?: { targetId: UserId; name: string }[]
 }
+
+//
+
+/** Protobuf duration, so the fields are capitalised and Seconds is a string. */
+export interface VoiceBanDuration {
+	Seconds: string | number
+	Nanos?: string | number
+}
+
+export interface VoiceSettingsResponse {
+	isVoiceEnabled: boolean
+	isUserOptIn: boolean
+	isUserEligible: boolean
+	isBanned: boolean
+	banReason?: number
+	bannedUntil: VoiceBanDuration | null
+	isVerifiedForVoice?: boolean
+	canVerifyAgeForVoice?: boolean
+	isOptInDisabled?: boolean
+	hasEverOpted?: boolean
+}
