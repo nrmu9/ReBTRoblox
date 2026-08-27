@@ -25,7 +25,10 @@ export const SettingsModal: SettingsModalState = {
 		assert(this.enabled, "not enabled")
 		this.init()
 
-		const visible = typeof force === "boolean" ? force : this.settingsDiv.parentNode !== document.body
+		// Tracked rather than derived from the parent: the node stays attached
+		// while the close transition plays, so reopening inside that window used to
+		// read as still visible and toggle straight back off.
+		const visible = typeof force === "boolean" ? force : !this.visible
 		this.visible = visible
 
 		if (visible) {
@@ -354,6 +357,11 @@ export const SettingsModal: SettingsModalState = {
 				// against this rather than just counting changes.
 				const bootValues = new Map<string, any>()
 
+				// Some settings hold objects, navigation.elements among them, and those
+				// never compare equal by identity. Serialising keeps the revert check
+				// working for them too.
+				const stamp = (value: any) => (value instanceof Object ? JSON.stringify(value) : value)
+
 				const collect = (group: any, prefix: string) => {
 					for (const [key, value] of Object.entries(group) as [string, any][]) {
 						if (key.startsWith("_") || !(value instanceof Object)) {
@@ -361,7 +369,7 @@ export const SettingsModal: SettingsModalState = {
 						}
 
 						if ("value" in value) {
-							bootValues.set(prefix + key, value.value)
+							bootValues.set(prefix + key, stamp(value.value))
 						} else {
 							collect(value, prefix + key + ".")
 						}
@@ -379,7 +387,7 @@ export const SettingsModal: SettingsModalState = {
 						return
 					}
 
-					if (bootValues.has(settingPath) && bootValues.get(settingPath) === value) {
+					if (bootValues.has(settingPath) && bootValues.get(settingPath) === stamp(value)) {
 						dirty.delete(settingPath)
 					} else {
 						dirty.add(settingPath)
