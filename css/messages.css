@@ -4,27 +4,33 @@
 
 /* */
 
-body .content .btr-currentPage {
-	display: contents;
-}
+/* Roblox rebuilt the inbox in React and themes it from its own tokens, so the
+   page jump box inherits colour rather than picking its own. */
+.btr-messages .btr-page-jump {
+	width: 34px;
+	height: 28px;
 
-body .content .btr-currentPage input {
-	display: inline-block;
-	background: white;
-	border: 1px solid #b8b8b8;
-	border-radius: 3px;
+	padding: 0 4px;
+	margin-left: 4px;
 
-	width: 38px;
-	height: 25px;
+	background: transparent;
+	border: 1px solid currentColor;
+	border-radius: 6px;
 
-	padding: 2px 0px;
-	margin-top: 3px;
-	margin-right: 6px;
-
+	color: inherit;
+	opacity: 0.55;
+	font: inherit;
+	font-size: 13px;
 	text-align: center;
-	color: #191919;
 }
 
-.btr-messages .message-actions .btn-control-sm {
-	margin-right: 6px;
+.btr-messages .btr-page-jump:hover,
+.btr-messages .btr-page-jump:focus {
+	opacity: 1;
+	outline: none;
+}
+
+.btr-messages .btr-page-jump::placeholder {
+	color: inherit;
+	opacity: 0.7;
 }
