@@ -15,6 +15,7 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 import { pageInit, pageReset } from "@/core/page"
 import { btrFastSearch } from "@/feat/fastSearch"
 import { btrAdblock } from "@/feat/adblock"
+import { btrVoiceStatus } from "@/feat/voiceStatus"
 import { query } from "@/core/query"
 import { onceFn } from "@/core/util"
 import type { ItemPreviewer } from "@/rbx/Preview"
@@ -1713,6 +1714,30 @@ pageInit.www = () => {
 			console.error(ex)
 		}
 	}
+
+	// Registered even when the setting is off, so turning it on needs no reload.
+	injectScript.call("voiceStatus", () => {
+		reactHook.inject("ul.navbar-right", (elem) => {
+			const placeholder = () =>
+				reactHook.createElement("div", {
+					id: "btr-placeholder-voice",
+					style: { display: "none" },
+					dangerouslySetInnerHTML: { __html: "" },
+				})
+
+			// Sits between search and the notification bell. Falling back to
+			// robux only loses the placement, not the feature.
+			const search = elem.find((x) => "toggleUniverseSearch" in x.props)
+
+			if (search) {
+				search.after(placeholder())
+			} else {
+				elem.find((x) => "robuxAmount" in x.props)?.before(placeholder())
+			}
+		})
+	})
+
+	void btrVoiceStatus.init()
 
 
 	if (SETTINGS.get("general.cacheRobuxAmount")) {

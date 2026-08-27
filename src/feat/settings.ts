@@ -35,6 +35,7 @@ export const DEFAULT_SETTINGS = {
 		hideChat: { value: false },
 		smallChatButton: { value: true },
 		fastSearch: { value: true },
+		voiceChatStatus: { value: true },
 
 		robuxToUSDRate: { value: "none", hidden: true },
 

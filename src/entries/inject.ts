@@ -4247,6 +4247,26 @@ const startInject = () => {
 					)
 				})
 			},
+			voiceStatus: () => {
+				reactHook.inject("ul.navbar-right", (elem: any) => {
+					const placeholder = () =>
+						reactHook.createElement("div", {
+							id: "btr-placeholder-voice",
+							style: { display: "none" },
+							dangerouslySetInnerHTML: { __html: "" },
+						})
+
+					// Sits between search and the notification bell. Falling back to
+					// robux only loses the placement, not the feature.
+					const search = elem.find((x: any) => "toggleUniverseSearch" in x.props)
+
+					if (search) {
+						search.after(placeholder())
+					} else {
+						elem.find((x: any) => "robuxAmount" in x.props)?.before(placeholder())
+					}
+				})
+			},
 			navigation: () => {
 				reactHook.inject("ul.navbar-right", (elem: any) => {
 					const robux = elem.find((x: any) => "robuxAmount" in x.props)
@@ -4341,6 +4361,7 @@ const startInject = () => {
 			"adblock.js",
 			"fastsearch",
 			"navigation",
+			"voiceStatus",
 		]
 
 		// These read settings, so they cannot run until init has delivered them.

@@ -112,6 +112,66 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	border-color: #232527;
 }
 
+/* Voice chat status */
+
+/* Padding and icon size follow the other navbar items, so the row lines up. */
+#btr-navbar-voice .btr-voice-status {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 4px;
+	color: #fff;
+}
+
+.light-theme #btr-navbar-voice .btr-voice-status {
+	color: #393b3d;
+}
+
+/* Every state other than "on" wears the slash, so the muted ones only differ
+   from it by being dimmed and the banned one by being red. */
+#btr-navbar-voice .btr-voice-status.btr-voice-muted {
+	opacity: 0.55;
+}
+
+#btr-navbar-voice .btr-voice-status.btr-voice-banned {
+	color: #ff5c5c;
+}
+
+.light-theme #btr-navbar-voice .btr-voice-status.btr-voice-banned {
+	color: #d63232;
+}
+
+#btr-navbar-voice .btr-voice-icon {
+	width: 28px;
+	height: 28px;
+	display: block;
+	fill: currentColor;
+}
+
+#btr-navbar-voice .btr-voice-stroke {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.6;
+	stroke-linecap: round;
+}
+
+#btr-navbar-voice .btr-voice-slash {
+	display: none;
+}
+
+#btr-navbar-voice .btr-voice-muted .btr-voice-slash,
+#btr-navbar-voice .btr-voice-banned .btr-voice-slash {
+	display: block;
+	stroke-width: 1.8;
+}
+
+#btr-navbar-voice .btr-voice-timer {
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	white-space: nowrap;
+}
+
 .btr-nav-hide_notifs .btr-nav-notif,
 .btr-nav-hide_notifs .notification-blue {
 	display: none !important;

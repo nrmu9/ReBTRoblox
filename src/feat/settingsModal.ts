@@ -186,6 +186,7 @@ export const SettingsModal: SettingsModalState = {
 					<group label=General path=general>
 						<checkbox label="Hide Ads" path=hideAds></checkbox>
 						<checkbox label="Fast User Search" path=general.fastSearch></checkbox>
+						<checkbox label="Voice Chat Status" path=voiceChatStatus></checkbox>
 						<div>
 							<checkbox label="Show Chat" path=!hideChat></checkbox>
 							<checkbox label="Minimize Chat" path=smallChatButton require=!hideChat></checkbox>
@@ -378,6 +379,7 @@ export const SettingsModal: SettingsModalState = {
 				"messages.pageJump",
 				"general.hideChat",
 				"general.smallChatButton",
+				"general.voiceChatStatus",
 				"general.hoverPreviewMode",
 				"itemdetails.itemPreviewer",
 				"itemdetails.explorerButton",
