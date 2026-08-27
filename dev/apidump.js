@@ -17,6 +17,16 @@ const zlib = require("node:zlib")
 const VERSION_URL = "https://clientsettingscdn.roblox.com/v2/client-version/WindowsStudio64"
 const SETUP = "https://setup.rbxcdn.com/"
 const OUT = path.join(__dirname, "..", "src", "rbx", "ApiDump.data.json")
+const ICONS_OUT = path.join(__dirname, "..", "res", "class_images.png")
+
+// ClassImages.PNG has moved between texture packages before, so they are tried
+// in turn rather than hardcoding one.
+const ICON_PACKAGES = [
+	"content-textures2.zip",
+	"content-textures3.zip",
+	"studiocontent-textures.zip",
+	"extracontent-textures.zip",
+]
 
 const dryRun = process.argv.includes("--dry")
 
@@ -101,18 +111,27 @@ const parseReflectionMetadata = (xml) => {
 
 	while ((match = itemRe.exec(xml))) {
 		const props = match[1]
-		const read = (type, key) => {
-			const m = new RegExp(`<${type} name="${key}">([\\s\\S]*?)</${type}>`).exec(props)
+
+		// Roblox writes all of these as <string>, the numeric ones included, so
+		// the tag name cannot be used to pick them out.
+		const read = (key) => {
+			const m = new RegExp(`<[a-z]+ name="${key}">([\\s\\S]*?)</[a-z]+>`).exec(props)
 			return m ? m[1].trim() : undefined
 		}
 
-		const name = read("string", "Name")
+		const name = read("Name")
 		if (!name) {
 			continue
 		}
 
-		const order = read("int", "ExplorerOrder")
-		const icon = read("int", "ExplorerImageIndex")
+		const order = read("ExplorerOrder")
+		const icon = read("ExplorerImageIndex")
+
+		// Counting a class that carries neither would mask a parse failure as
+		// "metadata found", which is exactly how the string/int mismatch slipped by.
+		if (order === undefined && icon === undefined) {
+			continue
+		}
 
 		out[name] = {
 			order: order === undefined ? undefined : Number(order),
@@ -304,6 +323,41 @@ const main = async () => {
 		log(`removed: ${removed.slice(0, 12).join(", ")}${removed.length > 12 ? ", ..." : ""}`)
 	}
 
+	// The explorer icon sheet is a 16px strip indexed by ExplorerImageIndex, so
+	// it has to come from the same deploy as the metadata above.
+	log("")
+	log("looking for the explorer icon sheet")
+
+	let icons = null
+	for (const pkg of ICON_PACKAGES) {
+		try {
+			icons = await readZipEntry(`${SETUP}${upload}-${pkg}`, "ClassImages.PNG")
+			log(`  found in ${pkg}`)
+			break
+		} catch {
+			/* try the next package */
+		}
+	}
+
+	if (!icons) {
+		log("  not found; leaving the existing sheet alone")
+	} else {
+		const width = icons.readUInt32BE(16)
+		const height = icons.readUInt32BE(20)
+		const tiles = Math.floor(width / height)
+		const maxIcon = Math.max(
+			-1,
+			...data.Classes.map((c) => (Array.isArray(c[3]) ? c[3][1] : Array.isArray(c[2]) ? c[2][1] : -1))
+		)
+
+		log(`  ${width}x${height}, ${tiles} tiles; highest index in use is ${maxIcon}`)
+
+		if (maxIcon >= tiles) {
+			log(`  refusing to use it: ${maxIcon} would fall outside the sheet`)
+			icons = null
+		}
+	}
+
 	if (dryRun) {
 		log("\ndry run, nothing written")
 		return
@@ -311,6 +365,13 @@ const main = async () => {
 
 	fs.writeFileSync(OUT, JSON.stringify(data, null, "\t") + "\n")
 	log(`\nwrote ${path.relative(path.join(__dirname, ".."), OUT)}`)
+
+	if (icons) {
+		// Kept as png rather than re-encoded: canvas only produces lossy webp,
+		// which smears 16px icons, and the size difference is a few kilobytes.
+		fs.writeFileSync(ICONS_OUT, icons)
+		log(`wrote ${path.relative(path.join(__dirname, ".."), ICONS_OUT)}`)
+	}
 }
 
 main().catch((err) => {

@@ -6997,7 +6997,11 @@
 				"Puffiness": 0,
 				"Rotation": 0,
 				"Scale": 0
-			}
+			},
+			[
+				22,
+				104
+			]
 		],
 		[
 			"AccountService",
@@ -7013,7 +7017,11 @@
 				"AttachmentRight": 3,
 				"AttachmentUp": 3,
 				"BackendAccoutrementState": 4
-			}
+			},
+			[
+				20,
+				32
+			]
 		],
 		[
 			"Accessory",
@@ -7023,11 +7031,20 @@
 					0,
 					1
 				]
-			}
+			},
+			[
+				30,
+				32
+			]
 		],
 		[
 			"Hat",
-			13
+			13,
+			0,
+			[
+				30,
+				45
+			]
 		],
 		[
 			"AchievementService",
@@ -7047,7 +7064,11 @@
 					1,
 					15
 				]
-			}
+			},
+			[
+				200,
+				146
+			]
 		],
 		[
 			"AdService",
@@ -7070,7 +7091,11 @@
 			{
 				"AnimationContent": 0,
 				"AnimationId": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"AnimationClip",
@@ -7107,7 +7132,12 @@
 		],
 		[
 			"AnimationController",
-			10
+			10,
+			0,
+			[
+				220,
+				60
+			]
 		],
 		[
 			"AnimationFromVideoCreatorService",
@@ -7175,7 +7205,11 @@
 				"TimePosition": 0,
 				"WeightCurrent": 0,
 				"WeightTarget": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"Animator",
@@ -7186,7 +7220,11 @@
 				"RootMotion": 1,
 				"RootMotionWeight": 1,
 				"FacsReplicationData": 8
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"Annotation",
@@ -7301,7 +7339,11 @@
 				"Glare": 5,
 				"Haze": 5,
 				"Offset": 4
-			}
+			},
+			[
+				5,
+				28
+			]
 		],
 		[
 			"Attachment",
@@ -7320,7 +7362,11 @@
 				"WorldPosition": 10,
 				"WorldRotation": 10,
 				"WorldSecondaryAxis": 10
-			}
+			},
+			[
+				30,
+				81
+			]
 		],
 		[
 			"Bone",
@@ -7329,7 +7375,11 @@
 				"Transform": 3,
 				"TransformedCFrame": 9,
 				"TransformedWorldCFrame": 10
-			}
+			},
+			[
+				30,
+				114
+			]
 		],
 		[
 			"AudioAnalyzer",
@@ -7342,7 +7392,11 @@
 					5,
 					64
 				]
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioChannelMixer",
@@ -7352,7 +7406,11 @@
 					5,
 					59
 				]
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioChannelSplitter",
@@ -7362,7 +7420,11 @@
 					5,
 					59
 				]
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioChorus",
@@ -7372,7 +7434,11 @@
 				"Depth": 5,
 				"Mix": 5,
 				"Rate": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioCompressor",
@@ -7385,7 +7451,11 @@
 				"Ratio": 5,
 				"Release": 5,
 				"Threshold": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioDeviceInput",
@@ -7405,14 +7475,22 @@
 				"Player": 13,
 				"Volume": 5,
 				"AccessList": 2
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioDeviceOutput",
 			10,
 			{
 				"Player": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioDistortion",
@@ -7420,7 +7498,11 @@
 			{
 				"Bypass": 5,
 				"Level": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioEcho",
@@ -7432,7 +7514,11 @@
 				"Feedback": 5,
 				"RampTime": 5,
 				"WetLevel": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioEmitter",
@@ -7469,7 +7555,11 @@
 					62
 				],
 				"PositionOverride": 0
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioEqualizer",
@@ -7481,7 +7571,11 @@
 				"LowGain": 5,
 				"MidGain": 5,
 				"MidRange": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioFader",
@@ -7489,7 +7583,11 @@
 			{
 				"Bypass": 5,
 				"Volume": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioFilter",
@@ -7504,7 +7602,11 @@
 				"Frequency": 5,
 				"Gain": 5,
 				"Q": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioFlanger",
@@ -7514,7 +7616,11 @@
 				"Depth": 5,
 				"Mix": 5,
 				"Rate": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioFocusService",
@@ -7528,7 +7634,11 @@
 				"Bypass": 5,
 				"Release": 5,
 				"Threshold": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioLimiter",
@@ -7538,7 +7648,11 @@
 				"Editor": 12,
 				"MaxLevel": 5,
 				"Release": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioListener",
@@ -7570,7 +7684,11 @@
 					62
 				],
 				"PositionOverride": 0
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioPitchShifter",
@@ -7582,7 +7700,11 @@
 					5,
 					64
 				]
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioPlayer",
@@ -7607,7 +7729,11 @@
 				"TimePosition": 19,
 				"Volume": 5,
 				"IsMutedForCapture": 0
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioRecorder",
@@ -7615,7 +7741,11 @@
 			{
 				"IsRecording": 5,
 				"TimeLength": 0
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioReverb",
@@ -7634,7 +7764,11 @@
 				"LowShelfGain": 5,
 				"ReferenceFrequency": 5,
 				"WetLevel": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioSearchParams",
@@ -7668,7 +7802,11 @@
 				"Text": 5,
 				"VoiceDetected": 5,
 				"VoiceDetectedOverride": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioTextToSpeech",
@@ -7685,7 +7823,11 @@
 				"TimePosition": 19,
 				"VoiceId": 18,
 				"Volume": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioTremolo",
@@ -7698,7 +7840,11 @@
 				"Shape": 5,
 				"Skew": 5,
 				"Square": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AudioWindSynthesizer",
@@ -7715,7 +7861,11 @@
 					617
 				],
 				"Volume": 5
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"AuroraScriptObject",
@@ -7971,7 +8121,12 @@
 		],
 		[
 			"Backpack",
-			10
+			10,
+			0,
+			[
+				30,
+				20
+			]
 		],
 		[
 			"BadgeService",
@@ -8143,7 +8298,11 @@
 			{
 				"SelectionImageObject": 4,
 				"Version": 0
-			}
+			},
+			[
+				30,
+				46
+			]
 		],
 		[
 			"PlayerGui",
@@ -8159,7 +8318,11 @@
 				],
 				"SelectionImageObject": 4,
 				"InputBindingMappingsRaw": 0
-			}
+			},
+			[
+				130,
+				46
+			]
 		],
 		[
 			"StarterGui",
@@ -8186,7 +8349,11 @@
 					1,
 					601
 				]
-			}
+			},
+			[
+				30,
+				46
+			]
 		],
 		[
 			"BaseRemoteEvent",
@@ -8194,11 +8361,21 @@
 		],
 		[
 			"RemoteEvent",
-			111
+			111,
+			0,
+			[
+				50,
+				75
+			]
 		],
 		[
 			"UnreliableRemoteEvent",
-			111
+			111,
+			0,
+			[
+				51,
+				75
+			]
 		],
 		[
 			"BaseWrap",
@@ -8220,7 +8397,12 @@
 		],
 		[
 			"WrapDeformer",
-			114
+			114,
+			0,
+			[
+				32,
+				127
+			]
 		],
 		[
 			"WrapLayer",
@@ -8247,7 +8429,11 @@
 				"ReferenceOriginWorld": 0,
 				"ShrinkFactor": 21,
 				"TemporaryReferenceId": 4
-			}
+			},
+			[
+				32,
+				126
+			]
 		],
 		[
 			"WrapTarget",
@@ -8259,7 +8445,11 @@
 					621
 				],
 				"Stiffness": 4
-			}
+			},
+			[
+				32,
+				127
+			]
 		],
 		[
 			"Beam",
@@ -8289,15 +8479,29 @@
 				"Width0": 23,
 				"Width1": 23,
 				"ZOffset": 4
-			}
+			},
+			[
+				30,
+				96
+			]
 		],
 		[
 			"BindableEvent",
-			10
+			10,
+			0,
+			[
+				50,
+				67
+			]
 		],
 		[
 			"BindableFunction",
-			10
+			10,
+			0,
+			[
+				40,
+				66
+			]
 		],
 		[
 			"BodyMover",
@@ -8312,7 +8516,11 @@
 				"P": 24,
 				"angularvelocity": 24,
 				"maxTorque": 24
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"BodyForce",
@@ -8320,7 +8528,11 @@
 			{
 				"Force": 24,
 				"force": 24
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"BodyGyro",
@@ -8332,7 +8544,11 @@
 				"P": 24,
 				"cframe": 24,
 				"maxTorque": 24
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"BodyPosition",
@@ -8344,7 +8560,11 @@
 				"Position": 24,
 				"maxForce": 24,
 				"position": 24
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"BodyThrust",
@@ -8354,7 +8574,11 @@
 				"Location": 24,
 				"force": 24,
 				"location": 24
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"BodyVelocity",
@@ -8365,7 +8589,11 @@
 				"Velocity": 24,
 				"maxForce": 24,
 				"velocity": 24
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"RocketPropulsion",
@@ -8383,7 +8611,11 @@
 				"TurnD": 26,
 				"TurnP": 26,
 				"Active": 27
-			}
+			},
+			[
+				140,
+				14
+			]
 		],
 		[
 			"BodyPartDescription",
@@ -8397,7 +8629,11 @@
 				"Color": 0,
 				"HeadShape": 0,
 				"Instance": 0
-			}
+			},
+			[
+				22,
+				104
+			]
 		],
 		[
 			"BranchService",
@@ -8488,7 +8724,8 @@
 				"RightLegColor3": 4,
 				"TorsoColor": 4,
 				"TorsoColor3": 4
-			}
+			},
+			20
 		],
 		[
 			"CharacterMesh",
@@ -8504,7 +8741,11 @@
 				"MeshId": 0,
 				"OverlayTextureContent": 0,
 				"OverlayTextureId": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"Clothing",
@@ -8513,7 +8754,8 @@
 				"Color3": 4,
 				"Outfit1": 4,
 				"Outfit2": 4
-			}
+			},
+			20
 		],
 		[
 			"Pants",
@@ -8521,7 +8763,11 @@
 			{
 				"PantsTemplate": 4,
 				"PantsTemplateContent": 4
-			}
+			},
+			[
+				20,
+				44
+			]
 		],
 		[
 			"Shirt",
@@ -8529,7 +8775,11 @@
 			{
 				"ShirtTemplate": 4,
 				"ShirtTemplateContent": 4
-			}
+			},
+			[
+				20,
+				43
+			]
 		],
 		[
 			"ShirtGraphic",
@@ -8538,14 +8788,19 @@
 				"Color3": 4,
 				"Graphic": 4,
 				"TextureContent": 4
-			}
+			},
+			[
+				20,
+				40
+			]
 		],
 		[
 			"Skin",
 			144,
 			{
 				"SkinColor": 4
-			}
+			},
+			20
 		],
 		[
 			"Chat",
@@ -8555,7 +8810,11 @@
 				"IsAutoMigrated": 0,
 				"LoadDefaultChat": 1,
 				"ModerationMode": 0
-			}
+			},
+			[
+				510,
+				33
+			]
 		],
 		[
 			"ClickDetector",
@@ -8564,7 +8823,11 @@
 				"CursorIcon": 28,
 				"CursorIconContent": 28,
 				"MaxActivationDistance": 0
-			}
+			},
+			[
+				30,
+				41
+			]
 		],
 		[
 			"DragDetector",
@@ -8619,7 +8882,11 @@
 				"PhysicalDragHitPoint": 27,
 				"PhysicalDragIsInVR": 27,
 				"PhysicalDragTargetFrame": 27
-			}
+			},
+			[
+				30,
+				41
+			]
 		],
 		[
 			"ClientStorageService",
@@ -8641,7 +8908,11 @@
 				"Cover": 4,
 				"Density": 4,
 				"Enabled": 5
-			}
+			},
+			[
+				5,
+				28
+			]
 		],
 		[
 			"ClusterPacketCache",
@@ -8693,7 +8964,12 @@
 		],
 		[
 			"Configuration",
-			10
+			10,
+			0,
+			[
+				220,
+				58
+			]
 		],
 		[
 			"ConfigureServerService",
@@ -8719,7 +8995,11 @@
 				"Color": 4,
 				"Enabled": 1,
 				"Visible": 4
-			}
+			},
+			[
+				30,
+				86
+			]
 		],
 		[
 			"AlignOrientation",
@@ -8743,7 +9023,11 @@
 				"Responsiveness": 38,
 				"RigidityEnabled": 36,
 				"SecondaryAxis": 37
-			}
+			},
+			[
+				30,
+				100
+			]
 		],
 		[
 			"AlignPosition",
@@ -8769,7 +9053,11 @@
 				"ReactionForceEnabled": 40,
 				"Responsiveness": 38,
 				"RigidityEnabled": 40
-			}
+			},
+			[
+				30,
+				99
+			]
 		],
 		[
 			"AngularVelocity",
@@ -8782,7 +9070,11 @@
 					41,
 					6
 				]
-			}
+			},
+			[
+				30,
+				103
+			]
 		],
 		[
 			"AnimationConstraint",
@@ -8801,7 +9093,8 @@
 				"Part0": 0,
 				"Part1": 0,
 				"Transform": 0
-			}
+			},
+			30
 		],
 		[
 			"BallSocketConstraint",
@@ -8817,7 +9110,11 @@
 				"TwistUpperAngle": 45,
 				"UpperAngle": 44,
 				"MaxFrictionTorqueXml": 43
-			}
+			},
+			[
+				30,
+				86
+			]
 		],
 		[
 			"HingeConstraint",
@@ -8841,7 +9138,11 @@
 				"SoftlockServoUponReachingTarget": 47,
 				"TargetAngle": 47,
 				"UpperAngle": 44
-			}
+			},
+			[
+				30,
+				87
+			]
 		],
 		[
 			"LineForce",
@@ -8852,7 +9153,11 @@
 				"Magnitude": 50,
 				"MaxForce": 50,
 				"ReactionForceEnabled": 50
-			}
+			},
+			[
+				30,
+				101
+			]
 		],
 		[
 			"LinearVelocity",
@@ -8881,22 +9186,40 @@
 					51,
 					590
 				]
-			}
+			},
+			[
+				30,
+				132
+			]
 		],
 		[
 			"PlaneConstraint",
-			169
+			169,
+			0,
+			[
+				30,
+				134
+			]
 		],
 		[
 			"Plane",
-			178
+			178,
+			0,
+			[
+				30,
+				134
+			]
 		],
 		[
 			"RigidConstraint",
 			169,
 			{
 				"EnableSkinning": 1
-			}
+			},
+			[
+				30,
+				135
+			]
 		],
 		[
 			"RodConstraint",
@@ -8908,7 +9231,11 @@
 				"LimitAngle1": 44,
 				"LimitsEnabled": 55,
 				"Thickness": 4
-			}
+			},
+			[
+				30,
+				90
+			]
 		],
 		[
 			"RopeConstraint",
@@ -8923,7 +9250,11 @@
 				"WinchResponsiveness": 57,
 				"WinchSpeed": 57,
 				"WinchTarget": 57
-			}
+			},
+			[
+				30,
+				89
+			]
 		],
 		[
 			"SlidingBallConstraint",
@@ -8947,7 +9278,11 @@
 				"TargetPosition": 47,
 				"UpperLimit": 44,
 				"Velocity": 48
-			}
+			},
+			[
+				30,
+				88
+			]
 		],
 		[
 			"CylindricalConstraint",
@@ -8973,11 +9308,20 @@
 				"TargetAngle": 60,
 				"UpperAngle": 61,
 				"WorldRotationAxis": 49
-			}
+			},
+			[
+				30,
+				95
+			]
 		],
 		[
 			"PrismaticConstraint",
-			183
+			183,
+			0,
+			[
+				30,
+				88
+			]
 		],
 		[
 			"SpringConstraint",
@@ -8994,7 +9338,11 @@
 				"Radius": 4,
 				"Stiffness": 63,
 				"Thickness": 4
-			}
+			},
+			[
+				30,
+				91
+			]
 		],
 		[
 			"Torque",
@@ -9005,7 +9353,11 @@
 					6
 				],
 				"Torque": 41
-			}
+			},
+			[
+				30,
+				103
+			]
 		],
 		[
 			"TorsionSpringConstraint",
@@ -9021,7 +9373,11 @@
 				"Radius": 4,
 				"Restitution": 44,
 				"Stiffness": 63
-			}
+			},
+			[
+				30,
+				125
+			]
 		],
 		[
 			"UniversalConstraint",
@@ -9031,7 +9387,11 @@
 				"MaxAngle": 44,
 				"Radius": 4,
 				"Restitution": 44
-			}
+			},
+			[
+				30,
+				123
+			]
 		],
 		[
 			"VectorForce",
@@ -9043,7 +9403,11 @@
 					65,
 					6
 				]
-			}
+			},
+			[
+				30,
+				102
+			]
 		],
 		[
 			"ContentProvider",
@@ -9098,7 +9462,8 @@
 				"MoveMaxForce": 68,
 				"TurnMaxTorque": 26,
 				"TurnSpeedFactor": 26
-			}
+			},
+			20
 		],
 		[
 			"ClimbController",
@@ -9108,7 +9473,8 @@
 				"BalanceMaxTorque": 67,
 				"BalanceSpeed": 67,
 				"MoveMaxForce": 68
-			}
+			},
+			20
 		],
 		[
 			"GroundController",
@@ -9125,7 +9491,8 @@
 				"StandForce": 68,
 				"StandSpeed": 68,
 				"TurnSpeedFactor": 68
-			}
+			},
+			20
 		],
 		[
 			"SwimController",
@@ -9136,7 +9503,8 @@
 				"PitchSpeedFactor": 67,
 				"RollMaxTorque": 67,
 				"RollSpeedFactor": 67
-			}
+			},
+			20
 		],
 		[
 			"ControllerManager",
@@ -9151,7 +9519,8 @@
 				"MovingDirection": 69,
 				"RootPart": 1,
 				"UpDirection": 69
-			}
+			},
+			20
 		],
 		[
 			"ControllerService",
@@ -9172,7 +9541,12 @@
 		],
 		[
 			"CorePackages",
-			10
+			10,
+			0,
+			[
+				30,
+				20
+			]
 		],
 		[
 			"CoreScriptDebuggingManagerHelper",
@@ -9199,14 +9573,22 @@
 			10,
 			{
 				"PersistedCurrentValue": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"CustomEventReceiver",
 			10,
 			{
 				"Source": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"CustomLog",
@@ -9232,11 +9614,21 @@
 		],
 		[
 			"BlockMesh",
-			216
+			216,
+			0,
+			[
+				30,
+				8
+			]
 		],
 		[
 			"CylinderMesh",
-			216
+			216,
+			0,
+			[
+				30,
+				8
+			]
 		],
 		[
 			"FileMesh",
@@ -9256,7 +9648,11 @@
 					0,
 					325
 				]
-			}
+			},
+			[
+				30,
+				8
+			]
 		],
 		[
 			"DataModelPatchService",
@@ -9342,7 +9738,11 @@
 			10,
 			{
 				"MaxItems": 0
-			}
+			},
+			[
+				0,
+				30
+			]
 		],
 		[
 			"DebugSettings",
@@ -9359,7 +9759,8 @@
 					73,
 					543
 				]
-			}
+			},
+			20
 		],
 		[
 			"DebuggablePluginWatcher",
@@ -9487,7 +9888,11 @@
 				],
 				"TriggerDistance": 0,
 				"TriggerOffset": 0
-			}
+			},
+			[
+				220,
+				62
+			]
 		],
 		[
 			"DialogChoice",
@@ -9497,7 +9902,11 @@
 				"GoodbyeDialog": 0,
 				"ResponseDialog": 0,
 				"UserDialog": 0
-			}
+			},
+			[
+				220,
+				63
+			]
 		],
 		[
 			"DigitsRigDescription",
@@ -9698,7 +10107,11 @@
 				"Position": 0,
 				"TimeScale": 0,
 				"Visible": 0
-			}
+			},
+			[
+				30,
+				36
+			]
 		],
 		[
 			"FaceAnimatorService",
@@ -9767,7 +10180,11 @@
 				"TongueOut": 82,
 				"TongueUp": 82,
 				"UpperLipSuck": 78
-			}
+			},
+			[
+				105,
+				129
+			]
 		],
 		[
 			"FaceInstance",
@@ -9809,7 +10226,11 @@
 				"UVScale": 4,
 				"ZIndex": 4,
 				"TexturePackMetadata": 4
-			}
+			},
+			[
+				40,
+				7
+			]
 		],
 		[
 			"Texture",
@@ -9819,7 +10240,11 @@
 				"OffsetStudsV": 4,
 				"StudsPerTileU": 4,
 				"StudsPerTileV": 4
-			}
+			},
+			[
+				40,
+				10
+			]
 		],
 		[
 			"FacialAgeEstimationService",
@@ -9867,11 +10292,14 @@
 					0,
 					547
 				]
-			}
+			},
+			20
 		],
 		[
 			"Hole",
-			281
+			281,
+			0,
+			20
 		],
 		[
 			"MotorFeature",
@@ -9910,7 +10338,11 @@
 				"size": 0,
 				"heat_xml": 0,
 				"size_xml": 0
-			}
+			},
+			[
+				30,
+				61
+			]
 		],
 		[
 			"FlagStandService",
@@ -9941,18 +10373,31 @@
 			10,
 			{
 				"ReplicatedGuiInsertionOrder": 0
-			}
+			},
+			[
+				10,
+				77
+			]
 		],
 		[
 			"GeneratedFolder",
-			294
+			294,
+			0,
+			[
+				10,
+				77
+			]
 		],
 		[
 			"ForceField",
 			10,
 			{
 				"Visible": 0
-			}
+			},
+			[
+				30,
+				37
+			]
 		],
 		[
 			"FriendService",
@@ -9968,7 +10413,8 @@
 				"Is30FpsThrottleEnabled": 84,
 				"PhysicsEnvironmentalThrottle": 84,
 				"Timeout": 85
-			}
+			},
+			10
 		],
 		[
 			"GamePassService",
@@ -9980,7 +10426,8 @@
 			{
 				"VideoCaptureEnabled": 86,
 				"VideoRecording": 86
-			}
+			},
+			20
 		],
 		[
 			"GamepadService",
@@ -10018,7 +10465,9 @@
 		],
 		[
 			"GlobalDataStore",
-			10
+			10,
+			0,
+			-1
 		],
 		[
 			"DataStore",
@@ -10026,7 +10475,9 @@
 		],
 		[
 			"OrderedDataStore",
-			307
+			307,
+			0,
+			-1
 		],
 		[
 			"GongService",
@@ -10141,7 +10592,11 @@
 				"GroupColor3": 4,
 				"GroupTransparency": 4,
 				"ResolutionScale": 0
-			}
+			},
+			[
+				200,
+				48
+			]
 		],
 		[
 			"Frame",
@@ -10151,7 +10606,11 @@
 					0,
 					234
 				]
-			}
+			},
+			[
+				150,
+				48
+			]
 		],
 		[
 			"GuiButton",
@@ -10172,7 +10631,11 @@
 				"MouseButton2ClickConnectionCount": 89,
 				"MouseButton2DownConnectionCount": 89,
 				"MouseButton2UpConnectionCount": 89
-			}
+			},
+			[
+				160,
+				52
+			]
 		],
 		[
 			"ImageButton",
@@ -10202,7 +10665,11 @@
 				"SliceCenter": 28,
 				"SliceScale": 28,
 				"TileSize": 28
-			}
+			},
+			[
+				160,
+				52
+			]
 		],
 		[
 			"TextButton",
@@ -10255,7 +10722,11 @@
 					536
 				],
 				"Confidential": 0
-			}
+			},
+			[
+				170,
+				51
+			]
 		],
 		[
 			"GuiLabel",
@@ -10285,7 +10756,11 @@
 				"SliceCenter": 28,
 				"SliceScale": 28,
 				"TileSize": 28
-			}
+			},
+			[
+				180,
+				49
+			]
 		],
 		[
 			"TextLabel",
@@ -10338,7 +10813,11 @@
 					536
 				],
 				"Confidential": 0
-			}
+			},
+			[
+				190,
+				50
+			]
 		],
 		[
 			"InputActionLabel",
@@ -10362,7 +10841,8 @@
 					91,
 					536
 				]
-			}
+			},
+			185
 		],
 		[
 			"RelativeGui",
@@ -10420,7 +10900,11 @@
 					92,
 					593
 				]
-			}
+			},
+			[
+				150,
+				48
+			]
 		],
 		[
 			"TextBox",
@@ -10494,7 +10978,11 @@
 				],
 				"Confidential": 0,
 				"LocalizedPlaceholderText": 91
-			}
+			},
+			[
+				170,
+				51
+			]
 		],
 		[
 			"TextChannelWindow",
@@ -10502,7 +10990,8 @@
 			{
 				"IsRendering": 0,
 				"Target": 0
-			}
+			},
+			16
 		],
 		[
 			"VideoDisplay",
@@ -10521,7 +11010,11 @@
 				"VideoRectOffset": 86,
 				"VideoRectSize": 86,
 				"VideoTransparency": 86
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"VideoFrame",
@@ -10552,7 +11045,11 @@
 				"Volume": 86,
 				"PlayingReplicating": 86,
 				"TimePositionReplicating": 86
-			}
+			},
+			[
+				18,
+				120
+			]
 		],
 		[
 			"ViewportFrame",
@@ -10567,7 +11064,11 @@
 				"LightDirection": 4,
 				"CameraCFrame": 0,
 				"CameraFieldOfView": 0
-			}
+			},
+			[
+				30,
+				52
+			]
 		],
 		[
 			"LayerCollector",
@@ -10604,7 +11105,11 @@
 				"SizeOffset": 0,
 				"StudsOffset": 0,
 				"StudsOffsetWorldSpace": 0
-			}
+			},
+			[
+				140,
+				64
+			]
 		],
 		[
 			"PluginGui",
@@ -10642,11 +11147,20 @@
 					4,
 					457
 				]
-			}
+			},
+			[
+				140,
+				47
+			]
 		],
 		[
 			"GuiMain",
-			336
+			336,
+			0,
+			[
+				140,
+				47
+			]
 		],
 		[
 			"SurfaceGuiBase",
@@ -10658,7 +11172,11 @@
 					0,
 					342
 				]
-			}
+			},
+			[
+				140,
+				64
+			]
 		],
 		[
 			"AdGui",
@@ -10675,7 +11193,11 @@
 					1,
 					15
 				]
-			}
+			},
+			[
+				200,
+				145
+			]
 		],
 		[
 			"SurfaceGui",
@@ -10699,7 +11221,11 @@
 				],
 				"ToolPunchThroughDistance": 0,
 				"ZOffset": 4
-			}
+			},
+			[
+				140,
+				64
+			]
 		],
 		[
 			"GuiBase3d",
@@ -10723,7 +11249,11 @@
 				"To": 0,
 				"Velocity": 0,
 				"WireRadius": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"InstanceAdornment",
@@ -10741,7 +11271,11 @@
 				"SurfaceColor": 4,
 				"SurfaceColor3": 4,
 				"SurfaceTransparency": 4
-			}
+			},
+			[
+				210,
+				54
+			]
 		],
 		[
 			"PVAdornment",
@@ -10774,7 +11308,11 @@
 					17
 				],
 				"Size": 0
-			}
+			},
+			[
+				205,
+				111
+			]
 		],
 		[
 			"ConeHandleAdornment",
@@ -10787,7 +11325,11 @@
 					0,
 					17
 				]
-			}
+			},
+			[
+				205,
+				110
+			]
 		],
 		[
 			"CylinderHandleAdornment",
@@ -10801,7 +11343,11 @@
 					0,
 					17
 				]
-			}
+			},
+			[
+				205,
+				109
+			]
 		],
 		[
 			"ImageHandleAdornment",
@@ -10810,7 +11356,11 @@
 				"Image": 0,
 				"ImageContent": 0,
 				"Size": 0
-			}
+			},
+			[
+				205,
+				108
+			]
 		],
 		[
 			"LineHandleAdornment",
@@ -10818,7 +11368,11 @@
 			{
 				"Length": 0,
 				"Thickness": 0
-			}
+			},
+			[
+				205,
+				107
+			]
 		],
 		[
 			"PyramidHandleAdornment",
@@ -10831,7 +11385,11 @@
 				],
 				"Sides": 0,
 				"Size": 0
-			}
+			},
+			[
+				205,
+				0
+			]
 		],
 		[
 			"SphereHandleAdornment",
@@ -10842,7 +11400,11 @@
 					0,
 					17
 				]
-			}
+			},
+			[
+				205,
+				112
+			]
 		],
 		[
 			"WireframeHandleAdornment",
@@ -10850,7 +11412,11 @@
 			{
 				"Scale": 0,
 				"Thickness": 0
-			}
+			},
+			[
+				205,
+				113
+			]
 		],
 		[
 			"ParabolaAdornment",
@@ -10870,7 +11436,11 @@
 				"SurfaceColor": 4,
 				"SurfaceColor3": 4,
 				"SurfaceTransparency": 4
-			}
+			},
+			[
+				210,
+				54
+			]
 		],
 		[
 			"PartAdornment",
@@ -10893,7 +11463,11 @@
 				"MouseDragConnectionCount": 89,
 				"MouseEnterConnectionCount": 89,
 				"MouseLeaveConnectionCount": 89
-			}
+			},
+			[
+				200,
+				56
+			]
 		],
 		[
 			"Handles",
@@ -10909,7 +11483,11 @@
 				"MouseDragConnectionCount": 89,
 				"MouseEnterConnectionCount": 89,
 				"MouseLeaveConnectionCount": 89
-			}
+			},
+			[
+				190,
+				53
+			]
 		],
 		[
 			"SurfaceSelection",
@@ -10919,7 +11497,11 @@
 					0,
 					342
 				]
-			}
+			},
+			[
+				210,
+				55
+			]
 		],
 		[
 			"SelectionLasso",
@@ -10933,14 +11515,22 @@
 			362,
 			{
 				"Part": 0
-			}
+			},
+			[
+				220,
+				57
+			]
 		],
 		[
 			"SelectionPointLasso",
 			362,
 			{
 				"Point": 0
-			}
+			},
+			[
+				220,
+				57
+			]
 		],
 		[
 			"Path2D",
@@ -10955,7 +11545,8 @@
 				"Visible": 0,
 				"ZIndex": 0,
 				"PropertiesSerialize": 0
-			}
+			},
+			31
 		],
 		[
 			"GuiService",
@@ -11007,7 +11598,8 @@
 				],
 				"Waveform": 0,
 				"WaveformData": 0
-			}
+			},
+			100
 		],
 		[
 			"HapticService",
@@ -11060,11 +11652,17 @@
 					0,
 					430
 				]
-			}
+			},
+			[
+				20,
+				133
+			]
 		],
 		[
 			"Hopper",
-			10
+			10,
+			0,
+			20
 		],
 		[
 			"HttpRbxApiService",
@@ -11165,7 +11763,11 @@
 				"Strafe": 8,
 				"WalkAngleError": 8,
 				"WalkDirection": 8
-			}
+			},
+			[
+				30,
+				9
+			]
 		],
 		[
 			"HumanoidDescription",
@@ -11216,7 +11818,11 @@
 				"WidthScale": 98,
 				"EmotesDataInternal": 0,
 				"EquippedEmotesDataInternal": 0
-			}
+			},
+			[
+				22,
+				104
+			]
 		],
 		[
 			"HumanoidRigDescription",
@@ -11348,7 +11954,11 @@
 				"RightToesRangeMin": 76,
 				"RightToesSize": 77,
 				"RightToesTposeAdjustment": 75
-			}
+			},
+			[
+				220,
+				53
+			]
 		],
 		[
 			"IKControl",
@@ -11368,7 +11978,11 @@
 					271
 				],
 				"Weight": 1
-			}
+			},
+			[
+				220,
+				53
+			]
 		],
 		[
 			"ILegacyStudioBridge",
@@ -11424,7 +12038,8 @@
 					278
 				],
 				"ViewportPositionState": 0
-			}
+			},
+			31
 		],
 		[
 			"InputBinding",
@@ -11482,7 +12097,8 @@
 				],
 				"Vector2Scale": 1,
 				"Vector3Scale": 1
-			}
+			},
+			31
 		],
 		[
 			"InputContext",
@@ -11491,7 +12107,8 @@
 				"Enabled": 1,
 				"Priority": 1,
 				"Sink": 1
-			}
+			},
+			31
 		],
 		[
 			"InputObject",
@@ -11552,7 +12169,11 @@
 				"Part0": 0,
 				"Part1": 0,
 				"part1": 0
-			}
+			},
+			[
+				200,
+				34
+			]
 		],
 		[
 			"DynamicRotate",
@@ -11599,7 +12220,8 @@
 				"DesiredAngle": 0,
 				"MaxVelocity": 0,
 				"ReplicateCurrentAngle": 104
-			}
+			},
+			20
 		],
 		[
 			"Motor6D",
@@ -11611,7 +12233,11 @@
 				"Transform": 0,
 				"ReplicateCurrentAngle6D": 104,
 				"ReplicateCurrentOffset6D": 104
-			}
+			},
+			[
+				200,
+				106
+			]
 		],
 		[
 			"Rotate",
@@ -11619,7 +12245,12 @@
 		],
 		[
 			"Snap",
-			402
+			402,
+			0,
+			[
+				200,
+				34
+			]
 		],
 		[
 			"VelocityMotor",
@@ -11636,7 +12267,11 @@
 			402,
 			{
 				"EnableSkinning": 1
-			}
+			},
+			[
+				200,
+				34
+			]
 		],
 		[
 			"JointsService",
@@ -11651,14 +12286,22 @@
 			10,
 			{
 				"Time": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"KeyframeMarker",
 			10,
 			{
 				"Value": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"KeyframeSequenceProvider",
@@ -11676,14 +12319,22 @@
 				"Color": 4,
 				"Enabled": 4,
 				"Shadows": 4
-			}
+			},
+			[
+				30,
+				13
+			]
 		],
 		[
 			"PointLight",
 			422,
 			{
 				"Range": 4
-			}
+			},
+			[
+				30,
+				13
+			]
 		],
 		[
 			"SpotLight",
@@ -11695,7 +12346,11 @@
 					342
 				],
 				"Range": 4
-			}
+			},
+			[
+				30,
+				13
+			]
 		],
 		[
 			"SurfaceLight",
@@ -11707,7 +12362,11 @@
 					342
 				],
 				"Range": 4
-			}
+			},
+			[
+				30,
+				13
+			]
 		],
 		[
 			"Lighting",
@@ -11744,7 +12403,11 @@
 					519
 				],
 				"TimeOfDay": 0
-			}
+			},
+			[
+				30,
+				13
+			]
 		],
 		[
 			"LinkingService",
@@ -11793,7 +12456,11 @@
 				"GameSourceLanguageId": 83,
 				"LocaleManifest": 83,
 				"ShouldUseCloudTable": 83
-			}
+			},
+			[
+				530,
+				92
+			]
 		],
 		[
 			"LocalizationTable",
@@ -11804,7 +12471,11 @@
 				"SourceLocaleId": 83,
 				"Contents": 1,
 				"IsExemptFromUGCAnalytics": 83
-			}
+			},
+			[
+				30,
+				97
+			]
 		],
 		[
 			"CloudLocalizationTable",
@@ -11877,11 +12548,20 @@
 			443,
 			{
 				"Source": 0
-			}
+			},
+			[
+				30,
+				6
+			]
 		],
 		[
 			"LocalScript",
-			445
+			445,
+			0,
+			[
+				40,
+				18
+			]
 		],
 		[
 			"ModuleScript",
@@ -11890,7 +12570,11 @@
 				"LinkedSource": 0,
 				"Source": 0,
 				"Confidential": 0
-			}
+			},
+			[
+				50,
+				76
+			]
 		],
 		[
 			"LuaWebService",
@@ -11923,7 +12607,11 @@
 					312
 				],
 				"Order": 0
-			}
+			},
+			[
+				22,
+				104
+			]
 		],
 		[
 			"MarkerCurve",
@@ -11935,7 +12623,12 @@
 		],
 		[
 			"MarketplaceService",
-			10
+			10,
+			0,
+			[
+				0,
+				46
+			]
 		],
 		[
 			"MatchmakingService",
@@ -11991,7 +12684,11 @@
 				"WoodName": 109,
 				"WoodPlanksName": 109,
 				"Use2022MaterialsXml": 110
-			}
+			},
+			[
+				30,
+				131
+			]
 		],
 		[
 			"MaterialVariant",
@@ -12025,7 +12722,11 @@
 				"AvgMetalness": 27,
 				"AvgRoughness": 27,
 				"TexturePack": 27
-			}
+			},
+			[
+				41,
+				130
+			]
 		],
 		[
 			"MemStorageConnection",
@@ -12060,11 +12761,20 @@
 			10,
 			{
 				"Text": 4
-			}
+			},
+			[
+				110,
+				33
+			]
 		],
 		[
 			"Hint",
-			467
+			467,
+			0,
+			[
+				110,
+				33
+			]
 		],
 		[
 			"MessageBusConnection",
@@ -12168,15 +12878,30 @@
 		],
 		[
 			"NetworkClient",
-			483
+			483,
+			0,
+			[
+				30,
+				16
+			]
 		],
 		[
 			"NetworkServer",
-			483
+			483,
+			0,
+			[
+				30,
+				15
+			]
 		],
 		[
 			"NetworkReplicator",
-			10
+			10,
+			0,
+			[
+				30,
+				29
+			]
 		],
 		[
 			"ClientReplicator",
@@ -12208,7 +12933,8 @@
 				"RenderStreamedRegions": 4,
 				"ShowActiveAnimationAsset": 4,
 				"OpenCertManagerDialog": 112
-			}
+			},
+			20
 		],
 		[
 			"NoCollisionConstraint",
@@ -12217,7 +12943,11 @@
 				"Enabled": 1,
 				"Part0": 115,
 				"Part1": 115
-			}
+			},
+			[
+				30,
+				105
+			]
 		],
 		[
 			"Noise",
@@ -12391,11 +13121,17 @@
 				"ReplicationPV": 3,
 				"siz": 117,
 				"size": 117
-			}
+			},
+			3
 		],
 		[
 			"CornerWedgePart",
-			498
+			498,
+			0,
+			[
+				120,
+				1
+			]
 		],
 		[
 			"FormFactorPart",
@@ -12431,18 +13167,31 @@
 					117,
 					353
 				]
-			}
+			},
+			[
+				110,
+				1
+			]
 		],
 		[
 			"FlagStand",
 			501,
 			{
 				"TeamColor": 0
-			}
+			},
+			[
+				30,
+				39
+			]
 		],
 		[
 			"Platform",
-			501
+			501,
+			0,
+			[
+				30,
+				35
+			]
 		],
 		[
 			"Seat",
@@ -12450,7 +13199,11 @@
 			{
 				"Disabled": 8,
 				"Occupant": 8
-			}
+			},
+			[
+				30,
+				35
+			]
 		],
 		[
 			"SkateboardPlatform",
@@ -12465,7 +13218,11 @@
 					8,
 					335
 				]
-			}
+			},
+			[
+				30,
+				35
+			]
 		],
 		[
 			"SpawnLocation",
@@ -12476,11 +13233,20 @@
 				"Enabled": 1,
 				"Neutral": 122,
 				"TeamColor": 122
-			}
+			},
+			[
+				30,
+				25
+			]
 		],
 		[
 			"WedgePart",
-			500
+			500,
+			0,
+			[
+				120,
+				1
+			]
 		],
 		[
 			"Terrain",
@@ -12510,7 +13276,11 @@
 				"ClusterGridV3": 0,
 				"PhysicsGrid": 0,
 				"SmoothGrid": 0
-			}
+			},
+			[
+				5,
+				65
+			]
 		],
 		[
 			"TriangleMeshPart",
@@ -12566,7 +13336,11 @@
 				],
 				"SolidMeshHolder": 0,
 				"VertexCount": 4
-			}
+			},
+			[
+				105,
+				73
+			]
 		],
 		[
 			"PartOperation",
@@ -12610,11 +13384,20 @@
 					0,
 					338
 				]
-			}
+			},
+			[
+				104,
+				72
+			]
 		],
 		[
 			"UnionOperation",
-			511
+			511,
+			0,
+			[
+				105,
+				73
+			]
 		],
 		[
 			"TrussPart",
@@ -12628,7 +13411,11 @@
 					117,
 					506
 				]
-			}
+			},
+			[
+				120,
+				1
+			]
 		],
 		[
 			"VehicleSeat",
@@ -12645,7 +13432,11 @@
 				"ThrottleFloat": 8,
 				"Torque": 8,
 				"TurnSpeed": 8
-			}
+			},
+			[
+				30,
+				35
+			]
 		],
 		[
 			"Camera",
@@ -12672,7 +13463,11 @@
 				"VRTiltAndRollEnabled": 0,
 				"ViewportSize": 0,
 				"focus": 0
-			}
+			},
+			[
+				5,
+				5
+			]
 		],
 		[
 			"ViewportCamera",
@@ -12701,11 +13496,20 @@
 				"ScaleFactor": 116,
 				"SlimHash": 0,
 				"WorldPivotData": 116
-			}
+			},
+			[
+				100,
+				2
+			]
 		],
 		[
 			"Actor",
-			519
+			519,
+			0,
+			[
+				10,
+				113
+			]
 		],
 		[
 			"BackpackItem",
@@ -12713,7 +13517,8 @@
 			{
 				"TextureContent": 0,
 				"TextureId": 0
-			}
+			},
+			20
 		],
 		[
 			"HopperBin",
@@ -12726,7 +13531,11 @@
 				],
 				"Command": 0,
 				"TextureName": 0
-			}
+			},
+			[
+				240,
+				22
+			]
 		],
 		[
 			"Tool",
@@ -12742,14 +13551,22 @@
 				"ManualActivationOnly": 1,
 				"RequiresHandle": 1,
 				"ToolTip": 4
-			}
+			},
+			[
+				30,
+				17
+			]
 		],
 		[
 			"Flag",
 			523,
 			{
 				"TeamColor": 0
-			}
+			},
+			[
+				30,
+				38
+			]
 		],
 		[
 			"ProceduralModel",
@@ -12758,11 +13575,17 @@
 				"GenerationError": 1,
 				"Generator": 1,
 				"Size": 3
-			}
+			},
+			100
 		],
 		[
 			"Status",
-			519
+			519,
+			0,
+			[
+				100,
+				2
+			]
 		],
 		[
 			"WorldRoot",
@@ -12963,14 +13786,22 @@
 					494
 				],
 				"TerrainWeldsFixed": 1
-			}
+			},
+			[
+				5,
+				19
+			]
 		],
 		[
 			"WorldModel",
 			527,
 			{
 				"UseWorkspaceCollisionGroups": 1
-			}
+			},
+			[
+				22,
+				19
+			]
 		],
 		[
 			"PackageLink",
@@ -12995,7 +13826,11 @@
 				"PackageGuid": 129,
 				"PackageIdSerialize": 129,
 				"VersionIdSerialize": 129
-			}
+			},
+			[
+				1,
+				98
+			]
 		],
 		[
 			"PackageService",
@@ -13155,7 +13990,11 @@
 				"VelocitySpread": 15,
 				"WindAffectsDrag": 131,
 				"ZOffset": 4
-			}
+			},
+			[
+				30,
+				80
+			]
 		],
 		[
 			"PartyEmulatorService",
@@ -13196,7 +14035,11 @@
 				"Attachment1": 0,
 				"IsBidirectional": 0,
 				"Label": 0
-			}
+			},
+			[
+				210,
+				137
+			]
 		],
 		[
 			"PathfindingModifier",
@@ -13204,7 +14047,11 @@
 			{
 				"Label": 0,
 				"PassThrough": 0
-			}
+			},
+			[
+				210,
+				128
+			]
 		],
 		[
 			"PathfindingService",
@@ -13347,7 +14194,12 @@
 		],
 		[
 			"PlatformLibraries",
-			10
+			10,
+			0,
+			[
+				30,
+				46
+			]
 		],
 		[
 			"Player",
@@ -13459,14 +14311,19 @@
 				],
 				"RawJoinData": 0,
 				"SuperSafeChatReplicate": 0
-			}
+			},
+			[
+				10,
+				12
+			]
 		],
 		[
 			"PlayerControlState",
 			10,
 			{
 				"Owner": 0
-			}
+			},
+			31
 		],
 		[
 			"PlayerData",
@@ -13528,7 +14385,12 @@
 		],
 		[
 			"PlayerScripts",
-			10
+			10,
+			0,
+			[
+				130,
+				78
+			]
 		],
 		[
 			"PlayerViewService",
@@ -13554,7 +14416,11 @@
 				"numPlayers": 0,
 				"ServerGitHash": 0,
 				"ServerLogPrefix": 0
-			}
+			},
+			[
+				20,
+				21
+			]
 		],
 		[
 			"Plugin",
@@ -13571,7 +14437,11 @@
 				"IsDebuggable": 0,
 				"MultipleDocumentInterfaceInstance": 0,
 				"UsesAssetInsertionDrag": 1
-			}
+			},
+			[
+				30,
+				86
+			]
 		],
 		[
 			"PluginAction",
@@ -13592,7 +14462,8 @@
 			10,
 			{
 				"Manifest": 0
-			}
+			},
+			30
 		],
 		[
 			"PluginConnectionService",
@@ -13600,7 +14471,12 @@
 		],
 		[
 			"PluginDebugService",
-			10
+			10,
+			0,
+			[
+				30,
+				46
+			]
 		],
 		[
 			"PluginDragEvent",
@@ -13614,7 +14490,12 @@
 		],
 		[
 			"PluginGuiService",
-			10
+			10,
+			0,
+			[
+				30,
+				46
+			]
 		],
 		[
 			"PluginManagementService",
@@ -13690,14 +14571,22 @@
 					385
 				],
 				"Weight": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"NumberPose",
 			601,
 			{
 				"Value": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"Pose",
@@ -13705,7 +14594,11 @@
 			{
 				"CFrame": 0,
 				"MaskWeight": 0
-			}
+			},
+			[
+				220,
+				60
+			]
 		],
 		[
 			"PostEffect",
@@ -13721,14 +14614,22 @@
 				"Intensity": 5,
 				"Size": 5,
 				"Threshold": 5
-			}
+			},
+			[
+				20,
+				83
+			]
 		],
 		[
 			"BlurEffect",
 			604,
 			{
 				"Size": 5
-			}
+			},
+			[
+				20,
+				83
+			]
 		],
 		[
 			"ColorCorrectionEffect",
@@ -13738,7 +14639,11 @@
 				"Contrast": 5,
 				"Saturation": 5,
 				"TintColor": 5
-			}
+			},
+			[
+				20,
+				83
+			]
 		],
 		[
 			"ColorGradingEffect",
@@ -13748,7 +14653,11 @@
 					5,
 					546
 				]
-			}
+			},
+			[
+				20,
+				83
+			]
 		],
 		[
 			"DepthOfFieldEffect",
@@ -13758,7 +14667,11 @@
 				"FocusDistance": 5,
 				"InFocusRadius": 5,
 				"NearIntensity": 5
-			}
+			},
+			[
+				20,
+				83
+			]
 		],
 		[
 			"SunRaysEffect",
@@ -13766,11 +14679,20 @@
 			{
 				"Intensity": 5,
 				"Spread": 5
-			}
+			},
+			[
+				20,
+				83
+			]
 		],
 		[
 			"Preloaded",
-			10
+			10,
+			0,
+			[
+				30,
+				70
+			]
 		],
 		[
 			"ProceduralBehaviorSchedulerService",
@@ -13811,7 +14733,11 @@
 					408
 				],
 				"UIOffset": 0
-			}
+			},
+			[
+				30,
+				124
+			]
 		],
 		[
 			"ProximityPromptService",
@@ -13958,7 +14884,12 @@
 		],
 		[
 			"RemoteFunction",
-			10
+			10,
+			0,
+			[
+				40,
+				74
+			]
 		],
 		[
 			"RenderSettings",
@@ -13997,7 +14928,8 @@
 					22,
 					600
 				]
-			}
+			},
+			20
 		],
 		[
 			"RenderingTest",
@@ -14021,15 +14953,29 @@
 				"ShouldSkip": 138,
 				"Ticket": 138,
 				"Timeout": 138
-			}
+			},
+			[
+				40,
+				5
+			]
 		],
 		[
 			"ReplicatedFirst",
-			10
+			10,
+			0,
+			[
+				30,
+				70
+			]
 		],
 		[
 			"ReplicatedStorage",
-			10
+			10,
+			0,
+			[
+				30,
+				70
+			]
 		],
 		[
 			"RequestOrchestratorService",
@@ -14041,7 +14987,12 @@
 		],
 		[
 			"RobloxPluginGuiService",
-			10
+			10,
+			0,
+			[
+				30,
+				46
+			]
 		],
 		[
 			"RobloxReplicatedStorage",
@@ -14258,7 +15209,8 @@
 			{
 				"AirDensity": 139,
 				"RelativeWindVelocity": 139
-			}
+			},
+			20
 		],
 		[
 			"BuoyancySensor",
@@ -14266,7 +15218,8 @@
 			{
 				"FullySubmerged": 139,
 				"TouchingSurface": 139
-			}
+			},
+			20
 		],
 		[
 			"ControllerSensor",
@@ -14290,7 +15243,8 @@
 					69,
 					469
 				]
-			}
+			},
+			20
 		],
 		[
 			"FluidForceSensor",
@@ -14299,7 +15253,8 @@
 				"CenterOfPressure": 139,
 				"Force": 139,
 				"Torque": 139
-			}
+			},
+			20
 		],
 		[
 			"SerializationService",
@@ -14310,11 +15265,20 @@
 			10,
 			{
 				"LoadStringEnabled": 1
-			}
+			},
+			[
+				30,
+				71
+			]
 		],
 		[
 			"ServerStorage",
-			10
+			10,
+			0,
+			[
+				30,
+				69
+			]
 		],
 		[
 			"ServiceProvider",
@@ -14377,7 +15341,9 @@
 		],
 		[
 			"GlobalSettings",
-			690
+			690,
+			0,
+			20
 		],
 		[
 			"UserSettings",
@@ -14428,7 +15394,11 @@
 				"SunAngularSize": 4,
 				"SunTextureContent": 4,
 				"SunTextureId": 4
-			}
+			},
+			[
+				5,
+				28
+			]
 		],
 		[
 			"SlimAnimationDataEntity",
@@ -14464,7 +15434,11 @@
 				"opacity_xml": 0,
 				"riseVelocity_xml": 0,
 				"size_xml": 0
-			}
+			},
+			[
+				30,
+				59
+			]
 		],
 		[
 			"SmoothVoxelsUpgraderService",
@@ -14527,7 +15501,11 @@
 				"TimePositionReplicator": 0,
 				"xmlRead_MaxDistance_3": 0,
 				"xmlRead_MinDistance_3": 0
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"SoundEffect",
@@ -14544,7 +15522,11 @@
 				"Depth": 5,
 				"Mix": 5,
 				"Rate": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"CompressorSoundEffect",
@@ -14556,7 +15538,11 @@
 				"Release": 5,
 				"SideChain": 5,
 				"Threshold": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"CustomSoundEffect",
@@ -14578,7 +15564,11 @@
 			708,
 			{
 				"Level": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"EchoSoundEffect",
@@ -14588,7 +15578,11 @@
 				"DryLevel": 5,
 				"Feedback": 5,
 				"WetLevel": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"EqualizerSoundEffect",
@@ -14597,7 +15591,11 @@
 				"HighGain": 5,
 				"LowGain": 5,
 				"MidGain": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"FlangeSoundEffect",
@@ -14606,14 +15604,22 @@
 				"Depth": 5,
 				"Mix": 5,
 				"Rate": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"PitchShiftSoundEffect",
 			708,
 			{
 				"Octave": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"ReverbSoundEffect",
@@ -14624,7 +15630,11 @@
 				"Diffusion": 5,
 				"DryLevel": 5,
 				"WetLevel": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"TremoloSoundEffect",
@@ -14633,14 +15643,22 @@
 				"Depth": 5,
 				"Duty": 5,
 				"Frequency": 5
-			}
+			},
+			[
+				20,
+				84
+			]
 		],
 		[
 			"SoundGroup",
 			10,
 			{
 				"Volume": 5
-			}
+			},
+			[
+				20,
+				85
+			]
 		],
 		[
 			"SoundService",
@@ -14681,7 +15699,11 @@
 					0,
 					608
 				]
-			}
+			},
+			[
+				500,
+				31
+			]
 		],
 		[
 			"SoundShimService",
@@ -14696,7 +15718,11 @@
 				"LocalTransparencyModifier": 0,
 				"SparkleColor": 0,
 				"TimeScale": 0
-			}
+			},
+			[
+				30,
+				42
+			]
 		],
 		[
 			"SpawnerService",
@@ -14722,7 +15748,12 @@
 		],
 		[
 			"StandalonePluginScripts",
-			10
+			10,
+			0,
+			[
+				130,
+				78
+			]
 		],
 		[
 			"StartPageService",
@@ -14730,11 +15761,21 @@
 		],
 		[
 			"StarterGear",
-			10
+			10,
+			0,
+			[
+				30,
+				20
+			]
 		],
 		[
 			"StarterPack",
-			10
+			10,
+			0,
+			[
+				30,
+				20
+			]
 		],
 		[
 			"StarterPlayer",
@@ -14830,15 +15871,29 @@
 					308
 				],
 				"RagdollDeath": 143
-			}
+			},
+			[
+				30,
+				79
+			]
 		],
 		[
 			"StarterPlayerScripts",
-			10
+			10,
+			0,
+			[
+				130,
+				78
+			]
 		],
 		[
 			"StarterCharacterScripts",
-			732
+			732,
+			0,
+			[
+				130,
+				78
+			]
 		],
 		[
 			"StartupMessageService",
@@ -15323,7 +16378,9 @@
 		],
 		[
 			"StyleBase",
-			10
+			10,
+			0,
+			200
 		],
 		[
 			"StyleRule",
@@ -15334,11 +16391,14 @@
 				"SelectorError": 0,
 				"Index": 0,
 				"PropertiesSerialize": 0
-			}
+			},
+			200
 		],
 		[
 			"StyleSheet",
-			764
+			764,
+			0,
+			200
 		],
 		[
 			"StyleDerive",
@@ -15347,14 +16407,16 @@
 				"Priority": 0,
 				"StyleSheet": 0,
 				"Index": 0
-			}
+			},
+			200
 		],
 		[
 			"StyleLink",
 			10,
 			{
 				"StyleSheet": 0
-			}
+			},
+			200
 		],
 		[
 			"StyleQuery",
@@ -15378,7 +16440,8 @@
 					186
 				],
 				"ConditionsSerialize": 0
-			}
+			},
+			200
 		],
 		[
 			"StylingService",
@@ -15410,7 +16473,11 @@
 				"RoughnessMapContent": 4,
 				"TexturePack": 4,
 				"TexturePackContent": 4
-			}
+			},
+			[
+				40,
+				10
+			]
 		],
 		[
 			"SystemThemeService",
@@ -15438,7 +16505,11 @@
 				"ChildOrder": 0,
 				"Score": 0,
 				"TeamColor": 0
-			}
+			},
+			[
+				10,
+				24
+			]
 		],
 		[
 			"TeamCreateData",
@@ -15457,7 +16528,12 @@
 		],
 		[
 			"Teams",
-			10
+			10,
+			0,
+			[
+				140,
+				23
+			]
 		],
 		[
 			"TelemetryService",
@@ -15520,7 +16596,11 @@
 				"RoughnessMapContent": 4,
 				"StudsPerTile": 4,
 				"TexturePack": 27
-			}
+			},
+			[
+				42,
+				144
+			]
 		],
 		[
 			"TerrainRegion",
@@ -15532,7 +16612,11 @@
 				"ExtentsMin": 0,
 				"GridV3": 0,
 				"SmoothGrid": 0
-			}
+			},
+			[
+				20,
+				65
+			]
 		],
 		[
 			"TestCase",
@@ -15555,7 +16639,11 @@
 				"ThrottlePhysicsToRealtime": 84,
 				"Timeout": 85,
 				"WarnCount": 162
-			}
+			},
+			[
+				1000,
+				68
+			]
 		],
 		[
 			"TextBoxService",
@@ -15566,7 +16654,11 @@
 			10,
 			{
 				"DirectChatRequester": 0
-			}
+			},
+			[
+				14,
+				140
+			]
 		],
 		[
 			"TextChatCommand",
@@ -15576,7 +16668,11 @@
 				"Enabled": 1,
 				"PrimaryAlias": 1,
 				"SecondaryAlias": 1
-			}
+			},
+			[
+				15,
+				138
+			]
 		],
 		[
 			"TextChatConfigurations",
@@ -15605,7 +16701,8 @@
 				"TextColor3": 4,
 				"TextSize": 4,
 				"VerticalStudsOffset": 1
-			}
+			},
+			13
 		],
 		[
 			"ChannelTabsConfiguration",
@@ -15623,7 +16720,11 @@
 				"TextSize": 4,
 				"TextStrokeColor3": 4,
 				"TextStrokeTransparency": 4
-			}
+			},
+			[
+				12,
+				141
+			]
 		],
 		[
 			"ChatInputBarConfiguration",
@@ -15651,7 +16752,11 @@
 				"TextSize": 4,
 				"TextStrokeColor3": 4,
 				"TextStrokeTransparency": 4
-			}
+			},
+			[
+				11,
+				142
+			]
 		],
 		[
 			"ChatWindowConfiguration",
@@ -15679,7 +16784,11 @@
 					592
 				],
 				"WidthScale": 1
-			}
+			},
+			[
+				10,
+				141
+			]
 		],
 		[
 			"TextChatMessage",
@@ -15766,7 +16875,11 @@
 					0,
 					441
 				]
-			}
+			},
+			[
+				511,
+				143
+			]
 		],
 		[
 			"TextFilterResult",
@@ -15803,7 +16916,11 @@
 				"UserId": 0,
 				"Username": 0,
 				"UserIdReplicated": 0
-			}
+			},
+			[
+				10,
+				139
+			]
 		],
 		[
 			"TextureGenerationPartGroup",
@@ -15856,7 +16973,12 @@
 		],
 		[
 			"TouchTransmitter",
-			10
+			10,
+			0,
+			[
+				30,
+				37
+			]
 		],
 		[
 			"TraceRouteService",
@@ -15917,7 +17039,11 @@
 				],
 				"Transparency": 4,
 				"WidthScale": 15
-			}
+			},
+			[
+				30,
+				93
+			]
 		],
 		[
 			"Translator",
@@ -15985,7 +17111,11 @@
 					1,
 					189
 				]
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UISizeConstraint",
@@ -15993,7 +17123,11 @@
 			{
 				"MaxSize": 1,
 				"MinSize": 1
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UITextSizeConstraint",
@@ -16001,7 +17135,11 @@
 			{
 				"MaxTextSize": 1,
 				"MinTextSize": 1
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UICorner",
@@ -16012,7 +17150,11 @@
 				"CornerRadius": 4,
 				"TopLeftRadius": 163,
 				"TopRightRadius": 163
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIDragDetector",
@@ -16058,7 +17200,11 @@
 					1,
 					566
 				]
-			}
+			},
+			[
+				30,
+				41
+			]
 		],
 		[
 			"UIFlexItem",
@@ -16074,7 +17220,11 @@
 					288
 				],
 				"ShrinkRatio": 4
-			}
+			},
+			[
+				130,
+				26
+			]
 		],
 		[
 			"UIGradient",
@@ -16094,7 +17244,11 @@
 					4,
 					247
 				]
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UILayout",
@@ -16136,7 +17290,11 @@
 					1,
 					487
 				]
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIListLayout",
@@ -16158,7 +17316,11 @@
 				"Wraps": 1,
 				"HorizontalPadding": 0,
 				"VerticalPadding": 0
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIPageLayout",
@@ -16180,7 +17342,11 @@
 				"ScrollWheelInputEnabled": 69,
 				"TouchInputEnabled": 69,
 				"TweenTime": 4
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UITableLayout",
@@ -16193,7 +17359,11 @@
 					517
 				],
 				"Padding": 4
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIPadding",
@@ -16203,14 +17373,22 @@
 				"PaddingLeft": 1,
 				"PaddingRight": 1,
 				"PaddingTop": 1
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIScale",
 			829,
 			{
 				"Scale": 1
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIShadow",
@@ -16229,7 +17407,11 @@
 				"Spread": 4,
 				"Transparency": 4,
 				"ZIndex": 4
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIStroke",
@@ -16257,7 +17439,11 @@
 				"Thickness": 4,
 				"Transparency": 4,
 				"ZIndex": 4
-			}
+			},
+			[
+				30,
+				26
+			]
 		],
 		[
 			"UIDragDetectorService",
@@ -16478,7 +17664,8 @@
 					0,
 					587
 				]
-			}
+			},
+			1000
 		],
 		[
 			"VRStatusService",
@@ -16486,7 +17673,12 @@
 		],
 		[
 			"ValueBase",
-			10
+			10,
+			0,
+			[
+				30,
+				4
+			]
 		],
 		[
 			"BinaryStringValue",
@@ -16500,28 +17692,44 @@
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"BrickColorValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"CFrameValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"Color3Value",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"DoubleConstrainedValue",
@@ -16532,7 +17740,11 @@
 				"MinValue": 0,
 				"Value": 0,
 				"value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"IntConstrainedValue",
@@ -16543,49 +17755,77 @@
 				"MinValue": 0,
 				"Value": 0,
 				"value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"IntValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"NumberValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"ObjectValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"RayValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"StringValue",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"Vector3Value",
 			856,
 			{
 				"Value": 0
-			}
+			},
+			[
+				30,
+				4
+			]
 		],
 		[
 			"ValueCurve",
@@ -16653,7 +17893,11 @@
 				"VideoContent": 18,
 				"Volume": 5,
 				"PlayingReplicating": 19
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"VideoScreenCaptureService",
@@ -16736,7 +17980,11 @@
 				"UseStreamSwitching": 0,
 				"VoiceChatEnabledForPlaceOnRcc": 5,
 				"VoiceChatEnabledForUniverseOnRcc": 5
-			}
+			},
+			[
+				520,
+				136
+			]
 		],
 		[
 			"WebSocketClient",
@@ -16769,7 +18017,11 @@
 				"Part0Internal": 115,
 				"Part1Internal": 115,
 				"State": 1
-			}
+			},
+			[
+				30,
+				94
+			]
 		],
 		[
 			"WindowProtocolService",
@@ -16784,7 +18036,11 @@
 				"SourceName": 165,
 				"TargetInstance": 165,
 				"TargetName": 165
-			}
+			},
+			[
+				10,
+				11
+			]
 		],
 		[
 			"WrapDeformMeshProvider",
@@ -16797,7 +18053,8 @@
 				"ReferenceCageMeshContent": 4,
 				"UVMaxBound": 4,
 				"UVMinBound": 4
-			}
+			},
+			33
 		],
 		[
 			"Logger",
