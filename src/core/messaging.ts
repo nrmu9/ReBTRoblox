@@ -2,6 +2,24 @@ import { IS_BACKGROUND_PAGE, IS_FIREFOX } from "@/core/env"
 
 declare const cloneInto: any
 
+/** Anything crossing a port or a CustomEvent boundary is untyped by nature. */
+type MessageCallback = (...args: any[]) => void
+
+/** Content script to background: a named call, with an id when a reply is wanted. */
+interface PortRequest {
+	name: string
+	data?: any
+	id?: number
+}
+
+/** Background back to the content script. Replies may stream, hence `final`. */
+interface PortResponse {
+	id: number
+	data?: any
+	final?: boolean
+	cancel?: boolean
+}
+
 export const backgroundScript: any = {
 	callbacks: {},
 	responseCounter: 0,
@@ -42,7 +60,7 @@ export const backgroundScript: any = {
 		this.resetTimeout()
 	},
 	
-	onPortMessage(port, msg) {
+	onPortMessage(port: chrome.runtime.Port, msg: PortResponse) {
 		const fn = this.callbacks[msg.id]
 		if(!fn) { return }
 
@@ -56,7 +74,7 @@ export const backgroundScript: any = {
 		fn(msg.data)
 	},
 	
-	send(name, data, callback) {
+	send(name: string, data?: any, callback?: MessageCallback) {
 		if(typeof data === "function") {
 			callback = data
 			data = null
@@ -80,17 +98,17 @@ export const backgroundScript: any = {
 export const injectScript: any = {
 	messageListeners: {},
 	
-	call(name, fn, ...args) {
+	call(name: string, fn: MessageCallback, ...args: any[]) {
 		this.send("call", name, args)
 	},
 
-	send(action, ...args) {
+	send(action: string, ...args: any[]) {
 		document.dispatchEvent(new CustomEvent(`btroblox/inject/${action}`, {
 			detail: IS_FIREFOX ? cloneInto(args, window, { cloneFunctions: true, wrapReflectors: true }) : args
 		}))
 	},
 
-	listen(action, callback, params) {
+	listen(action: string, callback: MessageCallback, params?: { once?: boolean }) {
 		let listeners = this.messageListeners[action]
 		
 		if(!listeners) {
@@ -114,7 +132,7 @@ export const injectScript: any = {
 		listeners.push(callback)
 	},
 	
-	init(...args) {
+	init(...args: any[]) {
 		document.dispatchEvent(new CustomEvent(`btroblox/init`, {
 			detail: IS_FIREFOX ? cloneInto(args, window, { cloneFunctions: true, wrapReflectors: true }) : args
 		}))
@@ -127,19 +145,19 @@ export const contentScript: any = {
 	listenersByName: [],
 	ports: [],
 	
-	onPortAdded(port) {
+	onPortAdded(port: chrome.runtime.Port) {
 		this.ports.push(port)
 
-		port.onMessage.addListener(msg => this.onPortMessage(port, msg))
+		port.onMessage.addListener((msg: PortRequest) => this.onPortMessage(port, msg))
 		port.onDisconnect.addListener(() => this.onPortRemoved(port))
 	},
 	
-	onPortRemoved(port) {
+	onPortRemoved(port: chrome.runtime.Port) {
 		const index = this.ports.indexOf(port)
 		if(index !== -1) { this.ports.splice(index, 1) }
 	},
 
-	onPortMessage(port, msg) {
+	onPortMessage(port: chrome.runtime.Port, msg: PortRequest) {
 		const listener = this.listenersByName[msg.name]
 
 		if(!listener) {
@@ -148,7 +166,7 @@ export const contentScript: any = {
 
 		let final = false
 
-		const respond = (response, hasMore) => {
+		const respond = (response: any, hasMore?: boolean) => {
 			if(!final && "id" in msg) {
 				final = !(hasMore === true)
 
@@ -170,7 +188,7 @@ export const contentScript: any = {
 		listener(msg.data, respond, port)
 	},
 	
-	listen(name, callback) {
+	listen(name: string, callback: MessageCallback) {
 		if(typeof name === "object") {
 			for(const [key, fn] of Object.entries(name) as [string, any][]) {
 				this.listen(key, fn)
