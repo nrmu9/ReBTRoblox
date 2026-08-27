@@ -45,6 +45,13 @@ jobs:
 
           curl -fsSL "https://github.com/${{ github.repository_owner }}.gpg" | gpg --batch --quiet --import
 
+          # Trust here comes from where the key was fetched, not from a web of
+          # trust the runner cannot have. Saying so keeps gpg from warning that
+          # it cannot vouch for a key that is the only one in the keyring.
+          gpg --list-keys --with-colons |
+            awk -F: '/^fpr:/ { print $10 ":6:" }' |
+            gpg --batch --quiet --import-ownertrust
+
           if ! git verify-tag "$tag"; then
             echo "::error::$tag is not signed by a gpg key published on the ${{ github.repository_owner }} account"
             exit 1
