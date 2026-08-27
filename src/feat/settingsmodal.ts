@@ -309,9 +309,9 @@ export const SettingsModal: SettingsModalState = {
 				checkbox.classList.add("btr-settings-checkbox")
 				
 				const labelIndex = labelCounter++
-				const label = html`<label for="btr-settings-input-${labelIndex}" title="${labelText}">${labelText}</label>`
+				const label = html<HTMLLabelElement>`<label for="btr-settings-input-${labelIndex}" title="${labelText}">${labelText}</label>`
 				
-				const input = html`<input type=checkbox id="btr-settings-input-${labelIndex}">`
+				const input = html<HTMLInputElement>`<input type=checkbox id="btr-settings-input-${labelIndex}">`
 				const resetButton = html`<span class=btr-setting-reset-button></span>`
 				
 				input.$on("change", () => callback(input.checked))
@@ -373,11 +373,11 @@ export const SettingsModal: SettingsModalState = {
 			const currencies: any[] = Object.values(RobuxToCash.Currencies)
 			
 			for(const currency of currencies.filter(x => !x.usdRate))  {
-				currencySelect.append(html`<option>${currency.name}</option>`)
+				currencySelect.append(html<HTMLOptionElement>`<option>${currency.name}</option>`)
 			}
 			
 			for(const currency of currencies.filter(x => x.usdRate).sort((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
-				currencySelect.append(html`<option title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}" value="${currency.name}">${currency.name}*</option>`)
+				currencySelect.append(html<HTMLOptionElement>`<option title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}" value="${currency.name}">${currency.name}*</option>`)
 			}
 
 			const setRate = () => {
@@ -415,7 +415,7 @@ export const SettingsModal: SettingsModalState = {
 						fullText = `${display} (${rateText})`
 					}
 					
-					rateSelect.append(html`<option value="${option.name}">${fullText}</option>`)
+					rateSelect.append(html<HTMLOptionElement>`<option value="${option.name}">${fullText}</option>`)
 
 					if(option.name === SETTINGS.get("general.robuxToUSDRate")) {
 						selected = true
@@ -541,14 +541,14 @@ export const SettingsModal: SettingsModalState = {
 				const resetButton = html`<span class=btr-setting-reset-button path=${settingPath}></span>`
 
 				if(select.hasAttribute("label")) {
-					wrapper.append(html`<label>${select.getAttribute("label") || ""}</label>`, html`<br>`)
+					wrapper.append(html<HTMLLabelElement>`<label>${select.getAttribute("label") || ""}</label>`, html`<br>`)
 				}
 
 				select.before(wrapper)
 				wrapper.append(select, resetButton)
 
 				const titleOption = select.options[0] && select.options[0].hasAttribute("disabled") ? select.options[0] : null
-				const titleOptionFormat = titleOption ? titleOption.textContent : null
+				const titleOptionFormat = titleOption?.textContent ?? ""
 
 				if(titleOption) {
 					titleOption.style.display = "none"
@@ -601,14 +601,14 @@ export const SettingsModal: SettingsModalState = {
 
 				checkbox.classList.add("btr-settings-checkbox")
 
-				const input = html`<input type=checkbox>`
+				const input = html<HTMLInputElement>`<input type=checkbox>`
 				checkbox.prepend(input)
 
 				const labelIndex = labelCounter++
 				input.id = `btr-settings-input-${labelIndex}`
 
 				const labelText = checkbox.hasAttribute("label") ? checkbox.getAttribute("label") : settingPath
-				const label = html`<label for=btr-settings-input-${labelIndex} title="${labelText}">${labelText}</label>`
+				const label = html<HTMLLabelElement>`<label for=btr-settings-input-${labelIndex} title="${labelText}">${labelText}</label>`
 				checkbox.append(label)
 
 				if(SETTINGS.hasSetting(settingPath)) {
@@ -668,8 +668,8 @@ export const SettingsModal: SettingsModalState = {
 
 				if(typeof settingValue === "boolean") {
 					const checkbox = html`<checkbox></checkbox>`
-					const input = html`<input id=btr-settings-input-${labelCounter} type=checkbox>`
-					const label = html`<label for=btr-settings-input-${labelCounter++} title="${settingPath}">${settingPath}</label>`
+					const input = html<HTMLInputElement>`<input id=btr-settings-input-${labelCounter} type=checkbox>`
+					const label = html<HTMLLabelElement>`<label for=btr-settings-input-${labelCounter++} title="${settingPath}">${settingPath}</label>`
 
 					checkbox.append(input)
 					checkbox.append(label)
@@ -690,18 +690,18 @@ export const SettingsModal: SettingsModalState = {
 					SETTINGS.onChange(settingPath, update)
 					update()
 				} else if(typeof settingValue === "string" && defaultValueInfo.validValues) {
-					const select = html`<select style="width:50%">
+					const select = html<HTMLSelectElement>`<select style="width:50%">
 						<option selected disabled>${settingPath}</option>
 					</select>`
 					
 					for(const value of defaultValueInfo.validValues) {
-						select.append(html`<option value="${value}">${value}</option>`)
+						select.append(html<HTMLOptionElement>`<option value="${value}">${value}</option>`)
 					}
 					
 					wipGroup.append(select)
 					
 					const titleOption = select.options[0] && select.options[0].hasAttribute("disabled") ? select.options[0] : null
-					const titleOptionFormat = titleOption ? titleOption.textContent : null
+					const titleOptionFormat = titleOption?.textContent ?? ""
 
 					if(titleOption) {
 						titleOption.style.display = "none"
@@ -716,7 +716,7 @@ export const SettingsModal: SettingsModalState = {
 							select.value = titleOption.value
 						}
 						
-						for(const option of select.$findAll("option:not([disabled])")) {
+						for(const option of select.$findAll<HTMLOptionElement>("option:not([disabled])")) {
 							option.textContent = option === selected ? `${option.value} (selected)` : option.value
 						}
 					}
@@ -805,7 +805,7 @@ export const SettingsModal: SettingsModalState = {
 					if(!entry) {
 						const label = html`<div class=name title=${key}>${key}</div>`
 						const resetButton = html`<span class=btr-setting-reset-button><span class=btr-cross></span></span>`
-						const input = html`<input class=value type=text>`
+						const input = html<HTMLInputElement>`<input class=value type=text>`
 						
 						const update = (initial?: any) => {
 							resetButton.style.display = input.value ? "" : "none"

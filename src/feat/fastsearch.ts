@@ -280,21 +280,21 @@ export const btrFastSearch = {
 					</a>
 				</li>`
 				
-				const label = item.$find(".text-label")
+				const label = item.$req(".text-label")
 
 				if(user.Temporary) {
 					item.dataset.searchurl = `/User.aspx?username=`
 					label.append(`${user.NotFound ? "User not found" : "Loading..."}`)
 					
 					if(user.NotFound) {
-						item.$find(".btr-fastsearch-thumbnail").style.visibility = "hidden"
+						item.$req(".btr-fastsearch-thumbnail").style.visibility = "hidden"
 					}
 				} else {
 					item.dataset.searchurl = `/User.aspx?userId=${user.UserId}&searchTerm=`
-					item.$find("a").href = `/users/${user.UserId}/profile`
+					item.$req<HTMLAnchorElement>("a").href = `/users/${user.UserId}/profile`
 					
 					if(user.HasVerifiedBadge) {
-						item.$find(".btr-fastsearch-name").append(html`
+						item.$req(".btr-fastsearch-name").append(html`
 						<img
 							src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cg clip-path='url(%23clip0_8_46)'%3E%3Crect x='5.88818' width='22.89' height='22.89' transform='rotate(15 5.88818 0)' fill='%230066FF'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M20.543 8.7508L20.549 8.7568C21.15 9.3578 21.15 10.3318 20.549 10.9328L11.817 19.6648L7.45 15.2968C6.85 14.6958 6.85 13.7218 7.45 13.1218L7.457 13.1148C8.058 12.5138 9.031 12.5138 9.633 13.1148L11.817 15.2998L18.367 8.7508C18.968 8.1498 19.942 8.1498 20.543 8.7508Z' fill='white'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0_8_46'%3E%3Crect width='28' height='28' fill='white'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E"
 							title="Verified Badge Icon"
@@ -325,12 +325,12 @@ export const btrFastSearch = {
 				results.push(item)
 				
 				if(!user.Temporary) {
-					item.$find(".btr-fastsearch-thumbnail").classList.add("shimmer", "loading")
+					item.$req(".btr-fastsearch-thumbnail").classList.add("shimmer", "loading")
 					
 					requestThumbnail(user.UserId).then(url => {
 						if(lastResultsLoaded !== now) { return }
 						
-						const thumb = item.$find(".btr-fastsearch-thumbnail")
+						const thumb = item.$req<HTMLImageElement>(".btr-fastsearch-thumbnail")
 						
 						if(url) {
 							thumb.src = url
@@ -342,7 +342,7 @@ export const btrFastSearch = {
 							thumb.classList.remove("shimmer", "loading")
 						}
 						
-						if(thumb.loaded) {
+						if(thumb.complete) {
 							onload()
 						} else {
 							thumb.$on("load", onload, { once: true })
@@ -352,7 +352,7 @@ export const btrFastSearch = {
 					requestPresence(user.UserId).then(info => {
 						if(lastResultsLoaded !== now) { return }
 						
-						const status = item.$find(".btr-fastsearch-status")
+						const status = item.$req(".btr-fastsearch-status")
 						status.classList.remove("game", "studio", "online")
 						
 						for(const x of item.$findAll(".btr-fastsearch-placename, .btr-fastsearch-follow")) {
@@ -365,7 +365,7 @@ export const btrFastSearch = {
 							status.classList.add("game")
 							
 							const placeName = html`<div class=btr-fastsearch-placename style="font-size:80%;color:rgb(2,143,47);padding-right:8px">${info.lastLocation || ""}</div>`
-							const followBtn = html`<button class="btr-fastsearch-follow btn-primary-xs">Join Game</button>`
+							const followBtn = html<HTMLButtonElement>`<button class="btr-fastsearch-follow btn-primary-xs">Join Game</button>`
 				
 							if(info.placeId) {
 								followBtn.$on("click", ev => {
@@ -379,7 +379,7 @@ export const btrFastSearch = {
 								followBtn.classList.add("disabled")
 							}
 				
-							item.$find(".btr-fastsearch-anchor").append(placeName, followBtn)
+							item.$req(".btr-fastsearch-anchor").append(placeName, followBtn)
 
 							break
 						}

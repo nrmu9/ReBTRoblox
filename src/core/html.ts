@@ -1,12 +1,14 @@
-export const htmltemplate = function(pieces: any, ...args: any[]): HTMLTemplateElement {
-	if(!Array.isArray(pieces)) { pieces = [pieces] }
+import { assert } from "@/core/util"
+
+export const htmltemplate = function(pieces: TemplateStringsArray | string, ...args: unknown[]): HTMLTemplateElement {
+	const parts: readonly string[] = typeof pieces === "string" ? [pieces] : pieces
 	
 	const trimWhitespace = s => s.replace(/\b\n\s*\b/g, " ").replace(/\n[^\S ]*/g, "")
 	
-	let result = trimWhitespace(pieces[0])
+	let result = trimWhitespace(parts[0])
 
 	for(let i = 0, len = args.length; i < len; i++) {
-		result += `!btr${i}!` + trimWhitespace(pieces[i + 1])
+		result += `!btr${i}!` + trimWhitespace(parts[i + 1])
 	}
 	
 	const template = document.createElement("template")
@@ -40,11 +42,20 @@ export const htmltemplate = function(pieces: any, ...args: any[]): HTMLTemplateE
 	return template
 }
 
-export const html = function(...args: any[]): any {
-	const template = htmltemplate(args[0], ...args.slice(1))
-	
-	const elem = template.content.firstElementChild || template.content.firstChild
-	if(elem) { elem.remove() }
+/**
+ * Builds a node from markup. Every call site in this codebase produces an
+ * element, so an empty template is a programming error rather than a value
+ * every caller has to guard.
+ */
+export const html = function<T extends Element = HTMLElement>(
+	pieces: TemplateStringsArray | string,
+	...args: unknown[]
+): T {
+	const template = htmltemplate(pieces, ...args)
+	const elem = template.content.firstElementChild ?? template.content.firstChild
 
-	return elem
+	assert(elem, "html template produced no node")
+	elem.remove()
+
+	return elem as unknown as T
 }

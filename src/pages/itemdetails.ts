@@ -99,8 +99,8 @@ pageInit.itemdetails = () => {
 			// 		let cursor = ""
 
 			// 		const btns = html`<div style="position: relative; float: right; height: 28px; margin-bottom: -28px; margin-top: 5px;"></div>`
-			// 		const parBtn = html`<button class="btn-secondary-xs active" style=float:right;margin:2px;>${name}</button>`
-			// 		const ownBtn = html`<button class=btn-control-xs style=float:right;margin:2px;>Owners</button>`
+			// 		const parBtn = html<HTMLButtonElement>`<button class="btn-secondary-xs active" style=float:right;margin:2px;>${name}</button>`
+			// 		const ownBtn = html<HTMLButtonElement>`<button class=btn-control-xs style=float:right;margin:2px;>Owners</button>`
 
 			// 		btns.append(parBtn, ownBtn)
 			// 		owners.before(btns)
@@ -339,7 +339,7 @@ pageInit.itemdetails = () => {
 					typeField.parentNode.after(salesContainer)
 					
 					const show = (sales?: any) => {
-						if(typeof sales === "number") { salesContainer.$find(".btr-row-value").textContent = formatNumber(sales) }
+						if(typeof sales === "number") { salesContainer.$req(".btr-row-value").textContent = formatNumber(sales) }
 						salesContainer.style.display = ""
 					}
 					
@@ -365,7 +365,7 @@ pageInit.itemdetails = () => {
 							}
 						})
 					} else if(category === "badges") {
-						salesContainer.$find(".text-label").textContent = "Awarded"
+						salesContainer.$req(".text-label").textContent = "Awarded"
 						show()
 						
 						RobloxApi.badges.getBadgeDetails(assetId).then(data => {
@@ -412,8 +412,8 @@ pageInit.itemdetails = () => {
 					typeField.parentNode.after(createdContainer, updatedContainer)
 					
 					const show = (created?: any, updated?: any) => {
-						if(created) { createdContainer.$find(".btr-row-value").textContent = new Date(created).$format("MMM DD, YYYY h:mm:ss A") }
-						if(updated) { updatedContainer.$find(".btr-row-value").textContent = new Date(updated).$format("MMM DD, YYYY h:mm:ss A") }
+						if(created) { createdContainer.$req(".btr-row-value").textContent = new Date(created).$format("MMM DD, YYYY h:mm:ss A") }
+						if(updated) { updatedContainer.$req(".btr-row-value").textContent = new Date(updated).$format("MMM DD, YYYY h:mm:ss A") }
 						createdContainer.style.display = ""
 						updatedContainer.style.display = ""
 					}

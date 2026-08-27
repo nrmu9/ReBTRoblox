@@ -144,7 +144,26 @@ export function getAssetFileType(assetTypeId, buffer) {
 
 //
 
-export function createPager(noSelect, hideWhenEmpty) {
+/**
+ * A pager element, augmented in place by createPager.
+ *
+ * setMaxPage and the total counter only exist on the selectable variant, but no
+ * caller mixes the two, so they are declared unconditionally rather than forcing
+ * optional chaining on every use.
+ */
+export interface Pager extends HTMLElement {
+	curPage: number
+	maxPage: number
+	setPage(page: number): void
+	setMaxPage(maxPage: number): void
+	togglePrev(enabled: boolean): void
+	toggleNext(enabled: boolean): void
+	onsetpage?: (page: number) => void
+	onprevpage?: () => void
+	onnextpage?: () => void
+}
+
+export function createPager(noSelect?: boolean, hideWhenEmpty?: boolean): Pager {
 	const pager = html`
 	<div class=btr-pager-holder>
 		<ul class=btr-pager>
@@ -162,101 +181,99 @@ export function createPager(noSelect, hideWhenEmpty) {
 				</button>
 			</li>
 		</ul>
-	</div>`
+	</div>` as Pager
 
 	if(!noSelect) {
-		pager.$find(".btr-pager-mid").replaceWith(html`
+		pager.$req(".btr-pager-mid").replaceWith(html`
 		<li class=btr-pager-mid>
 			<span>Page</span><input class=btr-pager-cur type=text value=1><span>of <span class=btr-pager-total></span></span>
 		</li>`)
 	}
 
-	const prev = pager.$find(".btr-pager-prev")
-	const next = pager.$find(".btr-pager-next")
-	const cur = pager.$find(".btr-pager-cur")
+	const prev = pager.$req(".btr-pager-prev")
+	const next = pager.$req(".btr-pager-next")
+	const cur = pager.$req<HTMLInputElement>(".btr-pager-cur")
 
-	Object.assign(pager as any, <Record<string, any>>{
-		curPage: 1,
+	pager.curPage = 1
+	pager.maxPage = 1
 
-		setPage(page) {
-			this.curPage = page
-			if(noSelect) {
-				cur.textContent = page
-				this.togglePrev(page > 1)
-			} else {
-				cur.value = page
-				this.togglePrev(page > 1)
-				this.toggleNext(page < this.maxPage)
-			}
-		},
+	pager.togglePrev = enabled => { prev.$req<HTMLButtonElement>("button").disabled = !enabled }
+	pager.toggleNext = enabled => { next.$req<HTMLButtonElement>("button").disabled = !enabled }
 
-		togglePrev(bool) { prev.$find("button").disabled = !bool },
-		toggleNext(bool) { next.$find("button").disabled = !bool }
-	})
+	pager.setPage = page => {
+		pager.curPage = page
+
+		if(noSelect) {
+			cur.textContent = String(page)
+			pager.togglePrev(page > 1)
+		} else {
+			cur.value = String(page)
+			pager.togglePrev(page > 1)
+			pager.toggleNext(page < pager.maxPage)
+		}
+	}
 
 	pager.setPage(1)
 
-	prev.$find("button").$on("click", ev => {
+	prev.$req("button").$on("click", ev => {
 		pager.onprevpage?.()
 		ev.preventDefault()
 	})
 	
-	next.$find("button").$on("click", ev => {
+	next.$req("button").$on("click", ev => {
 		pager.onnextpage?.()
 		ev.preventDefault()
 	})
 
 	if(!noSelect) {
-		const tot = pager.$find(".btr-pager-total")
-		pager.maxPage = 1
+		const tot = pager.$req(".btr-pager-total")
 
-		Object.assign(pager as any, <Record<string, any>>{
-			onprevpage() { if(this.curPage > 1 && this.onsetpage) { this.onsetpage(this.curPage - 1) } },
-			onnextpage() { if(this.curPage < this.maxPage && this.onsetpage) { this.onsetpage(this.curPage + 1) } },
+		pager.onprevpage = () => { if(pager.curPage > 1) { pager.onsetpage?.(pager.curPage - 1) } }
+		pager.onnextpage = () => { if(pager.curPage < pager.maxPage) { pager.onsetpage?.(pager.curPage + 1) } }
 
-			setMaxPage(maxPage) {
-				this.maxPage = maxPage
-				tot.textContent = maxPage
+		pager.setMaxPage = maxPage => {
+			pager.maxPage = maxPage
+			tot.textContent = String(maxPage)
 
-				if(hideWhenEmpty) {
-					pager.style.display = maxPage < 2 ? "none" : ""
-				}
-
-				this.toggleNext(this.curPage < maxPage)
+			if(hideWhenEmpty) {
+				pager.style.display = maxPage < 2 ? "none" : ""
 			}
-		})
+
+			pager.toggleNext(pager.curPage < maxPage)
+		}
 
 		pager.setMaxPage(1)
 		
 		{
-			const input = cur
-			
 			const updateInputWidth = () => {
-				input.style.width = "0px"
-				input.style.width = `${Math.max(32, Math.min(100, input.scrollWidth + 12))}px`
+				cur.style.width = "0px"
+				cur.style.width = `${Math.max(32, Math.min(100, cur.scrollWidth + 12))}px`
 			}
 			
-			input.addEventListener("input", updateInputWidth)
-			input.addEventListener("change", updateInputWidth)
+			cur.addEventListener("input", updateInputWidth)
+			cur.addEventListener("change", updateInputWidth)
 			
-			const descriptor = <Record<string, any>>{
+			// Reflect width changes made through the value property itself, which
+			// neither event covers. The descriptor steps aside for each access so
+			// the native accessor still does the real work.
+			const descriptor: PropertyDescriptor = {
 				configurable: true,
 				
 				get() {
 					delete this.value
 					const result = this.value
-					Object.defineProperty(input, "value", descriptor)
+					Object.defineProperty(cur, "value", descriptor)
 					return result
 				},
 				set(x) {
 					delete this.value
 					this.value = x
-					Object.defineProperty(input, "value", descriptor)
+					Object.defineProperty(cur, "value", descriptor)
 					updateInputWidth()
 				}
 			}
 			
-			Object.defineProperty(input, "value", descriptor)
+			Object.defineProperty(cur, "value", descriptor)
 		}
 
 		cur.$on("keydown", e => e.keyCode === 13 && cur.blur())
@@ -272,7 +289,7 @@ export function createPager(noSelect, hideWhenEmpty) {
 					pager.setPage(page)
 				}
 			} else {
-				cur.value = pager.curPage
+				cur.value = String(pager.curPage)
 			}
 		})
 	}
@@ -976,8 +993,8 @@ export const initExplorer = async (assetId: any, assetTypeId: any, isBundle?: an
 		const explorer = new mod.Explorer()
 		let explorerInitialized = false
 		
-		const popover = btnCont.$find(".btr-explorer-popover")
-		popover.$find(".btr-explorer-parent").replaceWith(explorer.element)
+		const popover = btnCont.$req(".btr-explorer-popover")
+		popover.$req(".btr-explorer-parent").replaceWith(explorer.element)
 		
 		btnCont.$on("click", ".btr-explorer-button", () => {
 			if(popover.classList.contains("visible")) {
@@ -1062,7 +1079,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 		</a>
 	</div>`
 	
-	const downloadButton = btnCont.$find("a")
+	const downloadButton = btnCont.$req<HTMLAnchorElement>("a")
 
 	const download = (data: any, fileType?: any) => {
 		const title = (query("#item-container .item-name-container h2") as any)
@@ -1156,7 +1173,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 		</div>`
 		
 		if(IS_DEV_MODE) {
-			popoverTemplate.$find("ul").append(html`
+			popoverTemplate.$req("ul").append(html`
 			<li>
 				<a class=btr-log-mesh>Print to console</a>
 			</li>`)
@@ -1267,8 +1284,8 @@ export const initContentButton = async (assetId: any, assetTypeId: any, isBundle
 		const contentId = AssetCache.getAssetIdFromUrl(contentUrl)
 		
 		if(contentId) {
-			btnCont.$find(">a").href = `https://www.roblox.com/library/${contentId}/` // marketplace needs full domain
-			btnCont.$find(">a").classList.remove("disabled")
+			btnCont.$req<HTMLAnchorElement>(">a").href = `https://www.roblox.com/library/${contentId}/` // marketplace needs full domain
+			btnCont.$req(">a").classList.remove("disabled")
 		}
 	})
 	

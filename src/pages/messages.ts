@@ -128,7 +128,7 @@ pageInit.messages = () => {
 			curPage.removeAttribute("ng-bind")
 			curPage.textContent = ""
 
-			const pageInput = html`<input type=text ng-keydown="$event.which===13&&$event.target.blur()" ng-blur="btr_setPage($event)">`
+			const pageInput = html<HTMLInputElement>`<input type=text ng-keydown="$event.which===13&&$event.target.blur()" ng-blur="btr_setPage($event)">`
 			pageInput.setAttribute("ng-value", bindAttr)
 			curPage.append(pageInput)
 		} else {
@@ -141,7 +141,7 @@ pageInit.messages = () => {
 		if(markAsUnread) {
 			markAsUnread.after(
 				" ",
-				html`<button class="btn-control-sm btr-markAllAsReadInbox">Mark All As Read</button>`
+				html<HTMLButtonElement>`<button class="btn-control-sm btr-markAllAsReadInbox">Mark All As Read</button>`
 			)
 		} else {
 			if(IS_DEV_MODE) {

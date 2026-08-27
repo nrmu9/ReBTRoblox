@@ -248,7 +248,7 @@ pageInit.avatar = () => {
 				<input type=color class=btr-color-rightLeg></input>
 			</div>`
 			
-			const inputs: Record<string, any> = {}
+			const inputs: Record<string, HTMLInputElement> = {}
 			let debounce = 0
 			
 			const updateBodyColors = async () => {
@@ -277,7 +277,7 @@ pageInit.avatar = () => {
 				}
 			}
 			
-			for(const input of selector.children) {
+			for(const input of selector.$findAll<HTMLInputElement>("input")) {
 				const name = input.className.slice(10)
 				
 				input.value = `#${bodyColor3s[`${name}Color3`]}`

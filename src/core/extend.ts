@@ -5,7 +5,7 @@
 // Import this once per entry point, before any module that uses them.
 
 import { dateFormat, dateSince } from "@/core/date"
-import { find, findAll } from "@/core/query"
+import { find, findAll, req } from "@/core/query"
 import { off, on } from "@/core/events"
 import { onRemove, watch, watchAll } from "@/core/watch"
 
@@ -40,6 +40,7 @@ export const installExtensions = (): void => {
 
 	define([scope.Element, Element, scope.Document, Document, scope.DocumentFragment, DocumentFragment], {
 		$find(this: ParentNode, selector: string) { return find(this, selector) },
+		$req(this: ParentNode, selector: string) { return req(this, selector) },
 		$findAll(this: ParentNode, selector: string) { return findAll(this, selector) },
 		$watch(this: ParentNode, ...args: any[]) { return (watch as any)(this, ...args) },
 		$watchAll(this: ParentNode, ...args: any[]) { return (watchAll as any)(this, ...args) }

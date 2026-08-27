@@ -1,6 +1,6 @@
-export const assert = <T>(value: T, ...args: unknown[]): T => {
+/** Narrows the checked value, so callers do not need a second guard. */
+export function assert(value: unknown, ...args: unknown[]): asserts value {
 	if(!value) { throw new Error(args.map(String).join(" ")) }
-	return value
 }
 
 export const assertWarn = <T>(value: T, ...args: unknown[]): T => {

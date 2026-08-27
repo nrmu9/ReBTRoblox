@@ -152,7 +152,7 @@ export const SourceViewer = (() => {
 			<div class=btr-sourceviewer-lines contentEditable="plaintext-only" spellcheck=false></div>
 		</div>`
 		
-		const linesParent = content.$find(".btr-sourceviewer-lines")
+		const linesParent = content.$req(".btr-sourceviewer-lines")
 
 		linesParent.$on("beforeinput", ev => {
 			ev.stopImmediatePropagation()

@@ -51,7 +51,7 @@ pageInit.gamedetails = () => {
 				initExplorer(placeId, AssetType.Place).then(btnCont => {
 					if(!btnCont) { return }
 					
-					btnCont.$find(".btr-explorer-button").style.display = "none"
+					btnCont.$req(".btr-explorer-button").style.display = "none"
 					btnCont.style.position = "absolute"
 					btnCont.style.width = `${target.clientWidth}px`
 					btnCont.style.height = `${0}px`
@@ -65,7 +65,7 @@ pageInit.gamedetails = () => {
 					)
 					
 					target.$on("click", ".btr-open-in-explorer", () => {
-						btnCont.$find(".btr-explorer-button").click()
+						btnCont.$req(".btr-explorer-button").click()
 					})
 				})
 			})
@@ -674,7 +674,7 @@ pageInit.gamedetails = () => {
 					mainCont.classList.remove("section-content")
 					mainCont.before(newContainer)
 					newContainer.after(midContainer)
-					newContainer.$find(".placeholder-main").replaceWith(mainCont)
+					newContainer.$req(".placeholder-main").replaceWith(mainCont)
 				})
 				.$watch("#about", about => {
 					about.classList.remove("active")
@@ -755,7 +755,7 @@ pageInit.gamedetails = () => {
 					badges.$watch(">.stack-list").$then().$watchAll(".badge-row", row => {
 						const url = row.$find(".badge-image>a").href
 						const label = row.$find(".badge-name")
-						const link = html`<a href="${url}">${label.textContent}</a>`
+						const link = html<HTMLAnchorElement>`<a href="${url}">${label.textContent}</a>`
 						
 						label.replaceChildren(link)
 						
@@ -807,7 +807,7 @@ pageInit.gamedetails = () => {
 					
 					if(SETTINGS.get("gamedetails.showBadgeOwned")) {
 						badges.$watch(".container-header h2", header => {
-							const refresh = html`<button type="button" class="btn-more rbx-refresh refresh-link-icon btn-control-xs btn-min-width">Refresh</button>`
+							const refresh = html<HTMLButtonElement>`<button type="button" class="btn-more rbx-refresh refresh-link-icon btn-control-xs btn-min-width">Refresh</button>`
 							header.after(refresh)
 							
 							refresh.$on("click", () => {
@@ -859,7 +859,7 @@ pageInit.gamedetails = () => {
 							</div>
 						</div>`
 						
-						box.$find(".btr-universe-visit-button").$on("click", () => {
+						box.$req(".btr-universe-visit-button").$on("click", () => {
 							injectScript.call("gamedetailsPlayGame", placeId => {
 								Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 							}, rootPlaceId)

@@ -47,6 +47,7 @@ declare global {
 	// objects rather than by import.
 	interface Element {
 		$find<T extends Element = HTMLElement>(selector: string): T | null
+		$req<T extends Element = HTMLElement>(selector: string): T
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
 		$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
@@ -54,6 +55,7 @@ declare global {
 
 	interface Document {
 		$find<T extends Element = HTMLElement>(selector: string): T | null
+		$req<T extends Element = HTMLElement>(selector: string): T
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 		$watch(selector: string | string[], filter?: any, callback?: any, props?: WatchProps): Watcher
 		$watchAll(selector: string, callback: (element: Element, stop: () => void) => void, props?: WatchProps): Watcher
@@ -61,6 +63,7 @@ declare global {
 
 	interface DocumentFragment {
 		$find<T extends Element = HTMLElement>(selector: string): T | null
+		$req<T extends Element = HTMLElement>(selector: string): T
 		$findAll<T extends Element = HTMLElement>(selector: string): NodeListOf<T>
 	}
 

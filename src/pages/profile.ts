@@ -174,10 +174,10 @@ pageInit.profile = () => {
 					tabs.parentNode.style.display = "none"
 				})
 				.$watch("#friends-carousel-container", friends => {
-					newCont.$find(".placeholder-friends").after(friends)
+					newCont.$req(".placeholder-friends").after(friends)
 					
 					friends.$watch(">*", cont => {
-						newCont.$find(".placeholder-friends").remove()
+						newCont.$req(".placeholder-friends").remove()
 					})
 				})
 				.$watch(".user-profile-header", header => {
@@ -221,7 +221,7 @@ pageInit.profile = () => {
 							
 							if(game && placeId) {
 								statusDiv.replaceChildren(
-									html`<a href="/games/${placeId}/" title="${game.title}"><span class="btr-header-status-text btr-status-ingame">${game.title}</span></a>`
+									html<HTMLAnchorElement>`<a href="/games/${placeId}/" title="${game.title}"><span class="btr-header-status-text btr-status-ingame">${game.title}</span></a>`
 								)
 								
 							// } else if(game) {
@@ -274,13 +274,13 @@ pageInit.profile = () => {
 					const clone = store.cloneNode(false)
 					clone.append(...store.childNodes)
 					
-					newCont.$find(".placeholder-store").replaceWith(clone)
+					newCont.$req(".placeholder-store").replaceWith(clone)
 				})
 				.$watch(".profile-collections", collections => {
 					const clone = collections.cloneNode(false)
 					clone.append(...collections.childNodes)
 					
-					newCont.$find(".placeholder-collections").replaceWith(clone)
+					newCont.$req(".placeholder-collections").replaceWith(clone)
 				})
 			
 			const gamesPromise = RobloxApi.games.getUserGames(userId, 50)
@@ -289,7 +289,7 @@ pageInit.profile = () => {
 				if(!document.contains(profileContainer)) { return }
 				
 				const descText = json?.components?.About?.description
-				const desc = newCont.$find(".btr-profile-description-content")
+				const desc = newCont.$req(".btr-profile-description-content")
 				
 				if(descText) {
 					desc.textContent = descText
@@ -299,8 +299,11 @@ pageInit.profile = () => {
 						desc.after(descToggle)
 						
 						descToggle.$on("click", () => {
-							const expanded = !desc.parentNode.classList.contains("expanded")
-							desc.parentNode.classList.toggle("expanded", expanded)
+							const parent = desc.parentElement
+							if(!parent) { return }
+
+							const expanded = !parent.classList.contains("expanded")
+							parent.classList.toggle("expanded", expanded)
 
 							descToggle.textContent = expanded ? "Show Less" : "Show More"
 						})
@@ -316,13 +319,13 @@ pageInit.profile = () => {
 					for(const [key, entry] of Object.entries(socialLinks) as [string, any][]) {
 						if(!entry) { continue }
 						
-						const link = html`<a class=btr-social-link href=${(entry as any)?.url}><span class="icon icon-regular-${key === "x" ? "twitter" : key}"></span></a>`
-						newCont.$find(".btr-profile-social-links").append(link)
+						const link = html<HTMLAnchorElement>`<a class=btr-social-link href=${(entry as any)?.url}><span class="icon icon-regular-${key === "x" ? "twitter" : key}"></span></a>`
+						newCont.$req(".btr-profile-social-links").append(link)
 					}
 				}
 				
-				newCont.$find(".btr-profile-stats").style.display = ""
-				newCont.$find(".btr-stats-joindate").textContent = new Date(json.components.About.joinDateTime).$format("M/D/YYYY")
+				newCont.$req(".btr-profile-stats").style.display = ""
+				newCont.$req(".btr-stats-joindate").textContent = new Date(json.components.About.joinDateTime).$format("M/D/YYYY")
 				
 				gamesPromise.then(json => {
 					let visits = 0
@@ -331,7 +334,7 @@ pageInit.profile = () => {
 						visits += game.placeVisits
 					}
 					
-					newCont.$find(".btr-stats-placevisits").textContent = formatNumber(visits)
+					newCont.$req(".btr-stats-placevisits").textContent = formatNumber(visits)
 				})
 				
 				const friendsPlaceholder = newCont.$find(".placeholder-friends")
@@ -346,7 +349,7 @@ pageInit.profile = () => {
 				// 	return
 				// }
 				
-				const list = newCont.$find(".btr-profile-playerbadges .btr-card-list")
+				const list = newCont.$req(".btr-profile-playerbadges .btr-card-list")
 				const pager = createPager(true, undefined)
 
 				const thumbClasses = {
@@ -376,11 +379,11 @@ pageInit.profile = () => {
 
 					if(!badges.length) {
 						list.append(html`<div class="section-content-off btr-section-content-off">This user has no Player Badges</div>`)
-						newCont.$find(".btr-profile-playerbadges").style.display = "none"
+						newCont.$req(".btr-profile-playerbadges").style.display = "none"
 						return
 					}
 					
-					newCont.$find(".btr-profile-playerbadges").style.display = ""
+					newCont.$req(".btr-profile-playerbadges").style.display = ""
 					
 					for(const data of badges) {
 						const badgeUrl = `/badges/${data.id}/${formatUrlName(data.name)}`
@@ -415,7 +418,7 @@ pageInit.profile = () => {
 								const badge = badges.find(x => x.id === thumb.targetId)
 								badge.thumb = thumb
 
-								const img = list.$find(`img[data-badgeId="${badge.id}"`)
+								const img = list.$find<HTMLImageElement>(`img[data-badgeId="${badge.id}"]`)
 								if(img) {
 									const thumbUrl = badge.thumb.imageUrl || "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
 									const thumbClass = thumbClasses[badge.thumb.state] || ""
@@ -461,8 +464,8 @@ pageInit.profile = () => {
 			}
 
 			const initGroups = () => {
-				const groups = newCont.$find(".btr-profile-groups")
-				const list = groups.$find(".btr-card-list")
+				const groups = newCont.$req(".btr-profile-groups")
+				const list = groups.$req(".btr-card-list")
 				list.setAttribute("ng-non-bindable", "")
 				const pageSize = 8
 
@@ -511,7 +514,7 @@ pageInit.profile = () => {
 							
 							parent.style.display = index < pageSize ? "" : "none"
 
-							const thumb = parent.$find(".card-thumb")
+							const thumb = parent.$req<HTMLImageElement>(".card-thumb")
 							thumbs[group.id] = thumb
 
 							list.append(parent)
@@ -537,8 +540,8 @@ pageInit.profile = () => {
 			}
 
 			const initFavorites = () => {
-				const favorites = newCont.$find(".btr-profile-favorites")
-				const hlist = favorites.$find(".hlist")
+				const favorites = newCont.$req(".btr-profile-favorites")
+				const hlist = favorites.$req(".hlist")
 				hlist.setAttribute("ng-non-bindable", "")
 
 				const pageSize = 6
@@ -572,7 +575,7 @@ pageInit.profile = () => {
 					</ul>
 				</div>`
 				
-				favorites.$find(".container-header").append(dropdown)
+				favorites.$req(".container-header").append(dropdown)
 				
 				const favoriteData: Record<string, any> = {}
 				
@@ -766,7 +769,7 @@ pageInit.profile = () => {
 				const profileData = await profileDataPromise
 				const initial = profileData?.components?.Experiences
 				
-				const content = newCont.$find(".btr-profile-games > .btr-games-content")
+				const content = newCont.$req(".btr-profile-games > .btr-games-content")
 				
 				if(!initial?.experiences?.length) {
 					content.replaceChildren(
@@ -778,7 +781,7 @@ pageInit.profile = () => {
 				const items: any[] = []
 				
 				const transition = (item, open, instant=false) => {
-					const content = item.$find(".btr-game-content")
+					const content = item.$req(".btr-game-content")
 					const height = content.scrollHeight
 					
 					if(content._timeout) { clearTimeout(content._timeout) }
@@ -869,7 +872,7 @@ pageInit.profile = () => {
 					
 					item.style.display = index < pageSize ? "" : "none"
 					
-					item.$find(".btr-game-button").$on("click", () => select(item))
+					item.$req(".btr-game-button").$on("click", () => select(item))
 					if(index === 0) { select(item, true) }
 					
 					loggedInUserPromise.then(loggedInUser => {
@@ -895,21 +898,21 @@ pageInit.profile = () => {
 					
 					RobloxApi.thumbnails.getGameThumbnails.batch(universeId, "768x432").then(json => {
 						const thumb = json.data.find(x => x.universeId === universeId)
-						item.$find(".btr-game-thumb").src = thumb.thumbnails?.[0]?.imageUrl
+						item.$req<HTMLImageElement>(".btr-game-thumb").src = thumb.thumbnails?.[0]?.imageUrl
 					})
 					
 					RobloxApi.games.getGameDetails.batch(universeId).then(async _gameDetails => {
 						const gameDetails = _gameDetails.data.find(x => x.id === universeId)
 						const placeId = gameDetails.rootPlaceId
 						
-						item.$find(".btr-game-thumb-container").href = `https://www.roblox.com/games/${placeId}/${formatUrlName(gameDetails.name)}`
-						item.$find(".btr-game-title").textContent = gameDetails.name
-						item.$find(".btr-game-title").classList.remove("shimmer")
+						item.$req<HTMLAnchorElement>(".btr-game-thumb-container").href = `https://www.roblox.com/games/${placeId}/${formatUrlName(gameDetails.name)}`
+						item.$req(".btr-game-title").textContent = gameDetails.name
+						item.$req(".btr-game-title").classList.remove("shimmer")
 						
 						loggedInUserPromise.then(loggedInUser => {
 							if(userId !== loggedInUser) { return }
 							
-							item.$find(".dropdown-menu").append(
+							item.$req(".dropdown-menu").append(
 								html`<li><a class=btr-btn-edit-place data-gameid=${universeId} data-placeid=${placeId}><div>Edit</div></a></li>`,
 								html`<li><a href="https://create.roblox.com/dashboard/creations/experiences/${universeId}/overview"><div>View Analytics</div></a></li>`,
 								html`<li><a href="https://advertise.roblox.com/"><div>Promote this Experience</div></a></li>`,
@@ -920,12 +923,12 @@ pageInit.profile = () => {
 							)
 						})
 						
-						item.$find(".slide-item-members-count").textContent = formatNumber(gameDetails.playing)
-						item.$find(".slide-item-visits").textContent = formatNumber(gameDetails.visits)
+						item.$req(".slide-item-members-count").textContent = formatNumber(gameDetails.playing)
+						item.$req(".slide-item-visits").textContent = formatNumber(gameDetails.visits)
 						
 						RobloxApi.thumbnails.getPlaceIcons.batch(placeId, "150x150").then(json => {
 							const thumb = json.data.find(x => x.targetId === placeId)
-							item.$find(".btr-game-icon").src = thumb.imageUrl
+							item.$req<HTMLImageElement>(".btr-game-icon").src = thumb.imageUrl
 						})
 						
 						//
@@ -933,7 +936,7 @@ pageInit.profile = () => {
 						const _placeDetails = await RobloxApi.games.getPlaceDetails.batch(placeId)
 						const placeDetails = _placeDetails.find(x => x.placeId === placeId)
 						
-						const desc = item.$find(".btr-game-desc-content")
+						const desc = item.$req(".btr-game-desc-content")
 						desc.textContent = placeDetails.description
 						
 						injectScript.call("linkify", target => $(target).linkify(), desc)
@@ -943,15 +946,18 @@ pageInit.profile = () => {
 							desc.after(descToggle)
 							
 							descToggle.$on("click", () => {
-								const expanded = !desc.parentNode.classList.contains("expanded")
-								desc.parentNode.classList.toggle("expanded", expanded)
+								const parent = desc.parentElement
+								if(!parent) { return }
+
+								const expanded = !parent.classList.contains("expanded")
+								parent.classList.toggle("expanded", expanded)
 
 								descToggle.textContent = expanded ? "Show Less" : "Show More"
 							})
 						}
 						
 						if(placeDetails.isPlayable) {
-							item.$find(".btr-game-playbutton-container").replaceChildren(
+							item.$req(".btr-game-playbutton-container").replaceChildren(
 								html`<div class="btr-game-playbutton btn-primary-lg" data-placeid=${placeId}>Play</div>`
 							)
 						} else {
@@ -965,7 +971,7 @@ pageInit.profile = () => {
 								ContextualPlayabilityUnrated: "This experience is not accessible because it is unrated"
 							}
 							
-							item.$find(".btr-game-playbutton-container").replaceChildren(html`
+							item.$req(".btr-game-playbutton-container").replaceChildren(html`
 								<div title="${prohibitedReasons[placeDetails.reasonProhibited] || placeDetails.reasonProhibited}" class="btr-place-prohibited btn-common-play-game-unplayable-lg btn-primary-lg" disabled>
 									<span class="icon-status-unavailable-secondary"></span>
 									<span class="btn-text">Unavailable</span>
@@ -1006,11 +1012,11 @@ pageInit.profile = () => {
 			initFavorites()
 			
 			if(SETTINGS.get("profile.embedInventoryEnabled")) {
-				newCont.$find(".btr-profile-inventory").style.display = ""
+				newCont.$req(".btr-profile-inventory").style.display = ""
 				
 				ready(() => {
-					newCont.$find(".placeholder-inventory").replaceWith(
-						html`<iframe id="btr-injected-inventory" src="/users/${userId}/inventory" scrolling="no">`
+					newCont.$req(".placeholder-inventory").replaceWith(
+						html<HTMLIFrameElement>`<iframe id="btr-injected-inventory" src="/users/${userId}/inventory" scrolling="no">`
 					)
 				})
 			}

@@ -340,7 +340,7 @@ export const Explorer = (() => {
 					}
 				})
 
-				btn.$find(".btr-sourceviewer-tab-close").$on("click", ev => {
+				btn.$req(".btr-sourceviewer-tab-close").$on("click", ev => {
 					ev.stopPropagation()
 					ev.preventDefault()
 
@@ -624,7 +624,7 @@ export const Explorer = (() => {
 
 				let lastClick
 
-				titleButton.$find(".btr-property-group-more").$on("click", ev => {
+				titleButton.$req(".btr-property-group-more").$on("click", ev => {
 					titleButton.classList.toggle("closed")
 					ev.stopPropagation()
 				})
@@ -693,23 +693,23 @@ export const Explorer = (() => {
 						break
 					case "float":
 					case "double":
-						valueItem.textContent = fixNum(value)
+						valueItem.textContent = String(fixNum(value))
 						break
 					case "string": case "UniqueId": {
-						const input = html`<input type=text readonly>`
+						const input = html<HTMLInputElement>`<input type=text readonly>`
 
 						const tooLong = value.length > 120
 						if(tooLong || value.includes("\n") || name.includes("Source")) {
 							input.value = input.title = (tooLong ? value.slice(0, 117) + "..." : value)
 
-							const more = html`<a class=more title="View Source">...</a>`
+							const more = html<HTMLAnchorElement>`<a class=more title="View Source">...</a>`
 							more.$on("click", () => this.openSourceViewer(target, name))
 							
 							valueItem.append(more)
 						} else {
 							const id = AssetCache.getAssetIdFromUrl(value)
 							if(id) {
-								const more = html`<a class=more href="https://www.roblox.com/library/${id}/Redirect" target=_blank>🔗</a>`
+								const more = html<HTMLAnchorElement>`<a class=more href="https://www.roblox.com/library/${id}/Redirect" target=_blank>🔗</a>`
 								more.title = "Go to asset"
 								valueItem.append(more)
 							}
@@ -721,7 +721,7 @@ export const Explorer = (() => {
 						break
 					}
 					case "bool": {
-						const input = html`<input type=checkbox>`
+						const input = html<HTMLInputElement>`<input type=checkbox>`
 						input.checked = value
 						valueItem.append(input)
 						
@@ -797,7 +797,7 @@ export const Explorer = (() => {
 						} else if(sourceType === "Object") {
 							valueItem.textContent = `{${value.Object}}`
 						} else {
-							valueItem.textContent = sourceType
+							valueItem.textContent = sourceType ?? ""
 						}
 						
 						break
@@ -1018,9 +1018,9 @@ export const Explorer = (() => {
 					
 					const line = {
 						elem: elem,
-						btn: elem.$find(".btr-explorer-item"),
-						icon: elem.$find(".btr-explorer-icon"),
-						nameLabel: elem.$find(".btr-explorer-item-name"),
+						btn: elem.$req(".btr-explorer-item"),
+						icon: elem.$req(".btr-explorer-icon"),
+						nameLabel: elem.$req(".btr-explorer-item-name"),
 						item: null as any
 					}
 					
@@ -1052,7 +1052,7 @@ export const Explorer = (() => {
 						}
 					})
 					
-					elem.$find(".btr-explorer-more").$on("click", ev => {
+					elem.$req(".btr-explorer-more").$on("click", ev => {
 						ev.stopPropagation()
 						ev.stopImmediatePropagation()
 						ev.preventDefault()
