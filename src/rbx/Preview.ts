@@ -1095,7 +1095,7 @@ export const HoverPreview = (() => {
 	}
 
 	const updatePreviewCamera = () => {
-		const addedObjects = new Set()
+		const addedObjects = new Set<THREE.Object3D>()
 		let cameraDir
 
 		for (const asset of lastPreviewedAssets) {
@@ -1160,8 +1160,12 @@ export const HoverPreview = (() => {
 		const expandBox = () => {
 			preview.avatar.root.updateWorldMatrix(true, true)
 
-			const expandBy = (object: any) => {
+			// Typed rather than any: this walk called boneTransform for years
+			// after three renamed it, and an any parameter meant nothing said so
+			// until it threw at runtime and took the whole bounds pass with it.
+			const expandBy = (object: THREE.Object3D) => {
 				if (
+					object instanceof THREE.Mesh &&
 					object.geometry instanceof THREE.BufferGeometry &&
 					object.geometry.getAttribute("position")
 				) {
@@ -1170,8 +1174,15 @@ export const HoverPreview = (() => {
 					for (let i = 0; i < position.count; i++) {
 						tempVector.fromBufferAttribute(position, i)
 
-						if (object.isSkinnedMesh) {
-							object.boneTransform(i, tempVector)
+						// Roblox rigid parts are SkinnedMesh with isSkinnedMesh off and
+						// no skinning attributes, and applyBoneTransform reads those,
+						// so the attribute is checked rather than just the flag.
+						if (
+							object instanceof THREE.SkinnedMesh &&
+							object.isSkinnedMesh &&
+							object.geometry.getAttribute("skinIndex")
+						) {
+							object.applyBoneTransform(i, tempVector)
 						}
 
 						tempVector.applyMatrix4(object.matrixWorld)
