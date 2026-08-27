@@ -91,6 +91,12 @@ jobs:
           if [ "$AMO_CHANNEL" = "listed" ]; then
             git archive --format=zip --prefix="btroblox/" "$GITHUB_REF_NAME" -o source.zip
             args+=(--upload-source-code source.zip)
+
+            # AMO needs summary, categories and a license before it will create
+            # a listing. Only the first listed version needs them.
+            if [ -f amo-metadata.json ]; then
+              args+=(--amo-metadata amo-metadata.json)
+            fi
           fi
 
           npx --yes web-ext sign \
