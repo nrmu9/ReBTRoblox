@@ -1980,9 +1980,17 @@ export const RBXAvatar = (() => {
 					if (meshId) {
 						part.rbxMeshLoading = meshId
 
-						AssetCache.loadMesh(true, meshId, (mesh: Mesh) => {
+						AssetCache.loadMesh(true, meshId, (mesh: Mesh | null) => {
 							if (part.rbxMeshLoading === meshId) {
 								delete part.rbxMeshLoading
+
+								// A mesh that failed to parse arrives as null. One bad
+								// asset should leave the rest of the avatar standing
+								// rather than taking the whole preview down.
+								if (!mesh) {
+									return
+								}
+
 								part.rbxMesh = getFirstLod(mesh)
 
 								applyMesh(part, part.rbxMesh)
@@ -2331,8 +2339,13 @@ export const RBXAvatar = (() => {
 					if (acc.meshId) {
 						obj.rbxMeshLoading = acc.meshId
 
-						AssetCache.loadMesh(true, acc.meshId, (mesh: Mesh) => {
+						AssetCache.loadMesh(true, acc.meshId, (mesh: Mesh | null) => {
 							delete obj.rbxMeshLoading
+
+							if (!mesh) {
+								return
+							}
+
 							obj.rbxMesh = getFirstLod(mesh)
 
 							if (acc.wrapLayer?.autoSkin) {
