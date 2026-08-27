@@ -8,6 +8,8 @@
 
 		"strict": true,
 		"noImplicitAny": true,
+		"noImplicitOverride": true,
+		"exactOptionalPropertyTypes": true,
 		"noUnusedLocals": true,
 		"noFallthroughCasesInSwitch": true,
 

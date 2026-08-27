@@ -124,7 +124,7 @@ export const injectScript: any = {
 		)
 	},
 
-	listen(action: string, callback: MessageCallback, params?: { once?: boolean }) {
+	listen(action: string, callback: MessageCallback, params?: { once?: boolean | undefined }) {
 		let listeners = this.messageListeners[action]
 
 		if (!listeners) {
@@ -154,7 +154,7 @@ export const injectScript: any = {
 						}
 					}
 				},
-				{ once: params?.once },
+				{ once: params?.once ?? false },
 			)
 		}
 

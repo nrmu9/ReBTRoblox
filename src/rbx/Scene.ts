@@ -324,7 +324,7 @@ export const RBXScene = (() => {
 			this.renderer.clippingPlanes.push(new THREE.Plane(new THREE.Vector3(0, 1, 0)))
 		}
 
-		update() {
+		override update() {
 			super.update()
 
 			this.avatar.offset.set(0, 0.1, 0).add(this.avatarOffset.position)
@@ -334,7 +334,7 @@ export const RBXScene = (() => {
 			this.trigger("update")
 		}
 
-		start() {
+		override start() {
 			super.start()
 
 			if (!this.hasInit) {

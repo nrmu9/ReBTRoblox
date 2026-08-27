@@ -21,7 +21,7 @@ interface PlayParams {
 interface PlayingAnimation {
 	playing: boolean
 	anim: AnimationClip
-	loop?: boolean
+	loop?: boolean | undefined
 	priority: number
 	weight: number
 	speed: number

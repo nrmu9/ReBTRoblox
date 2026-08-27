@@ -13,7 +13,7 @@ export interface PropInfo {
 export interface ClassInfo {
 	Name: string
 	Superclass: ClassInfo | null
-	Members?: Record<string, PropInfo>
+	Members?: Record<string, PropInfo> | undefined
 	ExplorerOrder?: number
 	ExplorerIcon?: number
 }

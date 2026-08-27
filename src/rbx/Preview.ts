@@ -806,7 +806,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 	}
 
-	setOutfitAccessoriesVisible(bool: boolean) {
+	override setOutfitAccessoriesVisible(bool: boolean) {
 		super.setOutfitAccessoriesVisible(bool)
 		this.hatsBtn.classList.toggle("checked", this.outfitAccessoriesVisible)
 	}

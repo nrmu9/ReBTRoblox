@@ -458,7 +458,7 @@ export const RBXAvatar = (() => {
 			this.needsUpdate = true
 		}
 
-		dispose() {
+		override dispose() {
 			for (const entry of this.stack) {
 				entry.source.removeOnUpdate(this.sourceListener)
 			}

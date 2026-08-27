@@ -220,7 +220,7 @@ export const RBXComposites = (() => {
 			)
 		}
 
-		afterComposite() {
+		override afterComposite() {
 			this.context.drawImage(this.sources.tshirt.getImage(), 2, 74, 128, 128)
 		}
 	}
