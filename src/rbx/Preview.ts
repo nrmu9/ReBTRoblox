@@ -16,7 +16,7 @@ import { query } from "@/core/query"
 import { EventEmitter } from "@/rbx/EventEmitter"
 
 const outfitCache: Record<string, any> = {}
-let avatarRulePromise
+let avatarRulePromise: Promise<any> | undefined
 
 function getAvatarRules() {
 	if (!avatarRulePromise) {
@@ -26,7 +26,7 @@ function getAvatarRules() {
 	return avatarRulePromise
 }
 
-function solveBodyColors(bodyColor3s) {
+function solveBodyColors(bodyColor3s: any) {
 	const bodyColors: Record<string, any> = {}
 
 	for (const [name, value] of Object.entries(bodyColor3s) as [string, any][]) {
@@ -37,7 +37,7 @@ function solveBodyColors(bodyColor3s) {
 	return bodyColors
 }
 
-function getOutfitData(id) {
+function getOutfitData(id: any) {
 	if (!outfitCache[id]) {
 		return (outfitCache[id] = RobloxApi.avatar.getOutfitDetails(id).then((data) => {
 			data = { ...data }
@@ -55,7 +55,7 @@ function getOutfitData(id) {
 	return outfitCache[id]
 }
 
-function getPlayerAppearance(userId) {
+function getPlayerAppearance(userId: number) {
 	if (!outfitCache["user" + userId]) {
 		return (outfitCache["user" + userId] = RobloxApi.avatar.getUserAvatar(userId).then((data) => {
 			data = { ...data }
@@ -145,13 +145,13 @@ class AvatarPreviewer extends EventEmitter {
 		this.loadingAnim = null
 		this.playingAnim = null
 
-		this.avatar.on("layeredRequestStateChanged", (state) => {
+		this.avatar.on("layeredRequestStateChanged", (state: any) => {
 			this.container.classList.toggle("btr-layered-loading", state === "fetching")
 		})
 
 		const invalidLayeredClothingMarker = html`<div class="btr-invalid-layered">!</div>`
 
-		this.avatar.on("hasInvalidLayeredClothingChanged", (hasInvalidLayeredClothing) => {
+		this.avatar.on("hasInvalidLayeredClothingChanged", (hasInvalidLayeredClothing: boolean) => {
 			if (this.avatar.hasInvalidAutoSkinnedAccessories && this.canStopAnimationIfAutoSkin) {
 				this.stopAnimation()
 			}
@@ -166,7 +166,7 @@ class AvatarPreviewer extends EventEmitter {
 
 	//
 
-	setEnabled(bool) {
+	setEnabled(bool: boolean) {
 		if (this.enabled === !!bool) {
 			return
 		}
@@ -201,7 +201,7 @@ class AvatarPreviewer extends EventEmitter {
 		}
 	}
 
-	setPlayerType(playerType) {
+	setPlayerType(playerType: string) {
 		if (this.playerType === playerType) {
 			return
 		}
@@ -218,7 +218,7 @@ class AvatarPreviewer extends EventEmitter {
 		this.trigger("playerTypeChanged", playerType)
 	}
 
-	setOutfitAccessoriesVisible(bool) {
+	setOutfitAccessoriesVisible(bool: boolean) {
 		this.outfitAccessoriesVisible = !!bool
 
 		for (const asset of this.outfitAssets) {
@@ -256,7 +256,7 @@ class AvatarPreviewer extends EventEmitter {
 			outfitPromise = getCurrentAppearance()
 		}
 
-		outfitPromise.then((result) => {
+		outfitPromise.then((result: any) => {
 			if (this.outfitDebounce !== debounce) {
 				return
 			}
@@ -266,7 +266,7 @@ class AvatarPreviewer extends EventEmitter {
 		})
 	}
 
-	onOutfitLoaded(data) {
+	onOutfitLoaded(data: any) {
 		this.appearance = JSON.parse(JSON.stringify(data))
 
 		this.avatar.setScales(data.scales)
@@ -325,7 +325,7 @@ class AvatarPreviewer extends EventEmitter {
 		return Promise.all(promises)
 	}
 
-	addAsset(assetId, assetTypeId, meta) {
+	addAsset(assetId: number, assetTypeId: number | null, meta: any) {
 		const asset = this.avatar.addAsset(assetId, assetTypeId, meta)
 		if (!asset) {
 			return
@@ -346,8 +346,8 @@ class AvatarPreviewer extends EventEmitter {
 		return asset
 	}
 
-	addAssetPreview(assetId, assetTypeId, meta) {
-		if (LayeredAssetTypes.includes(assetTypeId)) {
+	addAssetPreview(assetId: number, assetTypeId: number | null, meta: any) {
+		if (assetTypeId !== null && LayeredAssetTypes.includes(assetTypeId)) {
 			if (!meta) {
 				meta = { order: 1, version: 1 }
 			}
@@ -374,7 +374,7 @@ class AvatarPreviewer extends EventEmitter {
 	loadAnimation(assetId: any, fadeIn?: any) {
 		this.loadingAnim = assetId
 
-		AssetCache.loadAnimation(assetId, (data) => {
+		AssetCache.loadAnimation(assetId, (data: any) => {
 			if (this.loadingAnim !== assetId) {
 				return
 			}
@@ -446,7 +446,7 @@ class AvatarPreviewer extends EventEmitter {
 		this.trigger("currentAnimationChanged", null)
 	}
 
-	playAnimation(animId) {
+	playAnimation(animId: any) {
 		this.stopAnimation()
 
 		this.currentAnim = animId
@@ -600,7 +600,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		</div>`)
 
 		loggedInUserPromise.then((userId) => {
-			RobloxApi.thumbnails.getAvatarThumbnails([userId]).then((json) => {
+			RobloxApi.thumbnails.getAvatarThumbnails([userId]).then((json: any) => {
 				buttons.$find(`.btr-body-outfit-btn[data-outfit="current"] img`).src = json.data[0].imageUrl
 			})
 		})
@@ -610,7 +610,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		const bodyPopup = buttons.$find(".btr-body-popup")
 		const inputSliders: any[] = []
 
-		const loadSliders = (rules) => {
+		const loadSliders = (rules: any) => {
 			for (const input of bodyPopup.$findAll("input")) {
 				const scaleName = input.dataset.target
 				const rule = rules.scales[scaleName]
@@ -683,7 +683,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 			this.setPlayerType(typeInput.checked ? "R15" : "R6")
 		})
 
-		buttons.$on("click", ".btr-body-outfit-btn", (ev) => {
+		buttons.$on("click", ".btr-body-outfit-btn", (ev: BtrEvent<MouseEvent>) => {
 			const self = ev.currentTarget
 			const target = self.dataset.outfit
 			if (!target || self.classList.contains("selected")) {
@@ -772,7 +772,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		this.addBundleAnimation(0, "NONE")
 	}
 
-	selectOutfit(target) {
+	selectOutfit(target: any) {
 		if (this.currentOutfit === target) {
 			return
 		}
@@ -806,12 +806,12 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 	}
 
-	setOutfitAccessoriesVisible(bool) {
+	setOutfitAccessoriesVisible(bool: boolean) {
 		super.setOutfitAccessoriesVisible(bool)
 		this.hatsBtn.classList.toggle("checked", this.outfitAccessoriesVisible)
 	}
 
-	setParent(parent) {
+	setParent(parent: HTMLElement | null) {
 		if (!parent) {
 			parent = null
 		}
@@ -826,7 +826,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		this.updateParent()
 	}
 
-	setVisible(bool) {
+	setVisible(bool: boolean) {
 		if (this.isVisible === !!bool) {
 			return
 		}
@@ -847,7 +847,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 	}
 
-	setBundleOutfit(outfitId) {
+	setBundleOutfit(outfitId: any) {
 		this.bundleOutfitId = outfitId
 
 		const bundleOutfitBtn = this.buttons.$find(`.btr-body-outfit-btn[data-outfit="bundle"]`)
@@ -869,7 +869,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 	}
 
-	getAnimation(animId) {
+	getAnimation(animId: any) {
 		return this.animMap[animId]
 	}
 
@@ -914,7 +914,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		}
 	}
 
-	addAnimation(assetId, name) {
+	addAnimation(assetId: number, name: string) {
 		const anims = Object.values(this.animMap).map((x: any) => x.name)
 
 		if (anims.includes(name)) {
@@ -942,7 +942,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 		return anim
 	}
 
-	removeBundleAnimations(animType) {
+	removeBundleAnimations(animType: string) {
 		for (const anim of Object.values(this.animMap).filter((x: any) => x.animType === animType) as any[]) {
 			delete this.animMap[anim.assetId]
 
@@ -1022,7 +1022,7 @@ export class ItemPreviewer extends AvatarPreviewer {
 
 		anim.btn = btn
 
-		anim.onclick = (ev) => {
+		anim.onclick = (ev: Event) => {
 			if (anim.assetId) {
 				this.playAnimation(anim.assetId)
 			} else {
@@ -1046,7 +1046,7 @@ export const HoverPreview = (() => {
 		`https://t4.rbxcdn.com/6aa6eb3c8680be7c47f1122f4fb9ebf2`,
 	]
 
-	const ClothingParts = {
+	const ClothingParts: Record<string, string[]> = {
 		shirt: [
 			"LowerTorso",
 			"UpperTorso",
@@ -1082,11 +1082,11 @@ export const HoverPreview = (() => {
 
 	const lastPreviewedAssets: any[] = []
 	const invalidAssets: Record<string, any> = {}
-	let preview
+	let preview: any
 	let debounceCounter = 0
-	let currentTarget
+	let currentTarget: any
 
-	const setCameraDir = (cameraDir) => {
+	const setCameraDir = (cameraDir: any) => {
 		if (cameraDir === "Back") {
 			preview.scene.cameraRotation.set(...backCameraRotation)
 		} else {
@@ -1160,7 +1160,7 @@ export const HoverPreview = (() => {
 		const expandBox = () => {
 			preview.avatar.root.updateWorldMatrix(true, true)
 
-			const expandBy = (object) => {
+			const expandBy = (object: any) => {
 				if (
 					object.geometry instanceof THREE.BufferGeometry &&
 					object.geometry.getAttribute("position")
@@ -1225,13 +1225,13 @@ export const HoverPreview = (() => {
 		preview.container.append(rotBtn)
 
 		rotBtn.$on<MouseEvent>("mousedown", (ev) => {
-			if (ev.button !== 0) {
+			if ((ev as MouseEvent).button !== 0) {
 				return
 			}
-			let reqId
-			let last
+			let reqId: number | undefined
+			let last: number | undefined
 
-			const update = (time) => {
+			const update = (time: number) => {
 				const elapsed = time - (last || time)
 				last = time
 
@@ -1241,8 +1241,8 @@ export const HoverPreview = (() => {
 
 			reqId = requestAnimationFrame(update)
 
-			const mouseup = (ev) => {
-				if (ev.button !== 0) {
+			const mouseup = (ev: Event) => {
+				if ((ev as MouseEvent).button !== 0) {
 					return
 				}
 				ev.preventDefault()
@@ -1258,7 +1258,9 @@ export const HoverPreview = (() => {
 					{ once: true, capture: true },
 				)
 
-				cancelAnimationFrame(reqId)
+				if (reqId !== undefined) {
+					cancelAnimationFrame(reqId)
+				}
 			}
 
 			document.documentElement.$on("mouseup", mouseup)
@@ -1285,7 +1287,7 @@ export const HoverPreview = (() => {
 	}
 
 	return {
-		register(selector, thumbContSelector) {
+		register(selector: string, thumbContSelector: string) {
 			if (SETTINGS.get("general.hoverPreviewMode") === "never") {
 				return
 			}
@@ -1298,7 +1300,9 @@ export const HoverPreview = (() => {
 					return
 				}
 
-				const anchor = self.$find(`a[href*="/catalog/"],a[href*="/library/"],a[href*="/bundles/"]`)
+				const anchor = self.$find<HTMLAnchorElement>(
+					`a[href*="/catalog/"],a[href*="/library/"],a[href*="/bundles/"]`,
+				)
 				if (!anchor) {
 					return
 				}
@@ -1337,8 +1341,8 @@ export const HoverPreview = (() => {
 				thumbCont.addEventListener("mouseleave", mouseLeave, { once: true })
 
 				const isBundle = anchor.href.includes("/bundles/")
-				let targetOutfitId
-				let playingAnimId
+				let targetOutfitId: any
+				let playingAnimId: any
 
 				const finalizeLoad = () => {
 					if (debounceCounter !== debounce) {
@@ -1411,7 +1415,7 @@ export const HoverPreview = (() => {
 					preview.setEnabled(true)
 				}
 
-				const addItems = async (items) => {
+				const addItems = async (items: any[]) => {
 					if (debounceCounter !== debounce) {
 						return
 					}
@@ -1481,7 +1485,9 @@ export const HoverPreview = (() => {
 									weight: (x.Children.length && x.Children[0].Value) || 0,
 								}))
 									.filter((x: any) => x.id)
-									.reduce((prev, cur) => (!prev || cur.weight > prev.weight ? cur : prev))
+									.reduce((prev: any, cur: any) =>
+										!prev || cur.weight > prev.weight ? cur : prev,
+									)
 
 							if (anim) {
 								addAssetPreview(anim.id, 24)
@@ -1503,7 +1509,7 @@ export const HoverPreview = (() => {
 					for (const item of details.items) {
 						if (item.type === "Asset") {
 							promises.push(
-								AssetCache.resolveAsset(item.id).then((assetRequest) => ({
+								AssetCache.resolveAsset(item.id).then((assetRequest: any) => ({
 									AssetId: item.id,
 									AssetTypeId: assetRequest.assetTypeId,
 								})),
@@ -1516,7 +1522,7 @@ export const HoverPreview = (() => {
 					addItems(await Promise.all(promises))
 				} else {
 					const info = await AssetCache.resolveAsset(assetId).then(
-						(assetRequest) => ({ AssetId: assetId, AssetTypeId: assetRequest.assetTypeId }),
+						(assetRequest: any) => ({ AssetId: assetId, AssetTypeId: assetRequest.assetTypeId }),
 						() => null,
 					)
 

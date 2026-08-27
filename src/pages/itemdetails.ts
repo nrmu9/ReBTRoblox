@@ -504,7 +504,7 @@ pageInit.itemdetails = () => {
 
 							const parent = document.querySelector(
 								".item-thumbnail-container, #item-thumbnail-container-frontend",
-							)!.parentNode
+							)!.parentElement
 							preview.setParent(parent)
 						})
 
