@@ -406,11 +406,12 @@ export const DracoBitstream = {
 		const predictionScheme = (attribute.predictionScheme = stream.UInt8())
 		let predictionTransformType
 
-		if (
-			predictionScheme !== undefined &&
-			predictionTransformType !== undefined &&
-			predictionScheme !== PREDICTION_NONE
-		) {
+		// Draco writes the transform type whenever the scheme is not NONE. The
+		// guard here used to also require predictionTransformType to be set,
+		// which is the variable this branch exists to assign, so it never ran:
+		// the byte stayed in the stream and every predicted attribute decoded
+		// from the wrong offset.
+		if (predictionScheme !== PREDICTION_NONE) {
 			predictionTransformType = attribute.predictionTransformType = stream.Int8()
 		}
 
@@ -472,11 +473,12 @@ export const DracoBitstream = {
 			}
 		}
 
-		if (
-			predictionScheme !== undefined &&
-			predictionTransformType !== undefined &&
-			predictionScheme !== PREDICTION_NONE
-		) {
+		// Same condition as above, and it went the same way: the prediction data
+		// was neither read nor applied, so the rest of the bitstream was left
+		// unconsumed and predicted values kept their residuals. The transform
+		// type is set exactly when the scheme is not NONE, so testing it both
+		// states that and narrows it for the calls below.
+		if (predictionScheme !== PREDICTION_NONE && predictionTransformType !== undefined) {
 			this.decodePredictionData(
 				stream,
 				parser,
