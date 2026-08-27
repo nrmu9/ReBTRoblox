@@ -14,12 +14,18 @@
     "typecheck": "tsc --noEmit",
     "dev": "node dev/dev.js",
     "test:hook": "node test/serve.js",
-    "test:dollar": "node test/serve.js dollar"
+    "test:dollar": "node test/serve.js dollar",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.34",
     "@types/three": "^0.147.0",
     "esbuild": "^0.28.2",
+    "oxlint": "^1.80.0",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   },
   "dependencies": {
