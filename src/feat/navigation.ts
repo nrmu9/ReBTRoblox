@@ -278,6 +278,28 @@ export const Navigation = {
 			notif.style.display = origNotif ? "" : "none"
 		}
 		
+		/**
+		 * Re-run a header item whenever the left menu changes.
+		 *
+		 * React replaces the menu anchor outright when its badge count arrives, so
+		 * an observer bound to the anchor we were handed dies with that node. Watch
+		 * a stable ancestor instead. Our own items live in the header, outside this
+		 * container, so the writes cannot feed back in.
+		 */
+		const observeNavSource = (node: HTMLElement, elementName: string): void => {
+			const update = () => Navigation.elements[elementName].updateAll()
+			const root = node.closest("#left-navigation-container") ?? node.parentElement ?? node
+			
+			new MutationObserver(update).observe(root, {
+				childList: true,
+				subtree: true,
+				characterData: true,
+				attributeFilter: ["href"]
+			})
+			
+			update()
+		}
+		
 		Navigation.register("header_friends", {
 			label: "Show Friends",
 			
@@ -354,16 +376,7 @@ export const Navigation = {
 			},
 			
 			nodeAdded(node) {
-				const update = () => Navigation.elements.header_messages.updateAll()
-				
-				new MutationObserver(update).observe(node, {
-					childList: true,
-					subtree: true,
-					characterData: true,
-					attributeFilter: ["href"]
-				})
-				
-				update()
+				observeNavSource(node, "header_messages")
 			}
 		})
 		
@@ -382,16 +395,7 @@ export const Navigation = {
 			},
 			
 			nodeAdded(node) {
-				const update = () => Navigation.elements.header_friends.updateAll()
-				
-				new MutationObserver(update).observe(node, {
-					childList: true,
-					subtree: true,
-					characterData: true,
-					attributeFilter: ["href"]
-				})
-				
-				update()
+				observeNavSource(node, "header_friends")
 			}
 		})
 		
