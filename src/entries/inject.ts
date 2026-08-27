@@ -1,10 +1,26 @@
 // MAIN world script. Self-contained: it shares no module scope with the
 // content scripts and talks to them only over btroblox/* CustomEvents.
 
-document.addEventListener(
-	"btroblox/init",
-	(ev) => {
-		const [settings, IS_DEV_MODE, selectedRobuxToCashOption] = (ev as CustomEvent).detail
+// Registration cannot wait for the content bundle. That bundle is a dynamic
+// import, and on a cold cache it lands after Roblox has already rendered, at
+// which point a react hook registered too late never sees the components it was
+// meant to transform. So everything here runs at document_start, and only the
+// parts that actually read settings wait for btroblox/init.
+
+let pageSettings: any = {}
+let IS_DEV_MODE = false
+let selectedRobuxToCashOption: any = null
+
+/** Set once the body below has run, so init can hand over the real settings. */
+let applySettings: ((settings: any, isDevMode: boolean, cashOption: any) => void) | null = null
+
+const startInject = () => {
+	{
+		// Aliased so the body can keep reading `settings` while the outer binding
+		// is what init replaces.
+		const settings = new Proxy({} as any, {
+			get: (_t, key) => pageSettings?.[key],
+		})
 
 		const BTRoblox: Record<string, any> = {}
 		let currentPage: any = null
@@ -4143,9 +4159,90 @@ document.addEventListener(
 			// Stop inserting injected functions here
 		}
 
+		// Hooks that install a react or angular interception. They must be
+		// registered before Roblox renders, and registering one twice would apply
+		// its transform twice, so the content script calling later is a no op.
+		const EAGER_HOOKS = [
+			"avatar",
+			"assetRefinement",
+			"fullRangeBodyColors",
+			"showOwnedAssets",
+			"initReactRobuxToCash",
+			"setupPopovers",
+			"addBTRSettings",
+			"fixFirefoxLocalStorageIssue",
+			"cacheRobuxAmount",
+			"higherRobuxPrecision",
+			"hideFriendActivity",
+			"smallChatButton",
+			"hijackAuth",
+			"webpackHook",
+			"createAddBTRSettings",
+			"createAssetOptions",
+			"createDownloadVersion",
+			"marketplacePageChanged",
+			"gamedetails",
+			"groupsModifyLayout",
+			"showRecommendationPlayerCount",
+			"instantGameHoverAction",
+			"inventoryTools",
+			"refreshInventory",
+			"itemdetails",
+			"refreshMessages",
+			"messages",
+			"money",
+			"profile",
+			"adblock.js",
+			"fastsearch",
+			"navigation",
+		]
+
+		// These read settings, so they cannot run until init has delivered them.
+		const SETTINGS_HOOKS = [
+			"initReactFriends",
+			"removeAccessoryLimits",
+			"experiments",
+			"pagedServers",
+			"favoritesAtTop",
+		]
+
+		const registered = new Set<string>()
+
+		const callInjected = (name: string, args: any[] = []) => {
+			const isRegistration = EAGER_HOOKS.includes(name) || SETTINGS_HOOKS.includes(name)
+
+			if (isRegistration) {
+				if (registered.has(name)) {
+					return
+				}
+				registered.add(name)
+			}
+
+			try {
+				injectedFunctions[name](...args)
+			} catch (ex) {
+				console.error("[btr] injected function " + name + " failed", ex)
+			}
+		}
+
 		contentScript.listen("call", (name: string, args: any[]) => {
-			injectedFunctions[name](...args)
+			callInjected(name, args)
 		})
+
+		for (const name of EAGER_HOOKS) {
+			callInjected(name)
+		}
+
+		applySettings = (newSettings, isDevMode, cashOption) => {
+			pageSettings = newSettings
+			IS_DEV_MODE = isDevMode
+			selectedRobuxToCashOption = cashOption
+			RobuxToCash.selectedRobuxToCashOption = cashOption
+
+			for (const name of SETTINGS_HOOKS) {
+				callInjected(name)
+			}
+		}
 
 		//
 
@@ -4155,6 +4252,16 @@ document.addEventListener(
 
 		reactHook.init()
 		angularHook.init()
+	}
+}
+
+startInject()
+
+document.addEventListener(
+	"btroblox/init",
+	(ev) => {
+		const [newSettings, isDevMode, cashOption] = (ev as CustomEvent).detail
+		applySettings?.(newSettings, isDevMode, cashOption)
 	},
 	{ once: true },
 )
