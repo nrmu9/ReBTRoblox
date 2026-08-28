@@ -4269,6 +4269,118 @@ const startInject = () => {
 					}
 				})
 			},
+			// Roblox's chat renders an open conversation from a react-query cache
+			// that nothing invalidates when a message arrives. The conversation
+			// object gets a fresh preview, so the list updates and the unread
+			// badge appears, while the messages themselves stay as they were
+			// until the page is reloaded.
+			//
+			// Refetching that query is all it takes, so this watches the open
+			// conversations and invalidates one when its preview moves on
+			// without its messages following.
+			fixChatMessages: () => {
+				const SHELL = ".react-chat-dialog-shell"
+				const seen = new Map<string, string>()
+
+				const fiberOf = (node: any) => {
+					const key = Object.keys(node).find((k) => k.startsWith("__reactFiber$"))
+					return key ? node[key] : null
+				}
+
+				/** Walks up from a node until a fiber carries the named prop. */
+				const propAbove = (node: any, name: string, test?: (value: any) => boolean) => {
+					let fiber = fiberOf(node)
+
+					for (let depth = 0; fiber && depth < 40; depth++) {
+						const value = fiber.memoizedProps?.[name]
+
+						if (value && (!test || test(value))) {
+							return value
+						}
+
+						fiber = fiber.return
+					}
+
+					return null
+				}
+
+				const check = () => {
+					for (const shell of document.querySelectorAll(SHELL)) {
+						try {
+							const conversation = propAbove(shell, "conversation", (c) => !!c.id)
+							if (!conversation) {
+								continue
+							}
+
+							const preview = String(conversation.preview?.text ?? conversation.preview ?? "")
+							if (!preview || seen.get(conversation.id) === preview) {
+								continue
+							}
+
+							// Recorded before invalidating, so the refetch this causes
+							// cannot come back around and invalidate again.
+							seen.set(conversation.id, preview)
+
+							if (shell.textContent?.includes(preview)) {
+								continue
+							}
+
+							const client = propAbove(shell, "client", (c) => !!c.invalidateQueries)
+							if (!client) {
+								continue
+							}
+
+							// Matched by looking for the conversation id inside the key
+							// rather than by rebuilding roblox's key shape, which is
+							// theirs to change.
+							client.invalidateQueries({
+								predicate: (query: any) => {
+									try {
+										return JSON.stringify(query.queryKey).includes(conversation.id)
+									} catch {
+										return false
+									}
+								},
+							})
+						} catch {}
+					}
+				}
+
+				// The list re-renders when a message lands even though the
+				// conversation does not, so watching the chat covers the case
+				// without polling for it.
+				let watched: Element | null = null
+
+				const inner = new MutationObserver(() => {
+					if (watched && !watched.isConnected) {
+						// The chat was torn down, so go back to waiting for a new one
+						// rather than holding an observer on a detached tree.
+						inner.disconnect()
+						watched = null
+						outer.observe(document.documentElement, { childList: true, subtree: true })
+						return
+					}
+
+					check()
+				})
+
+				// Watching the whole document is only to find the chat once. It is
+				// the busiest observer on the page, so it stops as soon as it has.
+				const outer = new MutationObserver(() => {
+					const root = document.querySelector(".react-chat-root")
+
+					if (!root || root === watched) {
+						return
+					}
+
+					watched = root
+					outer.disconnect()
+					inner.observe(root, { childList: true, subtree: true, characterData: true })
+					check()
+				})
+
+				outer.observe(document.documentElement, { childList: true, subtree: true })
+			},
 			navigation: () => {
 				reactHook.inject("ul.navbar-right", (elem: any) => {
 					const robux = elem.find((x: any) => "robuxAmount" in x.props)
@@ -4362,6 +4474,7 @@ const startInject = () => {
 			"profile",
 			"adblock.js",
 			"fastsearch",
+			"fixChatMessages",
 			"navigation",
 			"voiceStatus",
 		]

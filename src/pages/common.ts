@@ -1948,6 +1948,12 @@ pageInit.www = () => {
 		update()
 	}
 
+	// Registered eagerly, before roblox renders the chat, and it only acts on
+	// conversations that are already open.
+	if (SETTINGS.get("general.fixChatMessages")) {
+		injectScript.call("fixChatMessages")
+	}
+
 	bodyWatcher.$watch("#chat-container", applyChatSettings)
 	bodyWatcher.$watchAll(
 		".react-chat-root",

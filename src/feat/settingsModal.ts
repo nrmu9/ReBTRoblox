@@ -190,6 +190,7 @@ export const SettingsModal: SettingsModalState = {
 						<div>
 							<checkbox label="Show Chat" path=!hideChat></checkbox>
 							<checkbox label="Minimize Chat" path=smallChatButton require=!hideChat></checkbox>
+							<checkbox label="Fix Missing Messages" path=fixChatMessages require=!hideChat></checkbox>
 						</div>
 						<checkbox label="Show 'Copy Id' Context Items" path=enableContextMenus></checkbox>
 						<checkbox label="Higher Robux Precision" path=higherRobuxPrecision></checkbox>
