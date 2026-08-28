@@ -14,6 +14,40 @@ interface AssetRequest {
 	[key: string]: any
 }
 
+/** What a loader accepts as the thing to fetch. */
+type AssetLoaderRequest = string | number | Record<string, unknown> | URLSearchParams
+
+type AssetLoaderCallback<T> = (value: T | null) => void
+
+/**
+ * Named rather than any, so a callback passed in the third position cannot
+ * satisfy the params slot. That is what let a 3 argument call match the 4
+ * argument overload and type the callback as any.
+ */
+interface AssetLoadParams {
+	format?: string
+	cache?: boolean
+	async?: boolean
+	browserAssetRequest?: boolean
+	onProgress?: (...args: any[]) => void
+}
+
+/**
+ * strict and params are both optional and sorted out at runtime, so the shapes
+ * are spelled out rather than collapsed into one signature with any holes.
+ */
+interface AssetLoader<T> {
+	(request: AssetLoaderRequest, cb?: AssetLoaderCallback<T>): Promise<T | null>
+	(request: AssetLoaderRequest, params: AssetLoadParams, cb?: AssetLoaderCallback<T>): Promise<T | null>
+	(strict: boolean, request: AssetLoaderRequest, cb?: AssetLoaderCallback<T>): Promise<T | null>
+	(
+		strict: boolean,
+		request: AssetLoaderRequest,
+		params: AssetLoadParams,
+		cb?: AssetLoaderCallback<T>,
+	): Promise<T | null>
+}
+
 export const AssetCache = (() => {
 	const resolveCache: Record<string, any> = {}
 	const cdnCache: Record<string, any> = {}
@@ -63,10 +97,29 @@ export const AssetCache = (() => {
 		return urlParams
 	}
 
-	function createMethod(constructor: any) {
-		const methodCache: Record<string, any> = {}
+	/**
+	 * Wraps a parser into the cached loader shape.
+	 *
+	 * Loaders resolve `T | null`: the catch below turns any failure, a dead
+	 * asset or a parser that throws, into null. That was invisible while these
+	 * were `any`, and callers dereferenced it.
+	 *
+	 * The overloads exist because the leading `strict` and trailing `params`
+	 * are both optional and shuffled at runtime. A single signature put the
+	 * callback in the `params` slot, where it typed as any, and the null went
+	 * unnoticed all over again.
+	 */
+	function createMethod<T>(
+		constructor: (buffer: ArrayBuffer, request: AssetRequest) => T | Promise<T>,
+	): AssetLoader<Awaited<T>> {
+		const methodCache: Record<string, Promise<Awaited<T> | null>> = {}
 
-		return (strict?: any, request?: any, params?: any, cb?: any) => {
+		return ((
+			strict?: any,
+			request?: any,
+			params?: any,
+			cb?: (value: Awaited<T> | null) => void,
+		): Promise<Awaited<T> | null> => {
 			if (typeof strict !== "boolean") {
 				cb = params
 				params = request
@@ -128,7 +181,7 @@ export const AssetCache = (() => {
 			}
 
 			return methodPromise
-		}
+		}) as AssetLoader<Awaited<T>>
 	}
 
 	return {
@@ -265,7 +318,7 @@ export const AssetCache = (() => {
 
 		loadImage: createMethod(
 			(buffer: ArrayBuffer, assetRequest: AssetRequest) =>
-				new Promise((resolve, reject) => {
+				new Promise<HTMLImageElement>((resolve, reject) => {
 					const src = URL.createObjectURL(new Blob([new Uint8Array(buffer)], { type: "image/png" }))
 
 					const image = new Image()

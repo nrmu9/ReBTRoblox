@@ -150,17 +150,29 @@ export const RBXComposites = (() => {
 
 			let meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/CompositShirtTemplate.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(shirtmesh, mesh)),
+				AssetCache.loadMesh(
+					true,
+					meshUrl,
+					(mesh: Mesh | null) => mesh && RBXAvatar.applyMesh(shirtmesh, mesh),
+				),
 			)
 
 			meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/CompositPantsTemplate.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(pantsmesh, mesh)),
+				AssetCache.loadMesh(
+					true,
+					meshUrl,
+					(mesh: Mesh | null) => mesh && RBXAvatar.applyMesh(pantsmesh, mesh),
+				),
 			)
 
 			meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/CompositTShirt.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(tshirtmesh, mesh)),
+				AssetCache.loadMesh(
+					true,
+					meshUrl,
+					(mesh: Mesh | null) => mesh && RBXAvatar.applyMesh(tshirtmesh, mesh),
+				),
 			)
 		}
 	}
@@ -213,7 +225,11 @@ export const RBXComposites = (() => {
 
 			const meshUrl = RBXAvatar.LocalAssets["res/previewer/compositing/R15CompositTorsoBase.mesh"]
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => {
+				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh | null) => {
+					if (!mesh) {
+						return
+					}
+
 					RBXAvatar.applyMesh(shirtmesh, mesh)
 					RBXAvatar.applyMesh(pantsmesh, mesh)
 				}),
@@ -256,7 +272,11 @@ export const RBXComposites = (() => {
 			source.onUpdate(() => this.requestUpdate())
 
 			this.loaders.push(
-				AssetCache.loadMesh(true, meshUrl, (mesh: Mesh) => RBXAvatar.applyMesh(obj, mesh)),
+				AssetCache.loadMesh(
+					true,
+					meshUrl,
+					(mesh: Mesh | null) => mesh && RBXAvatar.applyMesh(obj, mesh),
+				),
 			)
 		}
 	}

@@ -59,7 +59,11 @@ pageInit.gamedetails = () => {
 				const target = queryReq("#game-context-menu")
 
 				target.$on("click", ".btr-download-place", () => {
-					AssetCache.loadBuffer(placeId, (ab: ArrayBuffer) => {
+					AssetCache.loadBuffer(placeId, (ab: ArrayBuffer | null) => {
+						if (!ab) {
+							return
+						}
+
 						const blobUrl = URL.createObjectURL(new Blob([ab]))
 
 						const splitPath = window.location.pathname.split("/")

@@ -1423,7 +1423,7 @@ export const initDownloadButton = async (assetId: any, assetTypeId: any, isBundl
 			AssetCache.loadBuffer(
 				assetId,
 				{ browserAssetRequest: assetTypeId === AssetType.Audio, format: format },
-				(buffer: ArrayBuffer) => {
+				(buffer: ArrayBuffer | null) => {
 					downloadButton.classList.remove("disabled")
 					downloadButton.classList.remove("loading")
 

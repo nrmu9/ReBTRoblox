@@ -1906,7 +1906,11 @@ export const RBXAvatar = (() => {
 					source.setImage(null)
 
 					if (texId) {
-						AssetCache.loadImage(true, texId, (img: HTMLImageElement) => {
+						AssetCache.loadImage(true, texId, (img: HTMLImageElement | null) => {
+							if (!img) {
+								return
+							}
+
 							if (source.rbxTexId === texId) {
 								source.setImage(img)
 							}
@@ -2081,7 +2085,11 @@ export const RBXAvatar = (() => {
 					setImage(null)
 
 					if (texId) {
-						AssetCache.loadImage(true, texId, (img: HTMLImageElement) => {
+						AssetCache.loadImage(true, texId, (img: HTMLImageElement | null) => {
+							if (!img) {
+								return
+							}
+
 							if (target[key] === texId) {
 								setImage(img)
 							}
@@ -2273,27 +2281,43 @@ export const RBXAvatar = (() => {
 						})
 
 						if (acc.colorMapId) {
-							AssetCache.loadImage(true, acc.colorMapId, (img: HTMLImageElement) => {
+							AssetCache.loadImage(true, acc.colorMapId, (img: HTMLImageElement | null) => {
+								if (!img) {
+									return
+								}
+
 								texture.setImage(img)
 							})
 						}
 
 						if (acc.normalMapId) {
-							AssetCache.loadImage(true, acc.normalMapId, (img: HTMLImageElement) => {
+							AssetCache.loadImage(true, acc.normalMapId, (img: HTMLImageElement | null) => {
+								if (!img) {
+									return
+								}
+
 								material.normalMap = createTexture(img)
 								material.needsUpdate = true
 							})
 						}
 
 						if (acc.metalnessMapId) {
-							AssetCache.loadImage(true, acc.metalnessMapId, (img: HTMLImageElement) => {
+							AssetCache.loadImage(true, acc.metalnessMapId, (img: HTMLImageElement | null) => {
+								if (!img) {
+									return
+								}
+
 								material.metalnessMap = createTexture(img)
 								material.needsUpdate = true
 							})
 						}
 
 						if (acc.roughnessMapId) {
-							AssetCache.loadImage(true, acc.roughnessMapId, (img: HTMLImageElement) => {
+							AssetCache.loadImage(true, acc.roughnessMapId, (img: HTMLImageElement | null) => {
+								if (!img) {
+									return
+								}
+
 								material.roughnessMap = createTexture(img)
 								material.needsUpdate = true
 							})
@@ -2308,7 +2332,11 @@ export const RBXAvatar = (() => {
 						})
 
 						if (acc.texId) {
-							AssetCache.loadImage(true, acc.texId, (img: HTMLImageElement) => {
+							AssetCache.loadImage(true, acc.texId, (img: HTMLImageElement | null) => {
+								if (!img) {
+									return
+								}
+
 								material.map = new MergeTexture(256, 256, img)
 								material.needsUpdate = true
 							})
