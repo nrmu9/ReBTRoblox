@@ -257,28 +257,37 @@ body.btr-hide-chat #chat-container {
 }
 
 /* The chat collapses to its header on its own; this only narrows it while it
-   is collapsed, which is what the old compact chat did. Collapsed is detected
-   structurally, by the body being unmounted, because the classes do not change. */
-body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) {
-	width: 100px !important;
+   is collapsed, which is what the old compact chat did. btr-chat-collapsed is
+   put on the root by the content script, because the styling below needs the
+   root to know the list's state and :has() cannot nest. */
+
+:root {
+	--btr-chat-width: 286px;
+	--btr-chat-collapsed-width: 100px;
+}
+
+body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > section {
+	width: var(--btr-chat-collapsed-width) !important;
 	min-width: 0 !important;
+}
+
+/* Open conversations are positioned against the full list width, so a narrowed
+   list leaves them stranded with a gap. Slide them over by the difference. */
+body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > div {
+	transform: translateX(calc(var(--btr-chat-width) - var(--btr-chat-collapsed-width)));
 }
 
 /* The new chat button is what gave the header its height, so it keeps its own
    once that goes, and the title centres in what is left of the row. */
-body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div:first-child {
+body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > section > div:first-child {
 	height: 48px;
 }
 
-body.btr-minimize-chat
-	.react-chat-root
-	section:not(:has(> :nth-child(2)))
-	> div:first-child
-	> div:first-child {
+body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > section > div:first-child > div:first-child {
 	justify-content: center;
 }
 
-body.btr-minimize-chat .react-chat-root section:not(:has(> :nth-child(2))) > div:first-child > button {
+body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > section > div:first-child > button {
 	display: none;
 }
 

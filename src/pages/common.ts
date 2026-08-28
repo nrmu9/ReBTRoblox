@@ -1928,8 +1928,35 @@ pageInit.www = () => {
 		document.body?.classList.toggle("btr-minimize-chat", minimized)
 	}
 
+	/**
+	 * Marks the chat root while its list is collapsed.
+	 *
+	 * The collapsed list is narrower, but roblox positions open conversations
+	 * against the full width either way, so they sit adrift with a gap. Styling
+	 * that needs the root to know about the list's state, and :has() cannot
+	 * nest, so the state is put on the root here instead. Roblox does swap a
+	 * height class, but keying off a pixel value in a class name breaks the
+	 * first time the design changes; the list having no body does not.
+	 */
+	const watchChatCollapse = (root: HTMLElement) => {
+		const update = () => {
+			const list = root.querySelector(":scope > section")
+			root.classList.toggle("btr-chat-collapsed", !!list && list.childElementCount < 2)
+		}
+
+		new MutationObserver(update).observe(root, { childList: true, subtree: true })
+		update()
+	}
+
 	bodyWatcher.$watch("#chat-container", applyChatSettings)
-	bodyWatcher.$watchAll(".react-chat-root", applyChatSettings, { continuous: true })
+	bodyWatcher.$watchAll(
+		".react-chat-root",
+		(root: HTMLElement) => {
+			applyChatSettings()
+			watchChatCollapse(root)
+		},
+		{ continuous: true },
+	)
 
 	SETTINGS.onChange("general.hideChat", applyChatSettings)
 	SETTINGS.onChange("general.smallChatButton", applyChatSettings)
