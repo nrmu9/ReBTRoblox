@@ -239,7 +239,24 @@ export const DracoBitstream = {
 				}
 			}
 		} else if (encoderMethod === MESH_EDGEBREAKER_ENCODING) {
-			throw "draco edgebreaker not implemented"
+			const traversalType = stream.UInt8()
+			const numEncodedVertices = this.LEB128(stream)
+			const numFaces = this.LEB128(stream)
+			const numAttributeData = stream.UInt8()
+			const numEncodedSymbols = this.LEB128(stream)
+			const numEncodedSplitSymbols = this.LEB128(stream)
+
+			// The header parses, but the connectivity below it does not yet. Say
+			// which variant was refused: standard and valence traversal decode
+			// their CLERS symbols differently, so both have to be implemented.
+			parser.numFaces = numFaces
+			parser.numPoints = numEncodedVertices
+
+			void numAttributeData
+			void numEncodedSymbols
+			void numEncodedSplitSymbols
+
+			throw `draco edgebreaker not implemented (traversal type ${traversalType})`
 		} else {
 			throw "draco encoderMethod not implemented"
 		}
@@ -592,8 +609,11 @@ export const DracoBitstream = {
 			attribute.wrapMin = stream.Int32LE()
 			attribute.wrapMax = stream.Int32LE()
 		} else if (predictionTransformType === PREDICTION_TRANSFORM_NORMAL_OCTAHEDRON_CANONICALIZED) {
+			// This is the max quantized value itself, 1023 for 10 bit normals,
+			// not a bit count. The second int is the centre value, which draco
+			// recomputes rather than trusting.
 			attribute.octaMaxQ = stream.Int32LE()
-			stream.Int32LE() // octaUnused
+			stream.Int32LE() // centerValue, recomputed below
 		}
 
 		// DecodePredictionData
@@ -655,7 +675,11 @@ export const DracoBitstream = {
 			}
 		} else if (predictionTransformType === PREDICTION_TRANSFORM_NORMAL_OCTAHEDRON_CANONICALIZED) {
 			assert(attribute.octaMaxQ !== undefined, "draco: missing octahedral quantization")
-			let maxQuantizedValue = (1 << attribute.octaMaxQ) - 1
+
+			// octaMaxQ is already the max quantized value. Shifting by it treated
+			// it as a bit count, and 1 << 1023 wraps to 1 << 31 in javascript, so
+			// every bound below was nonsense and normals decoded to a constant.
+			let maxQuantizedValue = attribute.octaMaxQ
 			let maxValue = maxQuantizedValue - 1
 			let centerValue = maxValue / 2
 
@@ -731,10 +755,6 @@ export const DracoBitstream = {
 				}
 			}
 
-			const addAsUnsigned = (a: number, b: number) => {
-				return (a >= 0 ? a : 4294967296 + a) + (b >= 0 ? b : 4294967296 + b)
-			}
-
 			const modMax = (x: number) => {
 				return x > centerValue ? x - maxQuantizedValue : x < -centerValue ? x + maxQuantizedValue : x
 			}
@@ -767,7 +787,10 @@ export const DracoBitstream = {
 					pred = rotatePoint(pred, rotationCount)
 				}
 
-				let orig = [modMax(addAsUnsigned(pred[0], corr[0])), modMax(addAsUnsigned(pred[1], corr[1]))]
+				// Draco adds these as signed int32. Emulating unsigned wraparound
+				// pushed every sum outside modMax's range, so each normal after
+				// the first decoded from a corrupted prediction.
+				let orig = [modMax(pred[0] + corr[0]), modMax(pred[1] + corr[1])]
 
 				if (!isInBottomLeft) {
 					orig = rotatePoint(orig, (4 - rotationCount) % 4)

@@ -27,6 +27,7 @@
 	"devDependencies": {
 		"@types/chrome": "^0.2.7",
 		"@types/three": "^0.185.4",
+		"draco3d": "^1.5.7",
 		"esbuild": "^0.28.2",
 		"oxlint": "^1.80.0",
 		"prettier": "^3.9.6",
