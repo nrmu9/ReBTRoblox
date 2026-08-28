@@ -7,6 +7,24 @@ ReBTRoblox is an extension that aims to enhance Roblox website's look and functi
 
 It is a fork of [BTRoblox](https://github.com/AntiBoomz/BTRoblox) by [AntiBoomz](https://github.com/AntiBoomz), who wrote the original and everything this is built on. That project has not seen active maintenance for some time and a number of its features had stopped working, so this continues it. All credit for the original work is theirs.
 
+Installing
+----------
+
+**Firefox.** The add-ons store listing is awaiting review. Until it is approved,
+Firefox will not install the builds here: Mozilla signs a listed version only
+after review, so the `.xpi` on each release is marked `-unsigned` and loads in
+Nightly and Developer Edition, or through `about:debugging` as a temporary
+add-on, but not in release Firefox.
+
+**Chrome.** Download `-chrome.zip` from the
+[latest release](https://github.com/nrmu9/ReBTRoblox/releases/latest), unzip it,
+then load the folder at `chrome://extensions` with Developer mode on. There is
+no Chrome Web Store listing yet.
+
+Every release also ships `SHA256SUMS`. Builds are reproducible, so checking out
+the matching tag and running `npm ci && npm run package` produces byte identical
+archives.
+
 Links
 -----
 
