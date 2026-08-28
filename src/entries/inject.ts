@@ -4350,9 +4350,12 @@ const startInject = () => {
 								continue
 							}
 
-							const stale = !shell.textContent?.includes(preview)
+							// A conversation that has not rendered anything yet is loading,
+							// not behind. Invalidating then would cancel its first fetch
+							// and race the thing it is meant to help.
+							const rendered = shell.querySelectorAll("li").length
 
-							if (!stale) {
+							if (!rendered || shell.textContent?.includes(preview)) {
 								continue
 							}
 
