@@ -4280,6 +4280,7 @@ const startInject = () => {
 			// without its messages following.
 			fixChatMessages: () => {
 				const SHELL = ".react-chat-dialog-shell"
+				const ROW = "button.react-chat-row"
 				const seen = new Map<string, string>()
 
 				const fiberOf = (node: any) => {
@@ -4304,16 +4305,39 @@ const startInject = () => {
 					return null
 				}
 
+				const conversationOf = (node: any) => propAbove(node, "conversation", (c) => !!c.id)
+
 				const check = () => {
-					for (const shell of document.querySelectorAll(SHELL)) {
+					// Read from the list rows, not from the open conversation. The
+					// conversation is the component that is not re-rendering, so its
+					// props still describe the state before the message arrived. The
+					// rows do re-render, which is why the list and the unread badge
+					// are right while the messages are not.
+					// Falling back to the conversations themselves keeps this working,
+					// just not promptly, if the rows ever stop carrying one.
+					const sources = document.querySelectorAll(ROW).length
+						? document.querySelectorAll(ROW)
+						: document.querySelectorAll(SHELL)
+
+					for (const row of sources) {
 						try {
-							const conversation = propAbove(shell, "conversation", (c) => !!c.id)
+							const conversation = conversationOf(row)
 							if (!conversation) {
 								continue
 							}
 
 							const preview = String(conversation.preview?.text ?? conversation.preview ?? "")
 							if (!preview || seen.get(conversation.id) === preview) {
+								continue
+							}
+
+							// Only conversations that are open on screen can be showing
+							// stale messages.
+							const shell = [...document.querySelectorAll(SHELL)].find(
+								(s) => conversationOf(s)?.id === conversation.id,
+							)
+
+							if (!shell) {
 								continue
 							}
 
