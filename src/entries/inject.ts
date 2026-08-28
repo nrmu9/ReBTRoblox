@@ -4308,6 +4308,10 @@ const startInject = () => {
 				const conversationOf = (node: any) => propAbove(node, "conversation", (c) => !!c.id)
 
 				const check = () => {
+					if (settings.general?.fixChatMessages === false) {
+						return
+					}
+
 					// Read from the list rows, not from the open conversation. The
 					// conversation is the component that is not re-rendering, so its
 					// props still describe the state before the message arrived. The
@@ -4341,18 +4345,20 @@ const startInject = () => {
 								continue
 							}
 
-							// Recorded before invalidating, so the refetch this causes
-							// cannot come back around and invalidate again.
-							seen.set(conversation.id, preview)
-
-							if (shell.textContent?.includes(preview)) {
-								continue
-							}
-
 							const client = propAbove(shell, "client", (c) => !!c.invalidateQueries)
 							if (!client) {
 								continue
 							}
+
+							const stale = !shell.textContent?.includes(preview)
+
+							if (!stale) {
+								continue
+							}
+
+							// Recorded before invalidating, so the refetch this causes
+							// cannot come back around and invalidate again.
+							seen.set(conversation.id, preview)
 
 							// Matched by looking for the conversation id inside the key
 							// rather than by rebuilding roblox's key shape, which is
@@ -4381,7 +4387,7 @@ const startInject = () => {
 						// rather than holding an observer on a detached tree.
 						inner.disconnect()
 						watched = null
-						outer.observe(document.documentElement, { childList: true, subtree: true })
+						outer.observe(document, { childList: true, subtree: true })
 						return
 					}
 
@@ -4403,7 +4409,7 @@ const startInject = () => {
 					check()
 				})
 
-				outer.observe(document.documentElement, { childList: true, subtree: true })
+				outer.observe(document, { childList: true, subtree: true })
 			},
 			navigation: () => {
 				reactHook.inject("ul.navbar-right", (elem: any) => {
@@ -4521,6 +4527,16 @@ const startInject = () => {
 			try {
 				injectedFunctions[name](...args)
 			} catch (ex) {
+				// The dev probe hooks the content script's console, not this one,
+				// so a hook failing in here was invisible. Keep the failures where
+				// the bridge can read them.
+				if (__DEV__) {
+					try {
+						const errors = ((globalThis as any).__btrInjectErrors ??= [])
+						errors.push(name + ": " + ((ex as Error)?.stack || ex))
+					} catch {}
+				}
+
 				console.error("[btr] injected function " + name + " failed", ex)
 			}
 		}

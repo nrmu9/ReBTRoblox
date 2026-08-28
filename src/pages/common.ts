@@ -1948,8 +1948,8 @@ pageInit.www = () => {
 		update()
 	}
 
-	// Registered eagerly, before roblox renders the chat, and it only acts on
-	// conversations that are already open.
+	// Called on demand rather than listed as an eager hook: it queries the dom,
+	// and eager hooks run at document_start when there is nothing there yet.
 	if (SETTINGS.get("general.fixChatMessages")) {
 		injectScript.call("fixChatMessages")
 	}
