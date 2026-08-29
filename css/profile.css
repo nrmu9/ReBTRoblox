@@ -213,7 +213,9 @@ html .dark-theme.btr-profile .btr-section-content-off {
 
 /* Header redesign */
 
-.user-profile-header {
+/* Scoped to .btr-profile: without the profile feature nothing puts the
+   description back, so hiding it here removed it outright. */
+.btr-profile .user-profile-header {
 	margin-bottom: 10px;
 
 	/* Hide new description */
