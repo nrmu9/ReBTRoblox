@@ -244,6 +244,7 @@ export const SettingsModal: SettingsModalState = {
 						<checkbox label="Compact Badge Stats" path=compactBadgeStats></checkbox>
 						<checkbox label="Paged Server List" path=addServerPager></checkbox>
 						<checkbox label="Show Server Region" path=showServerRegion></checkbox>
+						<checkbox label="Exact Visit and Like Counts" path=exactCounts></checkbox>
 					</group>
 					<group label="Item Details" path=itemdetails toggleable>
 						<checkbox label="Item Previewer" path=itemPreviewer></checkbox>

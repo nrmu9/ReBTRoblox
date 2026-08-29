@@ -106,6 +106,7 @@ export const DEFAULT_SETTINGS = {
 		addServerPager: { value: true },
 		showServerRegion: { value: "none", validValues: ["none", "ping", "region", "both", "combined"] },
 		compactBadgeStats: { value: true },
+		exactCounts: { value: true },
 	},
 	groups: {
 		enabled: { value: true },

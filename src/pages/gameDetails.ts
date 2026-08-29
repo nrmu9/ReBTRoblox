@@ -6,6 +6,7 @@ import { ContextMenu } from "@/feat/contextMenu"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import {
+	formatNumber,
 	formatUrlName,
 	getAssetFileType,
 	initExplorer,
@@ -21,6 +22,68 @@ import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { getServerDetails } from "@/feat/serverDetails"
 import { queryReq } from "@/core/query"
+
+// Roblox rounds the big numbers on this page: visits turn into "1.8M+" and the
+// like counts into "10K+". The votes already carry the real number in their
+// title attribute, visits take one games API call.
+const exactText = (value: unknown) => {
+	const number = typeof value === "string" ? Number.parseInt(value, 10) : value
+	return typeof number === "number" && Number.isSafeInteger(number) ? formatNumber(number) : null
+}
+
+// Written back whenever the element changes, because voting makes the panel
+// rewrite its own text.
+const keepExact = (elem: HTMLElement, getText: () => string | null) => {
+	const apply = () => {
+		const text = getText()
+
+		if (text !== null && elem.textContent !== text) {
+			elem.textContent = text
+		}
+	}
+
+	new MutationObserver(apply).observe(elem, {
+		attributeFilter: ["title"],
+		attributes: true,
+		characterData: true,
+		childList: true,
+		subtree: true,
+	})
+
+	apply()
+}
+
+const showExactCounts = () => {
+	for (const selector of ["#vote-up-text", "#vote-down-text"]) {
+		document.$watch(
+			selector,
+			(elem: HTMLElement) => keepExact(elem, () => exactText(elem.getAttribute("title"))),
+			{ continuous: true },
+		)
+	}
+
+	document.$watch("#game-detail-meta-data", (meta: HTMLElement) => {
+		const universeId = Number.parseInt(meta.dataset.universeId ?? "", 10)
+
+		if (!Number.isSafeInteger(universeId)) {
+			return
+		}
+
+		RobloxApi.games.getGameDetails.batch(universeId).then((json: any) => {
+			const visits = json?.data?.find((x: any) => x.id === universeId)?.visits
+
+			if (exactText(visits) === null) {
+				return
+			}
+
+			document.$watch(
+				"#game-visits-count",
+				(elem: HTMLElement) => keepExact(elem, () => exactText(visits)),
+				{ continuous: true },
+			)
+		})
+	})
+}
 
 pageInit.gamedetails = () => {
 	onPageLoad((placeIdString: string) => {
@@ -722,6 +785,10 @@ pageInit.gamedetails = () => {
 				injectScript.send("setServerRegion", jobId, details)
 			})
 		})
+	}
+
+	if (SETTINGS.get("gamedetails.exactCounts")) {
+		onPageLoad(() => showExactCounts())
 	}
 
 	onPageReset(() => {
