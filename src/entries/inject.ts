@@ -7,7 +7,28 @@
 // meant to transform. So everything here runs at document_start, and only the
 // parts that actually read settings wait for btroblox/init.
 
-let pageSettings: any = {}
+// The hooks run before settings arrive, so the gates the content script would
+// have applied are unknown at that point. The last settings handed over are
+// kept on the page and read back here, so a disabled feature does not get its
+// hooks installed on the next load.
+const SETTINGS_CACHE_KEY = "ReBTRoblox:pageSettings"
+
+const readCachedSettings = () => {
+	try {
+		const json = localStorage.getItem(SETTINGS_CACHE_KEY)
+		return json ? JSON.parse(json) : null
+	} catch {
+		return null
+	}
+}
+
+const writeCachedSettings = (value: any) => {
+	try {
+		localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(value))
+	} catch {}
+}
+
+let pageSettings: any = readCachedSettings() ?? {}
 let IS_DEV_MODE = false
 let selectedRobuxToCashOption: any = null
 
@@ -4478,39 +4499,56 @@ const startInject = () => {
 		// document_start, when there is nothing to act on, and the dedupe below
 		// then swallows every later call. setupPopovers, refreshInventory and
 		// refreshMessages were all silently dead that way.
-		const EAGER_HOOKS = [
-			"avatar",
-			"assetRefinement",
-			"fullRangeBodyColors",
-			"showOwnedAssets",
-			"initReactRobuxToCash",
-			"addBTRSettings",
-			"cacheRobuxAmount",
-			"higherRobuxPrecision",
-			"hideFriendActivity",
-			"ignoreR6Warning",
-			"hijackAuth",
-			"webpackHook",
-			"removeAccessoryLimits",
-			"createAddBTRSettings",
-			"createAssetOptions",
-			"createDownloadVersion",
-			"marketplacePageChanged",
-			"gamedetails",
-			"groupsModifyLayout",
-			"showRecommendationPlayerCount",
-			"instantGameHoverAction",
-			"inventoryTools",
-			"itemdetails",
-			"messages",
-			"money",
-			"profile",
-			"adblock.js",
-			"fastsearch",
-			"fixChatMessages",
-			"navigation",
-			"voiceStatus",
+		//
+		// The entries after the name are the settings the content script gates
+		// the call on. A hook that transforms Roblox's own markup has to honour
+		// them: `profile` strips the About, Communities and description sections
+		// because the page code rebuilds them, so installing it while the profile
+		// feature is off removes them for good. Settings are only known here from
+		// the cache above, so an unknown setting counts as on, which is what
+		// happens on the first load after install.
+		const EAGER_HOOKS: string[][] = [
+			["avatar", "avatar.enabled"],
+			["assetRefinement", "avatar.enabled", "avatar.assetRefinement"],
+			["fullRangeBodyColors", "avatar.enabled", "avatar.fullRangeBodyColors"],
+			["showOwnedAssets", "catalog.enabled", "catalog.showOwnedAssets"],
+			["initReactRobuxToCash", "general.robuxToUSDRate"],
+			["addBTRSettings"],
+			["cacheRobuxAmount", "general.cacheRobuxAmount"],
+			["higherRobuxPrecision", "general.higherRobuxPrecision"],
+			["hideFriendActivity", "home.hideFriendActivity"],
+			["ignoreR6Warning"],
+			["hijackAuth"],
+			["webpackHook", "create.enabled"],
+			["removeAccessoryLimits", "avatar.removeAccessoryLimits"],
+			["createAddBTRSettings", "create.enabled"],
+			["createAssetOptions", "create.enabled", "create.assetOptions"],
+			["createDownloadVersion", "create.enabled", "create.downloadVersion"],
+			["marketplacePageChanged", "create.enabled"],
+			["gamedetails", "gamedetails.enabled"],
+			["groupsModifyLayout", "groups.enabled", "groups.modifyLayout"],
+			["showRecommendationPlayerCount", "home.showRecommendationPlayerCount"],
+			["instantGameHoverAction", "home.instantGameHoverAction"],
+			["inventoryTools", "inventory.enabled", "inventory.inventoryTools"],
+			["itemdetails", "itemdetails.enabled"],
+			["messages", "messages.enabled"],
+			["money", "general.robuxToUSDRate"],
+			["profile", "profile.enabled"],
+			["adblock.js", "general.hideAds"],
+			["fastsearch", "general.fastSearch"],
+			["fixChatMessages"],
+			["navigation", "navigation.enabled"],
+			["voiceStatus"],
 		]
+
+		const EAGER_HOOK_NAMES = EAGER_HOOKS.map(([name]) => name)
+
+		// "none" is how the robux conversion says off.
+		const isSettingOn = (path: string) => {
+			const [group, key] = path.split(".")
+			const value = pageSettings?.[group]?.[key]
+			return value !== false && value !== "none"
+		}
 
 		// These read settings, so they cannot run until init has delivered them.
 		const SETTINGS_HOOKS = ["initReactFriends", "experiments", "pagedServers", "favoritesAtTop"]
@@ -4518,7 +4556,7 @@ const startInject = () => {
 		const registered = new Set<string>()
 
 		const callInjected = (name: string, args: any[] = []) => {
-			const isRegistration = EAGER_HOOKS.includes(name) || SETTINGS_HOOKS.includes(name)
+			const isRegistration = EAGER_HOOK_NAMES.includes(name) || SETTINGS_HOOKS.includes(name)
 
 			if (isRegistration) {
 				if (registered.has(name)) {
@@ -4548,12 +4586,15 @@ const startInject = () => {
 			callInjected(name, args)
 		})
 
-		for (const name of EAGER_HOOKS) {
-			callInjected(name)
+		for (const [name, ...gates] of EAGER_HOOKS) {
+			if (gates.every(isSettingOn)) {
+				callInjected(name)
+			}
 		}
 
 		applySettings = (newSettings, isDevMode, cashOption) => {
 			pageSettings = newSettings
+			writeCachedSettings(newSettings)
 			IS_DEV_MODE = isDevMode
 			selectedRobuxToCashOption = cashOption
 			RobuxToCash.selectedRobuxToCashOption = cashOption
@@ -4574,6 +4615,7 @@ const startInject = () => {
 		// settings proxy per call picks changes up from here with no reload.
 		contentScript.listen("updateSettings", (newSettings: any, cashOption: any) => {
 			pageSettings = newSettings
+			writeCachedSettings(newSettings)
 			selectedRobuxToCashOption = cashOption
 			RobuxToCash.selectedRobuxToCashOption = cashOption
 		})
