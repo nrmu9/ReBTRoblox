@@ -109,9 +109,23 @@ const onAnimationStart = (event: AnimationEvent): void => {
 
 	const registration = registrations.get(event.animationName)
 
-	if (registration && event.target instanceof Element) {
-		deliver(registration, event.target)
+	if (!registration || !(event.target instanceof Element)) {
+		return
 	}
+
+	// redirectEvents re-dispatches a node's events onto another element so react
+	// keeps working after the about tab is moved, and animationstart is in that
+	// list. The clone carries the animation name with a target that never
+	// matched the selector, so the target has to be checked rather than trusted.
+	try {
+		if (!event.target.matches(registration.selector)) {
+			return
+		}
+	} catch {
+		return
+	}
+
+	deliver(registration, event.target)
 }
 
 const ensureSheet = (): CSSStyleSheet => {
