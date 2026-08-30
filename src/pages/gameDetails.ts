@@ -37,7 +37,8 @@ const keepExact = (elem: HTMLElement, getText: () => string | null) => {
 	const apply = () => {
 		const text = getText()
 
-		if (text !== null && elem.textContent !== text) {
+		// A count is a leaf. Never write over something that holds markup.
+		if (text !== null && elem.childElementCount === 0 && elem.textContent !== text) {
 			elem.textContent = text
 		}
 	}
