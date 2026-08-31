@@ -168,51 +168,9 @@ jobs:
           sha256sum * > SHA256SUMS
           cat SHA256SUMS
 
-      # Says which file to take, because the answer differs per channel and
-      # picking the wrong one means an .xpi release firefox refuses to install.
-      - name: Write the install note
-        run: |
-          slug="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
-
-          # Read from what was actually produced rather than from the config,
-          # so a release with no credentials cannot claim to be signed.
-          signed=""
-          if [ -f artifacts/*-firefox.xpi ] 2>/dev/null; then
-            if unzip -l artifacts/*-firefox.xpi | grep -q "META-INF/mozilla.rsa"; then
-              signed="yes"
-            fi
-          fi
-
-          # A skipped release never reached the store, so it must not point at it.
-          submitted="yes"
-          if git tag -l --format='%(contents)' "$GITHUB_REF_NAME" | grep -qiF "[skip amo]"; then
-            submitted=""
-          fi
-
-          {
-            if [ -n "$signed" ]; then
-              echo "The \`.xpi\` below is signed by Mozilla and installs in Firefox"
-              echo "directly. Open it with Firefox, or drag it onto the browser."
-            elif [ "$AMO_CHANNEL" = "listed" ] && [ -n "$submitted" ]; then
-              echo "Install for Firefox from"
-              echo "[addons.mozilla.org](https://addons.mozilla.org/firefox/addon/$slug/)."
-              echo
-              echo "The \`-unsigned.xpi\` below is the same build without Mozilla's"
-              echo "signature. Release Firefox will not install it; it is there for"
-              echo "Nightly, Developer Edition, \`about:debugging\`, and inspection."
-            else
-              echo "The \`.xpi\` below is **not signed**. Release Firefox will not"
-              echo "install it; it is there for Nightly, Developer Edition and"
-              echo "\`about:debugging\`."
-            fi
-          } > "$RUNNER_TEMP/NOTE.md"
-
-          cat "$RUNNER_TEMP/NOTE.md"
-
       - uses: softprops/action-gh-release@v3
         with:
           files: artifacts/*
-          body_path: ${{ runner.temp }}/NOTE.md
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
