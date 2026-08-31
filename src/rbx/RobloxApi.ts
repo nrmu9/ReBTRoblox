@@ -455,6 +455,18 @@ export const RobloxApi = {
 			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/friends`, {
 				credentials: "include",
 			}).then((res) => res.json()),
+
+		getFollowerCount: cacheResult(60e3, (userId: UserId) =>
+			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/followers/count`, {
+				credentials: "include",
+			}).then((res) => res.json()),
+		),
+
+		getFollowingCount: cacheResult(60e3, (userId: UserId) =>
+			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/followings/count`, {
+				credentials: "include",
+			}).then((res) => res.json()),
+		),
 	},
 	gamepasses: {
 		getGamepassDetails: cacheResult(

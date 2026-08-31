@@ -119,6 +119,7 @@ export const DEFAULT_SETTINGS = {
 	profile: {
 		enabled: { value: true },
 		embedInventoryEnabled: { value: true },
+		exactCounts: { value: true },
 	},
 }
 

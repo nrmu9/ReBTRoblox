@@ -16,9 +16,61 @@ import {
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
+// Roblox rounds the follower and following counts once they get big, so a
+// popular profile reads "17M Followers". Friends never needs this, the cap is
+// far below where rounding starts.
+const ROUNDED_COUNT = /^[\d.,]+[KMB]\+?\s+(Followers|Following)$/
+
+// Writing the exact number leaves text the pattern no longer matches, so a
+// react re-render is what asks for the count again, and it asks for a fresh
+// one rather than restoring the number we happened to write.
+const showExactCounts = (userId: number) => {
+	document.$watch(
+		".user-profile-header a span",
+		(span: HTMLElement) => {
+			const update = async () => {
+				const label = ROUNDED_COUNT.exec(span.textContent ?? "")?.[1]
+
+				if (!label) {
+					return
+				}
+
+				const json = await (label === "Followers"
+					? RobloxApi.friends.getFollowerCount(userId)
+					: RobloxApi.friends.getFollowingCount(userId))
+
+				if (!Number.isSafeInteger(json?.count)) {
+					return
+				}
+
+				span.textContent = `${formatNumber(json.count)} ${label}`
+			}
+
+			new MutationObserver(() => void update()).observe(span, {
+				characterData: true,
+				childList: true,
+				subtree: true,
+			})
+
+			void update()
+		},
+		{ continuous: true },
+	)
+}
+
 pageInit.profile = () => {
 	if (!SETTINGS.get("profile.enabled")) {
 		return
+	}
+
+	if (SETTINGS.get("profile.exactCounts")) {
+		onPageLoad((userIdString: string) => {
+			const userId = Number.parseInt(userIdString, 10)
+
+			if (Number.isSafeInteger(userId)) {
+				showExactCounts(userId)
+			}
+		})
 	}
 
 	injectScript.call("profile", () => {

@@ -235,6 +235,7 @@ export const SettingsModal: SettingsModalState = {
 					</group>
 					<group label=Profile path=profile toggleable>
 						<checkbox label="Embed Inventory" path=embedInventoryEnabled></checkbox>
+						<checkbox label="Exact Follower Counts" path=exactCounts></checkbox>
 					</group>
 					<group label=Groups path=groups toggleable>
 						<checkbox label="Modify Layout" path=modifyLayout></checkbox>
