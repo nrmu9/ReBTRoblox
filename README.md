@@ -1,3 +1,4 @@
+<a href="https://addons.mozilla.org/en-US/firefox/addon/rebtroblox/" title="Install for Firefox"><img src="https://img.shields.io/amo/v/rebtroblox?label=firefox%20add-on&style=for-the-badge" alt="Install for Firefox"></a>
 <a href="https://github.com/nrmu9/ReBTRoblox/releases/latest" title="Download the latest release"><img src="https://img.shields.io/github/v/release/nrmu9/ReBTRoblox?label=download&style=for-the-badge" alt="Download the latest release"></a>
 
 ReBTRoblox
@@ -10,11 +11,11 @@ It is a fork of [BTRoblox](https://github.com/AntiBoomz/BTRoblox) by [AntiBoomz]
 Installing
 ----------
 
-**Firefox.** The add-ons store listing is awaiting review. Until it is approved,
-Firefox will not install the builds here: Mozilla signs a listed version only
-after review, so the `.xpi` on each release is marked `-unsigned` and loads in
-Nightly and Developer Edition, or through `about:debugging` as a temporary
-add-on, but not in release Firefox.
+**Firefox.** Install from
+[addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/rebtroblox/).
+The `-unsigned.xpi` on each release is the same build without Mozilla's
+signature; release Firefox will not install it, and it is there for Nightly,
+Developer Edition, `about:debugging` and inspection.
 
 **Chrome.** Download `-chrome.zip` from the
 [latest release](https://github.com/nrmu9/ReBTRoblox/releases/latest), unzip it,
