@@ -23,7 +23,11 @@
 		"package:firefox": "node dev/package.js --target=firefox",
 		"package:chrome": "node dev/package.js --target=chrome",
 		"dev:chrome": "node dev/build.js --dev --watch --target=chrome --out=dist-chrome",
-		"test:draco": "node dev/draco.js"
+		"test:draco": "node dev/draco.js",
+		"test:webstore": "node dev/webstore.test.js",
+		"publish:chrome": "node dev/webstore.js",
+		"publish:chrome:draft": "node dev/webstore.js --no-publish",
+		"publish:chrome:auth": "node dev/webstore.js --auth"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.2.7",

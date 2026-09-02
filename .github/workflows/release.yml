@@ -20,6 +20,14 @@ jobs:
       # variable to "listed" to submit to the add-ons store instead.
       AMO_CHANNEL: ${{ vars.AMO_CHANNEL || 'unlisted' }}
 
+      # Optional, and the same idea for chrome. Without them the zip is only
+      # attached to the release. CWS_ITEM_ID is what the store assigns when the
+      # item is first created by hand, which the api cannot do.
+      CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+      CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+
     steps:
       # The tag object itself is needed to check its signature, so this cannot
       # be a shallow checkout.
@@ -90,8 +98,9 @@ jobs:
         run: |
           # A release that is not for the store says so in its own tag message,
           # which keeps the decision with the release instead of in repository
-          # settings someone has to remember to put back.
-          if git tag -l --format='%(contents)' "$GITHUB_REF_NAME" | grep -qiF "[skip amo]"; then
+          # settings someone has to remember to put back. [skip store] means
+          # both stores, [skip amo] and [skip cws] mean one of them.
+          if git tag -l --format='%(contents)' "$GITHUB_REF_NAME" | grep -qiE '\[skip (amo|store)\]'; then
             unsigned="$(ls artifacts/*-firefox.xpi)"
             mv "$unsigned" "${unsigned%-firefox.xpi}-firefox-unsigned.xpi"
             echo "tag says [skip amo]: nothing submitted, shipping the unsigned build"
@@ -174,3 +183,15 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
+
+      # The zip that goes to the store is the one the release ships, so what
+      # users install from either place came out of the same package run.
+      - name: Submit the Chrome build to the Web Store
+        if: env.CWS_CLIENT_ID != '' && env.CWS_ITEM_ID != ''
+        run: |
+          if git tag -l --format='%(contents)' "$GITHUB_REF_NAME" | grep -qiE '\[skip (cws|store)\]'; then
+            echo "tag says skip: nothing submitted to the web store"
+            exit 0
+          fi
+
+          node dev/webstore.js
