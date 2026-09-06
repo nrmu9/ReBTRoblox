@@ -1,4 +1,5 @@
 <a href="https://addons.mozilla.org/en-US/firefox/addon/rebtroblox/" title="Install for Firefox"><img src="https://img.shields.io/amo/v/rebtroblox?label=firefox%20add-on&style=for-the-badge" alt="Install for Firefox"></a>
+<a href="https://chromewebstore.google.com/detail/rebtroblox-continuing-the/dplimibgmlomamaljcclnjgcolbijcad" title="Install for Chrome"><img src="https://img.shields.io/chrome-web-store/v/dplimibgmlomamaljcclnjgcolbijcad?label=chrome%20extension&style=for-the-badge" alt="Install for Chrome"></a>
 <a href="https://github.com/nrmu9/ReBTRoblox/releases/latest" title="Download the latest release"><img src="https://img.shields.io/github/v/release/nrmu9/ReBTRoblox?label=download&style=for-the-badge" alt="Download the latest release"></a>
 
 ReBTRoblox
@@ -17,10 +18,10 @@ The `-unsigned.xpi` on each release is the same build without Mozilla's
 signature; release Firefox will not install it, and it is there for Nightly,
 Developer Edition, `about:debugging` and inspection.
 
-**Chrome.** Download `-chrome.zip` from the
-[latest release](https://github.com/nrmu9/ReBTRoblox/releases/latest), unzip it,
-then load the folder at `chrome://extensions` with Developer mode on. There is
-no Chrome Web Store listing yet.
+**Chrome.** Install from the
+[Chrome Web Store](https://chromewebstore.google.com/detail/rebtroblox-continuing-the/dplimibgmlomamaljcclnjgcolbijcad).
+The `-chrome.zip` on each release is the same build unpacked: unzip it and load
+the folder at `chrome://extensions` with Developer mode on.
 
 Every release also ships `SHA256SUMS`. Builds are reproducible, so checking out
 the matching tag and running `npm ci && npm run package` produces byte identical
