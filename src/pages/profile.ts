@@ -884,9 +884,7 @@ pageInit.profile = () => {
 									<a
 										class="text-link text-overflow btr-creator-link"
 										title="${item.creator.name}"
-										href="${item.creator.type === "User"
-											? `/users/${item.creator.id}/profile`
-											: `/communities/${item.creator.id}/community`}"
+										href="${item.creator.type === "User" ? `/users/${item.creator.id}/profile` : `/communities/${item.creator.id}/community`}"
 									>
 										${item.creator.name}
 									</a>
@@ -1227,9 +1225,7 @@ pageInit.profile = () => {
 
 							item.$req(".btr-game-playbutton-container").replaceChildren(html`
 								<div
-									title="${(prohibitedReasons as Record<string, any>)[
-										placeDetails.reasonProhibited
-									] || placeDetails.reasonProhibited}"
+									title="${(prohibitedReasons as Record<string, any>)[placeDetails.reasonProhibited] || placeDetails.reasonProhibited}"
 									class="btr-place-prohibited btn-common-play-game-unplayable-lg btn-primary-lg"
 									disabled
 								>
