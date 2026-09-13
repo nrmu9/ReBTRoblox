@@ -82,6 +82,7 @@ html .dark-theme.btr-profile .btr-section-content-off {
 
 		.btr-profile-description-content {
 			max-height: 162px;
+			text-align: center;
 			overflow: hidden;
 		}
 
@@ -114,7 +115,7 @@ html .dark-theme.btr-profile .btr-section-content-off {
 		border-top: 1px solid light-dark(#e3e3e3, #494d5a);
 		/* border-bottom: 1px solid light-dark(#E3E3E3, #494d5a); */
 		margin-top: 12px;
-		padding: 8px 0 0;
+		padding: 12px 0 0;
 
 		.btr-profile-stat {
 			flex: 1 1 auto;
