@@ -884,7 +884,9 @@ pageInit.profile = () => {
 									<a
 										class="text-link text-overflow btr-creator-link"
 										title="${item.creator.name}"
-										href="${item.creator.type === "User" ? `/users/${item.creator.id}/profile` : `/communities/${item.creator.id}/community`}"
+										href="${item.creator.type === "User"
+											? `/users/${item.creator.id}/profile`
+											: `/communities/${item.creator.id}/community`}"
 									>
 										${item.creator.name}
 									</a>
@@ -1184,7 +1186,7 @@ pageInit.profile = () => {
 						const placeDetails = _placeDetails.find((x: any) => x.placeId === placeId)
 
 						const desc = item.$req(".btr-game-desc-content")
-						desc.textContent = placeDetails.description
+						desc.textContent = placeDetails.description || "This game has no description"
 
 						injectScript.call("linkify", (target: any) => $(target).linkify(), desc)
 
@@ -1225,7 +1227,9 @@ pageInit.profile = () => {
 
 							item.$req(".btr-game-playbutton-container").replaceChildren(html`
 								<div
-									title="${(prohibitedReasons as Record<string, any>)[placeDetails.reasonProhibited] || placeDetails.reasonProhibited}"
+									title="${(prohibitedReasons as Record<string, any>)[
+										placeDetails.reasonProhibited
+									] || placeDetails.reasonProhibited}"
 									class="btr-place-prohibited btn-common-play-game-unplayable-lg btn-primary-lg"
 									disabled
 								>
