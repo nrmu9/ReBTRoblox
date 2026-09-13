@@ -299,8 +299,13 @@ html .dark-theme.btr-profile .btr-section-content-off {
 .btr-profile .btr-profile-playerbadges {
 	margin-bottom: 18px;
 
+	.btr-pager-holder {
+		margin-top: 4px;
+	}
+
 	.card {
-		width: 25%;
+		width: 22.5%;
+		margin-left: 10px;
 
 		.card-name {
 			font-weight: 500;
@@ -494,6 +499,10 @@ html .dark-theme.btr-profile .btr-section-content-off {
 
 html .btr-profile .btr-profile-favorites {
 	margin-bottom: 18px;
+
+	.game-cards {
+		min-height: 400px !important;
+	}
 
 	.game-card {
 		float: left;
