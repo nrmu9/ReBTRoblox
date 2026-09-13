@@ -1184,7 +1184,7 @@ pageInit.profile = () => {
 						const placeDetails = _placeDetails.find((x: any) => x.placeId === placeId)
 
 						const desc = item.$req(".btr-game-desc-content")
-						desc.textContent = placeDetails.description
+						desc.textContent = placeDetails.description || "This game has no description"
 
 						injectScript.call("linkify", (target: any) => $(target).linkify(), desc)
 
