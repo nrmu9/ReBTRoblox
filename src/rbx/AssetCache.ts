@@ -168,6 +168,14 @@ export const AssetCache = (() => {
 					})
 					.catch((err: unknown) => {
 						console.error(err)
+
+						// A failure is not kept. It is as likely to be a rate limit or
+						// a dropped connection as a bad asset, and caching it left the
+						// asset broken until the page was reloaded.
+						if (methodCache[cacheKey] === methodPromise) {
+							delete methodCache[cacheKey]
+						}
+
 						return null
 					})
 
@@ -243,6 +251,15 @@ export const AssetCache = (() => {
 
 				if (params?.cache !== false) {
 					resolveCache[cacheKey] = resolvePromise
+
+					// Only a success is kept: a rate limited lookup comes back with no
+					// locations, and keeping that failed the asset for the whole page.
+					const cached = resolvePromise
+					cached.catch(() => {
+						if (resolveCache[cacheKey] === cached) {
+							delete resolveCache[cacheKey]
+						}
+					})
 				}
 			}
 
@@ -266,6 +283,13 @@ export const AssetCache = (() => {
 
 				if (params?.cache !== false) {
 					cdnCache[cdnUrl] = cdnPromise
+
+					const cached = cdnPromise
+					cached.catch(() => {
+						if (cdnCache[cdnUrl] === cached) {
+							delete cdnCache[cdnUrl]
+						}
+					})
 				}
 			}
 
