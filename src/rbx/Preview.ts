@@ -319,7 +319,18 @@ class AvatarPreviewer extends EventEmitter {
 		}
 
 		if (!this.playingAnim && this.loadingAnim) {
-			promises.push(new Promise<void>((resolve) => this.once("animationPlayed", () => resolve())))
+			promises.push(
+				new Promise<void>((resolve) => {
+					const done = () => {
+						this.off("animationPlayed", done)
+						this.off("animationFailed", done)
+						resolve()
+					}
+
+					this.on("animationPlayed", done)
+					this.on("animationFailed", done)
+				}),
+			)
 		}
 
 		return Promise.all(promises)
@@ -376,6 +387,15 @@ class AvatarPreviewer extends EventEmitter {
 
 		AssetCache.loadAnimation(assetId, (data: any) => {
 			if (this.loadingAnim !== assetId) {
+				return
+			}
+
+			// A failed load hands back null. Playing that threw, so animationPlayed
+			// never fired and anything waiting on it, the hover preview included,
+			// waited forever.
+			if (!data) {
+				this.loadingAnim = null
+				this.trigger("animationFailed", assetId)
 				return
 			}
 
@@ -1077,6 +1097,9 @@ export const HoverPreview = (() => {
 		face: ["Head"],
 	}
 
+	const isPreviewableType = (assetTypeId: number) =>
+		WearableAssetTypeIds.includes(assetTypeId) || AnimationPreviewAssetTypeIds.includes(assetTypeId)
+
 	const frontCameraRotation = [0.15, 0.25, 0]
 	const backCameraRotation = [0.15, 2.89, 0]
 
@@ -1297,8 +1320,50 @@ export const HoverPreview = (() => {
 		}
 	}
 
+	// The first hover used to build the viewer's own avatar while they waited:
+	// the renderer, the outfit and every asset in it. On a cold cache that took
+	// seconds, and moving the mouse away threw the attempt out, so the preview
+	// looked like it only loaded after a few tries. It is built once the page is
+	// idle instead, leaving the first hover only the item itself to fetch.
+	let warmUpScheduled = false
+
+	const scheduleWarmUp = () => {
+		if (warmUpScheduled) {
+			return
+		}
+		warmUpScheduled = true
+
+		const warmUp = async () => {
+			if (preview || SETTINGS.get("general.hoverPreviewMode") === "never") {
+				return
+			}
+
+			initPreview()
+			preview.setEnabled(true)
+
+			await preview.waitForAppearance()
+
+			// A hover that started meanwhile owns the preview now.
+			if (!currentTarget) {
+				preview.setEnabled(false)
+			}
+		}
+
+		if (typeof requestIdleCallback === "function") {
+			requestIdleCallback(() => void warmUp(), { timeout: 3000 })
+		} else {
+			setTimeout(() => void warmUp(), 1000)
+		}
+	}
+
 	return {
-		register(selector: string, thumbContSelector: string) {
+		// warm is off where the page already has a previewer of its own, which
+		// loads the same avatar through the same cache.
+		register(selector: string, thumbContSelector: string, warm = true) {
+			if (warm) {
+				scheduleWarmUp()
+			}
+
 			document.$on("mouseover", `${selector} ${thumbContSelector}`, async (ev) => {
 				// Checked here rather than at registration: the listener is delegated
 				// and cannot be detached, so testing it per event is what lets the
@@ -1358,13 +1423,16 @@ export const HoverPreview = (() => {
 				let targetOutfitId: any
 				let playingAnimId: any
 
+				// Nothing that fails in here marks the item invalid. That is decided
+				// from its type alone, before any loading: an empty result after
+				// loading is as likely a rate limit as an item with nothing to show,
+				// and marking it kept the item dead until the page was reloaded.
 				const finalizeLoad = () => {
 					if (debounceCounter !== debounce) {
 						return
 					}
 
 					if (!lastPreviewedAssets.length && !playingAnimId) {
-						invalidAssets[assetId] = true
 						thumbCont.classList.remove("btr-preview-loading")
 						clearTarget()
 						return
@@ -1393,7 +1461,6 @@ export const HoverPreview = (() => {
 							const didSomethingChange = lastPreviewedAssets.find((asset) => !asset.isEmpty())
 
 							if (!didSomethingChange) {
-								invalidAssets[assetId] = true
 								clearTarget()
 								return
 							}
@@ -1512,33 +1579,75 @@ export const HoverPreview = (() => {
 					finalizeLoad()
 				}
 
-				if (!isLibraryItem) {
-					thumbCont.classList.add("btr-preview-loading")
+				// A failed request leaves the card as it was, and the next hover tries
+				// again. Only the mouse leaving used to clear the spinner.
+				const giveUp = () => {
+					if (debounceCounter === debounce) {
+						thumbCont.classList.remove("btr-preview-loading")
+						clearTarget()
+					}
 				}
 
 				if (isBundle) {
-					const details = await RobloxApi.catalog.getBundleDetails(assetId)
-					const promises: any[] = []
-
-					for (const item of details.items) {
-						if (item.type === "Asset") {
-							promises.push(
-								AssetCache.resolveAsset(item.id).then((assetRequest: any) => ({
-									AssetId: item.id,
-									AssetTypeId: assetRequest.assetTypeId,
-								})),
-							)
-						} else if (item.type === "UserOutfit") {
-							promises.push(RobloxApi.avatar.getOutfitDetails(item.id))
-						}
+					if (!isLibraryItem) {
+						thumbCont.classList.add("btr-preview-loading")
 					}
 
-					addItems(await Promise.all(promises))
+					let items: any[]
+
+					try {
+						const details = await RobloxApi.catalog.getBundleDetails(assetId)
+						const promises: any[] = []
+
+						// A part that fails to resolve is left out rather than failing
+						// the whole bundle, so the rest of it still previews.
+						for (const item of details.items) {
+							if (item.type === "Asset") {
+								promises.push(
+									AssetCache.resolveAsset(item.id).then(
+										(assetRequest: any) => ({
+											AssetId: item.id,
+											AssetTypeId: assetRequest.assetTypeId,
+										}),
+										() => null,
+									),
+								)
+							} else if (item.type === "UserOutfit") {
+								promises.push(RobloxApi.avatar.getOutfitDetails(item.id).catch(() => null))
+							}
+						}
+
+						items = await Promise.all(promises)
+					} catch {
+						return giveUp()
+					}
+
+					addItems(items)
 				} else {
 					const info = await AssetCache.resolveAsset(assetId).then(
 						(assetRequest: any) => ({ AssetId: assetId, AssetTypeId: assetRequest.assetTypeId }),
 						() => null,
 					)
+
+					if (debounceCounter !== debounce) {
+						return
+					}
+
+					if (!info) {
+						return giveUp()
+					}
+
+					// Gear, avatar backgrounds and the like have nothing to put on the
+					// avatar. Known from the type alone, so no spinner is shown for them
+					// and they are not looked up again.
+					if (!isPreviewableType(info.AssetTypeId)) {
+						invalidAssets[assetId] = true
+						return giveUp()
+					}
+
+					if (!isLibraryItem) {
+						thumbCont.classList.add("btr-preview-loading")
+					}
 
 					addItems([info])
 				}

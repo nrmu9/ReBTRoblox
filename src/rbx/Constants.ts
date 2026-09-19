@@ -59,6 +59,11 @@ export const AssetType = {
 	EyelashAccessory: 77,
 	MoodAnimation: 78,
 	DynamicHead: 79,
+	FaceMakeup: 88,
+	LipMakeup: 89,
+	EyeMakeup: 90,
+	AvatarBackground: 92,
+	TextDocument: 93,
 }
 
 export const BrickColor: Record<number, { name: string; color: RGB }> = {

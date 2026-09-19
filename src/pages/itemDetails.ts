@@ -47,7 +47,8 @@ pageInit.itemdetails = () => {
 
 	if (SETTINGS.get("general.hoverPreview")) {
 		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
-			HoverPreview.register(".item-card", ".item-card-thumb-container")
+			// Not warmed: the item previewer on this page already loads the avatar.
+			HoverPreview.register(".item-card", ".item-card-thumb-container", false)
 		})
 	}
 
