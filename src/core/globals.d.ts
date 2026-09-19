@@ -13,7 +13,6 @@ declare global {
 	const util: any
 	const cloneInto: any
 	const SHARED_DATA_PAYLOAD: any
-	const browser: any
 	const $: any
 
 	// Still in legacy js/. Each entry goes away as its module ports.

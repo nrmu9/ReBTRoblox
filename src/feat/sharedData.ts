@@ -4,6 +4,14 @@ import { setImmediate } from "@/core/dom"
 import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 
+// Firefox only. @types/chrome types browser as chrome now, which has no
+// contentScripts, so the part used here is declared rather than cast to any.
+interface FirefoxBrowser {
+	contentScripts: {
+		register(details: Record<string, unknown>): Promise<{ unregister(): void }>
+	}
+}
+
 export const SHARED_DATA = {
 	payloadIndex: undefined as number | undefined,
 	payloadScript: undefined as { unregister: () => void } | null | undefined,
@@ -47,7 +55,7 @@ export const SHARED_DATA = {
 
 			const details = chrome.runtime.getManifest().content_scripts![0]
 
-			browser.contentScripts
+			;(browser as unknown as FirefoxBrowser).contentScripts
 				.register({
 					matches: details.matches,
 					excludeMatches: details.exclude_matches,
