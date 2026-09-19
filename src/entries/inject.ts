@@ -4219,7 +4219,22 @@ const startInject = () => {
 							case "Collections":
 							case "Friends":
 							case "Store":
-								break // do nothing (we do something with this)
+								// The page code moves these into the profile layout. Moving a
+								// section's own nodes breaks react, which throws on its next
+								// update and unmounts the whole profile. Two wrappers of our
+								// own sit between them: react never touches the inner one,
+								// which is what gets moved, and everything the section
+								// updates is inside it and moves along with it.
+								if (!child.props.children?.props?.className?.startsWith("btr-wrapper-")) {
+									child.props.children = reactHook.createElement("div", {
+										className: `btr-wrapper-container-${child.key}`,
+										children: reactHook.createElement("div", {
+											className: `btr-wrapper-${child.key}`,
+											children: child.props.children,
+										}),
+									})
+								}
+								break
 							default:
 								if (IS_DEV_MODE) {
 									console.log(`Unknown component '${child.key}'`)

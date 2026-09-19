@@ -12,6 +12,7 @@ import {
 	loggedInUserPromise,
 	onPageLoad,
 	onPageReset,
+	redirectEvents,
 } from "@/pages/common"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
@@ -99,7 +100,18 @@ pageInit.profile = () => {
 					case "Collections":
 					case "Friends":
 					case "Store":
-						break // do nothing (we do something with this)
+						// Wrapped twice so the inner wrapper can be moved without
+						// react noticing. See the copy of this in inject.ts.
+						if (!child.props.children?.props?.className?.startsWith("btr-wrapper-")) {
+							child.props.children = reactHook.createElement("div", {
+								className: `btr-wrapper-container-${child.key}`,
+								children: reactHook.createElement("div", {
+									className: `btr-wrapper-${child.key}`,
+									children: child.props.children,
+								}),
+							})
+						}
+						break
 					default:
 						if (IS_DEV_MODE) {
 							console.log(`Unknown component '${child.key}'`)
@@ -244,12 +256,16 @@ pageInit.profile = () => {
 				.$watch(".profile-tabs", (tabs: HTMLElement) => {
 					tabs.parentElement!.style.display = "none"
 				})
-				.$watch("#friends-carousel-container", (friends: any) => {
-					newCont.$req(".placeholder-friends").after(friends)
+				// Roblox renders the friends carousel inside the tab content this
+				// layout hides, where it measures 0px wide and shows nobody. The
+				// wrapper the profile hook puts around it is what moves: react never
+				// touches that node, so it survives the move. It leaves the react
+				// root, so its events are sent back to the wrapper it came out of.
+				.$watch(".btr-wrapper-Friends", (friends: HTMLElement) => {
+					const container = friends.parentElement!
 
-					friends.$watch(">*", (_cont: HTMLElement) => {
-						newCont.$req(".placeholder-friends").remove()
-					})
+					newCont.$find(".placeholder-friends")?.replaceWith(friends)
+					redirectEvents(friends, container)
 				})
 				.$watch(".user-profile-header", (header: HTMLElement) => {
 					const target = header.$find("> .flex-nowrap > a.radius-circle")
@@ -326,35 +342,35 @@ pageInit.profile = () => {
 						update()
 					})
 				})
-				.$watch(".profile-currently-wearing", (wearing: any) => {
+				// Moved into the header, which is still inside the react root, so its
+				// events reach react without being redirected.
+				.$watch(".btr-wrapper-CurrentlyWearing", (wearing: HTMLElement) => {
 					const toggleItems = html`<span class="btr-toggle-items btn-control btn-control-sm"
 						>Show Items</span
 					>`
 					profileContainer.$req(".profile-avatar-left").parentElement!.append(toggleItems)
 
-					const clone = wearing.cloneNode(false)
-					clone.classList.add(
+					wearing.classList.add(
 						"btr-currently-wearing",
 						"stroke-muted",
 						"stroke-standard",
 						"shadow-transient-high",
 					)
-					clone.append(...wearing.childNodes)
-					toggleItems.after(clone)
+					toggleItems.after(wearing)
 
 					const onClick = (ev: Event) => {
-						if (!ev.composedPath().includes(clone) && ev.target !== toggleItems) {
+						if (!ev.composedPath().includes(wearing) && ev.target !== toggleItems) {
 							toggle()
 						}
 					}
 
 					const toggle = () => {
-						clone.classList.toggle("visible")
-						toggleItems.textContent = clone.classList.contains("visible")
+						wearing.classList.toggle("visible")
+						toggleItems.textContent = wearing.classList.contains("visible")
 							? "Hide Items"
 							: "Show Items"
 
-						if (clone.classList.contains("visible")) {
+						if (wearing.classList.contains("visible")) {
 							document.$on("click", onClick)
 						} else {
 							document.$off("click", onClick)
@@ -363,17 +379,17 @@ pageInit.profile = () => {
 
 					toggleItems.$on("click", toggle)
 				})
-				.$watch(".profile-store", (store: any) => {
-					const clone = store.cloneNode(false)
-					clone.append(...store.childNodes)
+				.$watch(".btr-wrapper-Store", (store: HTMLElement) => {
+					const container = store.parentElement!
 
-					newCont.$req(".placeholder-store").replaceWith(clone)
+					newCont.$find(".placeholder-store")?.replaceWith(store)
+					redirectEvents(store, container)
 				})
-				.$watch(".profile-collections", (collections: any) => {
-					const clone = collections.cloneNode(false)
-					clone.append(...collections.childNodes)
+				.$watch(".btr-wrapper-Collections", (collections: HTMLElement) => {
+					const container = collections.parentElement!
 
-					newCont.$req(".placeholder-collections").replaceWith(clone)
+					newCont.$find(".placeholder-collections")?.replaceWith(collections)
+					redirectEvents(collections, container)
 				})
 
 			const gamesPromise = RobloxApi.games.getUserGames(userId, 50)
