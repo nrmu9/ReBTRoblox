@@ -324,7 +324,7 @@ export interface VoiceSettingsResponse {
 	/** Whether verifying would actually grant voice, so worth prompting for. */
 	canVerifyAgeForVoice?: boolean
 	isBanned: boolean
-	bannedUntil: VoiceTimestamp | null
+	bannedUntil: VoiceTimestamp | string | null
 	/** Undocumented, and absent from the published schema. */
 	banReason?: number
 	/** Roblox.Platform.Voice.UserPermissionDenialReasons, 0 when enabled. */

@@ -12,6 +12,17 @@ const RETRY_INTERVAL = 60 * 1000
 /** How stale the last poll has to be before returning to the tab refetches. */
 const STALE_AFTER = 60 * 1000
 
+/**
+ * After a ban ends, Roblox can go on answering isBanned with the end time that
+ * has already passed. It is checked this often until the flag clears, and for
+ * no more than this many checks, after which the normal interval takes over.
+ */
+const EXPIRED_RECHECK = 20 * 1000
+const EXPIRED_RECHECK_LIMIT = 15
+
+/** Past this a timeout fires at once, so long waits are split into polls. */
+const MAX_TIMEOUT = 2 ** 31 - 1
+
 type VoiceStateKind = "enabled" | "off" | "ineligible" | "unavailable" | "banned"
 
 interface VoiceState {
@@ -22,21 +33,43 @@ interface VoiceState {
 }
 
 /**
- * isVoiceEnabled is the answer, not a reason: it already folds in eligibility,
- * the opt in and whatever else. So the narrower fields are read first to say
- * why voice is off, and it only speaks for itself when none of them explain it.
+ * A protobuf timestamp, so Seconds is a string and Nanos the sub second
+ * remainder, far below anything a countdown shows. The lower case spelling and
+ * a plain date string are accepted too, in case the serializer changes.
  */
-const readState = (settings: VoiceSettingsResponse): VoiceState => {
-	if (settings.isBanned) {
-		// A protobuf timestamp, so Seconds is a string and Nanos is the sub
-		// second remainder, far below anything a countdown shows.
-		const seconds = Number(settings.bannedUntil?.Seconds ?? 0)
+const readBanEnd = (value: unknown): number | undefined => {
+	let ms = Number.NaN
 
-		return {
-			kind: "banned",
-			label: "Voice chat banned",
-			until: Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
-		}
+	if (typeof value === "string") {
+		ms = Date.parse(value)
+	} else if (value && typeof value === "object") {
+		const record = value as Record<string, unknown>
+		ms = Number(record.Seconds ?? record.seconds) * 1000
+	}
+
+	return Number.isFinite(ms) && ms > 0 ? ms : undefined
+}
+
+/** A ban with an end in the past is over, whatever the flag beside it says. */
+const isStaleBan = (settings: VoiceSettingsResponse, now: number) => {
+	const until = readBanEnd(settings.bannedUntil)
+	return !!settings.isBanned && until !== undefined && until <= now
+}
+
+/**
+ * isVoiceEnabled is the answer, not a reason: it already folds in eligibility,
+ * the opt in, the ban and whatever else. So the narrower fields are read first
+ * to say why voice is off, and it only speaks for itself when none of them
+ * explain it.
+ *
+ * Worked out from the response each time it is shown rather than once per
+ * poll, so a countdown reaching zero is a ban ending on screen at that moment.
+ */
+const readState = (settings: VoiceSettingsResponse, now: number): VoiceState => {
+	const staleBan = isStaleBan(settings, now)
+
+	if (settings.isBanned && !staleBan) {
+		return { kind: "banned", label: "Voice chat banned", until: readBanEnd(settings.bannedUntil) }
 	}
 
 	// Roblox only prompts for age verification when it would actually grant
@@ -55,11 +88,12 @@ const readState = (settings: VoiceSettingsResponse): VoiceState => {
 		return { kind: "off", label: "Voice chat is off" }
 	}
 
-	if (settings.isVoiceEnabled === false) {
+	// Left false by the same stale ban, so it cannot speak for itself here.
+	if (settings.isVoiceEnabled === false && !staleBan) {
 		return { kind: "unavailable", label: "Voice chat is unavailable" }
 	}
 
-	return { kind: "enabled", label: "Voice chat is on" }
+	return { kind: "enabled", label: staleBan ? "Voice chat ban has ended" : "Voice chat is on" }
 }
 
 const formatRemaining = (ms: number): string => {
@@ -100,7 +134,9 @@ const buildItem = () =>
 	</li>`
 
 let item: HTMLElement | null = null
-let state: VoiceState | null = null
+
+/** The last response. Null until one arrives, and after a poll fails. */
+let settings: VoiceSettingsResponse | null = null
 
 let pollTimer: ReturnType<typeof setTimeout> | null = null
 let tickTimer: ReturnType<typeof setInterval> | null = null
@@ -108,14 +144,8 @@ let tickTimer: ReturnType<typeof setInterval> | null = null
 let fetching = false
 let lastFetch = 0
 
-/**
- * Set once a ban's countdown has run out and a refetch has been scheduled for
- * it, so the per second render cannot queue that refetch over and over.
- */
-let expiryHandled = false
-
-const isExpired = (value: VoiceState | null) =>
-	!!value && value.kind === "banned" && !!value.until && value.until <= Date.now()
+/** Checks made so far on a ban that has ended but not yet been cleared. */
+let staleChecks = 0
 
 const stopPolling = () => {
 	if (pollTimer) {
@@ -127,10 +157,13 @@ const stopPolling = () => {
 const schedulePoll = (delay: number) => {
 	stopPolling()
 
-	pollTimer = setTimeout(() => {
-		pollTimer = null
-		void refresh()
-	}, delay)
+	pollTimer = setTimeout(
+		() => {
+			pollTimer = null
+			void refresh()
+		},
+		Math.min(Math.max(delay, 0), MAX_TIMEOUT),
+	)
 }
 
 /** The countdown only ticks while there is a countdown to tick. */
@@ -152,16 +185,19 @@ function render(): void {
 		return
 	}
 
-	if (!SETTINGS.get(SETTING) || !state) {
+	if (!SETTINGS.get(SETTING) || !settings) {
 		item.classList.remove("btr-voice-shown")
 		setTicking(false)
 		return
 	}
 
+	const now = Date.now()
+	const state = readState(settings, now)
+
 	const status = item.$req<HTMLElement>(".btr-voice-status")
 	const timer = item.$req<HTMLElement>(".btr-voice-timer")
 
-	const remaining = state.until ? state.until - Date.now() : 0
+	const remaining = state.until ? state.until - now : 0
 	const countdown = state.kind === "banned" && remaining > 0 ? formatRemaining(remaining) : ""
 
 	item.classList.add("btr-voice-shown")
@@ -178,13 +214,32 @@ function render(): void {
 			: state.label
 
 	setTicking(!!countdown)
+}
 
-	// The ban is over as far as the countdown is concerned, so ask what replaced
-	// it instead of waiting out the rest of the poll interval.
-	if (state.kind === "banned" && state.until && remaining <= 0 && !expiryHandled) {
-		expiryHandled = true
-		schedulePoll(0)
+/**
+ * When to ask again. A running ban is checked the moment it should end, so the
+ * next state is shown without waiting out the interval. That is a timeout of
+ * its own rather than the countdown noticing, which a background tab throttles
+ * to once a minute and stops entirely once the countdown is hidden.
+ */
+const nextPollDelay = (now: number): number => {
+	if (!settings) {
+		return RETRY_INTERVAL
 	}
+
+	if (isStaleBan(settings, now)) {
+		staleChecks++
+		return staleChecks <= EXPIRED_RECHECK_LIMIT ? EXPIRED_RECHECK : POLL_INTERVAL
+	}
+
+	staleChecks = 0
+
+	const until = settings.isBanned ? readBanEnd(settings.bannedUntil) : undefined
+	if (until !== undefined) {
+		return Math.min(POLL_INTERVAL, until - now + 1000)
+	}
+
+	return POLL_INTERVAL
 }
 
 async function refresh(): Promise<void> {
@@ -195,20 +250,18 @@ async function refresh(): Promise<void> {
 	fetching = true
 
 	try {
-		state = readState(await RobloxApi.voice.getSettings())
+		settings = await RobloxApi.voice.getSettings()
 		lastFetch = Date.now()
 	} catch (ex) {
 		// A failed poll hides the icon rather than showing a state we cannot
 		// vouch for, and retries sooner.
-		state = null
+		settings = null
 	} finally {
 		fetching = false
 	}
 
-	expiryHandled = isExpired(state)
-
 	render()
-	schedulePoll(state ? POLL_INTERVAL : RETRY_INTERVAL)
+	schedulePoll(nextPollDelay(Date.now()))
 }
 
 const apply = () => {
