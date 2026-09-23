@@ -1,8 +1,17 @@
 /* Navigation */
 
+/* Sized like the buttons Roblox's own items now use. An inline link around the
+   block icon was split into stacked line boxes, which made the item 88px tall
+   and pushed it out of the toolbar. */
 #btr-navbar-messages > a,
 #btr-navbar-friends > a {
+	display: inline-block;
+	box-sizing: border-box;
+	width: 36px;
+	height: 36px;
 	padding: 4px;
+	line-height: 16px;
+	vertical-align: middle;
 	border-radius: 8px;
 	background: none;
 	border: none;
