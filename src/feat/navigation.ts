@@ -419,6 +419,21 @@ export const Navigation = {
 
 		// Sidebar
 
+		// Roblox Plus's "share to get Robux" banner, the second item in the
+		// sidebar. Hidden by a stylesheet rule keyed on a class here rather than on
+		// the node itself: react can recreate the node, and a rule that matches
+		// nothing is harmless if Roblox drops the banner.
+		Navigation.register("sidebar_referral", {
+			label: "Show Plus Referral Banner",
+			enabled: false,
+
+			init() {
+				this.addNode(document.documentElement)
+			},
+
+			update() {},
+		})
+
 		Navigation.register("sidebar_home", {
 			label: "Show Home",
 

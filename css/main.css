@@ -210,6 +210,13 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	display: none !important;
 }
 
+/* The Plus referral banner in the sidebar. The item holding it goes too, or its
+   gap stays behind. The link alone is the fallback if it moves out of an item. */
+.btr-nav-node-sidebar_referral:not(.btr-nav-sidebar_referral) nav li:has(> a[href*="/plus?referrals"]),
+.btr-nav-node-sidebar_referral:not(.btr-nav-sidebar_referral) nav a[href*="/plus?referrals"] {
+	display: none !important;
+}
+
 #navbar-stream.btr-nav-reduce_margins {
 	margin-right: 0;
 }
