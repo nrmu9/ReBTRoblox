@@ -1357,10 +1357,13 @@ export const HoverPreview = (() => {
 	}
 
 	return {
-		// warm is off where the page already has a previewer of its own, which
-		// loads the same avatar through the same cache.
-		register(selector: string, thumbContSelector: string, warm = true) {
-			if (warm) {
+		// Warming is opt in, and only the catalog asks: building the avatar is
+		// seconds of mesh and texture work, and every Roblox tab shares the
+		// process it runs in. Left on everywhere, the inventory every profile
+		// embeds built one on each profile load, and pages froze while it did.
+		// Never in a frame, whatever the caller asks.
+		register(selector: string, thumbContSelector: string, warm = false) {
+			if (warm && window.parent === window) {
 				scheduleWarmUp()
 			}
 

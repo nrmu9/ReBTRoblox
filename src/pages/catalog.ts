@@ -330,7 +330,7 @@ const OwnerAssetCache = {
 pageInit.catalog = () => {
 	if (SETTINGS.get("general.hoverPreview")) {
 		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
-			HoverPreview.register(".catalog-item-container", ".item-card-thumb-container")
+			HoverPreview.register(".catalog-item-container", ".item-card-thumb-container", true)
 		})
 	}
 
