@@ -154,10 +154,12 @@ pageInit.profile = () => {
 	// Roblox asks for a profile in several requests, a few components each, in no
 	// fixed order. Taking whichever arrived first left the bio, join date or games
 	// empty whenever that one did not carry them. The page side merges them, and
-	// each reader here waits for the component it needs. A component that never
-	// comes gives up after a while rather than leaving its section waiting.
-	const COMPONENT_TIMEOUT = 10e3
-
+	// each reader here waits for the component it needs.
+	//
+	// There is no timeout. One was tried, and after the tab was frozen for a
+	// while the expired timer could run before the queued answer it was waiting
+	// for, declaring a bio empty that had in fact arrived. A section only waits
+	// on a component Roblox always sends for a profile page.
 	const profileData: Record<string, any> = {}
 	const componentWaiters: Array<() => void> = []
 
@@ -182,12 +184,9 @@ pageInit.profile = () => {
 			}
 
 			const done = () => {
-				clearTimeout(timer)
 				componentWaiters.splice(componentWaiters.indexOf(check) >>> 0, 1)
-				resolve(profileData[profileId] ?? null)
+				resolve(profileData[profileId])
 			}
-
-			const timer = setTimeout(done, COMPONENT_TIMEOUT)
 
 			componentWaiters.push(check)
 			check()
@@ -308,7 +307,6 @@ pageInit.profile = () => {
 
 			// const presencePromise = new Promise(resolve => resolve(RobloxApi.presence.getPresence([userId]).then(json => json?.userPresences?.[0])))
 			const aboutPromise = waitForComponent(userIdString, "About")
-			const experiencesPromise = waitForComponent(userIdString, "Experiences")
 
 			// The answers may already have come and gone before this listened.
 			injectScript.send("requestProfileData", userIdString)
@@ -1014,11 +1012,20 @@ pageInit.profile = () => {
 			}
 
 			const initGames = async () => {
-				const initial = (await experiencesPromise)?.components?.Experiences
+				// Roblox does not reliably send the Experiences component, even for a
+				// user with games, so waiting on it left the section spinning. The
+				// games list fetched for the visit count is what this is built from.
+				// The component is used only if it has already arrived, since it
+				// carries Roblox's own ordering.
+				const games = await gamesPromise.catch(() => null)
+
+				const experiences: { universeId: number }[] =
+					profileData[userIdString]?.components?.Experiences?.experiences ??
+					(games?.data ?? []).map((game: any) => ({ universeId: game.id }))
 
 				const content = newCont.$req(".btr-profile-games > .btr-games-content")
 
-				if (!initial?.experiences?.length) {
+				if (!experiences.length) {
 					content.replaceChildren(
 						html`<div class="section-content-off btr-section-content-off">
 							This user has no experiences
@@ -1090,9 +1097,9 @@ pageInit.profile = () => {
 
 				pager.onsetpage = loadPage
 
-				pager.setMaxPage(Math.floor((initial.experiences.length - 1) / pageSize) + 1)
+				pager.setMaxPage(Math.floor((experiences.length - 1) / pageSize) + 1)
 
-				for (const { universeId } of initial.experiences) {
+				for (const { universeId } of experiences) {
 					const index = items.length
 
 					const item = html` <div class="btr-game">
