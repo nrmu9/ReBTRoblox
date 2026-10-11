@@ -1,0 +1,104 @@
+name: Chrome Web Store
+
+# Submits an existing release to the Chrome Web Store by hand. For when the
+# release run could not: the store refuses an upload while an earlier version
+# is still in review, and rerunning the whole release would resubmit to AMO.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to submit, such as v4.2.8
+        required: true
+      publish:
+        description: Submit for review once uploaded. Off leaves it as a draft.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+
+    env:
+      TAG: ${{ inputs.tag }}
+      CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+      CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      # Checked before it is used as a ref, since it comes from a form.
+      - name: Check the tag
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::$TAG is not a semver tag of the form v1.2.3"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # The same checks as a release: only a tag the owner signed is submitted.
+      - name: Verify the tag is signed by the repository owner
+        run: |
+          if [ "$(git cat-file -t "$TAG")" != "tag" ]; then
+            echo "::error::$TAG is a lightweight tag. Releases must be annotated and signed"
+            exit 1
+          fi
+
+          curl -fsSL "https://github.com/${{ github.repository_owner }}.gpg" | gpg --batch --quiet --import
+
+          gpg --list-keys --with-colons |
+            awk -F: '/^fpr:/ { print $10 ":6:" }' |
+            gpg --batch --quiet --import-ownertrust
+
+          if ! git verify-tag "$TAG"; then
+            echo "::error::$TAG is not signed by a gpg key published on the ${{ github.repository_owner }} account"
+            exit 1
+          fi
+
+          version="$(node -p "require('./package.json').version")"
+          if [ "${TAG#v}" != "$version" ]; then
+            echo "::error::tag $TAG does not match package.json version $version"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - run: npm run package:chrome
+
+      # Builds are reproducible, so the zip rebuilt from the tag has to match
+      # the one the release shipped byte for byte. The store gets exactly what
+      # was released, or nothing.
+      - name: Check the build matches the release
+        run: |
+          gh release download "$TAG" --pattern SHA256SUMS --dir release
+          zip="$(cd artifacts && ls *-chrome.zip)"
+
+          expected="$(grep " $zip\$" release/SHA256SUMS | cut -d' ' -f1)"
+          actual="$(sha256sum "artifacts/$zip" | cut -d' ' -f1)"
+
+          if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
+            echo "::error::artifacts/$zip does not match the $TAG release (expected ${expected:-nothing}, got $actual)"
+            exit 1
+          fi
+
+          echo "$zip matches the $TAG release"
+
+      - name: Submit to the Chrome Web Store
+        run: |
+          if [ "${{ inputs.publish }}" = "true" ]; then
+            node dev/webstore.js
+          else
+            node dev/webstore.js --no-publish
+          fi
