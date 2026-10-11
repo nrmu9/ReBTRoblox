@@ -17,8 +17,35 @@ pageInit.inventory = () => {
 		) as HTMLIFrameElement | null
 
 		if (iframe?.contentWindow === window) {
+			// This frame may not navigate the tab, which is what keeps the page's
+			// frame buster from taking it over, so a link here asks the profile to
+			// follow it instead. Bubbling, so a link the page handles itself and
+			// cancels is left alone, and a modified click still opens a new tab.
+			document.addEventListener("click", (ev: MouseEvent) => {
+				if (ev.defaultPrevented || ev.button !== 0) {
+					return
+				}
+				if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) {
+					return
+				}
+
+				const link = (ev.target as Element | null)?.closest?.<HTMLAnchorElement>("a[href]")
+				if (!link || (link.target && link.target !== "_self" && link.target !== "_top")) {
+					return
+				}
+
+				const url = new URL(link.href, location.href)
+
+				// Category tabs and the like change the hash and stay in the frame.
+				if (url.origin !== location.origin || (url.pathname === location.pathname && url.hash)) {
+					return
+				}
+
+				ev.preventDefault()
+				window.parent.postMessage({ btrInventoryNavigate: url.href }, location.origin)
+			})
+
 			document
-				.$watch("head", (head: HTMLElement) => head.append(html`<base target="_top"></base>`))
 				.$watch("body", (body: HTMLElement) => {
 					body.classList.add("btr-embed")
 

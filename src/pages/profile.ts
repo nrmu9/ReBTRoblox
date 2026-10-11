@@ -1358,20 +1358,38 @@ pageInit.profile = () => {
 				newCont.$req(".btr-profile-inventory").style.display = ""
 
 				ready(() => {
-					newCont.$req(".placeholder-inventory").replaceWith(
-						// The inventory page frame busts:
-						//   if (top.location != self.location) top.location = self.location.href
-						// which navigated the whole tab to the inventory instead of
-						// embedding it. Sandboxing blocks top navigation, and allowing it
-						// only on user activation keeps links inside the frame working
-						// while the automatic redirect, which has no activation, is denied.
-						html<HTMLIFrameElement>`<iframe
-							id="btr-injected-inventory"
-							src="/users/${userId}/inventory"
-							scrolling="no"
-							sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation"
-						></iframe>`,
-					)
+					// The inventory page frame busts:
+					//   if (top.location != self.location) top.location = self.location.href
+					// which navigates the whole tab to the inventory instead of
+					// embedding it. The frame is not allowed to navigate the tab at all.
+					// Letting it do so on user activation was not enough: a click on
+					// the profile while it loaded lent the frame that activation, and
+					// the frame code that removes the buster loads too late to win.
+					// Links in the frame ask this page to navigate instead.
+					const iframe = html<HTMLIFrameElement>`<iframe
+						id="btr-injected-inventory"
+						src="/users/${userId}/inventory"
+						scrolling="no"
+						sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+					></iframe>`
+
+					window.addEventListener("message", (ev: MessageEvent) => {
+						if (ev.origin !== location.origin || ev.source !== iframe.contentWindow) {
+							return
+						}
+
+						const href = ev.data?.btrInventoryNavigate
+						if (typeof href !== "string") {
+							return
+						}
+
+						const url = new URL(href, location.href)
+						if (url.origin === location.origin) {
+							location.assign(url.href)
+						}
+					})
+
+					newCont.$req(".placeholder-inventory").replaceWith(iframe)
 				})
 			}
 
