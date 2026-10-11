@@ -1,4 +1,3 @@
-import { deferredPromise } from "@/core/deferred"
 import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
 import { contentScript, injectScript } from "@/core/messaging"
@@ -120,27 +119,85 @@ pageInit.profile = () => {
 			}
 		})
 
+		// Kept as well as sent, and replayed on request. See the copy in inject.ts.
+		const profileResponses: Record<string, unknown> = {}
+
 		hijackXHR((request: any) => {
 			if (request.url === "https://apis.roblox.com/profile-platform-api/v1/profiles/get") {
 				request.onResponse.push((json: any) => {
-					contentScript.send("profileData", json)
+					if (json?.profileId == null) {
+						return
+					}
+
+					// Each request carries a few components, so they are merged rather
+					// than replaced, and the merged profile is what gets sent.
+					const prev: any = profileResponses[json.profileId]
+					const merged = prev
+						? { ...prev, ...json, components: { ...prev.components, ...json.components } }
+						: json
+
+					profileResponses[json.profileId] = merged
+					contentScript.send("profileData", merged)
 				})
+			}
+		})
+
+		contentScript.listen("requestProfileData", (profileId: string) => {
+			const json = profileResponses[profileId]
+
+			if (json) {
+				contentScript.send("profileData", json)
 			}
 		})
 	})
 
-	const profileDataPromises: Record<string, any> = {}
+	// Roblox asks for a profile in several requests, a few components each, in no
+	// fixed order. Taking whichever arrived first left the bio, join date or games
+	// empty whenever that one did not carry them. The page side merges them, and
+	// each reader here waits for the component it needs. A component that never
+	// comes gives up after a while rather than leaving its section waiting.
+	const COMPONENT_TIMEOUT = 10e3
+
+	const profileData: Record<string, any> = {}
+	const componentWaiters: Array<() => void> = []
 
 	injectScript.listen("profileData", (json: any) => {
-		const promise = (profileDataPromises[json.profileId] ??= deferredPromise<unknown>())
-		promise.$resolve(json)
+		if (json?.profileId == null) {
+			return
+		}
+
+		profileData[json.profileId] = json
+
+		for (const check of componentWaiters.slice()) {
+			check()
+		}
 	})
+
+	const waitForComponent = (profileId: string, component: string) =>
+		new Promise<any>((resolve) => {
+			const check = () => {
+				if (profileData[profileId]?.components?.[component]) {
+					done()
+				}
+			}
+
+			const done = () => {
+				clearTimeout(timer)
+				componentWaiters.splice(componentWaiters.indexOf(check) >>> 0, 1)
+				resolve(profileData[profileId] ?? null)
+			}
+
+			const timer = setTimeout(done, COMPONENT_TIMEOUT)
+
+			componentWaiters.push(check)
+			check()
+		})
 
 	onPageReset(() => {
 		document.body?.classList.remove("btr-profile")
 
-		for (const key of Object.keys(profileDataPromises)) {
-			delete profileDataPromises[key]
+		for (const key of Object.keys(profileData)) {
+			delete profileData[key]
 		}
 	})
 
@@ -250,7 +307,11 @@ pageInit.profile = () => {
 			</div>`
 
 			// const presencePromise = new Promise(resolve => resolve(RobloxApi.presence.getPresence([userId]).then(json => json?.userPresences?.[0])))
-			const profileDataPromise = (profileDataPromises[userIdString] ??= deferredPromise<unknown>())
+			const aboutPromise = waitForComponent(userIdString, "About")
+			const experiencesPromise = waitForComponent(userIdString, "Experiences")
+
+			// The answers may already have come and gone before this listened.
+			injectScript.send("requestProfileData", userIdString)
 
 			profileContainer
 				.$watch(".profile-tabs", (tabs: HTMLElement) => {
@@ -394,7 +455,7 @@ pageInit.profile = () => {
 
 			const gamesPromise = RobloxApi.games.getUserGames(userId, 50)
 
-			profileDataPromise.then((json: any) => {
+			aboutPromise.then((json: any) => {
 				if (!document.contains(profileContainer)) {
 					return
 				}
@@ -444,9 +505,11 @@ pageInit.profile = () => {
 				}
 
 				newCont.$req(".btr-profile-stats").style.display = ""
-				newCont.$req(".btr-stats-joindate").textContent = new Date(
-					json.components.About.joinDateTime,
-				).$format("M/D/YYYY")
+
+				const joinDate = json?.components?.About?.joinDateTime
+				if (joinDate) {
+					newCont.$req(".btr-stats-joindate").textContent = new Date(joinDate).$format("M/D/YYYY")
+				}
 
 				gamesPromise.then((json) => {
 					let visits = 0
@@ -951,8 +1014,7 @@ pageInit.profile = () => {
 			}
 
 			const initGames = async () => {
-				const profileData = await profileDataPromise
-				const initial = profileData?.components?.Experiences
+				const initial = (await experiencesPromise)?.components?.Experiences
 
 				const content = newCont.$req(".btr-profile-games > .btr-games-content")
 

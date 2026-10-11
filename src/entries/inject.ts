@@ -4243,11 +4243,37 @@ const startInject = () => {
 					}
 				})
 
+				// Kept as well as sent. On a cold load the content script starts
+				// listening after Roblox has already answered, and a message nobody
+				// hears is gone, which left the bio, join date and visits empty until
+				// a refresh. So the content script asks again once it is listening.
+				const profileResponses: Record<string, unknown> = {}
+
 				hijackXHR((request: any) => {
 					if (request.url === "https://apis.roblox.com/profile-platform-api/v1/profiles/get") {
 						request.onResponse.push((json: any) => {
-							contentScript.send("profileData", json)
+							if (json?.profileId == null) {
+								return
+							}
+
+							// Each request carries a few components, so they are merged rather
+							// than replaced, and the merged profile is what gets sent.
+							const prev: any = profileResponses[json.profileId]
+							const merged = prev
+								? { ...prev, ...json, components: { ...prev.components, ...json.components } }
+								: json
+
+							profileResponses[json.profileId] = merged
+							contentScript.send("profileData", merged)
 						})
+					}
+				})
+
+				contentScript.listen("requestProfileData", (profileId: string) => {
+					const json = profileResponses[profileId]
+
+					if (json) {
+						contentScript.send("profileData", json)
 					}
 				})
 			},
