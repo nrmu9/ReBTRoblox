@@ -1,8 +1,8 @@
 /* Navigation */
 
-/* Sized like the buttons Roblox's own items now use. An inline link around the
-   block icon was split into stacked line boxes, which made the item 88px tall
-   and pushed it out of the toolbar. */
+/* Colours and hover come from the Roblox button class these links wear. Only
+   the box is pinned here, since a link is not laid out like a button: left
+   inline around a block icon, it split into stacked line boxes 88px tall. */
 #btr-navbar-messages > a,
 #btr-navbar-friends > a {
 	display: inline-block;
@@ -12,25 +12,14 @@
 	padding: 4px;
 	line-height: 16px;
 	vertical-align: middle;
-	border-radius: 8px;
-	background: none;
-	border: none;
 }
 
-.light-theme #btr-navbar-messages > a:hover,
-.light-theme #btr-navbar-friends > a:hover {
-	background: rgba(0, 0, 0, 0.1);
-	border-color: rgba(0, 0, 0, 0.6);
-	color: #393b3d;
+#btr-navbar-messages .btr-nav-icon,
+#btr-navbar-friends .btr-nav-icon {
+	display: block;
+	width: 28px;
+	height: 28px;
 }
-
-.dark-theme #btr-navbar-messages > a:hover,
-.dark-theme #btr-navbar-friends > a:hover {
-	background-color: hsla(0, 0%, 100%, 0.1);
-	border-color: hsla(0, 0%, 100%, 0.7);
-	color: #fff;
-}
-
 .icon-nav-friend-btr,
 .icon-nav-message-btr {
 	background-image: url(/res/icon_nav.svg);
@@ -89,6 +78,9 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	color: #fff;
 }
 
+/* Coloured like the badges in Roblox's sidebar, from the same variables, so it
+   follows the theme. The border is the header's own colour, which keeps the
+   badge clear of the icon it overlaps. */
 #header .btr-nav-notif {
 	box-sizing: content-box;
 	position: absolute;
@@ -96,29 +88,19 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	top: -2px;
 	right: -2px;
 
-	background: white;
-	padding: 0px 4px;
+	background: var(--color-system-contrast, #f7f7f8);
+	padding: 0 4px;
 	height: 16px;
 	min-width: 8px;
 	text-align: center;
 
-	color: #191919;
+	color: var(--color-surface-200, #202227);
 	font-size: 10px;
-	font-weight: bold;
-	line-height: 17px;
+	font-weight: 600;
+	line-height: 16px;
 
-	border-radius: 10px;
-	border: 2px solid #0074bd;
-}
-
-.light-theme #header .btr-nav-notif {
-	background-color: #393b3d;
-	border-color: #393b3d;
-	color: #fff;
-}
-
-.dark-theme #header .btr-nav-notif {
-	border-color: #232527;
+	border-radius: 9999px;
+	border: 2px solid var(--color-surface-100, #191a1f);
 }
 
 /* Voice chat status */
@@ -152,12 +134,9 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	gap: 2px;
 	height: 36px;
 	padding: 4px;
-	color: #fff;
+	/* The muted grey Roblox's own navbar icons are drawn in. */
+	color: var(--color-content-muted, #bcbec8);
 	cursor: default;
-}
-
-.light-theme #btr-navbar-voice .btr-voice-status {
-	color: #393b3d;
 }
 
 /* Every state other than "on" wears the slash, so the muted ones only differ
@@ -181,11 +160,14 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 	fill: currentColor;
 }
 
+/* Outlined at the weight of Roblox's own navbar icons: 1.5 in this 24 unit box
+   draws about 1.75px at 28px, like their 2 units in a 32 unit box. */
 #btr-navbar-voice .btr-voice-stroke {
 	fill: none;
 	stroke: currentColor;
-	stroke-width: 1.6;
+	stroke-width: 1.5;
 	stroke-linecap: round;
+	stroke-linejoin: round;
 }
 
 #btr-navbar-voice .btr-voice-slash {

@@ -324,6 +324,22 @@ export const Navigation = {
 
 			selector: "#navbar-stream",
 			enabled: true,
+
+			// Roblox has not moved its own bell to the new icon set yet, so it was
+			// the one item left in the old filled style. It wears the new set's
+			// bell instead, the same way our friends and messages items do.
+			nodeAdded(node: HTMLElement) {
+				node.$watch(
+					".icon-common-notification-bell",
+					(bell: HTMLElement) => {
+						// The old class goes, as it carries the old sprite. The fallback
+						// puts it back if the new icon turns out not to be there.
+						bell.className = navIconClass("bell")
+						checkNavIcon(node, "icon-common-notification-bell")
+					},
+					{ continuous: true },
+				)
+			},
 		})
 
 		const FRIENDS_LINK = `nav a[href*="/users/friends"]`
@@ -367,6 +383,43 @@ export const Navigation = {
 			update()
 		}
 
+		/**
+		 * Our two header items wear Roblox's own button and icon classes, the same
+		 * ones its robux and settings items use, so they follow Roblox's colours,
+		 * hover and theme instead of copying them. The icons are the ones Roblox's
+		 * sidebar uses for the same pages.
+		 *
+		 * Both come from Roblox's navigation stylesheet. If a rename ever leaves an
+		 * icon without its mask, the item falls back to our own icon rather than
+		 * showing nothing. Checked once styles have loaded, since before then every
+		 * icon looks unstyled.
+		 */
+		const NAV_BUTTON_CLASS = "btn-navigation-nav-settings-md"
+		const navIconClass = (name: string) =>
+			`btr-nav-icon grow-0 shrink-0 basis-auto icon icon-regular-${name} size-[var(--icon-size-xlarge)] [vertical-align:middle]`
+
+		const checkNavIcon = (node: HTMLElement, fallbackClass: string): void => {
+			const check = () => {
+				const icon = node.$find<HTMLElement>(".btr-nav-icon")
+				if (!icon?.isConnected) {
+					return
+				}
+
+				const style = getComputedStyle(icon)
+				const mask = style.maskImage || style.getPropertyValue("-webkit-mask-image")
+
+				if (!mask || mask === "none") {
+					icon.className = `btr-nav-icon ${fallbackClass}`
+				}
+			}
+
+			if (document.readyState === "complete") {
+				check()
+			} else {
+				window.addEventListener("load", check, { once: true })
+			}
+		}
+
 		Navigation.register("header_friends", {
 			label: "Show Friends",
 
@@ -376,9 +429,9 @@ export const Navigation = {
 
 			selector: "#btr-placeholder-friends",
 			html: html` <li id="btr-navbar-friends" class="navbar-icon-item">
-				<a class="rbx-menu-item" href="/users/friends">
-					<span class="icon-nav-friend-btr"></span>
-					<span class="btr-nav-notif rbx-text-navbar-right" style="display:none;"></span>
+				<a class="${NAV_BUTTON_CLASS}" href="/users/friends" aria-label="Friends">
+					<span class="${navIconClass("two-people")}" aria-hidden="true"></span>
+					<span class="btr-nav-notif" style="display:none;"></span>
 				</a>
 			</li>`,
 
@@ -389,6 +442,10 @@ export const Navigation = {
 				}
 
 				mirrorNavItem(node, FRIENDS_LINK)
+			},
+
+			nodeAdded(node: HTMLElement) {
+				checkNavIcon(node, "icon-nav-friend-btr")
 			},
 		})
 
@@ -401,9 +458,9 @@ export const Navigation = {
 
 			selector: "#btr-placeholder-messages",
 			html: html` <li id="btr-navbar-messages" class="navbar-icon-item">
-				<a class="rbx-menu-item" href="/my/messages">
-					<span class="icon-nav-message-btr"></span>
-					<span class="btr-nav-notif rbx-text-navbar-right" style="display:none;"></span>
+				<a class="${NAV_BUTTON_CLASS}" href="/my/messages" aria-label="Messages">
+					<span class="${navIconClass("speech-bubble-align-center")}" aria-hidden="true"></span>
+					<span class="btr-nav-notif" style="display:none;"></span>
 				</a>
 			</li>`,
 
@@ -414,6 +471,10 @@ export const Navigation = {
 				}
 
 				mirrorNavItem(node, MESSAGES_LINK)
+			},
+
+			nodeAdded(node: HTMLElement) {
+				checkNavIcon(node, "icon-nav-message-btr")
 			},
 		})
 
