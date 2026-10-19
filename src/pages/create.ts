@@ -2,7 +2,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { Navigation } from "@/feat/navigation"
 import { SETTINGS } from "@/feat/settings"
-import { SettingsModal } from "@/feat/settingsModal"
+import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { setLoggedInUser } from "@/pages/common"
 
@@ -11,6 +11,8 @@ pageInit.create = () => {
 
 	Navigation.init()
 	SettingsModal.enable()
+	// Reachable even with the create features off.
+	watchSettingsMenu(`a[role=menuitem][href^="/settings"]`)
 
 	//
 
@@ -34,7 +36,4 @@ pageInit.create = () => {
 	}
 
 	injectScript.call("webpackHook")
-
-	// Add settings
-	injectScript.call("createAddBTRSettings")
 }

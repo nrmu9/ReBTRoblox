@@ -2055,17 +2055,6 @@ const startInject = () => {
 			setupPopovers: () => {
 				Roblox?.BootstrapWidgets?.SetupPopover(null, null, "[data-bind='popover-btr-download']")
 			},
-			addBTRSettings: () => {
-				reactHook.inject("#settings-popover-menu", (elem: any) => {
-					elem.prepend(
-						reactHook.createElement("li", {
-							dangerouslySetInnerHTML: {
-								__html: `<a class="rbx-menu-item btr-settings-toggle">BTR Settings</a>`,
-							},
-						}),
-					)
-				})
-			},
 			cacheRobuxAmount: () => {
 				reactHook.hijackConstructor(
 					(props: any) =>
@@ -2753,37 +2742,6 @@ const startInject = () => {
 				ReBTRoblox.webpackHook = webpackHook
 
 				webpackHook.init()
-			},
-			createAddBTRSettings: () => {
-				const { webpackHook } = ReBTRoblox
-				const objects: Record<string, any> = webpackHook.objects
-
-				reactHook.hijackConstructor(
-					(props: any) => props.settingsHref,
-					(target: any, thisArg: any, args: any[]) => {
-						const result = target.apply(thisArg, args)
-
-						try {
-							const list = reactHook.queryElement(
-								result,
-								(x: any) => x.props.id === "top-navigation-authentication-status-menu",
-							)
-
-							if (list) {
-								list.props.children.unshift(
-									objects.jsx(objects.Mui.MenuItem, {
-										children: "BTR Settings",
-										className: "btr-settings-toggle",
-									}),
-								)
-							}
-						} catch (ex) {
-							console.error(ex)
-						}
-
-						return result
-					},
-				)
 			},
 			createAssetOptions: () => {
 				const { webpackHook } = ReBTRoblox
@@ -4310,7 +4268,6 @@ const startInject = () => {
 			["fullRangeBodyColors", "avatar.enabled", "avatar.fullRangeBodyColors"],
 			["showOwnedAssets", "catalog.enabled", "catalog.showOwnedAssets"],
 			["initReactRobuxToCash", "general.robuxToUSDRate"],
-			["addBTRSettings"],
 			["cacheRobuxAmount", "general.cacheRobuxAmount"],
 			["higherRobuxPrecision", "general.higherRobuxPrecision"],
 			["hideFriendActivity", "home.hideFriendActivity"],
@@ -4318,7 +4275,6 @@ const startInject = () => {
 			["hijackAuth"],
 			["webpackHook", "create.enabled"],
 			["removeAccessoryLimits", "avatar.removeAccessoryLimits"],
-			["createAddBTRSettings", "create.enabled"],
 			["createAssetOptions", "create.enabled", "create.assetOptions"],
 			["createDownloadVersion", "create.enabled", "create.downloadVersion"],
 			["marketplacePageChanged", "create.enabled"],

@@ -1135,3 +1135,43 @@ export const SettingsModal: SettingsModalState = {
 		populate(robloxExperiments)
 	},
 }
+
+/**
+ * Adds "BTR Settings" to Roblox's account menu, right under its own settings
+ * link. Both sites open that menu in a portal react renders on demand, so the
+ * menu is found by the link rather than by its label, which is translated.
+ * The item is a copy of the link so it keeps Roblox's look.
+ */
+export const watchSettingsMenu = (settingsLink: string): void => {
+	document.$watchAll(`.foundation-web-menu:has(${settingsLink})`, (menu: HTMLElement) => {
+		const link = menu.$find(settingsLink)
+
+		if (!link || menu.$find(".btr-settings-toggle")) {
+			return
+		}
+
+		const item = link.cloneNode(true) as HTMLElement
+		item.removeAttribute("href")
+		item.classList.add("btr-settings-toggle")
+
+		const title =
+			item.$find(".foundation-web-menu-item-title") ??
+			[...item.querySelectorAll("span, div")].findLast(
+				(node) => !node.children.length && node.textContent?.trim(),
+			)
+
+		if (title) {
+			title.textContent = "BTR Settings"
+		}
+
+		// The menu stays open otherwise, over the settings panel. Closed a tick
+		// later, as a detached item would no longer reach the toggle handler.
+		item.$on("click", () => {
+			setTimeout(() => {
+				menu.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+			})
+		})
+
+		link.after(item)
+	})
+}

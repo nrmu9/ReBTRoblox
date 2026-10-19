@@ -8,7 +8,7 @@ import { loadOptionalFeature } from "@/feat/loadFeature"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
-import { SettingsModal } from "@/feat/settingsModal"
+import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
@@ -1198,32 +1198,7 @@ pageInit.www = () => {
 
 	//
 
-	injectScript.call("addBTRSettings")
-
-	// The newer navbar opens its settings menu in a radix portal, which the hook
-	// above never sees. Our item copies Roblox's first one so it keeps their look.
-	bodyWatcher.$watchAll("[aria-label='Settings'] .nav-foundation-menu", (menu: HTMLElement) => {
-		const first = menu.$find("[role=menuitem]")
-
-		if (!first || menu.$find(".btr-settings-toggle")) {
-			return
-		}
-
-		const item = first.cloneNode(true) as HTMLElement
-		item.removeAttribute("href")
-		item.classList.add("btr-settings-toggle")
-		item.$find(".foundation-web-menu-item-title")!.textContent = "BTR Settings"
-
-		// The menu stays open otherwise, over the settings panel. Closed a tick
-		// later, as a detached item would no longer reach the toggle handler.
-		item.$on("click", () => {
-			setTimeout(() => {
-				menu.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
-			})
-		})
-
-		first.after(item)
-	})
+	watchSettingsMenu(`a[role=menuitem][href*="/my/account"]`)
 
 	bodyWatcher
 		.$watch("#navbar-robux")
