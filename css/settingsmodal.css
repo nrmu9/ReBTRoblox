@@ -21,6 +21,7 @@
 	--btr-alert-content: var(--color-action-alert-foreground, #d4272f);
 	--btr-focus: var(--color-system-emphasis, #335fff);
 	--btr-contrast: var(--color-system-contrast, #191b1f);
+	--btr-scrollbar: rgba(25, 26, 31, 0.24);
 	--btr-inverse: var(--inverse-content-emphasis, #f7f7f8);
 	--btr-scrim: var(--color-common-backdrop, rgba(10, 10, 14, 0.75));
 	--btr-shadow: 0 2px 4px -0.5px rgba(4, 4, 8, 0.25), 0 10px 20px -0.75px rgba(4, 4, 8, 0.25);
@@ -42,6 +43,8 @@
 	--btr-emphasis-content: var(--color-action-emphasis-foreground, #f7f7f8);
 	--btr-alert-content: var(--color-action-alert-foreground, #f04433);
 	--btr-contrast: var(--color-system-contrast, #f7f7f8);
+	/* what Roblox gives its own page scrollbars */
+	--btr-scrollbar: rgb(56, 56, 56);
 	--btr-inverse: var(--inverse-content-emphasis, #202227);
 }
 
@@ -59,6 +62,8 @@
 
 	background: var(--btr-scrim);
 	color: var(--btr-content);
+	scrollbar-color: var(--btr-scrollbar) transparent;
+	scrollbar-width: thin;
 	font-family: "Builder Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size: 16px;
 	line-height: 1.4;
@@ -77,6 +82,11 @@
 .btr-settings-modal *::after {
 	box-sizing: border-box;
 	font-family: inherit;
+}
+
+/* scrollbar-width does not inherit, unlike the colour. */
+.btr-settings-modal * {
+	scrollbar-width: thin;
 }
 
 .btr-settings {
@@ -203,7 +213,6 @@
 	margin-right: -12px;
 	padding-right: 4px;
 	overflow-y: auto;
-	scrollbar-width: thin;
 	scrollbar-gutter: stable;
 }
 
@@ -304,12 +313,14 @@
 	background: var(--btr-press);
 }
 
+/* Inset from the dialog edge, so the scrollbar clears the rounded corner. */
 .btr-settings-body {
 	flex: 1;
 	min-height: 0;
-	padding: 0 32px 32px;
+	margin: 0 6px 12px 0;
+	padding: 0 26px 20px 32px;
 	overflow-y: auto;
-	scrollbar-width: thin;
+	scrollbar-gutter: stable;
 }
 
 .btr-settings :focus-visible {
