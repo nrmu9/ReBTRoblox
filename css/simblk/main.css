@@ -15,16 +15,14 @@ html body {
 
 /* Header */
 
-#header,
-.btr-settings .btr-settings-header {
+#header {
 	background-color: var(--btr-header-color);
 	border-bottom-color: var(--btr-header-color);
 }
 
 /* Flip header text color */
 
-#header,
-.btr-settings .btr-settings-header {
+#header {
 	color: var(--btr-header-text-color);
 }
 

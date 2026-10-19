@@ -726,9 +726,11 @@ export const SettingsModal: SettingsModalState = {
 		}
 
 		const makeSwitch = (id: string) => {
-			const wrap = html`<span class="btr-switch">
+			const wrap = html`<span class="btr-setting-switch">
 				<input type="checkbox" role="switch" />
-				<span class="btr-switch-track" aria-hidden="true"><span class="btr-switch-knob"></span></span>
+				<span class="btr-setting-switch-track" aria-hidden="true"
+					><span class="btr-setting-switch-knob"></span
+				></span>
 			</span>`
 
 			const input = wrap.$req<HTMLInputElement>("input")

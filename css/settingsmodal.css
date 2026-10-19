@@ -194,15 +194,17 @@
 	opacity: 1;
 }
 
+/* The scrollbar gets a gutter of its own, so it never sits over the tabs. */
 .btr-settings-tabs {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 	min-height: 0;
-	margin: 0 -4px;
-	padding: 0 4px;
+	margin-right: -12px;
+	padding-right: 4px;
 	overflow-y: auto;
 	scrollbar-width: thin;
+	scrollbar-gutter: stable;
 }
 
 .btr-settings-tab {
@@ -211,7 +213,7 @@
 	gap: 12px;
 	flex: none;
 	width: 100%;
-	height: 44px;
+	height: 40px;
 	padding: 0 12px;
 
 	background: none;
@@ -444,7 +446,7 @@ div.btr-setting-text {
 }
 
 .btr-setting-disabled > .btr-setting-text,
-.btr-setting-disabled > .btr-switch,
+.btr-setting-disabled > .btr-setting-switch,
 .btr-setting-disabled > .btr-select,
 .btr-page-disabled .btr-setting-card:not(.btr-setting-card-master) .btr-setting-row > * {
 	opacity: 0.5;
@@ -502,7 +504,7 @@ div.btr-setting-text {
 
 /* Switch */
 
-.btr-switch {
+.btr-setting-switch {
 	position: relative;
 	display: block;
 	flex: none;
@@ -510,7 +512,7 @@ div.btr-setting-text {
 	height: 24px;
 }
 
-.btr-switch input {
+.btr-setting-switch input {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
@@ -521,11 +523,11 @@ div.btr-setting-text {
 	cursor: pointer;
 }
 
-.btr-switch input:disabled {
+.btr-setting-switch input:disabled {
 	cursor: default;
 }
 
-.btr-switch-track {
+.btr-setting-switch-track {
 	position: absolute;
 	inset: 0;
 	background: var(--btr-standard);
@@ -533,7 +535,7 @@ div.btr-setting-text {
 	transition: background-color 200ms ease;
 }
 
-.btr-switch-knob {
+.btr-setting-switch-knob {
 	position: absolute;
 	top: 2px;
 	left: 2px;
@@ -546,16 +548,16 @@ div.btr-setting-text {
 		background-color 200ms ease;
 }
 
-.btr-switch input:checked + .btr-switch-track {
+.btr-setting-switch input:checked + .btr-setting-switch-track {
 	background: var(--btr-contrast);
 }
 
-.btr-switch input:checked + .btr-switch-track .btr-switch-knob {
+.btr-setting-switch input:checked + .btr-setting-switch-track .btr-setting-switch-knob {
 	background: var(--btr-inverse);
 	transform: translateX(20px);
 }
 
-.btr-switch-knob::after {
+.btr-setting-switch-knob::after {
 	content: "";
 	position: absolute;
 	top: 5px;
@@ -569,23 +571,23 @@ div.btr-setting-text {
 	transition: opacity 150ms ease;
 }
 
-.btr-switch input:checked + .btr-switch-track .btr-switch-knob::after {
+.btr-setting-switch input:checked + .btr-setting-switch-track .btr-setting-switch-knob::after {
 	opacity: 1;
 	transition-delay: 50ms;
 }
 
-.btr-switch input:hover:not(:disabled) + .btr-switch-track {
+.btr-setting-switch input:hover:not(:disabled) + .btr-setting-switch-track {
 	box-shadow: inset 0 0 0 100px var(--btr-hover);
 }
 
-.btr-switch input:focus-visible + .btr-switch-track {
+.btr-setting-switch input:focus-visible + .btr-setting-switch-track {
 	outline: 2px solid var(--btr-focus);
 	outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.btr-switch-track,
-	.btr-switch-knob {
+	.btr-setting-switch-track,
+	.btr-setting-switch-knob {
 		transition: none;
 	}
 }
