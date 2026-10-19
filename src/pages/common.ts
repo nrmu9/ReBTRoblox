@@ -1644,6 +1644,31 @@ pageInit.www = () => {
 		})
 	})
 
+	// The newer navbar opens its settings menu in a radix portal, which the hook
+	// above never sees. Our item copies Roblox's first one so it keeps their look.
+	bodyWatcher.$watchAll("[aria-label='Settings'] .nav-foundation-menu", (menu: HTMLElement) => {
+		const first = menu.$find("[role=menuitem]")
+
+		if (!first || menu.$find(".btr-settings-toggle")) {
+			return
+		}
+
+		const item = first.cloneNode(true) as HTMLElement
+		item.removeAttribute("href")
+		item.classList.add("btr-settings-toggle")
+		item.$find(".foundation-web-menu-item-title")!.textContent = "BTR Settings"
+
+		// The menu stays open otherwise, over the settings panel. Closed a tick
+		// later, as a detached item would no longer reach the toggle handler.
+		item.$on("click", () => {
+			setTimeout(() => {
+				menu.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+			})
+		})
+
+		first.after(item)
+	})
+
 	bodyWatcher.$watch("#roblox-linkify", (linkify: HTMLElement) => {
 		const index = linkify.dataset.regex!.search(/\|[^|]*shoproblox\\.com/)
 
