@@ -8,41 +8,38 @@ const BlogFeed = {
 	fetching: null as Promise<any[]> | null,
 	cached: null as any[] | null,
 
+	// The index below is large, so it is fetched at most this often and the
+	// cached posts are shown in between. The time is stored with them, as the
+	// chrome background worker restarts far more often than that.
 	canRequest() {
-		return Date.now() > this.lastRequest + 15e3
+		return Date.now() > this.lastRequest + 30 * 60e3
 	},
 
 	request() {
 		if (!this.fetching && this.canRequest()) {
 			this.lastRequest = Date.now()
 
-			const feedUrl = `https://api.buttercms.com/v2/pages/long_form_page/?locale=en&preview=0&page=1&page_size=3&fields.page_type.localized_slug=newsroom&fields.unlist_page=false&order=-displayed_publish_date&auth_token=137ac5a15935fab769262b6167858b427157ee3d`
+			// The newsroom moved off ButterCMS, whose token now answers 403. The
+			// new site's search index lists every post with its date and summary.
+			const feedUrl = "https://about.roblox.com/search-index/en.json"
 
 			this.fetching = fetch(feedUrl).then(async (res) => {
-				const json = await res.json()
-				const posts: any[] = []
+				const json: any[] = await res.json()
 
-				for (let i = 0; i < 3; i++) {
-					const post = json.data[i]
-					if (!post) {
-						break
-					}
-
-					const published = new Date(post.fields.displayed_publish_date)
-
-					posts.push({
-						url: `https://corp.roblox.com/newsroom/${published.getUTCFullYear()}/${("0" + (published.getUTCMonth() + 1)).slice(-2)}/${post.slug}`,
-						date: post.fields.displayed_publish_date,
-						title: post.fields.title,
-						desc:
-							post.fields.long_form_content?.find((x: any) => x.type === "long-form-text")
-								?.fields.body ?? "",
-					})
-				}
+				const posts = json
+					.filter((post) => post.page_type === "newsroom" && post.publishDate && post.url)
+					.toSorted((a, b) => Date.parse(b.publishDate) - Date.parse(a.publishDate))
+					.slice(0, 3)
+					.map((post) => ({
+						url: post.url,
+						date: post.publishDate,
+						title: post.title ?? "",
+						desc: post.description ?? "",
+					}))
 
 				this.cached = posts
 
-				STORAGE.set({ cachedBlogFeedV2: this.cached })
+				STORAGE.set({ cachedBlogFeedV3: this.cached, blogFeedFetchedAt: this.lastRequest })
 				SHARED_DATA.set("blogfeed", this.cached)
 
 				return this.cached
@@ -57,22 +54,34 @@ const BlogFeed = {
 	},
 }
 
-STORAGE.get(["cachedBlogFeedV2"], (data) => {
-	if (data.cachedBlogFeedV2 && !BlogFeed.cached) {
-		BlogFeed.cached = data.cachedBlogFeedV2 as any[]
-		SHARED_DATA.set("blogfeed", BlogFeed.cached)
-	}
+// Requests wait for this, or a worker that just woke would fetch again before
+// learning it fetched minutes ago.
+const loaded = new Promise<void>((resolve) => {
+	STORAGE.get(["cachedBlogFeedV3", "blogFeedFetchedAt"], (data) => {
+		if (data.cachedBlogFeedV3 && !BlogFeed.cached) {
+			BlogFeed.cached = data.cachedBlogFeedV3 as any[]
+			BlogFeed.lastRequest = Math.max(BlogFeed.lastRequest, Number(data.blogFeedFetchedAt) || 0)
+			SHARED_DATA.set("blogfeed", BlogFeed.cached)
+		}
+
+		resolve()
+	})
 })
+
+// What the ButterCMS feed left behind.
+STORAGE.remove("cachedBlogFeedV2")
 
 contentScript.listen({
 	requestBlogFeed(_: any, respond: ((value?: any, hasMore?: boolean) => void) & { cancel: () => void }) {
-		if (BlogFeed.cached) {
-			respond(BlogFeed.cached, true)
-		}
+		void loaded.then(() => {
+			if (BlogFeed.cached) {
+				respond(BlogFeed.cached, true)
+			}
 
-		BlogFeed.request().then(
-			(data: any) => respond(data),
-			() => respond.cancel(),
-		)
+			BlogFeed.request().then(
+				(data: any) => respond(data),
+				() => respond.cancel(),
+			)
+		})
 	},
 })
