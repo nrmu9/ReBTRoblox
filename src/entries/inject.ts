@@ -1179,8 +1179,27 @@ const startInject = () => {
 			},
 
 			inject(selector: string, callback: (...args: any[]) => any) {
+				const parsed = this.parseReactSelector(selector)
+
+				// One id or class per alternative that an element must carry to match
+				// it. Checking for that string first lets onCreateElement skip the
+				// full match for nearly every element React creates.
+				const tokens: string[] = []
+
+				for (const option of parsed) {
+					const token = option.props?.id ?? option.classList?.[0]
+
+					if (typeof token !== "string") {
+						tokens.length = 0
+						break
+					}
+
+					tokens.push(token)
+				}
+
 				this.injectedContent.push({
-					selector: this.parseReactSelector(selector),
+					selector: parsed,
+					tokens: tokens.length ? tokens : null,
 					callback: callback,
 				})
 			},
@@ -1277,10 +1296,26 @@ const startInject = () => {
 			onCreateElement(target: any, thisArg: any, args: any[]) {
 				const result = target.apply(thisArg, args)
 
+				const props = result?.props
+
+				if (!props) {
+					return result
+				}
+
+				const className = typeof props.className === "string" ? props.className : ""
+				const id = typeof props.id === "string" ? props.id : ""
+
 				const root = [result]
 				let wrapped
 
 				outer: for (const content of this.injectedContent) {
+					if (
+						content.tokens &&
+						!content.tokens.some((token: string) => token === id || className.includes(token))
+					) {
+						continue
+					}
+
 					try {
 						const matching: any[] = []
 
