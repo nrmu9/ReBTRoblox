@@ -1,709 +1,69 @@
-/* Roblox's design system, read off its own foundation-web components: a 4px
-   spacing scale, radii of 4/8/16, buttons at 40px with 8px corners and 14px
-   600 text, and the surface/content/stroke tokens it publishes on :root and
-   swaps with the site theme. Fallbacks cover surfaces that predate the tokens,
-   such as create.roblox.com. */
+/* The settings dialog, built from Roblox's own design tokens so it follows the
+   site theme the way its Foundation components do: surfaces, content and
+   stroke colours, the 4px spacing scale, 8 and 16px radii and Builder Sans.
+   Fallbacks cover pages without the tokens, such as older create.roblox.com
+   builds. */
 .btr-settings-modal {
-	--btr-surface: var(--color-surface-100, #ffffff);
-	--btr-surface-raised: var(--color-surface-200, #f3f4f6);
-	--btr-surface-sunken: var(--color-surface-300, #e9ebee);
+	--btr-surface-0: var(--color-surface-0, #ffffff);
+	--btr-surface: var(--color-surface-100, #f7f7f8);
+	--btr-surface-raised: var(--color-surface-200, #eff0f2);
 	--btr-content: var(--color-content-default, #3b3f47);
 	--btr-content-emphasis: var(--color-content-emphasis, #191b1f);
 	--btr-content-muted: var(--color-content-muted, #6f737d);
 	--btr-stroke: var(--color-stroke-default, rgba(25, 26, 31, 0.12));
-	--btr-stroke-emphasis: var(--color-stroke-emphasis, rgba(25, 26, 31, 0.16));
-	--btr-state-hover: var(--color-state-hover, rgba(25, 26, 31, 0.08));
-	--btr-state-press: var(--color-state-press, rgba(25, 26, 31, 0.12));
-	--btr-accent: #335fff;
-	--btr-link: var(--color-content-link, #335fff);
-
-	--btr-radius-sm: var(--radius-small, 4px);
-	--btr-radius: var(--radius-medium, 8px);
-	--btr-radius-lg: var(--radius-large, 16px);
-
-	--btr-space-xs: 4px;
-	--btr-space-sm: 8px;
-	--btr-space-md: 12px;
-	--btr-space-lg: 16px;
-
-	--btr-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+	--btr-stroke-muted: var(--color-stroke-muted, rgba(25, 26, 31, 0.08));
+	--btr-hover: var(--color-state-hover, rgba(25, 26, 31, 0.08));
+	--btr-press: var(--color-state-press, rgba(25, 26, 31, 0.12));
+	--btr-shift: var(--color-shift-200, rgba(25, 26, 31, 0.08));
+	--btr-standard: var(--color-action-standard-background, rgba(25, 26, 31, 0.12));
+	--btr-emphasis: var(--color-action-emphasis-background, #335fff);
+	--btr-emphasis-content: var(--color-action-emphasis-foreground, #ffffff);
+	--btr-alert-content: var(--color-action-alert-foreground, #d4272f);
+	--btr-focus: var(--color-system-emphasis, #335fff);
+	--btr-contrast: var(--color-system-contrast, #191b1f);
+	--btr-inverse: var(--inverse-content-emphasis, #f7f7f8);
+	--btr-scrim: var(--color-common-backdrop, rgba(10, 10, 14, 0.75));
+	--btr-shadow: 0 2px 4px -0.5px rgba(4, 4, 8, 0.25), 0 10px 20px -0.75px rgba(4, 4, 8, 0.25);
 }
 
 .btr-settings-modal.btr-dark-theme {
+	--btr-surface-0: var(--color-surface-0, #121215);
 	--btr-surface: var(--color-surface-100, #191a1f);
 	--btr-surface-raised: var(--color-surface-200, #202227);
-	--btr-surface-sunken: var(--color-surface-300, #272930);
 	--btr-content: var(--color-content-default, #d5d7dd);
 	--btr-content-emphasis: var(--color-content-emphasis, #f7f7f8);
 	--btr-content-muted: var(--color-content-muted, #bcbec8);
 	--btr-stroke: var(--color-stroke-default, rgba(208, 217, 251, 0.12));
-	--btr-stroke-emphasis: var(--color-stroke-emphasis, rgba(208, 217, 251, 0.16));
-	--btr-state-hover: var(--color-state-hover, rgba(208, 217, 251, 0.08));
-	--btr-state-press: var(--color-state-press, rgba(208, 217, 251, 0.12));
-
-	--btr-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+	--btr-stroke-muted: var(--color-stroke-muted, rgba(208, 217, 251, 0.08));
+	--btr-hover: var(--color-state-hover, rgba(208, 217, 251, 0.08));
+	--btr-press: var(--color-state-press, rgba(208, 217, 251, 0.12));
+	--btr-shift: var(--color-shift-200, rgba(208, 217, 251, 0.08));
+	--btr-standard: var(--color-action-standard-background, rgba(208, 217, 251, 0.12));
+	--btr-emphasis-content: var(--color-action-emphasis-foreground, #f7f7f8);
+	--btr-alert-content: var(--color-action-alert-foreground, #f04433);
+	--btr-contrast: var(--color-system-contrast, #f7f7f8);
+	--btr-inverse: var(--inverse-content-emphasis, #202227);
 }
 
-/* the earlier names stay pointed at these so nothing downstream breaks */
-.btr-settings-modal {
-	--btr-modal-surface: var(--btr-surface);
-	--btr-modal-raised: var(--btr-surface-raised);
-	--btr-modal-sunken: var(--btr-surface-sunken);
-	--btr-modal-text: var(--btr-content);
-	--btr-modal-text-strong: var(--btr-content-emphasis);
-	--btr-modal-text-muted: var(--btr-content-muted);
-	--btr-modal-stroke: var(--btr-stroke);
-	--btr-modal-hover: var(--btr-state-hover);
-	--btr-modal-accent: var(--btr-accent);
-	--btr-modal-radius: var(--btr-radius);
-	--btr-modal-radius-sm: var(--btr-radius-sm);
-	--btr-modal-shadow: var(--btr-shadow);
-}
+/* Shell */
 
 .btr-settings-modal {
 	position: fixed;
-	display: flex;
-	top: 40px;
-	left: 0;
-	right: 0;
-	bottom: 0;
-
-	font-size: 16px;
-	font-weight: 300;
-
-	align-items: center;
-	justify-content: center;
-
-	pointer-events: none;
+	inset: 0;
 	z-index: 10000;
 
-	color: var(--btr-modal-text);
-}
-
-.btr-settings-modal,
-.btr-settings-modal * {
-	font-family: "Builder Sans", "Source Sans Pro", Helvetica, Arial, sans-serif;
-	box-sizing: border-box;
-}
-
-.btr-settings {
-	display: flex;
-	flex-direction: column;
-	width: 680px;
-	max-width: 90%;
-	height: auto;
-	max-height: 90%;
-
-	background: var(--btr-modal-surface);
-	box-shadow: var(--btr-modal-shadow);
-
-	color: var(--btr-modal-text);
-	border-radius: var(--btr-modal-radius);
-
-	overflow: hidden;
-	overscroll-behavior: contain;
-
-	pointer-events: all;
-	position: relative;
-}
-
-.btr-settings-header {
-	flex: 0 0 auto;
-	display: flex;
-	height: 48px;
-	padding: 0 8px 0 16px;
-	align-items: center;
-	background: var(--btr-modal-raised);
-	color: var(--btr-modal-text-strong);
-	border-bottom: 1px solid var(--btr-modal-stroke);
-}
-
-.btr-settings-content {
-	flex: 1 1 auto;
-	overflow: auto;
-	overflow-x: hidden;
-	overscroll-behavior: contain;
-
-	position: relative;
-
-	padding: 12px;
-}
-
-.btr-setting-reset-button {
-	display: inline-block;
-	position: absolute;
-	margin-left: 4px;
-	margin-top: 3px;
-
-	height: 19px;
-	width: 19px;
-
-	cursor: pointer;
-
-	--btr-text-color: #000;
-	--btr-bg-color: #fff;
-}
-
-.btr-settings-enabled-toggle .btr-setting-reset-button {
-	margin-top: 0;
-}
-
-.btr-dark-theme .btr-setting-reset-button {
-	--btr-text-color: #fff;
-	--btr-bg-color: #393b3d;
-}
-
-.btr-setting-reset-button .btr-cross {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	left: 0;
-	top: 0;
-	background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggc3R5bGU9ImNvbG9yOiMwMDAiIGQ9Ik0gMTMuODQsMCA4LDUuODQgMi4xNiwwIDAsMi4xNiBjIDEuOTQsMS45NCAzLjg5LDMuODkgNS44NCw1Ljg0IEwgMCwxMy44NCAyLjE2LDE2IDgsMTAuMTYgYyAxLjk0LDEuOTQgMy44OSwzLjg5IDUuODQsNS44NCBsIDIuMTYsLTIuMTYgLTUuODQsLTUuODQgNS44NCwtNS44NCB6Ii8+PC9zdmc+);
-	background-repeat: no-repeat;
-	background-size: 9px 9px;
-	background-position: 50% 50%;
-}
-
-.btr-dark-theme .btr-setting-reset-button .btr-cross {
-	filter: invert(1);
-}
-
-.btr-setting-reset-button.disabled {
-	cursor: initial;
-	visibility: hidden;
-}
-
-.btr-settings-enabled-toggle .btr-setting-reset-button {
-	right: 100%;
-	margin-right: 4px;
-}
-
-.btr-setting-reset-button:hover {
-	background-color: rgba(150, 150, 150, 0.2);
-	z-index: 10000;
-}
-
-.btr-setting-reset-button:after {
-	position: absolute;
-	display: block;
-	background: var(--btr-bg-color);
-	color: var(--btr-text-color);
-	border: 1px solid #888;
-
-	right: 50%;
-	top: 100%;
-	width: 100px;
-
-	margin-top: 5px;
-	margin-right: -14px;
-	text-align: center;
-
-	padding: 1px;
-	border-radius: 6px;
-
-	font-size: 12px;
-	z-index: 1;
-
-	content: "Reset to Default";
-	pointer-events: none;
-}
-
-.btr-setting-reset-button:before {
-	position: absolute;
-	display: block;
-	background: var(--btr-bg-color);
-	color: var(--btr-text-color);
-	border: 1px solid #888;
-	border-right: none;
-	border-bottom: none;
-
-	right: 50%;
-	top: 100%;
-
-	margin-top: 2px;
-
-	width: 6px;
-	height: 6px;
-
-	z-index: 2;
-	transform: translateX(50%) rotate(45deg);
-
-	content: "";
-	pointer-events: none;
-}
-
-.btr-setting-reset-button:not(:hover):before,
-.btr-setting-reset-button:not(:hover):after {
-	visibility: hidden;
-}
-
-.btr-settings-content:not(.selected) {
-	display: none !important;
-}
-
-.btr-settings .btr-close-subcontent {
-	float: left;
-	padding: 3px;
-	margin-right: 8px;
-}
-
-.btr-settings .btr-close-subcontent .icon-left {
-	width: 20px;
-	height: 20px;
-	background-size: 40px auto;
-	background-position: 0 -300px !important;
-}
-
-.btr-settings-content h4 {
-	display: inline-block;
-	padding: 3px 0;
-}
-
-.btr-settings-content-header {
-	margin-bottom: 4px;
-}
-
-.btr-settings-footer {
-	display: flex;
-	flex: 0 0 auto;
-	height: 44px;
-	align-items: center;
-	gap: 8px;
-
-	padding: 0 12px 0 16px;
-	border-top: 1px solid var(--btr-modal-stroke);
-	color: var(--btr-modal-text-muted);
-	font-size: 13px;
-}
-
-.btr-settings-footer-version {
-	flex: 0 0 fit-content;
-	text-align: left;
-}
-
-.btr-settings-footer-roblox {
-	flex: 0 0 auto;
-	width: 22px;
-	height: 22px;
-	background-image: url("https://images.rbxcdn.com/f6d39fbab06f1ad69f6e6c36ffeff02e-SocialLinkSquareIconsV4.svg");
-	background-size: 100% auto;
-	margin-right: 2px;
-}
-
-.btr-settings-footer-roblox {
-	background-position: 0 -700%;
-}
-
-.btr-settings-header-title {
-	display: inline-block;
-	font-size: 16px;
-	font-weight: 600;
-	letter-spacing: 0.2px;
-}
-
-.btr-settings-header-close {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border-radius: var(--radius-circle, 9999px);
-	font-weight: 600;
-	text-align: center;
-	cursor: pointer;
-	font-size: 12px;
-	transition: background-color 120ms ease;
-}
+	padding: 24px 16px;
 
-.btr-settings .btr-settings-enabled-toggle {
-	position: absolute;
-	top: 8px;
-	right: 8px;
-	display: block;
-	float: right;
-	width: 54px;
-	height: 24px;
-	padding: 2px;
-	margin: 0;
-
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	background: #b8b8b8;
-	border-radius: 12px;
-
-	font-size: 12px;
-	font-weight: 400;
-	text-align: right;
-
-	user-select: none;
-	-moz-user-select: none;
-
-	outline: none;
-	cursor: pointer;
-}
-
-.btr-settings-enabled-toggle.checked {
-	background: #02b757;
-	text-align: left;
-}
-
-.btr-settings-enabled-toggle:before {
-	content: "";
-	position: absolute;
-	top: 2px;
-	left: 2px;
-	right: auto;
-	width: 20px;
-	height: 20px;
-
-	background: #fff;
-	border-radius: 10px;
-	user-select: none;
-	-moz-user-select: none;
-}
-
-.btr-settings-enabled-toggle.checked:before {
-	left: auto;
-	right: 2px;
-}
-
-.btr-settings-enabled-toggle:after {
-	content: "OFF";
-	display: flex;
-	height: 100%;
-	margin-right: 4px;
-	margin-left: 7px;
-	user-select: none;
-	-moz-user-select: none;
-	align-items: center;
-	justify-content: flex-end;
-	color: #fff;
-}
-
-.btr-settings-enabled-toggle.checked:after {
-	content: "ON";
-	justify-content: flex-start;
-}
-
-.btr-settings-content group {
-	display: block;
-	padding: 0 14px 14px;
-
-	position: relative;
-
-	background: var(--btr-modal-raised);
-	border: 1px solid var(--btr-modal-stroke);
-	border-radius: var(--btr-modal-radius);
-	margin-bottom: 10px;
-}
-
-.btr-settings-content group::after {
-	content: "";
-	display: block;
-	clear: both;
-}
-
-.btr-settings-content group.btr-group-disabled {
-	background: rgba(0, 0, 0, 0.02);
-}
-
-.btr-settings-content group .btr-setting-group-title-container {
-	position: relative;
-	padding-top: 8px;
-}
-
-.btr-settings-content group .btr-setting-group-title-container h4 {
-	display: block;
-	color: var(--btr-modal-text-strong);
-	font-size: 15px;
-	font-weight: 600;
-	margin: 0 0 8px;
-	padding: 0;
-	line-height: 1.2em;
-}
-
-.btr-settings-content group.btr-group-disabled .btr-setting-group-title-container h4,
-.btr-settings-content group.btr-group-disabled checkbox input[disabled] + label {
-	opacity: 0.6;
-}
-
-.btr-settings-content group[minimizable] .btr-setting-group-title-container h4 {
-	cursor: pointer;
-	margin: -8px -14px 0;
-	padding: 12px 14px;
-}
-
-.btr-settings-content group[minimizable] .btr-setting-group-title-container h4:hover {
-	background: rgba(0, 0, 0, 0.02);
-}
-
-.btr-dark-theme .btr-settings-content group[minimizable] .btr-setting-group-title-container h4:hover {
-	background: rgba(255, 255, 255, 0.05);
-}
-
-.btr-settings-content group[minimizable] .btr-setting-group-title-container h4:after {
-	content: "";
-	display: block;
-	position: absolute;
-	width: 12px;
-	height: 12px;
-	top: 20px;
-	right: 18px;
-
-	transform: rotate(45deg);
-	border-color: #191919;
-	border-width: 1px 0 0 1px;
-	border-style: solid;
-}
-
-.btr-dark-theme .btr-settings-content group[minimizable] .btr-setting-group-title-container h4:after {
-	filter: invert(100%);
-}
-
-.btr-settings-content group[minimizable][minimized] .btr-setting-group-title-container h4:after {
-	top: 14px;
-	border-width: 0 1px 1px 0;
-}
-
-.btr-settings-content group[minimizable] {
-	overflow: hidden;
-
-	user-select: none;
-	-moz-user-select: none;
-}
-
-.btr-settings-content group[minimizable] .btr-setting-group-content {
-	/* transition: height .5s; */
-	overflow: hidden;
-}
-
-.btr-settings-content group[minimizable][minimized] .btr-setting-group-content {
-	height: 0;
-}
-
-.btr-settings-content button {
-	vertical-align: bottom;
-}
-
-.btr-settings-content empty {
-	display: inline-block;
-	width: 50%;
-	height: 20px;
-}
-
-.btr-settings-content checkbox {
-	display: inline-flex;
-	width: 50%;
-
-	margin: 0;
-	padding: 2px 0;
-	padding-right: 10px;
-
-	position: relative;
-}
-
-.btr-settings-content checkbox input {
-	position: absolute;
-	visibility: hidden;
-}
-
-.btr-settings-content checkbox input + label {
-	position: relative;
-	display: inline-block;
-	background: none;
-	height: auto;
-	padding-left: 22px;
-
-	vertical-align: middle;
-	line-height: 16px;
-	font-weight: 300;
-
-	user-select: none;
-	-moz-user-select: none;
-	cursor: pointer;
-}
-
-.btr-settings-content checkbox input[disabled] + label {
-	cursor: initial;
-}
-
-.btr-settings-content checkbox input + label:before {
-	content: "";
-	display: inline-block;
-	background-color: #fff;
-	background-repeat: no-repeat;
-	background-size: 14px auto;
-	width: 16px;
-	height: 16px;
-	position: absolute;
-	left: 0;
-	top: 0;
-	border: 1px solid #b8b8b8;
-	border-radius: 3px;
-	box-sizing: border-box;
-}
-
-.btr-settings-content checkbox input:checked + label:before {
-	background-image: url(/res/icon_checkbox.svg);
-	background-color: #00a2ff;
-}
-
-.btr-settings-content checkbox input[disabled] + label:before {
-	background-color: #b8b8b8;
-}
-
-.btr-settings-content checkbox label {
-	margin-left: 4px;
+	background: var(--btr-scrim);
+	color: var(--btr-content);
+	font-family: "Builder Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size: 16px;
+	line-height: 1.4;
+	-webkit-font-smoothing: antialiased;
 
-	/* max-width: calc(100% - 40px); */
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.btr-settings-content checkbox .btr-setting-reset-button {
-	position: relative;
-	margin: 0;
-	margin-left: 4px;
-	margin-top: -1px;
-}
-
-.btr-settings-content .btr-select {
-	display: inline-block;
-	width: 50%;
-}
-
-.btr-settings-content select {
-	display: inline-block;
-	font-size: 14px;
-	padding: 1px 4px;
-	font-weight: 400;
-
-	padding-right: 20px;
-	max-width: calc(100% - 20px);
-
-	color: #191919;
-	border: 1px solid rgb(169, 169, 169);
-	background-color: #fff;
-
-	-webkit-appearance: none;
-	-moz-appearance: none;
-
-	background-image:
-		linear-gradient(45deg, transparent 50%, gray 50%), linear-gradient(135deg, gray 50%, transparent 50%);
-	background-position:
-		calc(100% - 10px) 11px,
-		calc(100% - 7px) 11px;
-	background-size:
-		3px 5px,
-		3px 5px;
-	background-repeat: no-repeat;
-}
-
-.btr-settings-content select[disabled] {
-	opacity: 0.7;
-}
-
-.btr-settings-content select option {
-	font-size: 15px;
-}
-
-.btr-settings-content[data-name="navigation"] {
-	padding-bottom: 20px;
-}
-
-.btr-settings-content[data-name="navigation"] checkbox {
-	width: 100%;
-}
-
-#btr-settings-item-previewer {
-	display: flex;
-	flex-direction: column;
-}
-
-#btr-settings-shout-filters {
-	display: flex;
-	flex-direction: column;
-	height: 600px;
-}
-
-#btr-settings-experiments {
-	margin: 10px 10px 0;
-	border-radius: 5px;
-	overflow: hidden;
-
-	display: flex;
-	flex-direction: column;
-
-	border: 1px solid light-dark(#e3e3e3, #494d5a);
-
-	position: relative;
-
-	> summary {
-		padding: 4px 8px;
-		cursor: pointer;
-		grid-column: 1 / 3;
-		background-color: light-dark(#fff, rgba(208, 217, 251, 0.12));
-	}
-
-	.group {
-		> summary {
-			padding: 2px 8px;
-			cursor: pointer;
-			grid-column: 1 / 3;
-			background-color: light-dark(#fff, rgba(208, 217, 251, 0.08));
-			border-top: 1px solid light-dark(#e3e3e3, #494d5a);
-			font-size: 12px;
-			font-weight: bold;
-		}
-
-		> .contents {
-			display: grid;
-			grid-template-columns: 50% auto;
-		}
-
-		.name {
-			display: block;
-			font-size: 12px;
-			padding: 4px;
-			padding-left: 16px;
-			border-top: 1px solid light-dark(#e3e3e3, #494d5a);
-			border-right: 1px solid light-dark(#e3e3e3, #494d5a);
-			width: 100%;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			user-select: text;
-		}
-
-		.value {
-			display: block;
-			font-size: 12px;
-			padding: 4px 6px;
-
-			background-color: rgba(208, 217, 251, 0.05);
-
-			outline: none;
-			border: none;
-			border-top: 1px solid light-dark(#e3e3e3, #494d5a);
-			width: 100%;
-
-			&.invalid {
-				background-color: rgba(255, 0, 0, 0.05);
-			}
-		}
-	}
-
-	.btr-setting-reset-button {
-		margin: 0;
-		right: 2px;
-	}
-}
-
-/* The modal is mounted and unmounted rather than toggled, so the open class is
-   added a frame after mounting and the unmount waits for the fade out. */
-.btr-settings-modal {
 	opacity: 0;
 	transition: opacity 140ms ease;
 }
@@ -712,11 +72,28 @@
 	opacity: 1;
 }
 
-.btr-settings-modal .btr-settings {
-	transform: translateY(10px) scale(0.985);
-	transition:
-		transform 170ms cubic-bezier(0.2, 0, 0.2, 1),
-		opacity 170ms ease;
+.btr-settings-modal *,
+.btr-settings-modal *::before,
+.btr-settings-modal *::after {
+	box-sizing: border-box;
+	font-family: inherit;
+}
+
+.btr-settings {
+	display: grid;
+	grid-template-columns: 248px minmax(0, 1fr);
+
+	width: min(960px, 100%);
+	height: min(720px, 100%);
+	overflow: hidden;
+
+	background: var(--btr-surface);
+	border: 1px solid var(--btr-stroke-muted);
+	border-radius: 16px;
+	box-shadow: var(--btr-shadow);
+
+	transform: translateY(8px) scale(0.985);
+	transition: transform 170ms cubic-bezier(0.2, 0, 0.2, 1);
 }
 
 .btr-settings-modal.btr-settings-open .btr-settings {
@@ -725,292 +102,764 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.btr-settings-modal,
-	.btr-settings-modal .btr-settings {
+	.btr-settings {
 		transition: none;
 	}
 }
 
-/* Components, on Roblox's scale. */
+.btr-settings .icon {
+	display: inline-block;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	background-color: currentColor;
+	mask-size: 100% 100%;
+	mask-repeat: no-repeat;
+}
 
-.btr-settings {
-	border-radius: var(--btr-radius-lg);
+/* Roblox only ships the icons a page uses, and a missing one would fill in
+   as a solid square. */
+.btr-settings .icon.btr-icon-missing {
+	visibility: hidden;
+}
+
+/* Sidebar */
+
+.btr-settings-sidebar {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-height: 0;
+	padding: 20px 12px;
+
+	border-right: 1px solid var(--btr-stroke-muted);
+}
+
+.btr-settings-brand {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 0 8px;
+}
+
+.btr-settings-brand-title {
+	font-size: 20px;
+	font-weight: 700;
+	color: var(--btr-content-emphasis);
+}
+
+.btr-settings-brand-version {
+	font-size: 12px;
+	color: var(--btr-content-muted);
+}
+
+.btr-settings-search {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 12px;
+
+	background: var(--btr-shift);
+	border: 1px solid transparent;
+	border-radius: 8px;
+	color: var(--btr-content-muted);
+	cursor: text;
+}
+
+.btr-settings-search:focus-within {
+	border-color: var(--btr-focus);
+}
+
+.btr-settings-search .icon {
+	width: 20px;
+	height: 20px;
+}
+
+.btr-settings-search input {
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+	padding: 0;
+
+	background: none;
+	border: none;
+	outline: none;
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+}
+
+.btr-settings-search input::placeholder {
+	color: var(--btr-content-muted);
+	opacity: 1;
+}
+
+.btr-settings-tabs {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-height: 0;
+	margin: 0 -4px;
+	padding: 0 4px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.btr-settings-tab {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: none;
+	width: 100%;
+	height: 44px;
+	padding: 0 12px;
+
+	background: none;
+	border: none;
+	border-radius: 8px;
+	color: var(--btr-content-emphasis);
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 22px;
+	text-align: left;
+	cursor: pointer;
+}
+
+.btr-settings-tab:hover {
+	background: var(--btr-hover);
+}
+
+.btr-settings-tab:active {
+	background: var(--btr-press);
+}
+
+.btr-settings-tab.selected {
+	background: var(--btr-shift);
+}
+
+.btr-settings-searching .btr-settings-tab.selected {
+	background: none;
+}
+
+.btr-settings-tab-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Main column */
+
+.btr-settings-main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
 }
 
 .btr-settings-header {
-	height: 56px;
-	padding: 0 var(--btr-space-sm) 0 var(--btr-space-lg);
-	background: var(--btr-surface);
-	border-bottom: 1px solid var(--btr-stroke);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: none;
+	height: 72px;
+	padding: 0 16px 0 32px;
 }
 
-.btr-settings-header-title {
-	font-size: 16px;
-	font-weight: 700;
-	line-height: 1.4;
+.btr-settings-title {
+	flex: 1;
+	margin: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
 	color: var(--btr-content-emphasis);
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 32px;
 }
 
-.btr-settings-header-close {
+.btr-settings-icon-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
 	width: 40px;
 	height: 40px;
-	border-radius: var(--btr-radius);
+	padding: 0;
+
+	background: none;
+	border: none;
+	border-radius: 50%;
 	color: var(--btr-content-emphasis);
-	transition: background-color 120ms ease;
+	cursor: pointer;
 }
 
-.btr-settings-header-close:hover {
-	background: var(--btr-state-hover);
+.btr-settings-icon-button:hover {
+	background: var(--btr-hover);
 }
 
-.btr-settings-header-close:active {
-	background: var(--btr-state-press);
+.btr-settings-icon-button:active {
+	background: var(--btr-press);
 }
 
-.btr-settings-content {
-	padding: var(--btr-space-lg);
-	background: var(--btr-surface);
+.btr-settings-body {
+	flex: 1;
+	min-height: 0;
+	padding: 0 32px 32px;
+	overflow-y: auto;
+	scrollbar-width: thin;
 }
 
-.btr-settings-content group {
-	padding: 0 var(--btr-space-lg) var(--btr-space-lg);
-	background: var(--btr-surface-raised);
-	border: 1px solid var(--btr-stroke);
-	border-radius: var(--btr-radius);
-	margin-bottom: var(--btr-space-md);
+.btr-settings :focus-visible {
+	outline: 2px solid var(--btr-focus);
+	outline-offset: 2px;
 }
 
-.btr-settings-content group .btr-setting-group-title-container h4 {
+/* Pages. Searching shows every page with a match, each under its name. */
+
+.btr-settings-page {
+	display: none;
+}
+
+.btr-settings-page.selected,
+.btr-settings-searching .btr-settings-page.btr-page-hit {
+	display: block;
+}
+
+.btr-settings-searching .btr-settings-page.selected:not(.btr-page-hit) {
+	display: none;
+}
+
+.btr-settings-page-title {
+	display: none;
+	margin: 24px 0 8px;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.btr-settings-searching .btr-settings-page-title {
+	display: block;
+}
+
+.btr-settings-searching .btr-settings-page:first-of-type .btr-settings-page-title,
+.btr-settings-searching .btr-page-hit ~ .btr-page-hit .btr-settings-page-title {
+	margin-top: 24px;
+}
+
+.btr-setting-heading {
+	margin: 32px 0 4px;
+	color: var(--btr-content-emphasis);
 	font-size: 16px;
 	font-weight: 700;
-	line-height: 1.4;
-	color: var(--btr-content-emphasis);
-	margin: 0 0 var(--btr-space-sm);
+	line-height: 22px;
 }
 
-.btr-settings-content checkbox label {
-	font-size: 14px;
-	line-height: 1.4;
-	color: var(--btr-content);
+.btr-settings-searching .btr-setting-heading {
+	display: none;
 }
 
-.btr-settings-content checkbox input + label:before {
-	border-radius: var(--btr-radius-sm);
-	border: 1px solid var(--btr-stroke-emphasis);
-	transition:
-		background-color 120ms ease,
-		border-color 120ms ease;
+.btr-settings-page > .btr-setting-card:first-of-type {
+	margin-top: 4px;
 }
 
-.btr-settings-content checkbox input:checked + label:before {
-	background-color: var(--btr-accent);
-	border-color: var(--btr-accent);
+.btr-setting-card {
+	display: flow-root;
 }
 
-.btr-settings-content select {
-	height: 32px;
-	border-radius: var(--btr-radius);
-	background-color: var(--btr-surface);
-	color: var(--btr-content);
-	border: 1px solid var(--btr-stroke-emphasis);
-	/* Room on the right for the native arrow, or a long rate label runs
-	   underneath it. */
-	padding: 0 var(--btr-space-lg) 0 var(--btr-space-sm);
-	font-size: 14px;
-	line-height: normal;
-	text-overflow: ellipsis;
-	transition: border-color 120ms ease;
+.btr-setting-card + .btr-setting-card {
+	border-top: 1px solid var(--btr-stroke-muted);
 }
 
-.btr-settings-content select:hover {
-	border-color: var(--btr-stroke-contrast, var(--btr-content-muted));
+.btr-setting-card-master {
+	border-bottom: 1px solid var(--btr-stroke-muted);
 }
 
-/* Roblox's buttons: 40 tall, 8 corners, 14px semibold. */
-.btr-settings-content .btn-control-xs,
-.btr-settings-content .btn-control-sm {
-	height: 40px;
-	padding: 0 var(--btr-space-md);
-	border-radius: var(--btr-radius);
-	border: none;
-	background: var(--btr-state-press);
-	color: var(--btr-content-emphasis);
-	font-size: 14px;
-	font-weight: 600;
-	line-height: 1;
-	cursor: pointer;
-	transition: background-color 120ms ease;
+.btr-setting-filtered {
+	display: none !important;
 }
 
-.btr-settings-content .btn-control-xs:hover,
-.btr-settings-content .btn-control-sm:hover {
-	background: var(--btr-state-hover);
-}
-
-.btr-settings-footer {
-	height: 56px;
-	padding: 0 var(--btr-space-md) 0 var(--btr-space-lg);
-	gap: var(--btr-space-sm);
-	background: var(--btr-surface);
-	border-top: 1px solid var(--btr-stroke);
+.btr-settings-empty {
+	padding: 64px 0;
 	color: var(--btr-content-muted);
-	font-size: 12px;
-	font-weight: 600;
-	line-height: 1.4;
+	text-align: center;
 }
 
-/* Shown only once a change lands that the page cannot pick up live. */
-.btr-settings-reload {
-	margin-left: auto;
-	height: 40px;
-	padding: 0 var(--btr-space-md);
+.btr-settings-alert {
+	margin: 0 0 16px;
+	padding: 12px 16px;
+	background: var(--btr-standard);
+	border-radius: 8px;
+	color: var(--btr-alert-content);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* Rows */
+
+.btr-setting-row {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	min-height: 64px;
+	padding: 12px 0;
+}
+
+.btr-setting-row + .btr-setting-row {
+	border-top: 1px solid var(--btr-stroke-muted);
+}
+
+.btr-setting-row.btr-setting-child {
+	padding-left: 24px;
+}
+
+.btr-setting-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+	min-width: 0;
+	cursor: pointer;
+}
+
+div.btr-setting-text {
+	cursor: default;
+}
+
+.btr-setting-label {
+	color: var(--btr-content-emphasis);
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 22px;
+}
+
+.btr-setting-desc {
+	color: var(--btr-content);
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.btr-setting-master .btr-setting-label {
+	font-weight: 700;
+}
+
+.btr-setting-disabled > .btr-setting-text,
+.btr-setting-disabled > .btr-switch,
+.btr-setting-disabled > .btr-select,
+.btr-page-disabled .btr-setting-card:not(.btr-setting-card-master) .btr-setting-row > * {
+	opacity: 0.5;
+}
+
+.btr-setting-disabled .btr-setting-text,
+.btr-page-disabled .btr-setting-card:not(.btr-setting-card-master) .btr-setting-text {
+	cursor: default;
+}
+
+.btr-setting-row-block {
+	flex-wrap: wrap;
+}
+
+.btr-setting-selects {
+	display: flex;
+	gap: 8px;
+	width: 100%;
+}
+
+.btr-setting-selects .btr-select:last-child {
+	flex: 1;
+	min-width: 0;
+}
+
+.btr-setting-selects select {
+	width: 100%;
+}
+
+/* Reset, shown only once a setting differs from its default. */
+
+.btr-setting-reset {
+	display: none;
+	flex: none;
+	height: 32px;
+	padding: 0 12px;
+
+	background: none;
 	border: none;
-	border-radius: var(--btr-radius);
-	background: var(--btr-accent);
-	color: #fff;
-	font-family: inherit;
+	border-radius: 8px;
+	color: var(--btr-content-muted);
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
+}
+
+.btr-setting-reset.btr-setting-reset-shown {
+	display: block;
+}
+
+.btr-setting-reset:hover {
+	background: var(--btr-hover);
+	color: var(--btr-content-emphasis);
+}
+
+/* Switch */
+
+.btr-switch {
+	position: relative;
+	display: block;
+	flex: none;
+	width: 44px;
+	height: 24px;
+}
+
+.btr-switch input {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	margin: 0;
 	opacity: 0;
-	transform: translateY(3px);
+	cursor: pointer;
+}
+
+.btr-switch input:disabled {
+	cursor: default;
+}
+
+.btr-switch-track {
+	position: absolute;
+	inset: 0;
+	background: var(--btr-standard);
+	border-radius: 9999px;
+	transition: background-color 200ms ease;
+}
+
+.btr-switch-knob {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 20px;
+	height: 20px;
+	background: var(--btr-content-emphasis);
+	border-radius: 50%;
 	transition:
-		opacity 140ms ease,
-		transform 140ms ease,
-		filter 120ms ease;
+		transform 300ms cubic-bezier(0.2, 0, 0, 1),
+		background-color 200ms ease;
 }
 
-.btr-settings-reload:hover {
-	filter: brightness(1.1);
+.btr-switch input:checked + .btr-switch-track {
+	background: var(--btr-contrast);
 }
 
-.btr-settings-reload.visible {
+.btr-switch input:checked + .btr-switch-track .btr-switch-knob {
+	background: var(--btr-inverse);
+	transform: translateX(20px);
+}
+
+.btr-switch-knob::after {
+	content: "";
+	position: absolute;
+	top: 5px;
+	left: 7px;
+	width: 5px;
+	height: 9px;
+	border-right: 2px solid var(--btr-content-emphasis);
+	border-bottom: 2px solid var(--btr-content-emphasis);
+	opacity: 0;
+	transform: rotate(45deg);
+	transition: opacity 150ms ease;
+}
+
+.btr-switch input:checked + .btr-switch-track .btr-switch-knob::after {
 	opacity: 1;
-	transform: none;
+	transition-delay: 50ms;
+}
+
+.btr-switch input:hover:not(:disabled) + .btr-switch-track {
+	box-shadow: inset 0 0 0 100px var(--btr-hover);
+}
+
+.btr-switch input:focus-visible + .btr-switch-track {
+	outline: 2px solid var(--btr-focus);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-switch-track,
+	.btr-switch-knob {
+		transition: none;
+	}
+}
+
+/* Select */
+
+.btr-select {
+	position: relative;
+	display: block;
+	flex: none;
+}
+
+.btr-select::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	right: 13px;
+	width: 7px;
+	height: 7px;
+	margin-top: -6px;
+	border-right: 2px solid var(--btr-content-emphasis);
+	border-bottom: 2px solid var(--btr-content-emphasis);
+	transform: rotate(45deg);
+	pointer-events: none;
+}
+
+.btr-select select {
+	height: 40px;
+	max-width: 100%;
+	padding: 0 36px 0 12px;
+
+	appearance: none;
+	background: var(--btr-standard);
+	border: 1px solid transparent;
+	border-radius: 8px;
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-weight: 500;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.btr-select select:hover:not(:disabled) {
+	box-shadow: inset 0 0 0 100px var(--btr-hover);
+}
+
+.btr-select select:focus-visible {
+	border-color: var(--btr-focus);
+	outline: none;
+}
+
+.btr-select select:disabled {
+	cursor: default;
+}
+
+.btr-select option {
+	background: var(--btr-surface-raised);
+	color: var(--btr-content-emphasis);
+}
+
+/* Buttons */
+
+.btr-settings-button {
+	flex: none;
+	height: 40px;
+	padding: 0 16px;
+
+	background: var(--btr-standard);
+	border: none;
+	border-radius: 8px;
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-weight: 600;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.btr-settings-button:hover {
+	box-shadow: inset 0 0 0 100px var(--btr-hover);
+}
+
+.btr-settings-button:active {
+	box-shadow: inset 0 0 0 100px var(--btr-press);
+}
+
+.btr-settings-button-emphasis {
+	background: var(--btr-emphasis);
+	color: var(--btr-emphasis-content);
+}
+
+.btr-settings-button-alert {
+	color: var(--btr-alert-content);
+}
+
+.btr-settings-button-alert.btr-settings-button-armed {
+	background: var(--btr-alert-content);
+	color: #ffffff;
+}
+
+/* Reload prompt */
+
+.btr-settings-reload {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex: none;
+	padding: 12px 16px 12px 32px;
+
+	border-top: 1px solid var(--btr-stroke-muted);
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	line-height: 20px;
 }
 
 .btr-settings-reload[hidden] {
 	display: none;
 }
 
-/* Corrections after moving the panel onto Roblox's scale. The rules above were
-   written against the old 8/14px padding, so anything positioned against the
-   group box needed re-anchoring. */
+/* Experiment editor */
 
-/* The group header spans the card, so its hover has to line up with the card's
-   padding rather than the old values, which is what put it in the wrong place. */
-.btr-settings-content group .btr-setting-group-title-container {
-	padding-top: var(--btr-space-lg);
-}
+#btr-settings-experiments {
+	overflow: hidden;
+	border: 1px solid var(--btr-stroke-muted);
+	border-radius: 12px;
+	font-size: 14px;
 
-.btr-settings-content group[minimizable] .btr-setting-group-title-container h4 {
-	margin: calc(-1 * var(--btr-space-lg)) calc(-1 * var(--btr-space-lg)) 0;
-	padding: var(--btr-space-md) var(--btr-space-lg);
-	border-radius: var(--btr-radius) var(--btr-radius) 0 0;
-}
-
-.btr-settings-content group[minimizable] .btr-setting-group-title-container h4:hover,
-.btr-dark-theme .btr-settings-content group[minimizable] .btr-setting-group-title-container h4:hover {
-	background: var(--btr-state-hover);
-}
-
-.btr-settings-content group[minimizable] .btr-setting-group-title-container h4:after {
-	top: 50%;
-	right: var(--btr-space-lg);
-	margin-top: -6px;
-	border-color: var(--btr-content-muted);
-}
-
-/* Roblox's switch: a plain pill in the action colour, no ON/OFF lettering. */
-.btr-settings .btr-settings-enabled-toggle {
-	top: var(--btr-space-md);
-	right: var(--btr-space-lg);
-	width: 44px;
-	height: 24px;
-	padding: 0;
-	background: var(--btr-surface-sunken);
-	border: 1px solid var(--btr-stroke-emphasis);
-	border-radius: var(--radius-circle, 9999px);
-	transition:
-		background-color 140ms ease,
-		border-color 140ms ease;
-}
-
-.btr-settings .btr-settings-enabled-toggle.checked {
-	background: var(--btr-accent);
-	border-color: var(--btr-accent);
-}
-
-.btr-settings .btr-settings-enabled-toggle:before {
-	top: 50%;
-	left: 2px;
-	right: auto;
-	width: 18px;
-	height: 18px;
-	margin-top: -9px;
-	background: #fff;
-	border-radius: var(--radius-circle, 9999px);
-	transition: transform 140ms cubic-bezier(0.2, 0, 0.2, 1);
-	transform: none;
-}
-
-.btr-settings .btr-settings-enabled-toggle.checked:before {
-	left: 2px;
-	right: auto;
-	transform: translateX(20px);
-}
-
-.btr-settings .btr-settings-enabled-toggle:after,
-.btr-settings .btr-settings-enabled-toggle.checked:after {
-	content: "";
-	display: none;
-}
-
-/* The two conversion dropdowns sat on different baselines. */
-.btr-settings-content select {
-	vertical-align: middle;
-	min-width: 0;
-	max-width: 100%;
-}
-
-.btr-settings-content label + span {
-	align-items: center;
-}
-
-/* Rows breathe on the 4px scale instead of the assorted old values. */
-.btr-settings-content checkbox {
-	display: block;
-	margin: var(--btr-space-sm) 0;
-}
-
-.btr-settings-content group > div {
-	margin-bottom: var(--btr-space-sm);
-}
-
-/* Sub pages cannot cross fade while the inactive one is display:none, so the
-   incoming page animates in on its own. */
-.btr-settings-content.selected {
-	animation: btr-settings-page-in 170ms cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-@keyframes btr-settings-page-in {
-	from {
-		opacity: 0;
-		transform: translateX(10px);
+	&:empty::before {
+		content: "Experiments show up here as pages ask Roblox for them.";
+		display: block;
+		padding: 16px;
+		color: var(--btr-content-muted);
 	}
 
-	to {
-		opacity: 1;
-		transform: none;
+	.group + .group {
+		border-top: 1px solid var(--btr-stroke-muted);
+	}
+
+	.group > summary {
+		padding: 12px 16px;
+		overflow: hidden;
+		color: var(--btr-content-emphasis);
+		font-weight: 600;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.group > summary:hover {
+		background: var(--btr-hover);
+	}
+
+	.group > .contents {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		padding: 0 16px 12px;
+		row-gap: 4px;
+		column-gap: 8px;
+		align-items: center;
+	}
+
+	.name {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+		overflow: hidden;
+		color: var(--btr-content);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		user-select: text;
+	}
+
+	.value {
+		height: 32px;
+		min-width: 0;
+		padding: 0 8px;
+
+		background: var(--btr-standard);
+		border: 1px solid transparent;
+		border-radius: 6px;
+		outline: none;
+		color: var(--btr-content-emphasis);
+		font-family: ui-monospace, Consolas, monospace;
+		font-size: 13px;
+
+		&::placeholder {
+			color: var(--btr-content-muted);
+			opacity: 1;
+		}
+
+		&:focus {
+			border-color: var(--btr-focus);
+		}
+
+		&.invalid {
+			border-color: var(--btr-alert-content);
+		}
+	}
+
+	.btr-setting-reset-button {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	.btr-setting-reset-button:hover {
+		background: var(--btr-hover);
+	}
+
+	.btr-cross::before {
+		content: "×";
+		color: var(--btr-content-muted);
+		font-size: 16px;
+		line-height: 1;
 	}
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.btr-settings-content.selected {
-		animation: none;
+/* Narrow windows: the tabs run along the top instead. */
+
+@media (max-width: 720px) {
+	.btr-settings-modal {
+		padding: 0;
 	}
 
-	.btr-settings .btr-settings-enabled-toggle,
-	.btr-settings .btr-settings-enabled-toggle:before {
-		transition: none;
+	.btr-settings {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto minmax(0, 1fr);
+		width: 100%;
+		height: 100%;
+		border-radius: 0;
+	}
+
+	.btr-settings-sidebar {
+		gap: 12px;
+		padding: 16px 16px 8px;
+		border-right: none;
+		border-bottom: 1px solid var(--btr-stroke-muted);
+	}
+
+	.btr-settings-tabs {
+		flex-direction: row;
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	.btr-settings-tab {
+		width: auto;
+		height: 40px;
+	}
+
+	.btr-settings-tab .icon {
+		display: none;
+	}
+
+	.btr-settings-header {
+		height: 56px;
+		padding: 0 8px 0 16px;
+	}
+
+	.btr-settings-title {
+		font-size: 20px;
+	}
+
+	.btr-settings-body {
+		padding: 0 16px 24px;
+	}
+
+	.btr-setting-row {
+		flex-wrap: wrap;
 	}
 }
