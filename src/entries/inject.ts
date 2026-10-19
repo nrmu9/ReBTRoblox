@@ -4284,38 +4284,6 @@ const startInject = () => {
 						)
 					}
 				})
-
-				reactHook.inject(".left-col-list", (elem: any) => {
-					const trade = elem.find((x: any) => x.key === "trade")
-					if (trade) {
-						trade.after(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-money",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-					}
-
-					const blog = elem.find((x: any) => x.key === "blog")
-					if (blog) {
-						blog.before(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-premium",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-
-						blog.after(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-blogfeed",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-					}
-				})
 			},
 			// Stop inserting injected functions here
 		}

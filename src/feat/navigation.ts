@@ -185,8 +185,11 @@ export const Navigation = {
 					}
 				}
 
+				// Every match, not the first: react replaces nav nodes, a sidebar
+				// anchor whenever its badge count changes, and a replaced node has
+				// to be hidden or marked again.
 				if (element.selector) {
-					document.$watch(element.selector, (node: HTMLElement) => {
+					document.$watchAll(element.selector, (node: HTMLElement) => {
 						if (element.html) {
 							const newNode = element.html.cloneNode(true) as HTMLElement
 							node.replaceWith(newNode)
@@ -231,53 +234,6 @@ export const Navigation = {
 					)
 			},
 		})
-
-		/*
-		Navigation.register("header_charts_rename", {
-			label: "Rename Charts to Discover",
-			enabled: false,
-			
-			update(node) {
-				if(node.nodeName === "TITLE") {
-					if(location.pathname.toLowerCase().startsWith("/charts")) {
-						if(this.enabled) {
-							if(document.title.includes("Charts")) {
-								this.replacedTitle = true
-								document.title = document.title.replace(/Charts/, "Discover")
-							}
-						} else {
-							if(this.replacedTitle && document.title.includes("Discover")) {
-								document.title = document.title.replace(/Discover/, "Charts")
-							}
-						}
-					}
-				} else {
-					if(this.enabled) {
-						if(node.textContent === "Charts") {
-							node.classList.add("btr-charts-rename")
-							node.textContent = "Discover"
-						}
-					} else {
-						if(node.classList.contains("btr-charts-rename") && node.textContent === "Discover") {
-							node.textContent = "Charts"
-						}
-					}
-				}
-			},
-			
-			init() {
-				document.$watch("#header").$then().$watch("ul.rbx-navbar", navbar => {
-					const chartsButton = navbar.$find(`.rbx-navbar a[href^="/charts"]`)
-					
-					if(chartsButton) {
-						this.addNode(chartsButton)
-					}
-				}, { continuous: true })
-				
-				document.$watch("title", title => this.addNode(title))
-			}
-		})
-			*/
 
 		Navigation.register("header_robux", {
 			label: "Show Robux",
@@ -369,9 +325,20 @@ export const Navigation = {
 		 * a stable ancestor instead. Our own items live in the header, outside this
 		 * container, so the writes cannot feed back in.
 		 */
+		const observedNavSources = new Map<string, Node>()
+
 		const observeNavSource = (node: HTMLElement, elementName: string): void => {
 			const update = () => Navigation.elements[elementName].updateAll()
 			const root = node.closest("#left-navigation-container") ?? node.parentElement ?? node
+
+			// Each replaced anchor comes through here again, and one observer per
+			// root is all it takes.
+			if (observedNavSources.get(elementName) === root) {
+				update()
+				return
+			}
+
+			observedNavSources.set(elementName, root)
 
 			new MutationObserver(update).observe(root, {
 				childList: true,
@@ -495,16 +462,79 @@ export const Navigation = {
 			update() {},
 		})
 
-		Navigation.register("sidebar_home", {
-			label: "Show Home",
+		// Roblox's sidebar links are found by where they point: its items carry
+		// no ids or keys. Hiding the item hides its list entry.
+		const SIDEBAR_ITEM = "#left-navigation-container nav li"
+		const sidebarLink = (path: string) => `${SIDEBAR_ITEM} > a[href*="${path}"]`
 
-			selector: "#nav-home",
-			enabled: false,
+		const hideSidebarItem = (name: string, label: string, selector: string, enabled = true) => {
+			Navigation.register(name, {
+				label,
+				selector,
+				enabled,
 
-			update(node: HTMLElement) {
-				node.parentElement!.style.display = this.enabled ? "" : "none"
-			},
-		})
+				update(node: HTMLElement) {
+					;(node.parentElement ?? node).style.display = this.enabled ? "" : "none"
+				},
+			})
+		}
+
+		/**
+		 * Puts one of our items after a Roblox sidebar link, copied from that link
+		 * so it keeps Roblox's look. React owns the list and can render it again
+		 * without the copy, so it goes back in whenever the link turns up anew.
+		 */
+		const addSidebarItem = (
+			element: any,
+			after: string,
+			make: (anchor: HTMLAnchorElement) => HTMLElement,
+		) => {
+			const nodeClass = element.nodeSelector.slice(1)
+
+			document.$watchAll<HTMLAnchorElement>(after, (anchor) => {
+				const item = anchor.parentElement
+
+				if (!item || item.nextElementSibling?.classList.contains(nodeClass)) {
+					return
+				}
+
+				const node = make(anchor)
+				item.after(node)
+				element.addNode(node)
+			})
+		}
+
+		/** A copy of a sidebar link pointing somewhere else, with its own icon. */
+		const copySidebarLink = (anchor: HTMLAnchorElement, href: string, text: string, icon: string) => {
+			const item = html`<li></li>`
+			const link = anchor.cloneNode(true) as HTMLAnchorElement
+
+			link.href = href
+			// Roblox marks the page you are on with this; the copy is a page of its own.
+			link.classList.toggle("bg-shift-200", location.pathname.toLowerCase().startsWith(href))
+			link.$find(".text-truncate-end")!.textContent = text
+
+			const iconNode = link.$find("[data-testid=foundation-web-icon]")
+			if (iconNode) {
+				iconNode.className = iconNode.className.replace(
+					/\bicon-regular-[\w-]+/,
+					`icon-regular-${icon}`,
+				)
+			}
+
+			item.append(link)
+			return item
+		}
+
+		hideSidebarItem("sidebar_home", "Show Home", sidebarLink("roblox.com/home"), false)
+		hideSidebarItem("sidebar_trade", "Show Trade", sidebarLink("/trades"))
+		hideSidebarItem("sidebar_plus", "Show Roblox Plus", `${SIDEBAR_ITEM} > a[href$="/plus"]`)
+		hideSidebarItem(
+			"sidebar_shop",
+			"Show Official Store",
+			`${SIDEBAR_ITEM} > button:has(.icon-regular-building-store)`,
+		)
+		hideSidebarItem("sidebar_giftcards", "Show Gift Cards", sidebarLink("/giftcards"))
 
 		Navigation.register("sidebar_messages", {
 			label: "Show Messages",
@@ -544,54 +574,33 @@ export const Navigation = {
 			},
 		})
 
-		Navigation.register("sidebar_trade", {
-			label: "Show Trade",
-
-			selector: "#nav-trade",
-			enabled: true,
-
-			update(node: HTMLElement) {
-				node.parentElement!.style.display = this.enabled ? "" : "none"
-			},
-		})
-
 		Navigation.register("sidebar_money", {
 			label: "Show Transactions",
 			enabled: false,
 
-			selector: "#btr-placeholder-money",
-			html: html` <li id="btr-nav-money">
-				<a href="/transactions" id="nav-money" class="dynamic-overflow-container text-nav">
-					<div><span class="icon-nav-trade"></span></div>
-					<span class="font-header-2 dynamic-ellipsis-item">Transactions</span>
-				</a>
-			</li>`,
-		})
-
-		Navigation.register("sidebar_premium", {
-			label: "Show Premium",
-
-			selector: "#btr-placeholder-premium",
-			html: html`
-				<li id=btr-nav-premium>
-					<a href=/premium/membership id=nav-premium class="dynamic-overflow-container text-nav">
-						<div><span class=icon-nav-premium-btr></span></div>
-						<span class="font-header-2 dynamic-ellipsis-item">Premium</span>
-					</a>
-				</li>`,
+			init() {
+				addSidebarItem(this, sidebarLink("/trades"), (anchor) =>
+					copySidebarLink(anchor, "/transactions", "Transactions", "wallet"),
+				)
+			},
 		})
 
 		Navigation.register("sidebar_blogfeed", {
 			label: "Show Blog Feed",
 
-			selector: "#btr-placeholder-blogfeed",
-			html: html`<div id="btr-blogfeed-container"><li id="btr-blogfeed"></li></div>`,
+			init() {
+				addSidebarItem(
+					this,
+					sidebarLink("blog.roblox.com"),
+					() => html`<li id="btr-blogfeed-container"><div id="btr-blogfeed"></div></li>`,
+				)
+			},
 
 			update(node: HTMLElement) {
 				node.style.display = this.enabled ? "" : "none"
 
-				if (this.enabled && !this.loadedFeed) {
-					this.loadedFeed = true
+				if (this.enabled && !node.dataset.btrLoaded) {
+					node.dataset.btrLoaded = "true"
 
 					const blogfeed = node.$req("#btr-blogfeed")
 					const parser = new DOMParser()
@@ -625,42 +634,6 @@ export const Navigation = {
 					}
 				}
 			},
-		})
-
-		Navigation.register("sidebar_shop", {
-			label: "Show Official Store",
-
-			selector: "#nav-shop",
-			enabled: true,
-
-			update(node: HTMLElement) {
-				node.parentElement!.style.display = this.enabled ? "" : "none"
-			},
-		})
-
-		Navigation.register("sidebar_giftcards", {
-			label: "Show Gift Cards",
-
-			selector: "#nav-giftcards",
-			enabled: true,
-
-			update(node: HTMLElement) {
-				node.parentElement!.style.display = this.enabled ? "" : "none"
-			},
-		})
-
-		Navigation.register("sidebar_premium_2", {
-			label: "Show Premium Button",
-
-			selector: ".left-col-list > .rbx-upgrade-now",
-			enabled: false,
-		})
-
-		Navigation.register("sidebar_events", {
-			label: "Show Events",
-
-			selector: ".left-col-list > .rbx-platform-event-container",
-			enabled: true,
 		})
 
 		if (SETTINGS.get("navigation.enabled") && location.host !== "create.roblox.com") {
