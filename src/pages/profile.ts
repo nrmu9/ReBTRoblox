@@ -231,9 +231,6 @@ pageInit.profile = () => {
 			injectScript.send("requestProfileData", userIdString)
 
 			profileContainer
-				.$watch(".profile-tabs", (tabs: HTMLElement) => {
-					tabs.parentElement!.style.display = "none"
-				})
 				// Roblox renders the friends carousel inside the tab content this
 				// layout hides, where it measures 0px wide and shows nobody. The
 				// wrapper the profile hook puts around it is what moves: react never
@@ -1295,16 +1292,6 @@ pageInit.profile = () => {
 			}
 
 			profileContainer.after(newCont)
-		})
-
-		document.$watch(".profile-container", (angularContainer: HTMLElement) => {
-			// rescue necessary elements and then remove the angular container to stop stuff from loading
-			const friends = angularContainer.$find("#friends-carousel-container")
-			if (friends) {
-				angularContainer.before(friends)
-			}
-
-			angularContainer.remove()
 		})
 	})
 }
