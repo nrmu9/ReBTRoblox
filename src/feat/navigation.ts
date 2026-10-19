@@ -664,58 +664,7 @@ export const Navigation = {
 		})
 
 		if (SETTINGS.get("navigation.enabled") && location.host !== "create.roblox.com") {
-			injectScript.call("navigation", () => {
-				reactHook.inject("ul.navbar-right", (elem) => {
-					const robux = elem.find((x) => "robuxAmount" in x.props)
-
-					if (robux) {
-						robux.before(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-friends",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-							reactHook.createElement("div", {
-								id: "btr-placeholder-messages",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-					}
-				})
-
-				reactHook.inject(".left-col-list", (elem) => {
-					const trade = elem.find((x) => x.key === "trade")
-					if (trade) {
-						trade.after(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-money",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-					}
-
-					const blog = elem.find((x) => x.key === "blog")
-					if (blog) {
-						blog.before(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-premium",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-
-						blog.after(
-							reactHook.createElement("div", {
-								id: "btr-placeholder-blogfeed",
-								style: { display: "none" },
-								dangerouslySetInnerHTML: { __html: "" },
-							}),
-						)
-					}
-				})
-			})
+			injectScript.call("navigation")
 		}
 	},
 }

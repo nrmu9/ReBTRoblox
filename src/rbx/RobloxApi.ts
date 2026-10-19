@@ -2,7 +2,6 @@ import type {
 	AssetId,
 	BadgeId,
 	BundleId,
-	CatalogItemRequest,
 	GamePassId,
 	GroupId,
 	CollectionItemType,
@@ -304,12 +303,6 @@ const toSearchParams = (params?: UrlParams): URLSearchParams => {
 }
 
 export const RobloxApi = {
-	accountinformation: {
-		getRobloxBadges: (userId: UserId) =>
-			xsrfFetch(`https://accountinformation.roblox.com/v1/users/${userId}/roblox-badges`, {
-				credentials: "include",
-			}).then((res) => res.json()),
-	},
 	assetdelivery: {
 		requestAssetV2: (urlParams: UrlParams, params?: any) => {
 			if (!IS_BACKGROUND_PAGE && params?.browserAssetRequest) {
@@ -411,15 +404,6 @@ export const RobloxApi = {
 			}).then((res) => res.json()),
 	},
 	catalog: {
-		getItemDetails: (items: CatalogItemRequest[]) =>
-			xsrfFetch(`https://catalog.roblox.com/v1/catalog/items/details`, {
-				method: "POST",
-				credentials: "include",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ items }),
-				xsrf: true,
-			}).then((res) => res.json()),
-
 		getBundleDetails: cacheResult(10e3, (bundleId: BundleId) =>
 			xsrfFetch(`https://catalog.roblox.com/v1/bundles/${bundleId}/details`, {
 				credentials: "include",
@@ -469,14 +453,6 @@ export const RobloxApi = {
 		),
 	},
 	gamepasses: {
-		getGamepassDetails: cacheResult(
-			10e3,
-			backgroundCall((gamepassId: GamePassId) =>
-				xsrfFetch(`https://apis.roblox.com/game-passes/v1/game-passes/${gamepassId}/details`, {
-					credentials: "include",
-				}).then((res) => res.json()),
-			),
-		),
 		getGamepassProductInfo: cacheResult(
 			10e3,
 			backgroundCall((gamepassId: GamePassId) =>
@@ -612,15 +588,6 @@ export const RobloxApi = {
 			).then((res) => res.json()),
 		),
 
-		getAssetThumbnails: batchable(100, (assetIds: AssetId[], size?: ThumbnailSize) =>
-			xsrfFetch(
-				`https://thumbnails.roblox.com/v1/assets?assetIds=${assetIds.join(",")}&size=${size}&format=Png`,
-				{
-					credentials: "include",
-				},
-			).then((res) => res.json()),
-		),
-
 		getGameThumbnails: batchable(
 			100,
 			(gameIds: UniverseId[], size = "768x432", countPerUniverse = 1, defaults = true) =>
@@ -646,15 +613,6 @@ export const RobloxApi = {
 		getBadgeIcons: batchable(100, (badgeIds: BadgeId[], size: ThumbnailSize = "150x150") =>
 			xsrfFetch(
 				`https://thumbnails.roblox.com/v1/badges/icons?badgeIds=${badgeIds.join(",")}&size=${size}&format=Png`,
-				{
-					credentials: "include",
-				},
-			).then((res) => res.json()),
-		),
-
-		getGameIcons: batchable(100, (gameIds: UniverseId[], size: ThumbnailSize = "150x150") =>
-			xsrfFetch(
-				`https://thumbnails.roblox.com/v1/games/icons?universeIds=${gameIds.join(",")}&size=${size}&format=Png`,
 				{
 					credentials: "include",
 				},
@@ -729,24 +687,5 @@ export const RobloxApi = {
 				body: toSearchParams({ assetId }),
 				xsrf: true,
 			}).then((res) => res.json()),
-
-		revertPlaceToVersion: (versionId: number) =>
-			xsrfFetch(`https://www.roblox.com/places/revert`, {
-				method: "POST",
-				credentials: "include",
-				body: toSearchParams({ assetVersionID: versionId }),
-				xsrf: true,
-			}).then((res) => !!res.ok),
-
-		shutdownAllInstances: (placeId: PlaceId, replaceInstances?: boolean) =>
-			xsrfFetch(`https://www.roblox.com/games/shutdown-all-instances`, {
-				method: "POST",
-				credentials: "include",
-				body: new URLSearchParams({
-					placeId: String(placeId),
-					replaceInstances: String(!!replaceInstances),
-				}),
-				xsrf: true,
-			}).then((res) => !!res.ok),
 	},
 }

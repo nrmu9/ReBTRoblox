@@ -438,13 +438,7 @@ export const btrFastSearch = {
 
 								if (info.placeId) {
 									followBtn.$on("click", (ev: KeyboardEvent) => {
-										injectScript.call(
-											"fastsearchFollowPlayer",
-											(userId: number) => {
-												Roblox.GameLauncher.followPlayerIntoGame(userId)
-											},
-											user.UserId,
-										)
+										injectScript.call("fastsearchFollowPlayer", user.UserId)
 
 										ev.preventDefault()
 									})
@@ -706,15 +700,6 @@ export const btrFastSearch = {
 				{ continuous: true },
 			)
 
-		injectScript.call("fastsearch", () => {
-			reactHook.inject("#navbar-universal-search, .navbar-search", (elem) => {
-				elem.find("ul")?.prepend(
-					reactHook.createElement("div", {
-						id: "btr-fastsearch-container",
-						dangerouslySetInnerHTML: { __html: "" },
-					}),
-				)
-			})
-		})
+		injectScript.call("fastsearch")
 	},
 }

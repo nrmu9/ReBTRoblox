@@ -12,8 +12,6 @@ const legacyExtension = chrome.extension as typeof chrome.extension & {
 
 export const IS_BACKGROUND_PAGE = !scope.window || legacyExtension?.getBackgroundPage?.() === scope.window
 
-export const IS_CONTENT_SCRIPT = !IS_BACKGROUND_PAGE
-
 export const STORAGE = chrome.storage.local
 
 export const THROW_DEV_WARNING = (message: string): void => {

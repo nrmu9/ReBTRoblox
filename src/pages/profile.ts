@@ -1,6 +1,5 @@
-import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
-import { contentScript, injectScript } from "@/core/messaging"
+import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { SETTINGS } from "@/feat/settings"
@@ -73,88 +72,7 @@ pageInit.profile = () => {
 		})
 	}
 
-	injectScript.call("profile", () => {
-		angularHook.hijackModule("peopleList", {
-			layoutService(target: any, thisArg: any, args: any[], _argsMap: any) {
-				const result = target.apply(thisArg, args)
-				result.maxNumberOfFriendsDisplayed = 10
-				return result
-			},
-		})
-
-		// Roblox dropped the tabs for one long page, .profile-content.
-		reactHook.inject(">.profile-tab-content,>.profile-content", (tabContent) => {
-			if (!Array.isArray(tabContent[0].props.children)) {
-				return
-			}
-
-			for (const child of tabContent[0].props.children) {
-				switch (child.key) {
-					case "About":
-					case "FavoriteExperiences":
-					case "Communities":
-					case "PlayerBadges":
-					case "Statistics":
-					case "Experiences":
-					case "CreationsModels":
-					case "Clothing":
-						delete child.props.children
-						break
-					case "CurrentlyWearing":
-					case "Collections":
-					case "Friends":
-					case "Store":
-						// Wrapped twice so the inner wrapper can be moved without
-						// react noticing. See the copy of this in inject.ts.
-						if (!child.props.children?.props?.className?.startsWith("btr-wrapper-")) {
-							child.props.children = reactHook.createElement("div", {
-								className: `btr-wrapper-container-${child.key}`,
-								children: reactHook.createElement("div", {
-									className: `btr-wrapper-${child.key}`,
-									children: child.props.children,
-								}),
-							})
-						}
-						break
-					default:
-						if (IS_DEV_MODE) {
-							console.log(`Unknown component '${child.key}'`)
-						}
-				}
-			}
-		})
-
-		// Kept as well as sent, and replayed on request. See the copy in inject.ts.
-		const profileResponses: Record<string, unknown> = {}
-
-		hijackXHR((request: any) => {
-			if (request.url === "https://apis.roblox.com/profile-platform-api/v1/profiles/get") {
-				request.onResponse.push((json: any) => {
-					if (json?.profileId == null) {
-						return
-					}
-
-					// Each request carries a few components, so they are merged rather
-					// than replaced, and the merged profile is what gets sent.
-					const prev: any = profileResponses[json.profileId]
-					const merged = prev
-						? { ...prev, ...json, components: { ...prev.components, ...json.components } }
-						: json
-
-					profileResponses[json.profileId] = merged
-					contentScript.send("profileData", merged)
-				})
-			}
-		})
-
-		contentScript.listen("requestProfileData", (profileId: string) => {
-			const json = profileResponses[profileId]
-
-			if (json) {
-				contentScript.send("profileData", json)
-			}
-		})
-	})
+	injectScript.call("profile")
 
 	// Roblox asks for a profile in several requests, a few components each, in no
 	// fixed order. Taking whichever arrived first left the bio, join date or games
@@ -217,7 +135,7 @@ pageInit.profile = () => {
 				<div class="btr-profile-left">
 					<div class="btr-profile-about">
 						<div class="container-header">
-							<h2 ng-bind="'Heading.AboutTab' | translate">About</h2>
+							<h2>About</h2>
 							<div class="btr-profile-social-links"></div>
 						</div>
 						<div class="section-content">
@@ -228,15 +146,11 @@ pageInit.profile = () => {
 							</div>
 							<div class="btr-profile-stats" style="display:none">
 								<div class="btr-profile-stat">
-									<div class="text-label" ng-bind="'Label.JoinDate' | translate">
-										Join Date
-									</div>
+									<div class="text-label">Join Date</div>
 									<div class="text-lead text-overflow btr-stats-joindate"></div>
 								</div>
 								<div class="btr-profile-stat">
-									<div class="text-label" ng-bind="'Label.PlaceVisits' | translate">
-										Place Visits
-									</div>
+									<div class="text-label">Place Visits</div>
 									<div class="text-lead text-overflow btr-stats-placevisits"></div>
 								</div>
 							</div>
@@ -244,7 +158,7 @@ pageInit.profile = () => {
 					</div>
 					<div class="btr-profile-playerbadges">
 						<div class="container-header">
-							<h2 ng-bind="'Heading.PlayerBadge' | translate">Badges</h2>
+							<h2>Badges</h2>
 						</div>
 						<div>
 							<div class="btr-card-list">
@@ -254,7 +168,7 @@ pageInit.profile = () => {
 					</div>
 					<div class="btr-profile-groups">
 						<div class="container-header">
-							<h2 ng-bind="'Heading.Groups' | translate">Communities</h2>
+							<h2>Communities</h2>
 						</div>
 						<div>
 							<div class="btr-card-list">
@@ -267,7 +181,7 @@ pageInit.profile = () => {
 				<div class="btr-profile-right">
 					<div class="btr-profile-games">
 						<div class="container-header">
-							<h2 ng-bind="'Heading.Games' | translate">Experiences</h2>
+							<h2>Experiences</h2>
 						</div>
 						<div class="btr-games-content">
 							<span class="spinner spinner-default"></span>
@@ -275,14 +189,14 @@ pageInit.profile = () => {
 					</div>
 					<div class="placeholder-friends">
 						<div class="container-header">
-							<h2 ng-bind="'Heading.Friends' | translate">Friends</h2>
+							<h2>Friends</h2>
 						</div>
 						<div class="spinner spinner-default"></div>
 					</div>
 					<div class="btr-profile-favorites">
 						<div class="container-header">
 							<a href="/users/${userId}/favorites">
-								<h2 ng-bind="'Heading.FavoriteGames' | translate">Favorites</h2>
+								<h2>Favorites</h2>
 								<span class="icon-chevron-heavy-right"></span>
 							</a>
 						</div>
@@ -301,7 +215,7 @@ pageInit.profile = () => {
 					<div class="btr-profile-inventory" style="display:none">
 						<div class="container-header">
 							<a href="/users/${userId}/inventory">
-								<h2 ng-bind="'Action.Inventory' | translate">Inventory</h2>
+								<h2>Inventory</h2>
 								<span class="icon-chevron-heavy-right"></span>
 							</a>
 						</div>
@@ -1129,21 +1043,11 @@ pageInit.profile = () => {
 								<div class="btr-game-stats">
 									<ul class="hlist">
 										<li class="list-item">
-											<div
-												class="text-label slide-item-stat-title"
-												ng-bind="'Label.Playing' | translate"
-											>
-												Playing
-											</div>
+											<div class="text-label slide-item-stat-title">Playing</div>
 											<div class="text-lead slide-item-members-count">&nbsp;</div>
 										</li>
 										<li class="list-item">
-											<div
-												class="text-label slide-item-stat-title"
-												ng-bind="'Label.Visits' | translate"
-											>
-												Visits
-											</div>
+											<div class="text-label slide-item-stat-title">Visits</div>
 											<div class="text-lead text-overflow slide-item-visits">
 												&nbsp;
 											</div>
@@ -1183,13 +1087,7 @@ pageInit.profile = () => {
 							</div>
 						`)
 
-						injectScript.call(
-							"setupGamePopovers",
-							(selector: string) => {
-								Roblox?.BootstrapWidgets?.SetupPopover(null, null, selector)
-							},
-							`[data-bind='btr-placedrop-${universeId}']`,
-						)
+						injectScript.call("setupGamePopovers", `[data-bind='btr-placedrop-${universeId}']`)
 					})
 
 					content.$find(">.spinner")?.remove()
@@ -1276,7 +1174,7 @@ pageInit.profile = () => {
 						const desc = item.$req(".btr-game-desc-content")
 						desc.textContent = placeDetails.description || "This game has no description"
 
-						injectScript.call("linkify", (target: any) => $(target).linkify(), desc)
+						injectScript.call("linkify", desc)
 
 						if (desc.scrollHeight > desc.offsetHeight) {
 							const descToggle = html`<span class="btr-toggle-description">Show More</span>`
@@ -1332,22 +1230,13 @@ pageInit.profile = () => {
 				}
 
 				document.body.$on("click", ".btr-game-playbutton", (ev) => {
-					injectScript.call(
-						"profilePlayGame",
-						(placeId: number) => {
-							Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
-						},
-						+ev.currentTarget.dataset.placeid!,
-					)
+					injectScript.call("profilePlayGame", +ev.currentTarget.dataset.placeid!)
 					ev.preventDefault()
 				})
 
 				document.body.$on("click", ".btr-btn-edit-place", (ev) => {
 					injectScript.call(
 						"profileEditPlace",
-						(gameId: number, placeId: number) => {
-							Roblox.GameLauncher.editGameInStudio(placeId, gameId)
-						},
 						+ev.currentTarget.dataset.gameid!,
 						+ev.currentTarget.dataset.placeid!,
 					)

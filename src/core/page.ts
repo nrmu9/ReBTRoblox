@@ -15,90 +15,61 @@ export const pageReset: Record<string, ((...args: any[]) => void)[]> = {}
 export const PAGE_INFO: Record<string, any> = {
 	avatar: {
 		matches: ["^/my/avatar"],
-		js: ["pages/avatar.js"],
 		css: ["avatar.css"],
 	},
 	catalog: {
 		matches: ["^/catalog/?$"],
-		js: ["pages/avatar.js"],
 		css: ["catalog.css"],
-	},
-	friends: {
-		matches: ["^/users/(\\d+)/friends", "^/users/friends"],
-		js: ["pages/friends.js"],
-		css: [],
 	},
 	gamedetails: {
 		matches: ["^/games/(\\d+)/"],
-		js: ["pages/gameDetails.js"],
 		css: ["gamedetails.css"],
 	},
 	games: {
 		matches: ["^/(games|discover)/?$"],
-		js: [],
 		css: ["games.css"],
 	},
 	groups: {
 		matches: ["^/groups/(\\d+)/*", "^/communities/(\\d+)/*"],
-		js: ["pages/groups.js"],
 		css: ["groups.css"],
 	},
 	groupadmin: {
 		matches: ["^/groups/configure$", "^/communities/configure$"],
-		js: ["pages/groupAdmin.js"],
 		css: [],
 	},
 	home: {
 		matches: ["^/home"],
-		js: ["pages/home.js"],
 		css: ["home.css"],
 	},
 	inventory: {
 		matches: ["^/users/(\\d+)/inventory"],
-		js: ["pages/inventory.js"],
 		css: ["inventory.css"],
 	},
 	itemdetails: {
 		matches: ["^/(catalog|library|game-pass|badges|bundles)/(\\d+)/"],
-		js: ["pages/itemDetails.js"],
 		css: ["itemdetails.css"],
-	},
-	membership: {
-		matches: ["^/premium/membership"],
-		js: [],
-		css: [],
 	},
 	messages: {
 		matches: ["^/my/messages"],
-		js: ["pages/messages.js"],
 		css: ["messages.css"],
 	},
 	money: {
 		matches: ["^/transactions"],
-		js: ["pages/money.js"],
-		css: ["money.css"],
+		css: [],
 	},
 	profile: {
 		matches: ["^/users/(\\d+)/profile"],
-		js: ["pages/profile.js"],
 		css: ["profile.css"],
-	},
-	universeconfig: {
-		matches: ["^/universes/configure"],
-		js: [],
-		css: ["universeconfig.css"],
 	},
 
 	create_dashboard: {
 		domainMatches: ["create.roblox.com"],
 		matches: ["^/dashboard/"],
-		js: ["pages/createDashboard.js"],
-		css: ["create_dashboard.css"],
+		css: [],
 	},
 	create_store: {
 		domainMatches: ["create.roblox.com"],
 		matches: ["^/store/"],
-		js: ["pages/createStore.js"],
 		css: ["create_store.css"],
 	},
 }

@@ -1,5 +1,5 @@
 import { setImmediate } from "@/core/dom"
-import { contentScript, injectScript } from "@/core/messaging"
+import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
 import { loadOptionalFeature } from "@/feat/loadFeature"
@@ -369,64 +369,6 @@ pageInit.catalog = () => {
 			currentRequest.push(assetId)
 		})
 
-		injectScript.call("showOwnedAssets", () => {
-			const ownedAssets: Record<string, any> = {}
-
-			contentScript.listen("updateOwnedAssets", (changes: any) => {
-				for (const [assetId, isOwned] of Object.entries(changes) as [string, any][]) {
-					ownedAssets[+assetId]?.set(isOwned)
-				}
-			})
-
-			reactHook.hijackConstructor(
-				// ItemCard
-				(props) => "unitsAvailableForConsumption" in props && "id" in props,
-				(target: any, thisArg: any, args: any[]) => {
-					const props = args[0]
-					const result = target.apply(thisArg, args)
-
-					if (props.type === "Asset" && props.id) {
-						let state = ownedAssets[props.id]
-
-						if (!state) {
-							state = reactHook.createGlobalState(false)
-							ownedAssets[props.id] = state
-
-							contentScript.send("checkOwnedAsset", props.id)
-						}
-
-						const owned = reactHook.useGlobalState(state)
-
-						if (owned) {
-							result.props.className = (result.props.className ?? "") + " btr-owned"
-
-							const parent = reactHook.queryElement(result, (x) =>
-								x.props.className?.includes("item-card-link"),
-							)
-
-							if (parent) {
-								let children = parent.props.children
-
-								if (!Array.isArray(children)) {
-									children = parent.props.children = children ? [children] : []
-								}
-
-								children.unshift(
-									reactHook.createElement("span", {
-										className: "btr-item-owned",
-										children: reactHook.createElement("span", {
-											className: "icon-checkmark-white-bold",
-											title: "You own this item",
-										}),
-									}),
-								)
-							}
-						}
-					}
-
-					return result
-				},
-			)
-		})
+		injectScript.call("showOwnedAssets")
 	}
 }

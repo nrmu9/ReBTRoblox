@@ -1,4 +1,3 @@
-import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { assert } from "@/core/util"
@@ -226,7 +225,6 @@ export const SettingsModal: SettingsModalState = {
 							require=removeAccessoryLimits
 						></checkbox>
 						<checkbox label="Full Range Body Colors" path=fullRangeBodyColors></checkbox>
-						<checkbox label="Refine Asset Layout" path=assetRefinement></checkbox>
 						<checkbox label="Skip R6 Switch Warning" path=ignoreR6Warning></checkbox>
 					</group>
 					<group label=Messages path=messages toggleable>
@@ -322,12 +320,6 @@ export const SettingsModal: SettingsModalState = {
 				</div>
 			</div>
 		</div>`
-
-		if (!IS_DEV_MODE) {
-			for (const elem of this.settingsDiv.$findAll("[devOnly]")) {
-				elem.remove()
-			}
-		}
 
 		if (SETTINGS.loadError) {
 			this.settingsDiv

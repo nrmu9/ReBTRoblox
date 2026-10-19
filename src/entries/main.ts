@@ -30,7 +30,6 @@ import "@/pages/catalog"
 import "@/pages/create"
 import "@/pages/createDashboard"
 import "@/pages/createStore"
-import "@/pages/friends"
 import "@/pages/gameDetails"
 import "@/pages/groupAdmin"
 import "@/pages/groups"
@@ -83,10 +82,6 @@ SETTINGS.load(() => {
 
 		setCurrentPage(getCurrentPage())
 
-		injectScript.send(
-			"setCurrentPage",
-			currentPage ? { name: currentPage.name, matches: currentPage.matches } : null,
-		)
 		updatePageCSS()
 
 		if (!initialized.common) {

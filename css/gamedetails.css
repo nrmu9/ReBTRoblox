@@ -180,15 +180,6 @@ html body .btr-badges-container .badge-row.btr-notowned {
 	opacity: 0.5;
 }
 
-html body .btr-badges-container .badge-row.btr-badgeownedloading:before {
-	position: absolute;
-	content: "";
-	width: 16px;
-	height: 16px;
-	background: url(/res/icon_loading.gif) transparent no-repeat;
-	opacity: 0.5;
-}
-
 /* Universe Box */
 
 html body .btr-universe-box {

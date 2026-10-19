@@ -282,7 +282,6 @@
 	text-align: left;
 }
 
-.btr-settings-footer-x,
 .btr-settings-footer-roblox {
 	flex: 0 0 auto;
 	width: 22px;
@@ -292,17 +291,8 @@
 	margin-right: 2px;
 }
 
-.btr-settings-footer-x {
-	background-position: 0 -200%;
-}
-
 .btr-settings-footer-roblox {
 	background-position: 0 -700%;
-}
-
-.btr-settings-footer-text {
-	flex: 1;
-	text-align: right;
 }
 
 .btr-settings-header-title {
@@ -637,109 +627,6 @@
 	display: flex;
 	flex-direction: column;
 	height: 600px;
-}
-
-.btr-filter-lists {
-	display: flex;
-	flex-direction: row;
-	margin-top: 12px;
-	user-select: none;
-	-moz-user-select: none;
-	overflow: hidden;
-	height: 100%;
-}
-
-.btr-filter-list {
-	display: flex;
-	flex-direction: column;
-	flex: 0 0 auto;
-	width: 49%;
-	overflow: hidden;
-}
-
-.btr-filter-list-header {
-	flex: 0 0 auto;
-	color: #b0b0b0;
-
-	cursor: pointer;
-}
-
-.btr-filter-list-header:hover {
-	color: #d0d0d0;
-}
-
-.btr-filter-enabled,
-.btr-filter-disabled {
-	flex: 1 1 auto;
-	padding: 6px;
-
-	background: #fafafa;
-	overflow-y: scroll;
-	box-shadow: inset 0 0 2px 0 rgba(0, 0, 0, 0.1);
-
-	color: #191919;
-}
-
-.btr-dark-theme .btr-filter-enabled,
-.btr-dark-theme .btr-filter-disabled {
-	background: #191b1d;
-}
-
-.btr-filter-center {
-	flex: 1 1 auto;
-}
-
-.btr-filter-group {
-	display: flex;
-	width: 100%;
-	height: 52px;
-	padding: 2px;
-	margin-bottom: 6px;
-
-	align-items: center;
-	cursor: pointer;
-	user-select: none;
-	-moz-user-select: none;
-
-	background: white;
-	box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.1);
-}
-
-.btr-filter-group:hover {
-	box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
-}
-
-.btr-filter-group:active {
-	background: #f5f5f5;
-}
-
-.btr-dark-theme .btr-filter-group {
-	background: #232527;
-	color: #fff;
-
-	box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.1);
-}
-
-.btr-dark-theme .btr-filter-group:hover {
-	box-shadow: 0 0 4px 0 rgba(255, 255, 255, 0.2);
-}
-
-.btr-filter-group-icon {
-	flex: 0 0 auto;
-	width: 50px;
-	height: 50px;
-}
-
-.btr-filter-group-icon img {
-	width: 100%;
-	height: 100%;
-}
-
-.btr-filter-group-title {
-	flex: 1;
-	padding: 6px;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 #btr-settings-experiments {

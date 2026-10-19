@@ -22,10 +22,6 @@ export const setImmediate = <A extends unknown[]>(fn: (...args: A) => void, ...a
 	return key
 }
 
-export const clearImmediate = (key: number): void => {
-	immediates.delete(key)
-}
-
 // A single shared observer fanning out to every listener.
 
 export interface DomListener {

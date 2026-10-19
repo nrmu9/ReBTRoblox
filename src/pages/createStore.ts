@@ -1,6 +1,6 @@
 import { onDomChanged } from "@/core/dom"
 import { html } from "@/core/html"
-import { contentScript, injectScript } from "@/core/messaging"
+import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
 import { initContentButton, initDownloadButton, initExplorer } from "@/pages/common"
@@ -168,18 +168,6 @@ pageInit.create_store = () => {
 		window.addEventListener("popstate", stateChanged)
 
 		injectScript.listen("stateChange", stateChanged)
-		injectScript.call("marketplacePageChanged", () => {
-			hijackFunction(history, "pushState", (target: any, thisArg: any, args: any[]) => {
-				const result = target.apply(thisArg, args)
-				contentScript.send("stateChange")
-				return result
-			})
-
-			hijackFunction(history, "replaceState", (target: any, thisArg: any, args: any[]) => {
-				const result = target.apply(thisArg, args)
-				contentScript.send("stateChange")
-				return result
-			})
-		})
+		injectScript.call("marketplacePageChanged")
 	})
 }

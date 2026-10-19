@@ -110,7 +110,8 @@ export const backgroundScript: any = {
 export const injectScript: any = {
 	messageListeners: {},
 
-	call(name: string, _fn: MessageCallback, ...args: any[]) {
+	/** Runs the inject.ts injectedFunctions entry of this name in the page. */
+	call(name: string, ...args: any[]) {
 		this.send("call", name, args)
 	},
 

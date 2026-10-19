@@ -44,8 +44,6 @@ const startInject = () => {
 		})
 
 		const ReBTRoblox: Record<string, any> = {}
-		let currentPage: any = null
-		void currentPage
 
 		const util = {
 			ready(fn: (...args: any[]) => any) {
@@ -688,41 +686,6 @@ const startInject = () => {
 						result.push(...reactHook.parseReactStringSelector(selector))
 						continue
 					}
-
-					// if(selector.selector) {
-					// 	util.assert(!selector.next)
-					// 	const selectors = reactHook.parseReactStringSelector(selector)
-
-					// 	const fillMissingData = targets => {
-					// 		for(const target of targets) {
-					// 			if(target.next) {
-					// 				fillMissingData(target.next)
-					// 				continue
-					// 			}
-
-					// 			for(const key of selector) {
-					// 				if(key === "selector") { continue }
-					// 				const value = selector[key]
-
-					// 				if(Array.isArray(value)) {
-					// 					target[key] = target[key] ?? []
-					// 					target[key].push(...value)
-
-					// 				} else if(typeof value === "object" && value !== null) {
-					// 					target[key] = target[key] ?? {}
-					// 					Object.assign(target[key], value)
-
-					// 				} else {
-					// 					target[key] = value
-					// 				}
-					// 			}
-					// 		}
-					// 	}
-
-					// 	fillMissingData(selectors)
-					// 	result.push(...selectors)
-					// 	continue
-					// }
 
 					result.push(selector)
 				}
@@ -1418,8 +1381,6 @@ const startInject = () => {
 					this.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher
 				let current = dispatcher.current
 
-				// let lastFiber
-
 				Object.defineProperty(Object.prototype, "lanes", {
 					configurable: true,
 					get() {
@@ -1462,21 +1423,6 @@ const startInject = () => {
 								})
 							}
 						}
-
-						// console.log("fiber?", this)
-
-						// Object.defineProperty(this, "updateQueue", {
-						// 	enumerable: true,
-						// 	configurable: true,
-						// 	get() { return value },
-						// 	set(_value) {
-						// 		value = _value
-
-						// 		if(value === null) {
-						// 			lastFiber = this
-						// 		}
-						// 	}
-						// })
 					},
 				})
 
@@ -1491,7 +1437,6 @@ const startInject = () => {
 						// According to ReactFiberHooks.js, current will be set to ContextOnlyDispatcher when not rendering
 						if (current && current.useCallback !== current.useEffect) {
 							reactHook.renderTarget = {
-								// fiber: lastFiber,
 								state: [],
 							}
 						} else {
@@ -1544,141 +1489,6 @@ const startInject = () => {
 							"Advanced",
 						),
 					)
-				})
-			},
-			assetRefinement: () => {
-				onSet(window, "Roblox", (Roblox: any) => {
-					onSet(Roblox, "AvatarAccoutrementService", (AvatarAccoutrementService: any) => {
-						let wearingAssets: any
-						let avatarRules: any
-
-						hijackFunction(
-							AvatarAccoutrementService,
-							"removeAssetFromAvatar",
-							(target: any, thisArg: any, args: any[]) => {
-								if (args[0] === "btrGetWearingAssets") {
-									wearingAssets = args[1]
-									throw "ReBTRoblox: abort (this should never be visible)"
-								}
-
-								return target.apply(thisArg, args)
-							},
-						)
-
-						angularHook.hijackModule("avatar", {
-							avatarController(target: any, thisArg: any, args: any[], argsMap: any) {
-								const result = target.apply(thisArg, args)
-
-								try {
-									const { $scope, avatarConstantService } = argsMap
-
-									const updateWearingAssets = () => {
-										if (!wearingAssets || !avatarRules) {
-											return
-										}
-
-										for (const item of wearingAssets) {
-											if (
-												avatarRules.accessoryRefinementTypes.includes(
-													item.assetType.id,
-												)
-											) {
-												if (!item.meta) {
-													item.meta = { version: 1 }
-												}
-												if (!item.meta.position) {
-													item.meta.position = { X: 0, Y: 0, Z: 0 }
-												}
-												if (!item.meta.rotation) {
-													item.meta.rotation = { X: 0, Y: 0, Z: 0 }
-												}
-												if (!item.meta.scale) {
-													item.meta.scale = { X: 1, Y: 1, Z: 1 }
-												}
-											}
-										}
-									}
-
-									$scope.btrUpdateItem = (item: any) => {
-										if (item.meta?.scale && item.btrScale) {
-											item.meta.scale.X = item.btrScale
-											item.meta.scale.Y = item.btrScale
-											item.meta.scale.Z = item.btrScale
-										}
-
-										$scope.onHatSlotClicked({ id: -1, assetType: { id: 8, name: "Hat" } })
-									}
-
-									$scope.btrRefreshWearingAssets = () => {
-										try {
-											$scope.onHatSlotClicked("btrGetWearingAssets")
-										} catch (ex) {}
-
-										$scope.btrWearingAssets = wearingAssets || []
-										updateWearingAssets()
-									}
-
-									$scope.btrRefreshWearingAssets()
-
-									$scope.$on(
-										avatarConstantService.events.wornAssetsChanged,
-										(_event: Event, _assetIds: any) => {
-											$scope.btrRefreshWearingAssets()
-										},
-									)
-
-									$scope.$on(
-										avatarConstantService.events.avatarRulesLoaded,
-										(event: Event, rules: any) => {
-											$scope.btrAvatarRules = avatarRules = rules
-											$scope.btrBounds = {}
-
-											for (const [assetTypeName, lowerBounds] of Object.entries(
-												avatarRules.accessoryRefinementLowerBounds,
-											) as [string, any][]) {
-												const upperBounds =
-													avatarRules.accessoryRefinementUpperBounds[assetTypeName]
-
-												const wearableAssetType = avatarRules.wearableAssetTypes.find(
-													(x: any) => x.name.replace(/\s/, "") === assetTypeName,
-												)
-												const assetBounds: Record<string, any> = ($scope.btrBounds[
-													wearableAssetType?.id
-												] = {})
-
-												for (const [category, values] of Object.entries(
-													lowerBounds,
-												) as [string, any][]) {
-													const bounds: Record<string, any> = (assetBounds[
-														category
-													] = {})
-
-													for (const [key, value] of Object.entries(values) as [
-														string,
-														any,
-													][]) {
-														bounds[key.slice(0, 1).toUpperCase()] = {
-															min: value,
-															max: upperBounds[category][key],
-														}
-													}
-												}
-											}
-
-											updateWearingAssets()
-										},
-									)
-								} catch (ex) {
-									console.error(ex)
-									if (IS_DEV_MODE) {
-										alert("hijackAngular Error")
-									}
-								}
-
-								return result
-							},
-						})
-					})
 				})
 			},
 			fullRangeBodyColors: () => {
@@ -1871,7 +1681,15 @@ const startInject = () => {
 					"composedPath",
 				]
 
+				const redirected = new WeakSet<Event>()
+
 				const callback = (event: Event) => {
+					// dispatchEvent runs a capture phase, so a clone can re-enter this
+					// capture listener if `to` is inside `from`. Never redirect twice.
+					if (redirected.has(event)) {
+						return
+					}
+
 					const clone = new (event.constructor as new (...args: any[]) => Event)(
 						event.type,
 						new Proxy(event, {
@@ -1905,6 +1723,8 @@ const startInject = () => {
 							})
 						}
 					}
+
+					redirected.add(clone)
 
 					if (!to.dispatchEvent(clone)) {
 						event.preventDefault()
@@ -4121,58 +3941,6 @@ const startInject = () => {
 					},
 				)
 			},
-			refreshMessages: () => {
-				const scope = angular
-					.element(document.querySelector(`div[ng-controller="messagesController"]`))
-					?.scope()
-
-				if (scope) {
-					scope.getMessages(scope.currentStatus.activeTab, scope.currentStatus.currentPage)
-					scope.$digest()
-				}
-			},
-			messages: () => {
-				angularHook.hijackModule("messages", {
-					messagesNav(target: any, thisArg: any, args: any[], argsMap: any) {
-						const result = target.apply(thisArg, args)
-
-						try {
-							const { $location } = argsMap
-
-							hijackFunction(result, "link", (target: any, thisArg: any, args: any[]) => {
-								try {
-									const [$state] = args
-
-									$state.btr_setPage = ($event: any) => {
-										const value = +$event.target.value
-
-										if (!Number.isNaN(value)) {
-											$location.search({ page: value })
-											$event.target.value = value
-										} else {
-											$event.target.value = $state.currentStatus.currentPage
-										}
-									}
-								} catch (ex) {
-									console.error(ex)
-									if (IS_DEV_MODE) {
-										alert("hijackAngular Error")
-									}
-								}
-
-								return target.apply(thisArg, args)
-							})
-						} catch (ex) {
-							console.error(ex)
-							if (IS_DEV_MODE) {
-								alert("hijackAngular Error")
-							}
-						}
-
-						return result
-					},
-				})
-			},
 			money: () => {
 				reactHook.inject(".balance-label.icon-robux-container", (elem: any) => {
 					const list = elem[0].props.children[0]?.props.children
@@ -4194,14 +3962,6 @@ const startInject = () => {
 				})
 			},
 			profile: () => {
-				angularHook.hijackModule("peopleList", {
-					layoutService(target: any, thisArg: any, args: any[], _argsMap: any) {
-						const result = target.apply(thisArg, args)
-						result.maxNumberOfFriendsDisplayed = 10
-						return result
-					},
-				})
-
 				// Roblox dropped the tabs for one long page, .profile-content.
 				reactHook.inject(">.profile-tab-content,>.profile-content", (tabContent: any) => {
 					if (!Array.isArray(tabContent[0].props.children)) {
@@ -4532,8 +4292,8 @@ const startInject = () => {
 		// Only put a hook here if it installs something. Anything that acts on the
 		// current DOM belongs on demand: listing it here runs it once at
 		// document_start, when there is nothing to act on, and the dedupe below
-		// then swallows every later call. setupPopovers, refreshInventory and
-		// refreshMessages were all silently dead that way.
+		// then swallows every later call. setupPopovers and refreshInventory
+		// were both silently dead that way.
 		//
 		// The entries after the name are the settings the content script gates
 		// the call on. A hook that transforms Roblox's own markup has to honour
@@ -4544,7 +4304,6 @@ const startInject = () => {
 		// happens on the first load after install.
 		const EAGER_HOOKS: string[][] = [
 			["avatar", "avatar.enabled"],
-			["assetRefinement", "avatar.enabled", "avatar.assetRefinement"],
 			["fullRangeBodyColors", "avatar.enabled", "avatar.fullRangeBodyColors"],
 			["showOwnedAssets", "catalog.enabled", "catalog.showOwnedAssets"],
 			["initReactRobuxToCash", "general.robuxToUSDRate"],
@@ -4566,7 +4325,6 @@ const startInject = () => {
 			["instantGameHoverAction", "home.instantGameHoverAction"],
 			["inventoryTools", "inventory.enabled", "inventory.inventoryTools"],
 			["itemdetails", "itemdetails.enabled"],
-			["messages", "messages.enabled"],
 			["money", "general.robuxToUSDRate"],
 			["profile", "profile.enabled"],
 			["fastsearch", "general.fastSearch"],
@@ -4639,10 +4397,6 @@ const startInject = () => {
 		}
 
 		//
-
-		contentScript.listen("setCurrentPage", (_currentPage) => {
-			currentPage = _currentPage
-		})
 
 		// init only fires once, so without this the page world would keep running
 		// against the settings it booted with. Every hook that reads through the

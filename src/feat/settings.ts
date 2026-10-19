@@ -79,7 +79,6 @@ export const DEFAULT_SETTINGS = {
 		removeAccessoryLimits: { value: true },
 		removeLayeredLimits: { value: true },
 		fullRangeBodyColors: { value: true },
-		assetRefinement: { value: false },
 		ignoreR6Warning: { value: false },
 	},
 	catalog: {
@@ -97,8 +96,6 @@ export const DEFAULT_SETTINGS = {
 
 		showSales: { value: true },
 		showCreatedAndUpdated: { value: true },
-
-		addOwnersList: { value: true, hidden: true },
 	},
 	gamedetails: {
 		enabled: { value: true },

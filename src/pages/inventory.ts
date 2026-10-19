@@ -1,7 +1,6 @@
 import { onDomChanged, setImmediate } from "@/core/dom"
-import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
-import { contentScript, injectScript } from "@/core/messaging"
+import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadFeature"
@@ -174,28 +173,7 @@ pageInit.inventory = () => {
 
 		injectScript.listen("inventoryUpdateEnd", updateButtons)
 
-		injectScript.call("inventoryTools", () => {
-			angularHook.hijackModule("inventory", {
-				inventoryContentController(target: any, thisArg: any, args: any[], argsMap: any) {
-					const result = target.apply(thisArg, args)
-
-					try {
-						const { $scope } = argsMap
-
-						$scope.$watch("$ctrl.assets", () => {
-							setTimeout(() => contentScript.send("inventoryUpdateEnd"), 0)
-						})
-					} catch (ex) {
-						console.error(ex)
-						if (IS_DEV_MODE) {
-							alert("hijackAngular Error")
-						}
-					}
-
-					return result
-				},
-			})
-		})
+		injectScript.call("inventoryTools")
 
 		document
 			.$on("change", ".btr-it-box", (_e) => {
@@ -269,27 +247,7 @@ pageInit.inventory = () => {
 						if (--itemsLeft === 0) {
 							isRemoving = false
 
-							injectScript.call("refreshInventory", () => {
-								const scope = angular
-									.element(document.querySelector("assets-explorer"))
-									.scope()
-								const ctrl = scope?.$parent?.$ctrl
-
-								if (ctrl) {
-									const real1 = ctrl.cursorPager.loadPreviousPage
-									const real2 = ctrl.assetsPager.canLoadPreviousPage
-
-									ctrl.cursorPager.loadPreviousPage = ctrl.cursorPager.reloadCurrentPage
-									ctrl.assetsPager.canLoadPreviousPage = () => true
-
-									try {
-										ctrl.assetsPager.loadPreviousPage()
-									} catch (ex) {}
-
-									ctrl.cursorPager.loadPreviousPage = real1
-									ctrl.assetsPager.canLoadPreviousPage = real2
-								}
-							})
+							injectScript.call("refreshInventory")
 						}
 					}
 

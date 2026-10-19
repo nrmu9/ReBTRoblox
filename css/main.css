@@ -850,31 +850,6 @@ a:not(.disabled):hover > .btr-icon-content {
 	top: 3px;
 }
 
-.btr-explorer-view-btn {
-	flex: 1;
-	cursor: pointer;
-	max-width: 33%;
-	text-align: center;
-
-	background: var(--btr-explorer-btn-bg);
-	border: 1px solid var(--btr-explorer-btn-border);
-
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.btr-explorer-view-btn:hover {
-	background: var(--btr-explorer-btn-hover);
-}
-
-.btr-explorer-view-btn.selected {
-	background: var(--btr-explorer-btn-selected);
-}
-
-.btr-explorer-childlist {
-	padding-left: 20px;
-}
-
 .btr-explorer-item-container {
 	display: flex;
 	align-items: center;
@@ -1409,12 +1384,6 @@ body div.btr-invalid-layered:hover::after {
 
 .light-theme div.btr-invalid-layered:hover::after {
 	color: #333;
-}
-
-/* groups.shoutAlertsInNotifStream */
-
-.btr-notif-desc {
-	overflow-wrap: anywhere;
 }
 
 /* Ew */
