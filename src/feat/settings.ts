@@ -31,7 +31,7 @@ export const DEFAULT_SETTINGS = {
 		theme: { value: "default", validValues: ["default", "simblk", "sky", "red"], hidden: true },
 		themeHotReload: { value: false, hidden: true },
 
-		hideAds: { value: false },
+		hideSponsored: { value: false },
 		hideChat: { value: false },
 		smallChatButton: { value: true },
 		fixChatMessages: { value: true },

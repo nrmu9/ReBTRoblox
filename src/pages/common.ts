@@ -14,7 +14,6 @@ import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { pageInit, pageReset } from "@/core/page"
 import { btrFastSearch } from "@/feat/fastSearch"
-import { btrAdblock } from "@/feat/adblock"
 import { btrVoiceStatus } from "@/feat/voiceStatus"
 import { query } from "@/core/query"
 import { onceFn } from "@/core/util"
@@ -1608,12 +1607,12 @@ pageInit.www = () => {
 	// already there; a class toggle is fully reversible, so these need no reload.
 	const applyBodyClasses = (body: HTMLElement) => {
 		body.classList.toggle("btr-no-hamburger", SETTINGS.get("navigation.noHamburger"))
-		body.classList.toggle("btr-hide-ads", SETTINGS.get("general.hideAds"))
+		body.classList.toggle("btr-hide-sponsored", SETTINGS.get("general.hideSponsored"))
 	}
 
 	const bodyWatcher = document.$watch(">body", applyBodyClasses).$then()
 
-	for (const settingPath of ["navigation.noHamburger", "general.hideAds"]) {
+	for (const settingPath of ["navigation.noHamburger", "general.hideSponsored"]) {
 		SETTINGS.onChange(settingPath, () => {
 			if (document.body) {
 				applyBodyClasses(document.body)
@@ -1735,14 +1734,6 @@ pageInit.www = () => {
 	if (SETTINGS.get("general.fastSearch")) {
 		try {
 			btrFastSearch.init()
-		} catch (ex) {
-			console.error(ex)
-		}
-	}
-
-	if (SETTINGS.get("general.hideAds")) {
-		try {
-			btrAdblock.init()
 		} catch (ex) {
 			console.error(ex)
 		}

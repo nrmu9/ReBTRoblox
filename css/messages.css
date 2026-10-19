@@ -1,9 +1,3 @@
-.btr-hide-ads .content {
-	max-width: 970px;
-}
-
-/* */
-
 /* Roblox rebuilt the inbox in React and themes it from its own tokens, so the
    page jump box inherits colour rather than picking its own. */
 .btr-messages .btr-page-jump {

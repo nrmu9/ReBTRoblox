@@ -18,7 +18,6 @@ import { SHARED_DATA } from "@/feat/sharedData"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { SettingsModal } from "@/feat/settingsModal"
 
-import "@/feat/adblock"
 import "@/feat/fastSearch"
 import "@/feat/navigation"
 import "@/feat/contextMenu"

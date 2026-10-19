@@ -1423,17 +1423,15 @@ body div.btr-invalid-layered:hover::after {
 	border: none;
 }
 
-.btr-hide-ads .ads-container,
-.btr-hide-ads .abp,
-.btr-hide-ads .abp-spacer,
-.btr-hide-ads .abp-container,
-.btr-hide-ads .top-abp-container,
-.btr-hide-ads #AdvertisingLeaderboard,
-.btr-hide-ads .btr-hide-ads #AdvertisementRight,
-.btr-hide-ads #MessagesAdSkyscraper,
-.btr-hide-ads .Ads_WideSkyscraper,
-.btr-hide-ads .profile-ads-container,
-.btr-hide-ads #ad {
+/* Sponsored experiences. Roblox marks an ad tile in its link and its footer;
+   a row is only hidden once every tile in it is an ad. */
+.btr-hide-sponsored
+	li.list-item:has(
+		> .game-card-container :is(a[href*="isAd=true"], [data-testid="game-tile-sponsored-footer"])
+	),
+.btr-hide-sponsored
+	.game-card-container:has(:is(a[href*="isAd=true"], [data-testid="game-tile-sponsored-footer"])),
+.btr-hide-sponsored .game-sort-carousel-wrapper:has(a[href*="isAd=true"]):not(:has(a[href*="isAd=false"])) {
 	display: none !important;
 }
 

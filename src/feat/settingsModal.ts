@@ -184,7 +184,7 @@ export const SettingsModal: SettingsModalState = {
 				</div>
 				<div class="btr-settings-content selected" id=btr-settings-main data-name=main>
 					<group label=General path=general>
-						<checkbox label="Hide Ads" path=hideAds></checkbox>
+						<checkbox label="Hide Sponsored Experiences" path=hideSponsored></checkbox>
 						<checkbox label="Fast User Search" path=general.fastSearch></checkbox>
 						<checkbox label="Voice Chat Status" path=voiceChatStatus></checkbox>
 						<div>

@@ -4292,17 +4292,6 @@ const startInject = () => {
 			profileEditPlace: (gameId: number, placeId: number) => {
 				Roblox.GameLauncher.editGameInStudio(placeId, gameId)
 			},
-			"adblock.js": () => {
-				util.ready(() => {
-					if (window.Roblox?.PrerollPlayer) {
-						window.Roblox.PrerollPlayer.waitForPreroll = (x: any) => $.Deferred().resolve(x)
-					}
-
-					if (window.Roblox?.VideoPreRollDFP) {
-						window.Roblox.VideoPreRollDFP = null
-					}
-				})
-			},
 			fastsearchFollowPlayer: (userId: number) => {
 				Roblox.GameLauncher.followPlayerIntoGame(userId)
 			},
@@ -4580,7 +4569,6 @@ const startInject = () => {
 			["messages", "messages.enabled"],
 			["money", "general.robuxToUSDRate"],
 			["profile", "profile.enabled"],
-			["adblock.js", "general.hideAds"],
 			["fastsearch", "general.fastSearch"],
 			["fixChatMessages"],
 			["navigation", "navigation.enabled"],
