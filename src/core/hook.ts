@@ -39,6 +39,10 @@ const ANIMATION_PREFIX = "btr-hook-"
 
 const registrations = new Map<string, Registration>()
 
+// Dev only: matches per selector, read by dev/health.js alongside the page
+// world counts to find watchers that stopped matching.
+const health: Record<string, number> | null = __DEV__ ? ((globalThis as any).__btrHealth ??= {}) : null
+
 let sheet: CSSStyleSheet | null = null
 let observer: MutationObserver | null = null
 let pending = false
@@ -59,6 +63,10 @@ const deliver = (registration: Registration, element: Element): void => {
 	}
 
 	registration.seen.add(element)
+
+	if (health) {
+		health[`watch ${registration.selector}`]++
+	}
 
 	if (registration.once) {
 		dispose(registration)
@@ -188,6 +196,10 @@ export const watch = (selector: string, handler: Handler, options: WatchOptions 
 	}
 
 	registrations.set(registration.animation, registration)
+
+	if (health) {
+		health[`watch ${registration.selector}`] ??= 0
+	}
 
 	const target = ensureSheet()
 

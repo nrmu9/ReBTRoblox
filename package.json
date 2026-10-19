@@ -11,6 +11,7 @@
 		"build:chrome": "node dev/build.js --target=chrome",
 		"watch": "node dev/build.js --dev --watch",
 		"bridge": "node dev/bridge.js",
+		"health": "node dev/health.js",
 		"typecheck": "tsc --noEmit",
 		"dev": "node dev/dev.js",
 		"test:hook": "node test/serve.js",

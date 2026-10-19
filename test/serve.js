@@ -18,6 +18,7 @@ const run = async () => {
 		write: false,
 		format: "iife",
 		alias: { "@": path.join(ROOT, "src") },
+		define: { __DEV__: "false", __MV3__: "false" },
 	})
 
 	const script = built.outputFiles[0].text

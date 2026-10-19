@@ -339,6 +339,28 @@ const startInject = () => {
 			},
 		}
 
+		// Dev only: how often each hook has matched, keyed by the injected function
+		// that installed it. dev/health.js reads this to find hooks that stopped
+		// matching after Roblox changed a page. Production drops all of it.
+		const health: Record<string, number> | null = __DEV__ ? ((globalThis as any).__btrHealth = {}) : null
+		let healthOwner = ""
+
+		const healthKey = (what: string): string => {
+			if (!health) {
+				return ""
+			}
+
+			const key = `${healthOwner || "?"}: ${what}`
+			health[key] ??= 0
+			return key
+		}
+
+		const healthHit = (key: string | undefined): void => {
+			if (health && key) {
+				health[key]++
+			}
+		}
+
 		const angularHook: Record<string, any> = {
 			templateListeners: {},
 			cachedTemplates: {},
@@ -405,6 +427,23 @@ const startInject = () => {
 			//
 
 			hijackModule(moduleName: string, objects: any) {
+				if (health) {
+					const counted: Record<string, any> = {}
+
+					for (const [name, callback] of Object.entries(objects) as [string, any][]) {
+						const key = healthKey(`angular ${moduleName}.${name}`)
+
+						counted[name] = function (this: any, ...args: any[]) {
+							if (__DEV__) {
+								healthHit(key)
+							}
+							return callback.apply(this, args)
+						}
+					}
+
+					objects = counted
+				}
+
 				let module
 
 				try {
@@ -1147,6 +1186,9 @@ const startInject = () => {
 					index: this.constructorReplaces.length,
 					filter,
 					handler,
+					healthKey:
+						__DEV__ &&
+						healthKey(`constructor ${String(filter).replace(/\s+/g, " ").slice(0, 90)}`),
 
 					remove() {
 						;(this as any).removed = true
@@ -1198,6 +1240,7 @@ const startInject = () => {
 				}
 
 				this.injectedContent.push({
+					healthKey: __DEV__ && healthKey(`inject ${selector}`),
 					selector: parsed,
 					tokens: tokens.length ? tokens : null,
 					callback: callback,
@@ -1233,6 +1276,10 @@ const startInject = () => {
 					}
 
 					if (matches) {
+						if (__DEV__) {
+							healthHit(info.healthKey)
+						}
+
 						return info.handler(
 							function (this: any, ...args: any[]) {
 								return reactHook.nextConstructorReplace(render, index + 1, this as any, args)
@@ -1328,6 +1375,9 @@ const startInject = () => {
 										wrapped = reactHook.wrap([root, result])
 									}
 
+									if (__DEV__) {
+										healthHit(content.healthKey)
+									}
 									content.callback(wrapped)
 
 									if (!root.includes(result)) {
@@ -1341,6 +1391,9 @@ const startInject = () => {
 							for (const path of reactHook.querySelectorAll(result, matching, 5, true)) {
 								const child = reactHook.wrap([root, ...path])
 
+								if (__DEV__) {
+									healthHit(content.healthKey)
+								}
 								content.callback(child)
 
 								if (!root.includes(result)) {
@@ -4323,6 +4376,8 @@ const startInject = () => {
 				registered.add(name)
 			}
 
+			healthOwner = name
+
 			try {
 				injectedFunctions[name](...args)
 			} catch (ex) {
@@ -4337,6 +4392,8 @@ const startInject = () => {
 				}
 
 				console.error("[btr] injected function " + name + " failed", ex)
+			} finally {
+				healthOwner = ""
 			}
 		}
 
