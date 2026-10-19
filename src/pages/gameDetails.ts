@@ -91,8 +91,9 @@ pageInit.gamedetails = () => {
 		const placeId = Number.parseInt(placeIdString, 10)
 
 		if (RobuxToCash.isEnabled()) {
+			// Game passes and developer products sit side by side in the store.
 			document
-				.$watch("#rbx-passes-container")
+				.$watch("#game-store-container")
 				.$then()
 				.$watch(
 					".text-robux",
@@ -411,49 +412,69 @@ pageInit.gamedetails = () => {
 							})
 
 						if (SETTINGS.get("gamedetails.showBadgeOwned")) {
-							badges.$watch(".container-header h2", (header: HTMLElement) => {
-								const refresh = html<HTMLButtonElement>`<button
-									type="button"
-									class="btn-more rbx-refresh refresh-link-icon btn-control-xs btn-min-width"
-								>
-									Refresh
-								</button>`
-								header.after(refresh)
+							// h3 since the badges list was rebuilt.
+							badges.$watch(
+								".container-header h2, .container-header h3",
+								(header: HTMLElement) => {
+									const refresh = html<HTMLButtonElement>`<button
+										type="button"
+										class="btn-more rbx-refresh refresh-link-icon btn-control-xs btn-min-width"
+									>
+										Refresh
+									</button>`
+									header.after(refresh)
 
-								refresh.$on("click", () => {
-									if (refresh.getAttribute("disabled")) {
-										return
-									}
-
-									badgeQueue.splice(0, badgeQueue.length)
-
-									for (const row of badges.$findAll(".badge-row")) {
-										const url = row.$req<HTMLAnchorElement>(".badge-image>a").href
-
-										const match = url.match(/(?:catalog|badges)\/(\d+)\//)
-										if (!match) {
-											continue
+									refresh.$on("click", () => {
+										if (refresh.getAttribute("disabled")) {
+											return
 										}
 
-										const badgeId = +match[1]
-										badgeQueue.push({ row, badgeId })
-									}
+										badgeQueue.splice(0, badgeQueue.length)
 
-									if (!badgeQueue.length) {
-										return
-									}
+										for (const row of badges.$findAll(".badge-row")) {
+											const url = row.$req<HTMLAnchorElement>(".badge-image>a").href
 
-									refresh.setAttribute("disabled", "")
+											const match = url.match(/(?:catalog|badges)\/(\d+)\//)
+											if (!match) {
+												continue
+											}
 
-									updateOwned().finally(() => {
-										refresh.removeAttribute("disabled")
+											const badgeId = +match[1]
+											badgeQueue.push({ row, badgeId })
+										}
+
+										if (!badgeQueue.length) {
+											return
+										}
+
+										refresh.setAttribute("disabled", "")
+
+										updateOwned().finally(() => {
+											refresh.removeAttribute("disabled")
+										})
 									})
-								})
-							})
+								},
+							)
 						}
 					})
-					.$watch("#carousel-game-details", (details: any) => {
-						details.setAttribute("data-is-video-autoplayed-on-ready", "false")
+					// The rebuilt carousel has no attribute to turn autoplay off, so the
+					// first play is paused unless it came from using the carousel.
+					.$watch("#game-details-carousel-container", (carousel: HTMLElement) => {
+						let touched = false
+
+						for (const type of ["pointerdown", "keydown"]) {
+							carousel.addEventListener(type, () => (touched = true), { capture: true })
+						}
+
+						carousel.addEventListener(
+							"play",
+							(event) => {
+								if (!touched && event.target instanceof HTMLVideoElement) {
+									event.target.pause()
+								}
+							},
+							{ capture: true, once: true },
+						)
 					})
 					.$watch("#game-detail-meta-data", (dataCont: HTMLElement) => {
 						ContextMenu.setCustomContextMenu(document.documentElement, {

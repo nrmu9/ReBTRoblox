@@ -3682,11 +3682,18 @@ const startInject = () => {
 					)
 				})
 
-				reactHook.inject(".game-social-links .btn-secondary-lg", (elem: any) => {
+				// Each link is now a component of its own, keyed by the social link id
+				// and taking its address as url, so it is matched by its classes
+				// rather than as a child of the list. The list keeps the links in its
+				// first state, which is what a match is checked against.
+				reactHook.inject(".btn-secondary-lg.border", (elem: any) => {
 					const socials = reactHook.renderTarget?.state[0]?.[0]
-					const entry = socials?.find((x: any) => x.id === +elem[0].key)
+					const entry = Array.isArray(socials)
+						? socials.find((x: any) => x?.id === +elem[0].key && typeof x.url === "string")
+						: null
 
 					if (entry) {
+						elem[0].props.url = entry.url
 						elem[0].props.href = entry.url
 
 						hijackFunction(elem[0].props, "onClick", (target: any, thisArg: any, args: any[]) => {
