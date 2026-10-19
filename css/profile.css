@@ -1,5 +1,10 @@
 /* Main */
 
+/* What is left of the sections Roblox renders once ours replace them. */
+.btr-profile .profile-content {
+	display: none;
+}
+
 .btr-profile .content {
 	max-width: none;
 	width: 1072px;

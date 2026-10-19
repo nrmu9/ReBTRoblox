@@ -4202,7 +4202,12 @@ const startInject = () => {
 					},
 				})
 
-				reactHook.inject(">.profile-tab-content", (tabContent: any) => {
+				// Roblox dropped the tabs for one long page, .profile-content.
+				reactHook.inject(">.profile-tab-content,>.profile-content", (tabContent: any) => {
+					if (!Array.isArray(tabContent[0].props.children)) {
+						return
+					}
+
 					for (const child of tabContent[0].props.children) {
 						switch (child.key) {
 							case "About":
