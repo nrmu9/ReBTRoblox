@@ -74,7 +74,7 @@ export const openActivity = async (
 			<div class="btr-activity-tabs" role="tablist" hidden>
 				<button type="button" role="tab" data-tab="activity">Activity</button>
 				<button type="button" role="tab" data-tab="stats">Stats</button>
-				<button type="button" role="tab" data-tab="friends">Friends</button>
+				<button type="button" role="tab" data-tab="friends">People</button>
 				<button type="button" role="tab" data-tab="changes">Changes</button>
 			</div>
 			<div class="btr-activity-body">

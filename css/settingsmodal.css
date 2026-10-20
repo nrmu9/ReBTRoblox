@@ -1790,7 +1790,7 @@ div.btr-setting-text {
 	background: rgb(2 183 87 / 0.16);
 	color: #02b757;
 
-	[data-kind="friendRemoved"] & {
+	[data-kind$="Removed"] & {
 		background: color-mix(in srgb, var(--btr-alert-content) 16%, transparent);
 		color: var(--btr-alert-content);
 	}
@@ -2258,4 +2258,19 @@ div.btr-setting-text {
 	flex: none;
 	color: var(--btr-content-muted);
 	font-size: 13px;
+}
+
+.btr-change-icon[data-icon="favorites"] {
+	background: rgb(255 77 141 / 0.16);
+	color: #ff4d8d;
+}
+
+.btr-change-icon[data-icon="followers"] {
+	background: rgb(0 162 255 / 0.16);
+	color: #00a2ff;
+}
+
+/* Game and item pictures are square, unlike badges. */
+.btr-change-thumb {
+	border-radius: 8px;
 }

@@ -10,7 +10,7 @@ import { startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
 const imageCache = new Map<string, string>()
 
 /** Thumbnail urls for ids of one kind, asked for 100 at a time and cached. */
-export const thumbnails = async (kind: "headshot" | "badge" | "place", ids: number[]) => {
+export const thumbnails = async (kind: "headshot" | "badge" | "place" | "asset", ids: number[]) => {
 	const missing = [...new Set(ids)].filter((id) => !imageCache.has(`${kind}:${id}`))
 	const url =
 		kind === "headshot"
@@ -19,8 +19,11 @@ export const thumbnails = async (kind: "headshot" | "badge" | "place", ids: numb
 			: kind === "badge"
 				? (batch: number[]) =>
 						`https://thumbnails.roblox.com/v1/badges/icons?badgeIds=${batch.join(",")}&size=150x150&format=Png`
-				: (batch: number[]) =>
-						`https://thumbnails.roblox.com/v1/places/gameicons?placeIds=${batch.join(",")}&size=50x50&format=Png`
+				: kind === "place"
+					? (batch: number[]) =>
+							`https://thumbnails.roblox.com/v1/places/gameicons?placeIds=${batch.join(",")}&size=50x50&format=Png`
+					: (batch: number[]) =>
+							`https://thumbnails.roblox.com/v1/assets?assetIds=${batch.join(",")}&size=150x150&format=Png`
 
 	for (let i = 0; i < missing.length; i += 100) {
 		const json = await fetch(url(missing.slice(i, i + 100)))
@@ -160,13 +163,41 @@ const buildLog = (options: LogOptions) => {
 	panel.replaceChildren(toolbar, ...(options.intro ? [options.intro] : []), list, empty, more)
 }
 
-const FRIEND_GROUPS = [
+const PEOPLE_GROUPS = [
 	["all", "All"],
-	["friendAdded", "Added"],
-	["friendRemoved", "Removed"],
+	["friends", "Friends"],
+	["followers", "Followers"],
+	["following", "Following"],
 ] as const
 
-const friendEntry = (event: ActivityEvent) => {
+const PEOPLE_KINDS: ActivityEvent["kind"][] = [
+	"friendAdded",
+	"friendRemoved",
+	"followerAdded",
+	"followerRemoved",
+	"followingAdded",
+	"followingRemoved",
+]
+
+const peopleGroup = (event: ActivityEvent) =>
+	event.kind.startsWith("friend")
+		? "friends"
+		: event.kind.startsWith("follower")
+			? "followers"
+			: "following"
+
+/** What happened, read after the person's name. */
+const peopleLabel = (kind: ActivityEvent["kind"], isOwn: boolean) =>
+	({
+		friendAdded: "Friend added",
+		friendRemoved: "Friend removed",
+		followerAdded: isOwn ? "Followed you" : "Followed them",
+		followerRemoved: isOwn ? "Unfollowed you" : "Unfollowed them",
+		followingAdded: isOwn ? "You followed" : "They followed",
+		followingRemoved: isOwn ? "You unfollowed" : "They unfollowed",
+	})[kind as string] ?? kind
+
+const friendEntry = (event: ActivityEvent, isOwn: boolean) => {
 	const row = html`<a
 		class="btr-friendlog-row"
 		href="/users/${event.otherId}/profile"
@@ -179,7 +210,7 @@ const friendEntry = (event: ActivityEvent) => {
 			>
 			<span class="btr-friendlog-username">${event.name ? `@${event.name}` : ""}</span>
 		</span>
-		<span class="btr-friendlog-kind">${event.kind === "friendAdded" ? "Added" : "Removed"}</span>
+		<span class="btr-friendlog-kind">${peopleLabel(event.kind, isOwn)}</span>
 		<span class="btr-friendlog-time">${new Date(event.at).$format(clockFormat())}</span>
 	</a>`
 
@@ -191,14 +222,14 @@ const friendEntry = (event: ActivityEvent) => {
 	return row
 }
 
-/** A friends list's changes, newest first under a heading for each day. */
+/** Friends made and lost, and followers and following gained and lost, newest first by day. */
 export const renderFriends = async (
 	panel: HTMLElement,
 	userId: number,
 	isOwn: boolean,
 	state: { group: string },
 ) => {
-	const events = (await getActivityEvents(userId, ["friendAdded", "friendRemoved"])) ?? []
+	const events = (await getActivityEvents(userId, PEOPLE_KINDS)) ?? []
 
 	if (!events.length) {
 		panel.replaceChildren(
@@ -216,9 +247,10 @@ export const renderFriends = async (
 	buildLog({
 		panel,
 		events,
-		groups: FRIEND_GROUPS,
-		groupOf: (event) => event.kind,
-		entry: friendEntry,
+		groups: PEOPLE_GROUPS,
+		hideEmpty: true,
+		groupOf: peopleGroup,
+		entry: (event) => friendEntry(event, isOwn),
 		state,
 		onPage: async (entries) => {
 			const images = entries.map((row) => row.$req<HTMLImageElement>(".btr-friendlog-avatar"))
@@ -247,6 +279,9 @@ const ICONS: Record<string, string> = {
 	left: "M5 12h14",
 	account: "M12 7v6M12 17h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
 	badges: "M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z",
+	favorites: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+	followers:
+		"M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.4 3 5",
 }
 
 const CHANGE_GROUPS = [
@@ -256,6 +291,8 @@ const CHANGE_GROUPS = [
 	["avatar", "Avatar"],
 	["communities", "Communities"],
 	["badges", "Badges"],
+	["favorites", "Favorites"],
+	["followers", "Followers"],
 	["account", "Account"],
 ] as const
 
@@ -270,7 +307,11 @@ const groupOf = (event: ActivityEvent) =>
 					? "communities"
 					: event.field === "badge"
 						? "badges"
-						: "account"
+						: event.field === "favoriteAdded" || event.field === "favoriteRemoved"
+							? "favorites"
+							: event.field === "followers" || event.field === "followings"
+								? "followers"
+								: "account"
 
 const icon = (name: string) =>
 	html`<span class="btr-change-icon" data-icon="${name}" aria-hidden="true">
@@ -377,6 +418,37 @@ const changeEntry = (event: ActivityEvent) => {
 		}
 
 		item.dataset.badge = String(badge.id)
+	} else if (event.field === "favoriteAdded" || event.field === "favoriteRemoved") {
+		const favorite = (event.field === "favoriteAdded" ? event.after : event.before) as {
+			kind: "game" | "item"
+			id: number
+			name: string
+			placeId?: number
+		}
+		const href =
+			favorite.kind === "game"
+				? favorite.placeId
+					? `/games/${favorite.placeId}`
+					: null
+				: `/catalog/${favorite.id}`
+
+		title.append(
+			event.field === "favoriteAdded" ? "Favorited " : "Unfavorited ",
+			href ? html`<a href="${href}">${favorite.name}</a>` : favorite.name,
+		)
+
+		if (favorite.kind === "game" && favorite.placeId) {
+			item.dataset.place = String(favorite.placeId)
+		} else if (favorite.kind === "item") {
+			item.dataset.asset = String(favorite.id)
+		}
+	} else if (event.field === "followers" || event.field === "followings") {
+		const before = Number(event.before)
+		const after = Number(event.after)
+		const change = after - before
+
+		title.textContent = `${event.field === "followers" ? "Followers" : "Following"} ${before.toLocaleString("en-US")} → ${after.toLocaleString("en-US")}`
+		body.append(html`<div class="btr-change-sub">${change > 0 ? `+${change}` : String(change)}</div>`)
 	} else if (event.field === "isBanned") {
 		title.textContent = event.after ? "Account banned" : "Account unbanned"
 	} else {
@@ -412,6 +484,27 @@ export const renderChanges = async (panel: HTMLElement, userId: number, state: {
 			Badges show when they were earned.
 		</p>`,
 		onPage: async (entries) => {
+			for (const [kind, key] of [
+				["place", "place"],
+				["asset", "asset"],
+			] as const) {
+				const withImage = entries.filter((item) => item.dataset[key])
+				const imageOf = await thumbnails(
+					kind,
+					withImage.map((item) => Number(item.dataset[key])),
+				)
+
+				for (const item of withImage) {
+					const url = imageOf(Number(item.dataset[key]))
+
+					if (url) {
+						item.$find(".btr-change-icon")?.replaceWith(
+							html`<img class="btr-change-badge btr-change-thumb" alt="" src="${url}" />`,
+						)
+					}
+				}
+			}
+
 			const badges = entries.filter((item) => item.dataset.badge)
 			const urlOf = await thumbnails(
 				"badge",

@@ -7,7 +7,7 @@ import {
 	setState,
 	type ActivityEvent,
 } from "@/feat/activity/store"
-import { compareFriendList } from "@/feat/activity/friends"
+import { compareFriendList, namesOf } from "@/feat/activity/friends"
 import { isLive, recordPresences } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
 
@@ -19,6 +19,11 @@ const PRESENCE_EVERY = 2 * 60e3
 const FRIENDS_EVERY = 60 * 60e3
 const PROFILE_EVERY = 4 * 60 * 60e3
 const BADGES_EVERY = 60 * 60e3
+const FAVORITES_EVERY = 4 * 60 * 60e3
+const FOLLOWS_EVERY = 2 * 60 * 60e3
+// Followers lists longer than this are only checked for new followers at the
+// top, as reading a large account's whole list every few hours is too much.
+const FULL_FOLLOW_LIST = 1000
 
 export const getWatchedUsers = (): number[] => {
 	try {
@@ -117,20 +122,7 @@ const compareProfile = async (userId: number, before: ProfileSnapshot, after: Pr
 		}
 	}
 
-	if (!changes.length || (await isFull())) {
-		return
-	}
-
-	const at = Date.now()
-	const db = await openDb()
-	const tx = db.transaction("events", "readwrite")
-
-	for (const change of changes) {
-		tx.objectStore("events").add({ userId, at, kind: "profileChanged", ...change })
-	}
-
-	await committed(tx)
-	announceChange([userId])
+	await logChanges(userId, changes)
 }
 
 const checkProfile = async (userId: number) => {
@@ -231,6 +223,252 @@ const checkBadges = async (userId: number) => {
 	announceChange([userId])
 }
 
+/** Logs profile changes, one event each, at once. */
+const logChanges = async (
+	userId: number,
+	changes: Array<Pick<ActivityEvent, "field" | "before" | "after">>,
+) => {
+	if (!changes.length || (await isFull())) {
+		return
+	}
+
+	const at = Date.now()
+	const db = await openDb()
+	const tx = db.transaction("events", "readwrite")
+
+	for (const change of changes) {
+		tx.objectStore("events").add({ userId, at, kind: "profileChanged", ...change })
+	}
+
+	await committed(tx)
+	announceChange([userId])
+}
+
+/** Every page of a list, or null if any page failed. */
+const allPages = async (url: (cursor: string) => string, maxPages: number) => {
+	const items: any[] = []
+	let cursor = ""
+
+	for (let page = 0; page < maxPages; page++) {
+		const json = await getJson(url(cursor))
+
+		if (!json) {
+			return null
+		}
+
+		items.push(...(json.data ?? []))
+		cursor = json.nextPageCursor ?? ""
+
+		if (!cursor) {
+			break
+		}
+	}
+
+	return items
+}
+
+// The catalog types the profile's favorites list offers, places aside as
+// games are read on their own.
+const FAVORITE_TYPES = [8, 24, 3, 13, 18, 19, 17, 40, 10, 12, 38, 11, 2]
+
+interface FavoriteEntry {
+	name: string
+	placeId?: number
+}
+
+interface FavoritesSnapshot {
+	games: Record<string, FavoriteEntry>
+	/** By catalog type, then asset id. */
+	items: Record<string, Record<string, FavoriteEntry>>
+}
+
+/**
+ * Logs games and catalog items favorited and unfavorited. A list that fails to
+ * load keeps what was seen before, so a bad request never reads as everything
+ * being unfavorited.
+ */
+const checkFavorites = async (userId: number) => {
+	const before = await getState<FavoritesSnapshot>(`favorites:${userId}`)
+	const after: FavoritesSnapshot = { games: before?.games ?? {}, items: { ...before?.items } }
+
+	const games = await allPages(
+		(cursor) =>
+			`https://games.roblox.com/v2/users/${userId}/favorite/games?limit=100&sortOrder=Desc${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+		5,
+	)
+
+	if (games) {
+		after.games = Object.fromEntries(
+			games.map((game: any) => [game.id, { name: game.name, placeId: game.rootPlace?.id }]),
+		)
+	}
+
+	for (const type of FAVORITE_TYPES) {
+		const items = await allPages(
+			(cursor) =>
+				`https://catalog.roblox.com/v1/favorites/users/${userId}/favorites/${type}/assets?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+			3,
+		)
+
+		if (items) {
+			after.items[type] = Object.fromEntries(items.map((item: any) => [item.id, { name: item.name }]))
+		}
+	}
+
+	await setState(`favorites:${userId}`, after)
+
+	if (!before) {
+		return
+	}
+
+	const changes: Array<Pick<ActivityEvent, "field" | "before" | "after">> = []
+
+	const compare = (
+		kind: "game" | "item",
+		was: Record<string, FavoriteEntry>,
+		now: Record<string, FavoriteEntry>,
+	) => {
+		for (const [id, entry] of Object.entries(now)) {
+			if (!(id in was)) {
+				changes.push({ field: "favoriteAdded", after: { kind, id: Number(id), ...entry } })
+			}
+		}
+
+		for (const [id, entry] of Object.entries(was)) {
+			if (!(id in now)) {
+				changes.push({ field: "favoriteRemoved", before: { kind, id: Number(id), ...entry } })
+			}
+		}
+	}
+
+	compare("game", before.games, after.games)
+
+	for (const type of FAVORITE_TYPES) {
+		// A type first read now has nothing to compare against.
+		if (before.items[type]) {
+			compare("item", before.items[type], after.items[type] ?? {})
+		}
+	}
+
+	await logChanges(userId, changes)
+}
+
+interface FollowsSnapshot {
+	followersCount: number
+	followingsCount: number
+	/** The whole list, or null when it is too long to read each time. */
+	followers: number[] | null
+	/** The newest followers, which a long list is checked against. */
+	recentFollowers: number[]
+	followings: number[] | null
+}
+
+const followList = (userId: number, list: "followers" | "followings", maxPages: number) =>
+	allPages(
+		(cursor) =>
+			`https://friends.roblox.com/v1/users/${userId}/${list}?limit=100&sortOrder=Desc${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+		maxPages,
+	).then((items) => items?.map((item: any) => item.id).filter((id: number) => id > 0) ?? null)
+
+/** Logs people who followed and unfollowed, and how the counts changed. */
+const checkFollows = async (userId: number) => {
+	const [followersCount, followingsCount] = await Promise.all([
+		getJson(`https://friends.roblox.com/v1/users/${userId}/followers/count`),
+		getJson(`https://friends.roblox.com/v1/users/${userId}/followings/count`),
+	]).then((counts) => counts.map((json) => json?.count))
+
+	if (!Number.isSafeInteger(followersCount) || !Number.isSafeInteger(followingsCount)) {
+		return
+	}
+
+	const fullFollowers = followersCount <= FULL_FOLLOW_LIST
+	const followers = await followList(userId, "followers", fullFollowers ? 10 : 2)
+	const followings = followingsCount <= FULL_FOLLOW_LIST ? await followList(userId, "followings", 10) : null
+
+	const before = await getState<FollowsSnapshot>(`follows:${userId}`)
+	const after: FollowsSnapshot = {
+		followersCount,
+		followingsCount,
+		followers: fullFollowers ? (followers ?? before?.followers ?? null) : null,
+		recentFollowers: followers?.slice(0, 200) ?? before?.recentFollowers ?? [],
+		followings: followings ?? (followingsCount <= FULL_FOLLOW_LIST ? (before?.followings ?? null) : null),
+	}
+
+	await setState(`follows:${userId}`, after)
+
+	if (!before) {
+		return
+	}
+
+	const counts: Array<Pick<ActivityEvent, "field" | "before" | "after">> = []
+
+	if (before.followersCount !== followersCount) {
+		counts.push({ field: "followers", before: before.followersCount, after: followersCount })
+	}
+
+	if (before.followingsCount !== followingsCount) {
+		counts.push({ field: "followings", before: before.followingsCount, after: followingsCount })
+	}
+
+	await logChanges(userId, counts)
+
+	const people: Array<[ActivityEvent["kind"], number]> = []
+
+	const diff = (
+		was: number[],
+		now: number[],
+		added: ActivityEvent["kind"],
+		removed: ActivityEvent["kind"],
+	) => {
+		const wasSet = new Set(was)
+		const nowSet = new Set(now)
+		people.push(
+			...now
+				.filter((id) => !wasSet.has(id))
+				.map((id) => [added, id] as [ActivityEvent["kind"], number]),
+		)
+		people.push(
+			...was
+				.filter((id) => !nowSet.has(id))
+				.map((id) => [removed, id] as [ActivityEvent["kind"], number]),
+		)
+	}
+
+	if (followers && before.followers && after.followers) {
+		diff(before.followers, after.followers, "followerAdded", "followerRemoved")
+	} else if (followers && before.recentFollowers.length) {
+		// Only the top of a long list is read: whoever is above the newest
+		// follower seen last time is new. Leaving cannot be seen this way.
+		const known = new Set(before.recentFollowers)
+		const firstKnown = followers.findIndex((id) => known.has(id))
+		people.push(
+			...followers
+				.slice(0, firstKnown === -1 ? 0 : firstKnown)
+				.map((id) => ["followerAdded", id] as [ActivityEvent["kind"], number]),
+		)
+	}
+
+	if (followings && before.followings) {
+		diff(before.followings, followings, "followingAdded", "followingRemoved")
+	}
+
+	if (!people.length || (await isFull())) {
+		return
+	}
+
+	const names = await namesOf(people.map(([, id]) => id))
+	const at = Date.now()
+	const db = await openDb()
+	const tx = db.transaction("events", "readwrite")
+
+	for (const [kind, otherId] of people) {
+		tx.objectStore("events").add({ userId, at, kind, otherId, ...names.get(otherId) })
+	}
+
+	await committed(tx)
+	announceChange([userId])
+}
+
 const checkFriends = async (userId: number) => {
 	const ids = await friendsOf(userId)
 
@@ -248,19 +486,20 @@ let ownUserId: number | null = null
 const tick = async () => {
 	const watched = getWatchedUsers()
 
-	if (running || !watched.length || !SETTINGS.get("profile.lastSeen")) {
+	if (running || !SETTINGS.get("profile.lastSeen")) {
 		return
 	}
 
 	running = true
 
 	try {
-		if (Date.now() - lastPresence >= PRESENCE_EVERY) {
+		ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
+
+		if (watched.length && Date.now() - lastPresence >= PRESENCE_EVERY) {
 			lastPresence = Date.now()
 
 			// Friends' presence comes live while the connection is up, so only
 			// the rest are asked for. Without it, everyone is.
-			ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
 			const friends = new Set(
 				(isLive() && ownUserId && (await getState<number[]>(`friends:${ownUserId}`))) || [],
 			)
@@ -281,9 +520,18 @@ const tick = async () => {
 		}
 
 		const due =
-			(await getState<Record<number, { friends?: number; profile?: number; badges?: number }>>(
-				"watchChecks",
-			)) ?? {}
+			(await getState<
+				Record<
+					number,
+					{
+						friends?: number
+						profile?: number
+						badges?: number
+						favorites?: number
+						follows?: number
+					}
+				>
+			>("watchChecks")) ?? {}
 
 		for (const userId of watched) {
 			const checks = (due[userId] ??= {})
@@ -304,6 +552,28 @@ const tick = async () => {
 				checks.badges = Date.now()
 				await checkBadges(userId)
 				break
+			}
+
+			if (Date.now() - (checks.favorites ?? 0) >= FAVORITES_EVERY) {
+				checks.favorites = Date.now()
+				await checkFavorites(userId)
+				break
+			}
+
+			if (Date.now() - (checks.follows ?? 0) >= FOLLOWS_EVERY) {
+				checks.follows = Date.now()
+				await checkFollows(userId)
+				break
+			}
+		}
+
+		// Your own followers too, with the friend log, so unfollows show up.
+		if (ownUserId && SETTINGS.get("profile.friendLog") && !watched.includes(ownUserId)) {
+			const checks = (due[ownUserId] ??= {})
+
+			if (Date.now() - (checks.follows ?? 0) >= FOLLOWS_EVERY) {
+				checks.follows = Date.now()
+				await checkFollows(ownUserId)
 			}
 		}
 

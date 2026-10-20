@@ -27,7 +27,7 @@ const inOrder = <T>(task: () => Promise<T>): Promise<T> => {
 }
 
 /** Names as they are now, kept with each change so a later rename or deletion still reads. */
-const namesOf = async (userIds: number[]) => {
+export const namesOf = async (userIds: number[]) => {
 	const names = new Map<number, { name: string; displayName: string }>()
 
 	for (let i = 0; i < userIds.length; i += 100) {

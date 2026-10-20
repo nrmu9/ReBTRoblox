@@ -31,8 +31,15 @@ export interface ActivityEvent {
 	at: number
 	/** Seen as it happened, rather than found by comparing lists later. */
 	exact?: boolean
-	kind: "friendAdded" | "friendRemoved" | "profileChanged"
-	/** The friend added or removed, and their names at the time. */
+	kind:
+		| "friendAdded"
+		| "friendRemoved"
+		| "followerAdded"
+		| "followerRemoved"
+		| "followingAdded"
+		| "followingRemoved"
+		| "profileChanged"
+	/** The friend or follower added or removed, and their names at the time. */
 	otherId?: number
 	name?: string
 	displayName?: string
