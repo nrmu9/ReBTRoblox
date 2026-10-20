@@ -1171,3 +1171,11 @@ div.btr-setting-text {
 .btr-exp-edited-only .btr-exp-group:not(:has(.btr-exp-edited)) {
 	display: none;
 }
+
+.btr-setting-reload-mark {
+	margin-left: 6px;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+	font-weight: 400;
+	cursor: help;
+}

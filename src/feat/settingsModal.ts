@@ -1484,6 +1484,20 @@ export const SettingsModal: SettingsModalState = {
 			])
 
 			const bar: HTMLElement = this.settingsDiv.$req(".btr-settings-reload")
+
+			// Settings that wait for a reload say so up front, with a small mark.
+			for (const row of this.settingsDiv.$findAll(".btr-setting-row[data-path]")) {
+				if (!APPLIES_LIVE.has(row.dataset.path)) {
+					row.$find(".btr-setting-label")?.append(
+						html`<span
+							class="btr-setting-reload-mark"
+							title="Applies after a reload"
+							aria-label="Applies after a reload"
+							>↻</span
+						>`,
+					)
+				}
+			}
 			const bootValues = new Map<string, any>()
 
 			// Objects never compare equal by identity, so values are compared
