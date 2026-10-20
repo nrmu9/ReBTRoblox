@@ -6,7 +6,8 @@ import { pageInit } from "@/core/page"
 import { ContextMenu } from "@/feat/contextMenu"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { clockFormat } from "@/feat/clock"
-import { trackButton } from "@/feat/activity/trackButton"
+import { keepTrackLabel } from "@/feat/activity/trackMenu"
+import { openTracked } from "@/feat/activity/trackDialog"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
@@ -484,21 +485,54 @@ pageInit.gamedetails = () => {
 
 		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-gamedetails"))
 
-		// Opens the game's activity, where tracking it starts and stops.
+		// The game's activity, where tracking it starts and stops, is in its
+		// ... menu. Only games you can edit come with one, so the rest get one
+		// made the way Roblox makes it.
 		document.$watch("#game-detail-meta-data", (meta: HTMLElement) => {
 			const universeId = Number.parseInt(meta.dataset.universeId ?? "", 10)
 
-			if (Number.isSafeInteger(universeId)) {
-				const button = trackButton(
+			if (!Number.isSafeInteger(universeId)) {
+				return
+			}
+
+			const item = html`<li class="btr-track-menu-item"><a href="#"></a></li>`
+			keepTrackLabel(item.$req("a"), "game", universeId)
+
+			document.$watch(".game-calls-to-action", (actions: HTMLElement) => {
+				let menu = actions.$find("#game-context-menu")
+
+				if (!menu) {
+					menu = html`<div id="game-context-menu">
+						<button
+							class="rbx-menu-item btn-generic-more-sm"
+							data-toggle="popover"
+							data-bind="game-context-menu"
+							data-viewport=".game-calls-to-action"
+						>
+							<span class="icon-more"></span>
+						</button>
+						<div class="rbx-popover-content" data-toggle="game-context-menu">
+							<ul class="dropdown-menu" role="menu"></ul>
+						</div>
+					</div>`
+
+					actions.prepend(menu)
+					injectScript.call("gamedetailsSetupMenu")
+				}
+
+				menu.$req(".rbx-popover-content .dropdown-menu").append(item)
+			})
+
+			// The open menu is a copy of its list, so the click is caught here.
+			document.$on("click", ".btr-track-menu-item a", (ev: MouseEvent) => {
+				ev.preventDefault()
+				injectScript.call("gamedetailsCloseMenu")
+				openTracked(
 					"game",
 					universeId,
-					() => document.querySelector(".game-title-container h1")?.textContent?.trim() || "Game",
+					document.querySelector(".game-title-container h1")?.textContent?.trim() || "Game",
 				)
-
-				document.$watch(".game-buttons-container", (container: HTMLElement) =>
-					container.append(button),
-				)
-			}
+			})
 		})
 
 		document

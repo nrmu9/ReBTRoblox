@@ -4,7 +4,8 @@ import { loadOptionalFeature } from "@/feat/loadFeature"
 import { btrLocalStorage } from "@/core/storage"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
-import { trackButton } from "@/feat/activity/trackButton"
+import { keepTrackLabel } from "@/feat/activity/trackMenu"
+import { openTracked } from "@/feat/activity/trackDialog"
 import {
 	formatNumber,
 	keepText,
@@ -113,17 +114,54 @@ pageInit.groups = () => {
 			return
 		}
 
-		const button = trackButton(
-			"group",
-			groupId,
-			// The page title is the name followed by - Roblox.
-			() => document.title.replace(/ - Roblox$/, "") || `Community ${groupId}`,
+		// The header's ... menu gets the entry. Other menus on the page look the
+		// same, so it goes only into one opened just after that button was pressed.
+		let pressed = 0
+
+		document.addEventListener(
+			"click",
+			(ev) => {
+				if (
+					(ev.target as Element).closest?.(
+						".group-profile-header .actions-container .MuiIconButton-root",
+					)
+				) {
+					pressed = Date.now()
+				}
+			},
+			true,
 		)
 
-		// The header is drawn again at times, and the same button goes back in.
-		document.$watch(".profile-insights-container", (row: HTMLElement) => row.append(button), {
-			continuous: true,
-		})
+		document.$watch(
+			".MuiMenu-list",
+			(list: HTMLElement) => {
+				const template = list.firstElementChild
+
+				if (Date.now() - pressed > 2000 || !template || list.$find(".btr-track-menu-item")) {
+					return
+				}
+
+				// Roblox's own entries' look, without their ripple.
+				const item = document.createElement("li")
+				item.className = `${template.className} btr-track-menu-item`
+				item.setAttribute("role", "menuitem")
+				item.tabIndex = -1
+				keepTrackLabel(item, "group", groupId)
+
+				item.$on("click", () => {
+					list.closest(".MuiPopover-root")?.querySelector<HTMLElement>(".MuiBackdrop-root")?.click()
+					// The page title is the name followed by - Roblox.
+					openTracked(
+						"group",
+						groupId,
+						document.title.replace(/ - Roblox$/, "") || `Community ${groupId}`,
+					)
+				})
+
+				list.append(item)
+			},
+			{ continuous: true },
+		)
 	})
 
 	if (SETTINGS.get("groups.exactCounts")) {

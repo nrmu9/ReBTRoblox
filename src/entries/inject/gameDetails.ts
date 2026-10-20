@@ -4,6 +4,14 @@ import { reactHook } from "@/entries/inject/react"
 // Injected functions for the game details page, apart from its server list.
 
 export const gameDetailsFunctions: Record<string, (...args: any[]) => any> = {
+	// Sets up the ... menu ReBTRoblox adds to games that come without one.
+	gamedetailsSetupMenu: () => {
+		Roblox?.BootstrapWidgets?.SetupPopover(null, null, "[data-bind='game-context-menu']")
+	},
+	// Closes that menu, which clicking its button from a script does not.
+	gamedetailsCloseMenu: () => {
+		;(window as any).jQuery?.("[data-bind='game-context-menu']").popover?.("hide")
+	},
 	gamedetails: () => {
 		reactHook.inject(".game-description-container", (elem: any) => {
 			elem.replaceWith(
