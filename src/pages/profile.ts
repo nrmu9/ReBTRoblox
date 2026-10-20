@@ -3,7 +3,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
-import { isWatched, lastSeenAt, openActivity } from "@/feat/activityModal"
+import { lastSeenAt, openActivity } from "@/feat/activityModal"
 import { clockFormat } from "@/feat/clock"
 import { getPresenceHistory, onPresenceHistoryChange, type PresenceSegment } from "@/feat/presenceHistory"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
@@ -200,11 +200,7 @@ pageInit.profile = () => {
 										aria-haspopup="dialog"
 										title="View activity"
 									>
-										<span class="text-label"
-											>Last Seen Online<span class="btr-lastseen-watching" hidden
-												>Watching</span
-											></span
-										>
+										<span class="text-label">Last Seen Online</span>
 										<span class="text-lead text-overflow btr-stats-lastseen"></span>
 									</button>
 								</div>
@@ -502,15 +498,6 @@ pageInit.profile = () => {
 
 							render(await getPresenceHistory(userId))
 							onPresenceHistoryChange(userId, render)
-
-							// Marks someone you watch, whose activity is checked from the background.
-							const watching = stat.$req(".btr-lastseen-watching")
-							const updateWatching = () => {
-								watching.hidden = userId === loggedInUser || !isWatched(userId)
-							}
-
-							SETTINGS.onChange("profile.watchedUsers", updateWatching)
-							updateWatching()
 
 							stat.$req(".btr-lastseen-toggle").$on("click", () => {
 								const name =
