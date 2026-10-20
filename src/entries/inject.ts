@@ -1615,6 +1615,31 @@ const startInject = () => {
 
 		//
 
+		/**
+		 * Whether a game stays in a list: sponsored ones go with Hide Sponsored,
+		 * disliked ones with Hide Disliked. Null when neither is on. Read per
+		 * response, so changes apply on the next load without a reload of this.
+		 */
+		const gameFilter = (): ((game: any) => boolean) | null => {
+			const hideSponsored = !!settings.general?.hideSponsored
+			let disliked = new Set<string>()
+
+			if (settings.home?.hideDisliked) {
+				try {
+					disliked = new Set(
+						JSON.parse(localStorage.getItem("ReBTRoblox:dislikedPlaces") || "[]").map(String),
+					)
+				} catch {}
+			}
+
+			if (!hideSponsored && !disliked.size) {
+				return null
+			}
+
+			return (game: any) =>
+				!(hideSponsored && game?.isSponsored) && !disliked.has(String(game?.rootPlaceId))
+		}
+
 		const injectedFunctions: Record<string, (...args: any[]) => any> = {
 			// Insert injected functions here,
 			avatar: () => {
@@ -2231,6 +2256,44 @@ const startInject = () => {
 					)
 				})
 			},
+			// The same filter on Charts and search, which list games their own way.
+			filterGames: () => {
+				hijackXHR((request: any) => {
+					const charts = /^https:\/\/apis\.roblox\.com\/explore-api\/v1\/get-sort/i.test(
+						request.url,
+					)
+					const search = /^https:\/\/apis\.roblox\.com\/search-api\/omni-search/i.test(request.url)
+
+					if (!charts && !search) {
+						return
+					}
+
+					request.onResponse.push((json: any) => {
+						const keep = gameFilter()
+
+						if (!keep) {
+							return
+						}
+
+						if (charts) {
+							for (const sort of json?.sorts ?? [json]) {
+								if (Array.isArray(sort?.games)) {
+									sort.games = sort.games.filter(keep)
+								}
+							}
+						} else if (Array.isArray(json?.searchResults)) {
+							json.searchResults = json.searchResults.filter((result: any) => {
+								if (result?.contentGroupType !== "Game" || !Array.isArray(result.contents)) {
+									return true
+								}
+
+								result.contents = result.contents.filter(keep)
+								return result.contents.length > 0
+							})
+						}
+					})
+				})
+			},
 			// Passes on responses to requests Roblox makes anyway, so features read
 			// them instead of asking again. The last few are kept, as the content
 			// script can start listening after the first ones have come and gone.
@@ -2306,28 +2369,17 @@ const startInject = () => {
 							}
 						}
 
-						if (settings.home?.hideDisliked) {
-							let disliked: string[] = []
+						const keep = gameFilter()
 
-							try {
-								disliked = JSON.parse(
-									localStorage.getItem("ReBTRoblox:dislikedPlaces") || "[]",
-								)
-							} catch {}
-
+						if (keep) {
 							const games = json.contentMetadata?.Game ?? {}
 
-							if (Array.isArray(disliked) && disliked.length) {
-								for (const sort of json.sorts) {
-									if (Array.isArray(sort.recommendationList)) {
-										sort.recommendationList = sort.recommendationList.filter(
-											(item: any) =>
-												item?.contentType !== "Game" ||
-												!disliked.includes(
-													String(games[item.contentId]?.rootPlaceId),
-												),
-										)
-									}
+							for (const sort of json.sorts) {
+								if (Array.isArray(sort.recommendationList)) {
+									sort.recommendationList = sort.recommendationList.filter(
+										(item: any) =>
+											item?.contentType !== "Game" || keep(games[item.contentId]),
+									)
 								}
 							}
 						}
@@ -4536,6 +4588,7 @@ const startInject = () => {
 			["hideFriendActivity", "home.hideFriendActivity"],
 			["homeRows"],
 			["robloxResponses"],
+			["filterGames"],
 			["ignoreR6Warning"],
 			["hijackAuth"],
 			["webpackHook", "create.enabled"],

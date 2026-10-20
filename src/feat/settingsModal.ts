@@ -259,6 +259,11 @@ export const SettingsModal: SettingsModalState = {
 								desc="Hides sponsored games"
 							></toggle>
 							<toggle
+								label="Hide Disliked Games"
+								path="home.hideDisliked"
+								desc="Hides games you disliked from Home, Charts and search. It learns them as you open and vote on games"
+							></toggle>
+							<toggle
 								label="Fast User Search"
 								path="fastSearch"
 								desc="Shows matching users as you type in search"
@@ -381,11 +386,6 @@ export const SettingsModal: SettingsModalState = {
 								label="Instant Game Hover"
 								path="instantGameHoverAction"
 								desc="Shows game details as soon as you hover a game"
-							></toggle>
-							<toggle
-								label="Hide Disliked Games"
-								path="hideDisliked"
-								desc="Hides games you disliked. It learns them as you open and vote on games, so older dislikes show up once you visit them"
 							></toggle>
 							<heading>Rows</heading>
 							<div class="btr-settings-home-rows"></div>
