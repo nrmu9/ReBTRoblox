@@ -101,7 +101,7 @@ export const SettingsModal: SettingsModalState = {
 			}
 
 			this.settingsDiv.addEventListener("transitionend", unmount, { once: true })
-			setTimeout(unmount, 250)
+			setTimeout(unmount, 320)
 
 			if (this.themeObserver) {
 				this.themeObserver.disconnect()
@@ -230,51 +230,51 @@ export const SettingsModal: SettingsModalState = {
 							<toggle
 								label="Hide Sponsored Experiences"
 								path="hideSponsored"
-								desc="Hides paid game tiles, and whole rows when every tile in them is an ad."
+								desc="Hides sponsored games"
 							></toggle>
 							<toggle
 								label="Fast User Search"
 								path="fastSearch"
-								desc="Shows matching users as you type in the search bar."
+								desc="Shows matching users as you type in search"
 							></toggle>
 							<toggle
 								label="Voice Chat Status"
 								path="voiceChatStatus"
-								desc="Shows your voice chat status, including bans, in the top bar."
+								desc="Shows your voice chat status in the top bar"
 							></toggle>
 							<toggle
 								label="Copy ID Menu Items"
 								path="enableContextMenus"
-								desc="Adds Copy ID options to the right click menu on games, items and users."
+								desc="Adds a Copy ID option when you right click games, items and users"
 							></toggle>
 							<toggle
 								label="Higher Robux Precision"
 								path="higherRobuxPrecision"
-								desc="Shows more of your Robux balance before it gets shortened to 1.2K."
+								desc="Shows your full balance instead of shortening it to 1.2K"
 							></toggle>
 							<toggle
 								label="Show Robux While Loading"
 								path="cacheRobuxAmount"
-								desc="Shows your last known balance until the current one loads."
+								desc="Shows your last balance while the current one loads"
 							></toggle>
 
 							<heading>Chat</heading>
 							<toggle
 								label="Show Chat"
 								path="!hideChat"
-								desc="Shows the chat window in the corner of the page."
+								desc="Shows the chat in the corner of the page"
 							></toggle>
 							<toggle
 								label="Minimize Chat"
 								path="smallChatButton"
 								require="!hideChat"
-								desc="Shrinks the chat window to a small button."
+								desc="Shrinks the chat into a small button"
 							></toggle>
 							<toggle
 								label="Fix Missing Messages"
 								path="fixChatMessages"
 								require="!hideChat"
-								desc="Fixes conversations that open without their latest messages."
+								desc="Fixes chats that open without their newest messages"
 							></toggle>
 
 							<heading>Robux to Cash</heading>
@@ -284,9 +284,7 @@ export const SettingsModal: SettingsModalState = {
 							>
 								<div class="btr-setting-text">
 									<span class="btr-setting-label">Conversion Rate</span>
-									<span class="btr-setting-desc"
-										>Shows Robux prices in real money at the rate you pick.</span
-									>
+									<span class="btr-setting-desc">Shows Robux prices in real money</span>
 								</div>
 								<button type="button" class="btr-setting-reset" path="general.robuxToUSDRate">
 									Reset
@@ -308,14 +306,13 @@ export const SettingsModal: SettingsModalState = {
 							icon="three-bars-horizontal"
 							path="navigation"
 							toggle
-							master="Navigation changes"
-							desc="Changes to the top bar and sidebar."
+							master="Customize navigation"
 						>
 							<toggle
 								label="Keep Sidebar Open"
 								path="noHamburger"
 								require="false"
-								desc="Keeps the sidebar open on wide screens instead of hiding it behind the menu button."
+								desc="Keeps the sidebar open on wide screens"
 							></toggle>
 							<heading>Top Bar</heading>
 							<div class="btr-settings-nav-list" data-kind="header"></div>
@@ -327,37 +324,37 @@ export const SettingsModal: SettingsModalState = {
 							<toggle
 								label="Show More Friends"
 								path="friendsSecondRow"
-								desc="Shows a second row of friends."
+								desc="Shows a second row of friends"
 							></toggle>
 							<toggle
 								label="Show Friend Usernames"
 								path="friendsShowUsername"
-								desc="Shows usernames under display names in the friends row."
+								desc="Shows usernames under display names"
 							></toggle>
 							<toggle
 								label="Link Friend Presence"
 								path="friendPresenceLinks"
-								desc="Makes the game a friend is playing a link on their tile."
+								desc="Lets you click the game a friend is playing"
 							></toggle>
 							<toggle
 								label="Hide Friend Activity"
 								path="hideFriendActivity"
-								desc="Hides the friends are playing labels on game tiles."
+								desc="Hides which friends are playing a game"
 							></toggle>
 							<toggle
 								label="Move Favorites to Top"
 								path="favoritesAtTop"
-								desc="Moves your favorite games to the top of the page."
+								desc="Moves your favorites to the top"
 							></toggle>
 							<toggle
 								label="Show Player Counts"
 								path="showRecommendationPlayerCount"
-								desc="Shows how many people are playing each recommended game."
+								desc="Shows how many people are playing each game"
 							></toggle>
 							<toggle
 								label="Instant Game Hover"
 								path="instantGameHoverAction"
-								desc="Shows game details as soon as you hover a tile."
+								desc="Shows game details as soon as you hover a game"
 							></toggle>
 						</page>
 
@@ -368,17 +365,17 @@ export const SettingsModal: SettingsModalState = {
 							path="profile"
 							toggle
 							master="Profile layout"
-							desc="The reworked profile layout."
+							desc="Uses the ReBTRoblox profile layout"
 						>
 							<toggle
 								label="Embed Inventory"
 								path="embedInventoryEnabled"
-								desc="Shows the inventory on the profile itself."
+								desc="Shows the inventory on the profile"
 							></toggle>
 							<toggle
 								label="Exact Follower Counts"
 								path="exactCounts"
-								desc="Shows exact friend, follower and following counts instead of rounded ones."
+								desc="Shows exact follower and following counts"
 							></toggle>
 						</page>
 
@@ -389,32 +386,31 @@ export const SettingsModal: SettingsModalState = {
 							path="gamedetails"
 							toggle
 							master="Game page features"
-							desc="Changes to experience pages."
 						>
 							<toggle
 								label="Exact Visit and Like Counts"
 								path="exactCounts"
-								desc="Shows exact visits, likes and favorites instead of rounded ones."
+								desc="Shows exact visits, likes and favorites"
 							></toggle>
 							<toggle
 								label="Paged Server List"
 								path="addServerPager"
-								desc="Splits the server list into pages you can jump between."
+								desc="Splits the server list into pages"
 							></toggle>
 							<toggle
 								label="Show Server Region"
 								path="showServerRegion"
-								desc="Shows where each server is hosted."
+								desc="Shows where each server is located"
 							></toggle>
 							<toggle
 								label="Highlight Owned Badges"
 								path="showBadgeOwned"
-								desc="Marks the badges you already have."
+								desc="Marks badges you already have"
 							></toggle>
 							<toggle
 								label="Compact Badge Stats"
 								path="compactBadgeStats"
-								desc="Fits badge stats into a smaller layout."
+								desc="Shows badge stats in less space"
 							></toggle>
 						</page>
 
@@ -425,45 +421,44 @@ export const SettingsModal: SettingsModalState = {
 							path="itemdetails"
 							toggle
 							master="Item page features"
-							desc="Changes to marketplace item pages."
 						>
 							<toggle
 								label="Show Sales"
 								path="showSales"
-								desc="Shows how many times an item has sold."
+								desc="Shows how many times an item has sold"
 							></toggle>
 							<toggle
 								label="Show Created and Updated"
 								path="showCreatedAndUpdated"
-								desc="Shows when an item was made and last changed."
+								desc="Shows when an item was created and last updated"
 							></toggle>
 							<toggle
 								label="Explorer Button"
 								path="explorerButton"
-								desc="Adds a button to browse what a model or package is made of."
+								desc="Adds a button to look inside models and packages"
 							></toggle>
 							<toggle
 								label="Download Button"
 								path="downloadButton"
-								desc="Adds a button to download an item's file."
+								desc="Adds a button to download the item"
 							></toggle>
 							<toggle
 								label="Content Button"
 								path="contentButton"
-								desc="Adds a button to open the asset behind an item, such as a shirt's template."
+								desc="Adds a button to open an item's template or texture"
 							></toggle>
 
 							<heading>Previewer</heading>
 							<toggle
 								label="Item Previewer"
 								path="itemPreviewer"
-								desc="Shows a 3D preview of the item on your avatar."
+								desc="Shows the item on your avatar in 3D"
 							></toggle>
 							<choice
 								label="Open Automatically"
 								path="itemPreviewerMode"
 								require="itemPreviewer"
-								desc="When the previewer opens without being asked."
+								desc="When the previewer opens by itself"
 							>
 								<option value="never">Never</option>
 								<option value="animations">For animations</option>
@@ -472,23 +467,15 @@ export const SettingsModal: SettingsModalState = {
 							<toggle
 								label="Hover Previewer"
 								path="general.hoverPreview"
+								mode="general.hoverPreviewMode"
 								require="true"
-								desc="Previews items when you hover them in lists."
+								desc="Previews items when you hover them"
 							></toggle>
-							<choice
-								label="Preview on Hover"
-								path="general.hoverPreviewMode"
-								require="general.hoverPreview"
-								desc="Whether hovering opens the preview right away."
-							>
-								<option value="never">Never</option>
-								<option value="always">Always</option>
-							</choice>
 							<toggle
 								label="Layered Clothing"
 								path="general.previewLayeredClothing"
 								require="true"
-								desc="Fits layered clothing to the avatar in previews. Still in progress."
+								desc="Fits layered clothing to your avatar in previews"
 							></toggle>
 						</page>
 
@@ -499,28 +486,27 @@ export const SettingsModal: SettingsModalState = {
 							path="avatar"
 							toggle
 							master="Avatar editor features"
-							desc="Changes to the avatar editor."
 						>
 							<toggle
 								label="Remove Accessory Limits"
 								path="removeAccessoryLimits"
-								desc="Lets you wear more accessories than Roblox normally allows."
+								desc="Lets you wear more accessories at once"
 							></toggle>
 							<toggle
 								label="Remove Layered Clothing Limits"
 								path="removeLayeredLimits"
 								require="removeAccessoryLimits"
-								desc="Lets you wear more layered clothing at once."
+								desc="Lets you wear more layered clothing at once"
 							></toggle>
 							<toggle
 								label="Full Range Body Colors"
 								path="fullRangeBodyColors"
-								desc="Lets you pick any body color, not just the palette."
+								desc="Lets you pick any body color"
 							></toggle>
 							<toggle
 								label="Skip R6 Switch Warning"
 								path="ignoreR6Warning"
-								desc="Switches to R6 without the confirmation."
+								desc="Switches to R6 without asking first"
 							></toggle>
 						</page>
 
@@ -531,12 +517,11 @@ export const SettingsModal: SettingsModalState = {
 							path="inventory"
 							toggle
 							master="Inventory features"
-							desc="Changes to inventory pages."
 						>
 							<toggle
 								label="Inventory Tools"
 								path="inventoryTools"
-								desc="Adds a button to remove several items from your inventory at once."
+								desc="Lets you remove several items at once"
 							></toggle>
 						</page>
 
@@ -547,12 +532,11 @@ export const SettingsModal: SettingsModalState = {
 							path="catalog"
 							toggle
 							master="Marketplace features"
-							desc="Changes to the marketplace."
 						>
 							<toggle
 								label="Show Owned Items"
 								path="showOwnedAssets"
-								desc="Marks the items you already own."
+								desc="Marks items you already own"
 							></toggle>
 						</page>
 
@@ -563,17 +547,16 @@ export const SettingsModal: SettingsModalState = {
 							path="messages"
 							toggle
 							master="Inbox features"
-							desc="Changes to the inbox."
 						>
 							<toggle
 								label="Mark All as Read"
 								path="markAllAsRead"
-								desc="Adds a button to mark every message as read."
+								desc="Adds a button to mark all messages as read"
 							></toggle>
 							<toggle
 								label="Jump to Page"
 								path="pageJump"
-								desc="Lets you type a page number to go straight to it."
+								desc="Lets you jump straight to a page"
 							></toggle>
 						</page>
 
@@ -584,12 +567,11 @@ export const SettingsModal: SettingsModalState = {
 							path="groups"
 							toggle
 							master="Community page features"
-							desc="Changes to community pages."
 						>
 							<toggle
 								label="Modify Layout"
 								path="modifyLayout"
-								desc="Rearranges the community page and adds a payouts tab for owners."
+								desc="Rearranges the community page and adds a payouts tab"
 							></toggle>
 						</page>
 
@@ -600,17 +582,16 @@ export const SettingsModal: SettingsModalState = {
 							path="create"
 							toggle
 							master="Creator Hub features"
-							desc="Changes to the Creator Hub."
 						>
 							<toggle
 								label="Downloadable Version History"
 								path="downloadVersion"
-								desc="Adds download links to the version history of your places and assets."
+								desc="Lets you download older versions of your places and assets"
 							></toggle>
 							<toggle
 								label="Modify Asset Options"
 								path="assetOptions"
-								desc="Adds extra links to the menus of your creations."
+								desc="Adds extra links to your creations' menus"
 							></toggle>
 						</page>
 
@@ -625,7 +606,7 @@ export const SettingsModal: SettingsModalState = {
 									<div class="btr-setting-text">
 										<span class="btr-setting-label">Reset All Settings</span>
 										<span class="btr-setting-desc"
-											>Puts every setting back to its default.</span
+											>Puts every setting back to its default</span
 										>
 									</div>
 									<button
@@ -784,13 +765,30 @@ export const SettingsModal: SettingsModalState = {
 			row.dataset.path = path
 			row.append(makeReset(path), wrap)
 
-			input.$on("change", () => SETTINGS.set(path, input.checked !== invert))
+			// A mode is the live half of a feature that otherwise needs a reload,
+			// so the one switch sets both and reads as on only when both are.
+			const mode = elem.getAttribute("mode")
+
+			if (mode) {
+				settingsDone[mode] = true
+			}
+
+			input.$on("change", () => {
+				SETTINGS.set(path, input.checked !== invert)
+
+				if (mode) {
+					SETTINGS.set(mode, input.checked ? "always" : "never")
+				}
+			})
 
 			const update = () => {
-				input.checked = !!SETTINGS.get(path) !== invert
+				input.checked = !!SETTINGS.get(path) !== invert && (!mode || SETTINGS.get(mode) !== "never")
 			}
 
 			SETTINGS.onChange(path, update)
+			if (mode) {
+				SETTINGS.onChange(mode, update)
+			}
 			update()
 
 			const reqAttr = elem.getAttribute("require")
@@ -1318,6 +1316,252 @@ export const SettingsModal: SettingsModalState = {
 
 				bar.hidden = dirty.size === 0
 			})
+		}
+
+		// Dropdowns, in the style of Roblox's own menus. The native select stays,
+		// hidden, as the one place the value lives, so everything that reads or
+		// sets it keeps working; the button and menu only mirror it.
+		{
+			const modal: HTMLElement = this.settingsDiv
+			const body: HTMLElement = modal.$req(".btr-settings-body")
+
+			const menu = html`<div class="btr-dropdown-menu" role="listbox" tabindex="-1" hidden></div>`
+			modal.append(menu)
+
+			let owner: HTMLSelectElement | null = null
+			let ownerButton: HTMLButtonElement | null = null
+			let active = -1
+			let closeTimer: ReturnType<typeof setTimeout> | undefined
+
+			const options = () => [...menu.children] as HTMLElement[]
+
+			const setActive = (index: number) => {
+				const items = options()
+				active = Math.max(0, Math.min(items.length - 1, index))
+
+				items.forEach((item, i) => item.classList.toggle("btr-dropdown-active", i === active))
+				items[active]?.scrollIntoView({ block: "nearest" })
+			}
+
+			const close = (focusButton = false) => {
+				if (!owner) {
+					return
+				}
+
+				ownerButton!.setAttribute("aria-expanded", "false")
+
+				if (focusButton) {
+					ownerButton!.focus()
+				}
+
+				owner = null
+				ownerButton = null
+				menu.classList.remove("btr-dropdown-open")
+
+				clearTimeout(closeTimer)
+				closeTimer = setTimeout(() => {
+					if (!owner) {
+						menu.hidden = true
+					}
+				}, 150)
+			}
+
+			const choose = (index: number) => {
+				const select = owner
+				const item = options()[index]
+
+				close(true)
+
+				if (select && item && select.value !== item.dataset.value) {
+					select.value = item.dataset.value!
+					select.dispatchEvent(new Event("change"))
+				}
+			}
+
+			const open = (select: HTMLSelectElement, button: HTMLButtonElement) => {
+				clearTimeout(closeTimer)
+				owner = select
+				ownerButton = button
+				button.setAttribute("aria-expanded", "true")
+
+				menu.replaceChildren()
+
+				for (const option of select.options) {
+					const item = html`<div class="btr-dropdown-option" role="option">
+						<span class="btr-dropdown-option-label">${option.textContent?.trim() ?? ""}</span>
+					</div>`
+
+					item.dataset.value = option.value
+					item.setAttribute("aria-selected", String(option.selected))
+					item.title = option.title || option.textContent?.trim() || ""
+
+					item.$on("pointermove", () => setActive(options().indexOf(item)))
+					item.$on("click", () => choose(options().indexOf(item)))
+					menu.append(item)
+				}
+
+				// Below the button, or above when that has more room, and never
+				// narrower than the button itself.
+				const rect = button.getBoundingClientRect()
+				const below = innerHeight - rect.bottom - 16
+				const above = rect.top - 16
+				const up = below < 240 && above > below
+
+				menu.hidden = false
+				menu.style.minWidth = `${rect.width}px`
+				menu.style.maxHeight = `${Math.min(320, up ? above : below)}px`
+				menu.style.left = `${Math.min(rect.left, innerWidth - menu.offsetWidth - 16)}px`
+				menu.style.top = up ? "" : `${rect.bottom + 4}px`
+				menu.style.bottom = up ? `${innerHeight - rect.top + 4}px` : ""
+				menu.classList.toggle("btr-dropdown-up", up)
+
+				setActive(select.selectedIndex)
+				requestAnimationFrame(() => {
+					if (owner === select) {
+						menu.classList.add("btr-dropdown-open")
+					}
+				})
+			}
+
+			// Capture, so Escape closes the menu before it can close the dialog.
+			document.addEventListener(
+				"keydown",
+				(ev: KeyboardEvent) => {
+					if (!owner) {
+						return
+					}
+
+					const count = options().length
+					let handled = true
+
+					switch (ev.key) {
+						case "ArrowDown":
+							setActive(active + 1)
+							break
+						case "ArrowUp":
+							setActive(active - 1)
+							break
+						case "Home":
+							setActive(0)
+							break
+						case "End":
+							setActive(count - 1)
+							break
+						case "Enter":
+						case " ":
+							choose(active)
+							break
+						case "Escape":
+							close(true)
+							break
+						case "Tab":
+							close()
+							handled = false
+							break
+						default: {
+							// Type a letter to jump to the next option starting with it.
+							const key = ev.key.length === 1 ? ev.key.toLowerCase() : ""
+							const items = options()
+							const next = key
+								? [...items.slice(active + 1), ...items.slice(0, active + 1)].find((item) =>
+										item.textContent?.trim().toLowerCase().startsWith(key),
+									)
+								: null
+
+							if (next) {
+								setActive(items.indexOf(next))
+							} else {
+								handled = false
+							}
+						}
+					}
+
+					if (handled) {
+						ev.preventDefault()
+						ev.stopPropagation()
+					}
+				},
+				true,
+			)
+
+			document.addEventListener(
+				"pointerdown",
+				(ev: Event) => {
+					if (
+						owner &&
+						!menu.contains(ev.target as Node) &&
+						!ownerButton!.contains(ev.target as Node)
+					) {
+						close()
+					}
+				},
+				true,
+			)
+
+			body.addEventListener("scroll", () => close(), { passive: true })
+			window.addEventListener("resize", () => close())
+
+			const nativeValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!
+
+			for (const select of modal.$findAll<HTMLSelectElement>(".btr-select select")) {
+				const button = html<HTMLButtonElement>`<button
+					type="button"
+					class="btr-dropdown"
+					aria-haspopup="listbox"
+					aria-expanded="false"
+				>
+					<span class="btr-dropdown-label"></span>
+					<span class="btr-dropdown-chevron" aria-hidden="true"></span>
+				</button>`
+
+				if (select.id) {
+					button.id = select.id
+					select.removeAttribute("id")
+				}
+
+				const ariaLabel = select.getAttribute("aria-label")
+				if (ariaLabel) {
+					button.setAttribute("aria-label", ariaLabel)
+				}
+
+				select.tabIndex = -1
+				select.after(button)
+
+				const refresh = () => {
+					const selected = select.selectedOptions[0]
+					button.$req(".btr-dropdown-label").textContent = selected?.textContent?.trim() ?? ""
+					button.title = selected?.title || selected?.textContent?.trim() || ""
+					button.disabled = select.disabled
+				}
+
+				// The rest of this file sets the value directly, which fires no
+				// event, so the setter itself tells the button.
+				Object.defineProperty(select, "value", {
+					configurable: true,
+					get: () => nativeValue.get!.call(select),
+					set: (value) => {
+						nativeValue.set!.call(select, value)
+						refresh()
+					},
+				})
+
+				new MutationObserver(refresh).observe(select, {
+					attributes: true,
+					attributeFilter: ["disabled"],
+					childList: true,
+					subtree: true,
+				})
+
+				button.$on("click", () => (owner === select ? close() : open(select, button)))
+				button.$on("keydown", (ev: KeyboardEvent) => {
+					if (!owner && ["ArrowDown", "ArrowUp", "Enter", " "].includes(ev.key)) {
+						ev.preventDefault()
+						open(select, button)
+					}
+				})
+
+				refresh()
+			}
 		}
 
 		this.robloxExperimentsChanged()
