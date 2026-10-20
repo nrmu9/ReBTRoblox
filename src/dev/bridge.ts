@@ -102,7 +102,16 @@ const poll = async (): Promise<void> => {
 				continue
 			}
 
-			const result = job.target === "bg" ? await runInBackground(job.code) : await runInTab(job.code)
+			// A job that never settles, such as one in a tab that navigated away
+			// mid run, would otherwise stop the loop and leave the bridge dead
+			// until the extension reloads. The server gives up at 30s anyway.
+			const run = job.target === "bg" ? runInBackground(job.code) : runInTab(job.code)
+			const result = await Promise.race([
+				run,
+				new Promise<Result>((resolve) =>
+					setTimeout(() => resolve({ ok: false, error: "job did not settle" }), 28e3),
+				),
+			])
 
 			await post("/result", { id: job.id, ...result })
 		} catch (err) {
