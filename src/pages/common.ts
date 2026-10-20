@@ -7,6 +7,7 @@ import { assert, bufferToString, formatFileName, ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
+import { recordPresences } from "@/feat/lastSeen"
 import { SETTINGS } from "@/feat/settings"
 import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { AssetCache } from "@/rbx/AssetCache"
@@ -1329,6 +1330,13 @@ pageInit.www = () => {
 	applyChatSettings()
 
 	// Experiments
+
+	// Presence Roblox fetched itself, recorded for the profile's last seen.
+	injectScript.listen("presences", (presences: any[]) => {
+		if (SETTINGS.get("profile.lastSeen") && Array.isArray(presences)) {
+			recordPresences(presences)
+		}
+	})
 
 	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
 		robloxExperiments[experiment] ??= {}

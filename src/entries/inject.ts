@@ -2189,6 +2189,21 @@ const startInject = () => {
 					)
 				})
 			},
+			// Passes on the presence Roblox asks for itself, such as the friends row
+			// polling it, so last seen stays fresh without a request of our own.
+			recordPresence: () => {
+				hijackXHR((request: any) => {
+					if (!/^https:\/\/presence\.roblox\.com\/v1\/presence\/users$/i.test(request.url)) {
+						return
+					}
+
+					request.onResponse.push((json: any) => {
+						if (Array.isArray(json?.userPresences)) {
+							contentScript.send("presences", json.userPresences)
+						}
+					})
+				})
+			},
 			// Reports the rows Home loads, so the settings can list them, and drops
 			// the hidden ones from the response before Roblox renders any of it.
 			// Rows are matched by topic id, which unlike the title is not translated.
@@ -4460,6 +4475,7 @@ const startInject = () => {
 			["higherRobuxPrecision", "general.higherRobuxPrecision"],
 			["hideFriendActivity", "home.hideFriendActivity"],
 			["homeRows"],
+			["recordPresence", "profile.lastSeen"],
 			["ignoreR6Warning"],
 			["hijackAuth"],
 			["webpackHook", "create.enabled"],
