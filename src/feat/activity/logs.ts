@@ -168,6 +168,7 @@ const PEOPLE_GROUPS = [
 	["friends", "Friends"],
 	["followers", "Followers"],
 	["following", "Following"],
+	["requests", "Requests"],
 ] as const
 
 const PEOPLE_KINDS: ActivityEvent["kind"][] = [
@@ -177,6 +178,9 @@ const PEOPLE_KINDS: ActivityEvent["kind"][] = [
 	"followerRemoved",
 	"followingAdded",
 	"followingRemoved",
+	"requestReceived",
+	"requestSent",
+	"requestDeclined",
 ]
 
 const peopleGroup = (event: ActivityEvent) =>
@@ -184,11 +188,21 @@ const peopleGroup = (event: ActivityEvent) =>
 		? "friends"
 		: event.kind.startsWith("follower")
 			? "followers"
-			: "following"
+			: event.kind.startsWith("request")
+				? "requests"
+				: "following"
 
 /** What happened, read after the person's name. */
-const peopleLabel = (kind: ActivityEvent["kind"], isOwn: boolean) =>
+const peopleLabel = ({ kind, field }: ActivityEvent, isOwn: boolean) =>
 	({
+		requestReceived: "Sent you a request",
+		requestSent: "You sent a request",
+		requestDeclined:
+			field === "byYou"
+				? "You declined"
+				: field === "byThem"
+					? "Declined your request"
+					: "Request declined",
 		friendAdded: "Friend added",
 		friendRemoved: "Friend removed",
 		followerAdded: isOwn ? "Followed you" : "Followed them",
@@ -210,7 +224,7 @@ const friendEntry = (event: ActivityEvent, isOwn: boolean) => {
 			>
 			<span class="btr-friendlog-username">${event.name ? `@${event.name}` : ""}</span>
 		</span>
-		<span class="btr-friendlog-kind">${peopleLabel(event.kind, isOwn)}</span>
+		<span class="btr-friendlog-kind">${peopleLabel(event, isOwn)}</span>
 		<span class="btr-friendlog-time">${new Date(event.at).$format(clockFormat())}</span>
 	</a>`
 
@@ -303,7 +317,7 @@ const groupOf = (event: ActivityEvent) =>
 			? "bio"
 			: event.field === "avatar"
 				? "avatar"
-				: event.field === "groupJoined" || event.field === "groupLeft"
+				: event.field === "groupJoined" || event.field === "groupLeft" || event.field === "groupRole"
 					? "communities"
 					: event.field === "badge"
 						? "badges"
@@ -395,6 +409,28 @@ const changeEntry = (event: ActivityEvent) => {
 		}
 
 		body.append(images)
+
+		for (const [label, items] of [
+			["Put on", event.items?.added],
+			["Took off", event.items?.removed],
+		] as const) {
+			if (!items?.length) {
+				continue
+			}
+
+			const line = html`<div class="btr-change-sub"></div>`
+			line.append(`${label} `)
+
+			items.forEach((piece, i) => {
+				if (i > 0) {
+					line.append(", ")
+				}
+
+				line.append(html`<a href="/catalog/${piece.id}">${piece.name}</a>`)
+			})
+
+			body.append(line)
+		}
 	} else if (event.field === "groupJoined" || event.field === "groupLeft") {
 		const { id, name } = (event.field === "groupJoined" ? event.after : event.before) as {
 			id: number
@@ -449,6 +485,15 @@ const changeEntry = (event: ActivityEvent) => {
 
 		title.textContent = `${event.field === "followers" ? "Followers" : "Following"} ${before.toLocaleString("en-US")} → ${after.toLocaleString("en-US")}`
 		body.append(html`<div class="btr-change-sub">${change > 0 ? `+${change}` : String(change)}</div>`)
+	} else if (event.field === "groupRole") {
+		const before = event.before as { id: number; name: string; role: string; rank: number }
+		const after = event.after as { id: number; name: string; role: string; rank: number }
+
+		title.append(
+			after.rank > before.rank ? "Promoted in " : "Demoted in ",
+			html`<a href="/communities/${after.id}">${after.name}</a>`,
+		)
+		body.append(swap(before.role, after.role))
 	} else if (event.field === "isBanned") {
 		title.textContent = event.after ? "Account banned" : "Account unbanned"
 	} else {

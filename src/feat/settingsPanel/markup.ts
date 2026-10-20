@@ -246,7 +246,7 @@ export const settingsMarkup = () =>
 							label="Friend Log"
 							path="friendLog"
 							require="liveTracking"
-							desc="Records friends you add and lose, as it happens, and who follows and unfollows you"
+							desc="Records friends you add and lose, friend requests, and who follows and unfollows you"
 						></toggle>
 						<div class="btr-setting-row" data-search="friend log unfriend removed added history">
 							<div class="btr-setting-text">

@@ -108,14 +108,169 @@ const compareNow = async (userId: number, allIds: number[]): Promise<void> => {
 }
 
 /** A friendship Roblox's realtime connection says was made or ended, as it happened. */
+// Friend requests
+
+const REQUESTS_KEY = "requests"
+
+interface Requests {
+	/** Requests seen, by the other person, and which way each went. */
+	pending: Record<string, "received" | "sent">
+}
+
+interface IncomingRequest {
+	senderId: number
+	sentAt: number
+}
+
+/** Requests waiting for you, or null if they could not be read. */
+const incomingRequests = async (): Promise<IncomingRequest[] | null> => {
+	const requests: IncomingRequest[] = []
+	let cursor = ""
+
+	for (let page = 0; page < 5; page++) {
+		const json = await fetch(
+			`https://friends.roblox.com/v1/my/friends/requests?limit=100&sortOrder=Desc${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+			{ credentials: "include" },
+		)
+			.then((res) => (res.ok ? res.json() : null))
+			.catch(() => null)
+
+		if (!json) {
+			return null
+		}
+
+		for (const entry of json.data ?? []) {
+			const request = entry.friendRequest ?? {}
+
+			requests.push({
+				senderId: request.senderId ?? entry.id,
+				sentAt: Date.parse(request.sentAt) || Date.now(),
+			})
+		}
+
+		cursor = json.nextPageCursor ?? ""
+
+		if (!cursor) {
+			break
+		}
+	}
+
+	return requests
+}
+
+const logRequests = async (
+	userId: number,
+	entries: Array<{ kind: ActivityEvent["kind"]; otherId: number; at: number; field?: string }>,
+) => {
+	if (!entries.length || (await isFull())) {
+		return
+	}
+
+	const names = await namesOf(entries.map((entry) => entry.otherId))
+	const db = await openDb()
+	const tx = db.transaction("events", "readwrite")
+
+	for (const entry of entries) {
+		tx.objectStore("events").add({ userId, exact: true, ...entry, ...names.get(entry.otherId) })
+	}
+
+	await committed(tx)
+	announceChange([userId])
+}
+
+/**
+ * Requests received while nothing was listening, found by comparing the ones
+ * waiting with those seen before. Each is logged when it was sent.
+ */
+const compareRequestsNow = async (ownUserId: number) => {
+	const incoming = await incomingRequests()
+
+	if (!incoming) {
+		return
+	}
+
+	const state = (await getState<Requests>(REQUESTS_KEY)) ?? { pending: {} }
+	const first = !(await getState<Requests>(REQUESTS_KEY))
+	const fresh = incoming.filter((request) => !state.pending[request.senderId])
+
+	for (const request of incoming) {
+		state.pending[request.senderId] = "received"
+	}
+
+	await setState(REQUESTS_KEY, state)
+
+	// Those already waiting when this starts are not news.
+	if (!first) {
+		await logRequests(
+			ownUserId,
+			fresh.map((request) => ({
+				kind: "requestReceived",
+				otherId: request.senderId,
+				at: request.sentAt,
+			})),
+		)
+	}
+}
+
+/** A request sent or declined, which way read from the requests waiting for you and those seen before. */
+const onRequestNow = async (ownUserId: number, otherId: number, type: string) => {
+	const state = (await getState<Requests>(REQUESTS_KEY)) ?? { pending: {} }
+
+	if (type === "FriendshipRequested") {
+		const incoming = await incomingRequests()
+		const received = incoming?.find((request) => request.senderId === otherId)
+
+		state.pending[otherId] = received ? "received" : "sent"
+		await setState(REQUESTS_KEY, state)
+		await logRequests(ownUserId, [
+			{
+				kind: received ? "requestReceived" : "requestSent",
+				otherId,
+				at: received?.sentAt ?? Date.now(),
+			},
+		])
+	} else {
+		const direction = state.pending[otherId]
+		delete state.pending[otherId]
+		await setState(REQUESTS_KEY, state)
+		await logRequests(ownUserId, [
+			{
+				kind: "requestDeclined",
+				otherId,
+				at: Date.now(),
+				...(direction ? { field: direction === "received" ? "byYou" : "byThem" } : {}),
+			},
+		])
+	}
+}
+
 const onFriendshipNow = async (ownUserId: number, notification: any): Promise<void> => {
 	const added = notification?.Type === "FriendshipCreated"
 	const removed = notification?.Type === "FriendshipDestroyed"
 	const { UserId1, UserId2 } = notification?.EventArgs ?? {}
 	const otherId = UserId1 === ownUserId ? UserId2 : UserId2 === ownUserId ? UserId1 : null
 
-	if ((!added && !removed) || !Number.isSafeInteger(otherId)) {
+	if (!Number.isSafeInteger(otherId)) {
 		return
+	}
+
+	if (notification?.Type === "FriendshipRequested" || notification?.Type === "FriendshipDeclined") {
+		await onRequestNow(ownUserId, otherId, notification.Type)
+		return
+	}
+
+	if (!added && !removed) {
+		return
+	}
+
+	// A request that became a friendship is no longer waiting.
+	if (added) {
+		const state = await getState<Requests>(REQUESTS_KEY)
+
+		if (state?.pending[otherId]) {
+			delete state.pending[otherId]
+			await setState(REQUESTS_KEY, state)
+		}
 	}
 
 	// The saved list follows, so the next comparison does not log it again.
@@ -140,3 +295,6 @@ export const compareFriendList = (userId: number, friendIds: number[]): Promise<
 
 export const onFriendshipChanged = (ownUserId: number, notification: any): Promise<void> =>
 	inOrder(() => onFriendshipNow(ownUserId, notification))
+
+export const compareRequests = (ownUserId: number): Promise<void> =>
+	inOrder(() => compareRequestsNow(ownUserId))

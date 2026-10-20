@@ -24,6 +24,11 @@ export interface PresenceRecord {
 	gameId?: string
 }
 
+export interface AvatarItem {
+	id: number
+	name: string
+}
+
 export interface ActivityEvent {
 	id?: number
 	/** Whose friends list or profile it is. */
@@ -38,6 +43,9 @@ export interface ActivityEvent {
 		| "followerRemoved"
 		| "followingAdded"
 		| "followingRemoved"
+		| "requestReceived"
+		| "requestSent"
+		| "requestDeclined"
 		| "profileChanged"
 	/** The friend or follower added or removed, and their names at the time. */
 	otherId?: number
@@ -46,6 +54,8 @@ export interface ActivityEvent {
 	field?: string
 	before?: unknown
 	after?: unknown
+	/** For an avatar change, the items put on and taken off. */
+	items?: { added: AvatarItem[]; removed: AvatarItem[] }
 }
 
 const DB_NAME = "rebtroblox-activity"

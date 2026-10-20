@@ -67,7 +67,54 @@ interface ProfileSnapshot {
 	isBanned: boolean
 	/** The avatar image's address, whose hash changes with the avatar. */
 	avatar: string | null
-	groups: Record<string, string>
+	/** Older snapshots kept only the name. */
+	groups: Record<string, GroupEntry | string>
+	/** Asset ids worn, read when the avatar changes. */
+	wearing?: number[]
+}
+
+interface GroupEntry {
+	name: string
+	role: string
+	rank: number
+}
+
+const groupName = (entry: GroupEntry | string) => (typeof entry === "string" ? entry : entry.name)
+
+const wearingOf = (userId: number): Promise<number[] | null> =>
+	getJson(`https://avatar.roblox.com/v1/users/${userId}/currently-wearing`).then((json) =>
+		Array.isArray(json?.assetIds) ? json.assetIds : null,
+	)
+
+/** Item names, from the catalog, which wants a token it hands out on the first refusal. */
+const itemNames = async (assetIds: number[]): Promise<Map<number, string>> => {
+	const names = new Map<number, string>()
+
+	for (let i = 0; i < assetIds.length; i += 100) {
+		const body = JSON.stringify({
+			items: assetIds.slice(i, i + 100).map((id) => ({ itemType: "Asset", id })),
+		})
+		const post = (token?: string) =>
+			fetch("https://catalog.roblox.com/v1/catalog/items/details", {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json", ...(token ? { "X-CSRF-TOKEN": token } : {}) },
+				body,
+			}).catch(() => null)
+
+		let res = await post()
+		const token = res?.status === 403 ? res.headers.get("x-csrf-token") : null
+
+		if (token) {
+			res = await post(token)
+		}
+
+		for (const item of res?.ok ? ((await res.json())?.data ?? []) : []) {
+			names.set(item.id, item.name)
+		}
+	}
+
+	return names
 }
 
 const avatarHash = (url: string | null) => url?.match(/-([0-9A-F]{32})-/i)?.[1] ?? url
@@ -90,14 +137,17 @@ const profileOf = async (userId: number): Promise<ProfileSnapshot | null> => {
 		isBanned: !!user.isBanned,
 		avatar: avatar?.data?.[0]?.state === "Completed" ? avatar.data[0].imageUrl : null,
 		groups: Object.fromEntries(
-			(groups.data ?? []).map((entry: any) => [entry.group.id, entry.group.name]),
+			(groups.data ?? []).map((entry: any) => [
+				entry.group.id,
+				{ name: entry.group.name, role: entry.role?.name ?? "", rank: entry.role?.rank ?? 0 },
+			]),
 		),
 	}
 }
 
 /** Logs what differs between two looks at a profile, one event per change. */
 const compareProfile = async (userId: number, before: ProfileSnapshot, after: ProfileSnapshot) => {
-	const changes: Array<Pick<ActivityEvent, "field" | "before" | "after">> = []
+	const changes: Array<Pick<ActivityEvent, "field" | "before" | "after" | "items">> = []
 
 	for (const field of ["name", "displayName", "description", "isBanned"] as const) {
 		if (before[field] !== after[field]) {
@@ -107,18 +157,45 @@ const compareProfile = async (userId: number, before: ProfileSnapshot, after: Pr
 
 	// A render that failed says nothing about the avatar.
 	if (before.avatar && after.avatar && avatarHash(before.avatar) !== avatarHash(after.avatar)) {
-		changes.push({ field: "avatar", before: before.avatar, after: after.avatar })
+		const change: Pick<ActivityEvent, "field" | "before" | "after" | "items"> = {
+			field: "avatar",
+			before: before.avatar,
+			after: after.avatar,
+		}
+
+		// What was put on and taken off, when both looks are known.
+		if (before.wearing && after.wearing) {
+			const was = new Set(before.wearing)
+			const now = new Set(after.wearing)
+			const added = after.wearing.filter((id) => !was.has(id))
+			const removed = before.wearing.filter((id) => !now.has(id))
+			const names = await itemNames([...added, ...removed])
+			const named = (ids: number[]) => ids.map((id) => ({ id, name: names.get(id) ?? `Item ${id}` }))
+
+			change.items = { added: named(added), removed: named(removed) }
+		}
+
+		changes.push(change)
 	}
 
-	for (const [id, name] of Object.entries(after.groups)) {
-		if (!(id in before.groups)) {
-			changes.push({ field: "groupJoined", after: { id: Number(id), name } })
+	for (const [id, entry] of Object.entries(after.groups)) {
+		const old = before.groups[id]
+
+		if (!old) {
+			changes.push({ field: "groupJoined", after: { id: Number(id), name: groupName(entry) } })
+		} else if (typeof old !== "string" && typeof entry !== "string" && old.rank !== entry.rank) {
+			// A role from an older snapshot that kept only names is not known.
+			changes.push({
+				field: "groupRole",
+				before: { id: Number(id), ...old },
+				after: { id: Number(id), ...entry },
+			})
 		}
 	}
 
-	for (const [id, name] of Object.entries(before.groups)) {
+	for (const [id, entry] of Object.entries(before.groups)) {
 		if (!(id in after.groups)) {
-			changes.push({ field: "groupLeft", before: { id: Number(id), name } })
+			changes.push({ field: "groupLeft", before: { id: Number(id), name: groupName(entry) } })
 		}
 	}
 
@@ -133,6 +210,16 @@ const checkProfile = async (userId: number) => {
 	}
 
 	const before = await getState<ProfileSnapshot>(`profile:${userId}`)
+
+	// What they wear is read when the avatar looks different, and once to
+	// start from, rather than on every check.
+	const avatarChanged =
+		!before?.avatar || (after.avatar && avatarHash(before.avatar) !== avatarHash(after.avatar))
+	const wearing = (avatarChanged ? await wearingOf(userId) : null) ?? before?.wearing
+
+	if (wearing) {
+		after.wearing = wearing
+	}
 
 	// An avatar that failed to render keeps the last one, so it is not seen
 	// as changed twice.
@@ -226,7 +313,7 @@ const checkBadges = async (userId: number) => {
 /** Logs profile changes, one event each, at once. */
 const logChanges = async (
 	userId: number,
-	changes: Array<Pick<ActivityEvent, "field" | "before" | "after">>,
+	changes: Array<Pick<ActivityEvent, "field" | "before" | "after" | "items">>,
 ) => {
 	if (!changes.length || (await isFull())) {
 		return

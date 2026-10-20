@@ -1,5 +1,5 @@
 import { STORAGE } from "@/core/env"
-import { compareFriendList, onFriendshipChanged } from "@/feat/activity/friends"
+import { compareFriendList, compareRequests, onFriendshipChanged } from "@/feat/activity/friends"
 import { recordPresences, setLiveSince } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
 
@@ -89,6 +89,7 @@ const recordFriends = async () => {
 	// A list missing a page would read as friends removed.
 	if (complete && SETTINGS.get("profile.friendLog")) {
 		await compareFriendList(me.id, friendIds)
+		await compareRequests(me.id)
 	}
 }
 

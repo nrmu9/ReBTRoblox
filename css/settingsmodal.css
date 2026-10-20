@@ -2274,3 +2274,15 @@ div.btr-setting-text {
 .btr-change-thumb {
 	border-radius: 8px;
 }
+
+/* Requests are neither gained nor lost, until one is declined. */
+.btr-friendlog-row[data-kind="requestReceived"] .btr-friendlog-kind,
+.btr-friendlog-row[data-kind="requestSent"] .btr-friendlog-kind {
+	background: rgb(0 162 255 / 0.16);
+	color: #00a2ff;
+}
+
+.btr-friendlog-row[data-kind="requestDeclined"] .btr-friendlog-kind {
+	background: color-mix(in srgb, var(--btr-alert-content) 16%, transparent);
+	color: var(--btr-alert-content);
+}
