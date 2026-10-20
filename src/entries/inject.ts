@@ -2230,6 +2230,32 @@ const startInject = () => {
 								}
 							}
 						}
+
+						if (settings.home?.hideDisliked) {
+							let disliked: string[] = []
+
+							try {
+								disliked = JSON.parse(
+									localStorage.getItem("ReBTRoblox:dislikedPlaces") || "[]",
+								)
+							} catch {}
+
+							const games = json.contentMetadata?.Game ?? {}
+
+							if (Array.isArray(disliked) && disliked.length) {
+								for (const sort of json.sorts) {
+									if (Array.isArray(sort.recommendationList)) {
+										sort.recommendationList = sort.recommendationList.filter(
+											(item: any) =>
+												item?.contentType !== "Game" ||
+												!disliked.includes(
+													String(games[item.contentId]?.rootPlaceId),
+												),
+										)
+									}
+								}
+							}
+						}
 					})
 				})
 			},

@@ -372,6 +372,11 @@ export const SettingsModal: SettingsModalState = {
 								path="instantGameHoverAction"
 								desc="Shows game details as soon as you hover a game"
 							></toggle>
+							<toggle
+								label="Hide Disliked Games"
+								path="hideDisliked"
+								desc="Hides games you disliked. It learns them as you open and vote on games, so older dislikes show up once you visit them"
+							></toggle>
 							<heading>Rows</heading>
 							<div class="btr-settings-home-rows"></div>
 						</page>

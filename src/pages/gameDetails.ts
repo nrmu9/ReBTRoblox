@@ -1,5 +1,6 @@
 import { dateSince } from "@/core/date"
 import { html } from "@/core/html"
+import { btrLocalStorage } from "@/core/storage"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ContextMenu } from "@/feat/contextMenu"
@@ -87,6 +88,44 @@ const showExactCounts = () => {
 }
 
 const PUBLIC_SERVERS = "#rbx-public-running-games"
+
+/**
+ * Remembers whether you disliked this game, for Hide Disliked Games on Home.
+ * Read from the vote buttons, as there is no list of your votes to ask for,
+ * and again whenever they change.
+ */
+const trackDislike = () => {
+	document.$watch("#voting-section", (section: HTMLElement) => {
+		const placeId = section.dataset.targetId
+
+		if (!placeId) {
+			return
+		}
+
+		const update = () => {
+			// Read on every change, so it settles on the vote once it has loaded.
+			const disliked = !!section.$find(".icon-dislike.selected")
+			const list = new Set(btrLocalStorage.getItem<string[]>("dislikedPlaces") ?? [])
+
+			if (disliked !== list.has(placeId)) {
+				if (disliked) {
+					list.add(placeId)
+				} else {
+					list.delete(placeId)
+				}
+
+				btrLocalStorage.setItem("dislikedPlaces", [...list])
+			}
+		}
+
+		new MutationObserver(update).observe(section, {
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["class"],
+		})
+		update()
+	})
+}
 
 /** A button beside Refresh that joins the emptiest public server with room. */
 const addJoinSmallest = (placeId: number) => {
@@ -246,6 +285,8 @@ const addRegionFilter = () => {
 pageInit.gamedetails = () => {
 	onPageLoad((placeIdString: string) => {
 		const placeId = Number.parseInt(placeIdString, 10)
+
+		trackDislike()
 
 		if (SETTINGS.get("gamedetails.serverTools")) {
 			addJoinSmallest(placeId)
