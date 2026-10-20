@@ -2089,3 +2089,32 @@ div.btr-setting-text {
 		content: url("data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
 	}
 }
+
+.btr-change-sub {
+	margin-top: 2px;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+
+	a {
+		color: var(--btr-content-emphasis);
+		font-weight: 600;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.btr-change-icon[data-icon="badges"] {
+	background: rgb(246 136 2 / 0.16);
+	color: #f68802;
+}
+
+.btr-change-badge {
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
+}

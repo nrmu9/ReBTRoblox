@@ -150,7 +150,10 @@ const dayLabel = (day: number) => {
 		return "Yesterday"
 	}
 
-	return new Date(day).$format("DDD, MMM D")
+	// The year only once it is not this one.
+	return new Date(day).$format(
+		new Date(day).getFullYear() === new Date().getFullYear() ? "DDD, MMM D" : "DDD, MMM D, YYYY",
+	)
 }
 
 const STATE_LABELS = ["Offline", "Online on the website", "In an experience", "In Studio"]
@@ -590,6 +593,7 @@ const ICONS: Record<string, string> = {
 	joined: "M12 5v14M5 12h14",
 	left: "M5 12h14",
 	account: "M12 7v6M12 17h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
+	badges: "M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z",
 }
 
 const CHANGE_GROUPS = [
@@ -598,6 +602,7 @@ const CHANGE_GROUPS = [
 	["bio", "Bio"],
 	["avatar", "Avatar"],
 	["communities", "Communities"],
+	["badges", "Badges"],
 	["account", "Account"],
 ] as const
 
@@ -610,7 +615,9 @@ const groupOf = (event: ActivityEvent) =>
 				? "avatar"
 				: event.field === "groupJoined" || event.field === "groupLeft"
 					? "communities"
-					: "account"
+					: event.field === "badge"
+						? "badges"
+						: "account"
 
 const icon = (name: string) =>
 	html`<span class="btr-change-icon" data-icon="${name}" aria-hidden="true">
@@ -704,6 +711,19 @@ const changeEntry = (event: ActivityEvent) => {
 			event.field === "groupJoined" ? "Joined " : "Left ",
 			html`<a href="/communities/${id}">${name}</a>`,
 		)
+	} else if (event.field === "badge") {
+		const badge = event.after as { id: number; name: string; placeId?: number; gameName?: string }
+
+		title.append("Earned ", html`<a href="/badges/${badge.id}">${badge.name}</a>`)
+
+		if (badge.placeId) {
+			const game = html`<div class="btr-change-sub"></div>`
+			game.append("in ")
+			game.append(html`<a href="/games/${badge.placeId}">${badge.gameName || "an experience"}</a>`)
+			body.append(game)
+		}
+
+		item.dataset.badge = String(badge.id)
 	} else if (event.field === "isBanned") {
 		title.textContent = event.after ? "Account banned" : "Account unbanned"
 	} else {
@@ -711,6 +731,26 @@ const changeEntry = (event: ActivityEvent) => {
 	}
 
 	return item
+}
+
+const badgeIcons = async (badgeIds: number[]) => {
+	const urls = new Map<number, string>()
+
+	for (let i = 0; i < badgeIds.length; i += 100) {
+		const json = await fetch(
+			`https://thumbnails.roblox.com/v1/badges/icons?badgeIds=${badgeIds.slice(i, i + 100).join(",")}&size=150x150&format=Png`,
+		)
+			.then((res) => res.json())
+			.catch(() => null)
+
+		for (const item of json?.data ?? []) {
+			if (item.imageUrl) {
+				urls.set(item.targetId, item.imageUrl)
+			}
+		}
+	}
+
+	return urls
 }
 
 /** What changed on someone's profile, newest first by day, filtered by kind of change. */
@@ -752,7 +792,8 @@ const renderChanges = async (
 	}
 
 	const note = html`<p class="btr-change-note">
-		Profiles are checked every few hours, so each change happened some time before the time shown.
+		Profiles are checked every few hours, so most changes happened some time before the time shown. Badges
+		show when they were earned.
 	</p>`
 
 	const list = html`<ol class="btr-change-list"></ol>`
@@ -789,6 +830,19 @@ const renderChanges = async (
 	}
 
 	panel.replaceChildren(toolbar, note, list)
+
+	const badges = [...list.$findAll<HTMLElement>("[data-badge]")]
+	const icons = badges.length ? await badgeIcons(badges.map((item) => Number(item.dataset.badge))) : null
+
+	for (const item of badges) {
+		const url = icons?.get(Number(item.dataset.badge))
+
+		if (url) {
+			item.$req(".btr-change-icon").replaceWith(
+				html`<img class="btr-change-badge" alt="" src="${url}" />`,
+			)
+		}
+	}
 }
 
 // Watching

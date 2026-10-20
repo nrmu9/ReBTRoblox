@@ -18,6 +18,7 @@ import { SETTINGS } from "@/feat/settings"
 const PRESENCE_EVERY = 2 * 60e3
 const FRIENDS_EVERY = 60 * 60e3
 const PROFILE_EVERY = 4 * 60 * 60e3
+const BADGES_EVERY = 60 * 60e3
 
 export const getWatchedUsers = (): number[] => {
 	try {
@@ -150,6 +151,86 @@ const checkProfile = async (userId: number) => {
 	}
 }
 
+interface BadgeSnapshot {
+	ids: number[]
+	checkedAt: number
+}
+
+/**
+ * Logs badges earned since the last look, at the time each was awarded. The
+ * newest hundred are compared, and only those awarded after the last look
+ * count, so a badge someone deletes, which lets an older one into the
+ * hundred, does not read as new. A hidden inventory lists none and is skipped.
+ */
+const checkBadges = async (userId: number) => {
+	const list = await getJson(`https://badges.roblox.com/v1/users/${userId}/badges?limit=100&sortOrder=Desc`)
+
+	if (!Array.isArray(list?.data) || !list.data.length) {
+		return
+	}
+
+	const before = await getState<BadgeSnapshot>(`badges:${userId}`)
+	const now = Date.now()
+	await setState(`badges:${userId}`, { ids: list.data.map((badge: any) => badge.id), checkedAt: now })
+
+	if (!before) {
+		return
+	}
+
+	const known = new Set(before.ids)
+	const fresh = list.data.filter((badge: any) => !known.has(badge.id))
+
+	if (!fresh.length || (await isFull())) {
+		return
+	}
+
+	const dates = await getJson(
+		`https://badges.roblox.com/v1/users/${userId}/badges/awarded-dates?badgeIds=${fresh.map((badge: any) => badge.id).join(",")}`,
+	)
+	const awardedAt = new Map<number, number>(
+		(dates?.data ?? []).map((entry: any) => [entry.badgeId, Date.parse(entry.awardedDate)]),
+	)
+
+	const earned = fresh.filter((badge: any) => (awardedAt.get(badge.id) ?? 0) > before.checkedAt)
+
+	if (!earned.length) {
+		return
+	}
+
+	// The game each was earned in, by the place that awarded it.
+	const placeIds = [...new Set(earned.map((badge: any) => badge.awarder?.id).filter(Boolean))]
+	const places = await getJson(
+		`https://games.roblox.com/v1/games/multiget-place-details?placeIds=${placeIds.join(",")}`,
+	)
+	const gameNames = new Map<number, string>(
+		(Array.isArray(places) ? places : []).map((place: any) => [place.placeId, place.name]),
+	)
+
+	const db = await openDb()
+	const tx = db.transaction("events", "readwrite")
+
+	for (const badge of earned) {
+		const placeId = badge.awarder?.id
+		const event: ActivityEvent = {
+			userId,
+			at: awardedAt.get(badge.id)!,
+			exact: true,
+			kind: "profileChanged",
+			field: "badge",
+			after: {
+				id: badge.id,
+				name: badge.displayName || badge.name,
+				...(placeId ? { placeId, gameName: gameNames.get(placeId) } : {}),
+			},
+		}
+
+		tx.objectStore("events").add(event)
+	}
+
+	await committed(tx)
+	announceChange([userId])
+}
+
 const checkFriends = async (userId: number) => {
 	const ids = await friendsOf(userId)
 
@@ -200,7 +281,9 @@ const tick = async () => {
 		}
 
 		const due =
-			(await getState<Record<number, { friends?: number; profile?: number }>>("watchChecks")) ?? {}
+			(await getState<Record<number, { friends?: number; profile?: number; badges?: number }>>(
+				"watchChecks",
+			)) ?? {}
 
 		for (const userId of watched) {
 			const checks = (due[userId] ??= {})
@@ -214,6 +297,12 @@ const tick = async () => {
 			if (Date.now() - (checks.profile ?? 0) >= PROFILE_EVERY) {
 				checks.profile = Date.now()
 				await checkProfile(userId)
+				break
+			}
+
+			if (Date.now() - (checks.badges ?? 0) >= BADGES_EVERY) {
+				checks.badges = Date.now()
+				await checkBadges(userId)
 				break
 			}
 		}
