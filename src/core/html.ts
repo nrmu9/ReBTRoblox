@@ -19,7 +19,11 @@ export const htmltemplate = function (
 ): HTMLTemplateElement {
 	const parts: readonly string[] = typeof pieces === "string" ? [pieces] : pieces
 
-	const trimWhitespace = (s: string) => s.replace(/\b\n\s*\b/g, " ").replace(/\n[^\S ]*/g, "")
+	// A line break inside text reads as a space, as in HTML, whatever the
+	// characters around it: requiring letters on both sides glued "them.Those"
+	// together. Breaks next to a tag still go, as they are only indentation.
+	const trimWhitespace = (s: string) =>
+		s.replace(/([^\s>])\n\s*(?=[^\s<])/g, "$1 ").replace(/\n[^\S ]*/g, "")
 
 	let result = trimWhitespace(parts[0])
 
