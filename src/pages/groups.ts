@@ -6,6 +6,7 @@ import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
+	keepText,
 	loggedInUserPromise,
 	modifyAngularTemplate,
 	onPageLoad,
@@ -16,18 +17,28 @@ import {
 // words after it, which stay as Roblox wrote them, translated or not.
 const ROUNDED_COUNT = /^([\d.,]+[KMB]?\+?)(\s.*)$/i
 
-const showExactCount = (element: Element, count: unknown) => {
-	const match = ROUNDED_COUNT.exec(element.textContent?.trim() ?? "")
-
-	if (match && typeof count === "number" && Number.isSafeInteger(count)) {
-		element.textContent = `${formatNumber(count)}${match[2]}`
+// Only a count in that form is rewritten, so anything else Roblox puts there
+// is left alone.
+const showExactCount = (element: HTMLElement, count: unknown) => {
+	if (typeof count !== "number" || !Number.isSafeInteger(count)) {
+		return
 	}
+
+	keepText(element, () => {
+		const match = ROUNDED_COUNT.exec(element.textContent?.trim() ?? "")
+		return match ? `${formatNumber(count)}${match[2]}` : null
+	})
 }
 
-/** The header's count from the community itself, the list's from your groups. */
+/**
+ * The header's count from the community itself, the list's from your groups.
+ * Both are answers Roblox asks for anyway, in before it draws the counts.
+ */
 const showExactMemberCounts = (groupId: number) => {
-	fetch(`https://groups.roblox.com/v1/groups/${groupId}`, { credentials: "include" })
-		.then((res) => res.json())
+	const url = `https://groups.roblox.com/v1/groups/${groupId}`
+
+	waitForRobloxResponse((responseUrl) => responseUrl === url)
+		.then((json) => json ?? fetch(url, { credentials: "include" }).then((res) => res.json()))
 		.then((group) => {
 			document.$watchAll("button.radius-circle", (button: HTMLElement) => {
 				showExactCount(button, group?.memberCount)
@@ -70,7 +81,9 @@ const showExactMemberCounts = (groupId: number) => {
 
 			document.$watchAll(".groups-list-item", (item: HTMLAnchorElement) => {
 				const id = item.getAttribute("href")?.match(/\/communities\/(\d+)/)?.[1]
-				const label = item.$find(".text-body-medium .text-body-medium, span.text-body-medium")
+				const label = item.$find<HTMLElement>(
+					".text-body-medium .text-body-medium, span.text-body-medium",
+				)
 
 				if (id && label) {
 					showExactCount(label, counts.get(id))

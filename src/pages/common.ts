@@ -75,6 +75,32 @@ export const AccessoryAssetTypeIds = [
 
 export const formatNumber = (num: number | string) =>
 	String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,")
+/**
+ * Keeps an element showing the text `getText` gives, such as an exact count
+ * in place of Roblox's rounded one, written back whenever Roblox renders it
+ * again. Null leaves the element as it is. The observer runs before the page
+ * paints, so Roblox's own text is never seen.
+ */
+export const keepText = (elem: HTMLElement, getText: () => string | null, attributeFilter?: string[]) => {
+	const apply = () => {
+		const text = getText()
+
+		// A count is a leaf. Never write over something that holds markup.
+		if (text !== null && elem.childElementCount === 0 && elem.textContent !== text) {
+			elem.textContent = text
+		}
+	}
+
+	new MutationObserver(apply).observe(elem, {
+		...(attributeFilter ? { attributes: true, attributeFilter } : {}),
+		characterData: true,
+		childList: true,
+		subtree: true,
+	})
+
+	apply()
+}
+
 export const formatUrlName = (name: string, def = "Name") =>
 	encodeURIComponent(
 		name

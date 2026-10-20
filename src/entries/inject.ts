@@ -268,7 +268,9 @@ const startInject = () => {
 									return null
 								}
 
-								if (json === null || typeof json !== "object") {
+								// Bare values pass too, such as the favorite count, which
+								// is a plain number.
+								if (json === null) {
 									return null
 								}
 
@@ -2302,6 +2304,8 @@ const startInject = () => {
 					/^https:\/\/presence\.roblox\.com\/v1\/presence\/users$/i,
 					/^https:\/\/groups\.roblox\.com\/v1\/users\/\d+\/groups\/roles(?:\?|$)/i,
 					/^https:\/\/games\.roblox\.com\/v1\/games\?universeIds=/i,
+					/^https:\/\/groups\.roblox\.com\/v1\/groups\/\d+$/i,
+					/^https:\/\/catalog\.roblox\.com\/v1\/favorites\/(?:assets|bundles)\/\d+\/count$/i,
 				]
 
 				const kept: Array<[string, any]> = []

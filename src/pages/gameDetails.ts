@@ -12,6 +12,7 @@ import {
 	formatUrlName,
 	getAssetFileType,
 	initExplorer,
+	keepText,
 	loggedInUserPromise,
 	onMouseEnter,
 	onPageLoad,
@@ -34,34 +35,12 @@ const exactText = (value: unknown) => {
 	return typeof number === "number" && Number.isSafeInteger(number) ? formatNumber(number) : null
 }
 
-// Written back whenever the element changes, because voting makes the panel
-// rewrite its own text.
-const keepExact = (elem: HTMLElement, getText: () => string | null) => {
-	const apply = () => {
-		const text = getText()
-
-		// A count is a leaf. Never write over something that holds markup.
-		if (text !== null && elem.childElementCount === 0 && elem.textContent !== text) {
-			elem.textContent = text
-		}
-	}
-
-	new MutationObserver(apply).observe(elem, {
-		attributeFilter: ["title"],
-		attributes: true,
-		characterData: true,
-		childList: true,
-		subtree: true,
-	})
-
-	apply()
-}
-
 const showExactCounts = () => {
 	for (const selector of ["#vote-up-text", "#vote-down-text"]) {
 		document.$watch(
 			selector,
-			(elem: HTMLElement) => keepExact(elem, () => exactText(elem.getAttribute("title"))),
+			// Voting rewrites the panel's text, and the title with it.
+			(elem: HTMLElement) => keepText(elem, () => exactText(elem.getAttribute("title")), ["title"]),
 			{ continuous: true },
 		)
 	}
@@ -89,7 +68,7 @@ const showExactCounts = () => {
 
 				document.$watch(
 					"#game-visits-count",
-					(elem: HTMLElement) => keepExact(elem, () => exactText(visits)),
+					(elem: HTMLElement) => keepText(elem, () => exactText(visits)),
 					{ continuous: true },
 				)
 			})

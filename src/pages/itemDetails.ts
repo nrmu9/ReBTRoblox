@@ -5,6 +5,7 @@ import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { clockFormat } from "@/feat/clock"
+import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
@@ -12,6 +13,7 @@ import {
 	initDownloadButton,
 	initExplorer,
 	initPreview,
+	keepText,
 	onPageLoad,
 	onPageReset,
 } from "@/pages/common"
@@ -39,30 +41,21 @@ pageInit.itemdetails = () => {
 		if (SETTINGS.get("itemdetails.exactCounts") && (category === "catalog" || category === "bundles")) {
 			const kind = category === "bundles" ? "bundles" : "assets"
 
-			fetch(`https://catalog.roblox.com/v1/favorites/${kind}/${assetId}/count`, {
-				credentials: "include",
-			})
-				.then((res) => res.json())
+			const url = `https://catalog.roblox.com/v1/favorites/${kind}/${assetId}/count`
+
+			// Roblox asks for the count itself, and its answer is in before the
+			// button is drawn.
+			waitForRobloxResponse((responseUrl) => responseUrl === url)
+				.then((json) => json ?? fetch(url, { credentials: "include" }).then((res) => res.json()))
 				.then((count) => {
 					if (typeof count === "number") {
 						const exact = formatNumber(count)
 
 						// React writes its rounded count back whenever it renders the
 						// button again, such as once your own favorite has loaded.
-						document.$watchAll(".favoriteCount", (label: HTMLElement) => {
-							const apply = () => {
-								if (label.textContent !== exact) {
-									label.textContent = exact
-								}
-							}
-
-							new MutationObserver(apply).observe(label, {
-								childList: true,
-								characterData: true,
-								subtree: true,
-							})
-							apply()
-						})
+						document.$watchAll(".favoriteCount", (label: HTMLElement) =>
+							keepText(label, () => exact),
+						)
 					}
 				})
 				.catch(() => {})
