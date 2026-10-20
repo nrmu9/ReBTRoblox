@@ -35,6 +35,38 @@ pageInit.itemdetails = () => {
 	onPageLoad((category, assetIdString) => {
 		const assetId = Number.parseInt(assetIdString, 10)
 
+		if (SETTINGS.get("itemdetails.exactCounts") && (category === "catalog" || category === "bundles")) {
+			const kind = category === "bundles" ? "bundles" : "assets"
+
+			fetch(`https://catalog.roblox.com/v1/favorites/${kind}/${assetId}/count`, {
+				credentials: "include",
+			})
+				.then((res) => res.json())
+				.then((count) => {
+					if (typeof count === "number") {
+						const exact = formatNumber(count)
+
+						// React writes its rounded count back whenever it renders the
+						// button again, such as once your own favorite has loaded.
+						document.$watchAll(".favoriteCount", (label: HTMLElement) => {
+							const apply = () => {
+								if (label.textContent !== exact) {
+									label.textContent = exact
+								}
+							}
+
+							new MutationObserver(apply).observe(label, {
+								childList: true,
+								characterData: true,
+								subtree: true,
+							})
+							apply()
+						})
+					}
+				})
+				.catch(() => {})
+		}
+
 		document
 			.$watch("#content")
 			.$then()

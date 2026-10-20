@@ -481,6 +481,11 @@ export const SettingsModal: SettingsModalState = {
 								desc="Shows when an item was created and last updated"
 							></toggle>
 							<toggle
+								label="Exact Favorite Count"
+								path="exactCounts"
+								desc="Shows the exact number of favorites"
+							></toggle>
+							<toggle
 								label="Explorer Button"
 								path="explorerButton"
 								desc="Adds a button to look inside models and packages"
@@ -620,6 +625,11 @@ export const SettingsModal: SettingsModalState = {
 								label="Modify Layout"
 								path="modifyLayout"
 								desc="Rearranges the community page and adds a payouts tab"
+							></toggle>
+							<toggle
+								label="Exact Member Counts"
+								path="exactCounts"
+								desc="Shows exact member counts on community pages"
 							></toggle>
 						</page>
 

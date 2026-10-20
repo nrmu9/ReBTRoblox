@@ -2,7 +2,63 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { SETTINGS } from "@/feat/settings"
-import { modifyAngularTemplate, onPageLoad, onPageReset } from "@/pages/common"
+import {
+	formatNumber,
+	loggedInUserPromise,
+	modifyAngularTemplate,
+	onPageLoad,
+	onPageReset,
+} from "@/pages/common"
+
+// A count Roblox shortened, "13.5M+ Members", split into the number and the
+// words after it, which stay as Roblox wrote them, translated or not.
+const ROUNDED_COUNT = /^([\d.,]+[KMB]?\+?)(\s.*)$/i
+
+const showExactCount = (element: Element, count: unknown) => {
+	const match = ROUNDED_COUNT.exec(element.textContent?.trim() ?? "")
+
+	if (match && typeof count === "number" && Number.isSafeInteger(count)) {
+		element.textContent = `${formatNumber(count)}${match[2]}`
+	}
+}
+
+/** The header's count from the community itself, the list's from your groups. */
+const showExactMemberCounts = (groupId: number) => {
+	fetch(`https://groups.roblox.com/v1/groups/${groupId}`, { credentials: "include" })
+		.then((res) => res.json())
+		.then((group) => {
+			document.$watchAll("button.radius-circle", (button: HTMLElement) => {
+				showExactCount(button, group?.memberCount)
+			})
+		})
+		.catch(() => {})
+
+	loggedInUserPromise
+		.then((userId) =>
+			userId > 0
+				? fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, {
+						credentials: "include",
+					}).then((res) => res.json())
+				: null,
+		)
+		.then((json) => {
+			const counts = new Map<string, number>()
+
+			for (const entry of json?.data ?? []) {
+				counts.set(String(entry.group?.id), entry.group?.memberCount)
+			}
+
+			document.$watchAll(".groups-list-item", (item: HTMLAnchorElement) => {
+				const id = item.getAttribute("href")?.match(/\/communities\/(\d+)/)?.[1]
+				const label = item.$find(".text-body-medium .text-body-medium, span.text-body-medium")
+
+				if (id && label) {
+					showExactCount(label, counts.get(id))
+				}
+			})
+		})
+		.catch(() => {})
+}
 
 pageInit.groups = () => {
 	if (SETTINGS.get("general.hoverPreview")) {
@@ -13,6 +69,16 @@ pageInit.groups = () => {
 
 	if (!SETTINGS.get("groups.enabled")) {
 		return
+	}
+
+	if (SETTINGS.get("groups.exactCounts")) {
+		onPageLoad((groupIdString: string) => {
+			const groupId = Number.parseInt(groupIdString, 10)
+
+			if (Number.isSafeInteger(groupId)) {
+				showExactMemberCounts(groupId)
+			}
+		})
 	}
 
 	if (SETTINGS.get("groups.modifyLayout")) {

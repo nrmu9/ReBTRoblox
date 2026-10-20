@@ -99,6 +99,7 @@ export const DEFAULT_SETTINGS = {
 
 		showSales: { value: true },
 		showCreatedAndUpdated: { value: true },
+		exactCounts: { value: true },
 	},
 	gamedetails: {
 		enabled: { value: true },
@@ -113,6 +114,7 @@ export const DEFAULT_SETTINGS = {
 	groups: {
 		enabled: { value: true },
 		modifyLayout: { value: true },
+		exactCounts: { value: true },
 	},
 	inventory: {
 		enabled: { value: true },
