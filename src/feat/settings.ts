@@ -62,6 +62,8 @@ export const DEFAULT_SETTINGS = {
 		favoritesAtTop: { value: false },
 		hideFriendActivity: { value: false },
 		instantGameHoverAction: { value: false },
+		// JSON list of the Home row topic ids to hide, managed in the Home page
+		hiddenRows: { value: "", hidden: true },
 		showRecommendationPlayerCount: { value: true },
 	},
 	messages: {

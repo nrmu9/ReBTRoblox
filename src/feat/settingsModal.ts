@@ -6,6 +6,8 @@ import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { robloxExperiments } from "@/pages/common"
+import { HOME_ROWS_KEY } from "@/pages/home"
+import { btrLocalStorage } from "@/core/storage"
 
 interface SettingsModalState {
 	enabled: boolean
@@ -356,6 +358,8 @@ export const SettingsModal: SettingsModalState = {
 								path="instantGameHoverAction"
 								desc="Shows game details as soon as you hover a game"
 							></toggle>
+							<heading>Rows</heading>
+							<div class="btr-settings-home-rows"></div>
 						</page>
 
 						<page
@@ -987,6 +991,68 @@ export const SettingsModal: SettingsModalState = {
 
 			SETTINGS.onChange("navigation.elements", update)
 			update()
+		}
+
+		// Home rows, listed as Home has shown them. A switch per row, kept in
+		// home.hiddenRows as the topic ids to hide.
+		{
+			const placeholder = this.settingsDiv.$req(".btr-settings-home-rows")
+			const card = html`<div class="btr-setting-card"></div>`
+			placeholder.replaceWith(card)
+
+			const known = btrLocalStorage.getItem<Record<string, any>>(HOME_ROWS_KEY) ?? {}
+
+			const getHidden = (): string[] => {
+				try {
+					const list = JSON.parse(SETTINGS.get("home.hiddenRows") || "[]")
+					return Array.isArray(list) ? list.map(String) : []
+				} catch {
+					return []
+				}
+			}
+
+			const rows = Object.entries(known)
+
+			if (!rows.length) {
+				card.append(
+					html`<div class="btr-setting-row">
+						<div class="btr-setting-text">
+							<span class="btr-setting-desc">Open Home once and its rows show up here</span>
+						</div>
+					</div>`,
+				)
+			}
+
+			for (const [id, row] of rows) {
+				const inputId = nextId()
+				const elem = makeRow(`Show ${row.title}`, row.subtitle || null, inputId)
+				const { wrap, input } = makeSwitch(inputId)
+
+				elem.dataset.search = "home row hide"
+				elem.append(wrap)
+				card.append(elem)
+
+				input.$on("change", () => {
+					const hidden = new Set(getHidden())
+
+					if (input.checked) {
+						hidden.delete(id)
+					} else {
+						hidden.add(id)
+					}
+
+					SETTINGS.set("home.hiddenRows", hidden.size ? JSON.stringify([...hidden]) : "")
+				})
+
+				const update = () => {
+					input.checked = !getHidden().includes(id)
+				}
+
+				SETTINGS.onChange("home.hiddenRows", update)
+				update()
+			}
+
+			settingsDone["home.hiddenRows"] = true
 		}
 
 		// Robux to cash

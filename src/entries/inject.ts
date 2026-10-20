@@ -2189,6 +2189,50 @@ const startInject = () => {
 					)
 				})
 			},
+			// Reports the rows Home loads, so the settings can list them, and drops
+			// the hidden ones from the response before Roblox renders any of it.
+			// Rows are matched by topic id, which unlike the title is not translated.
+			homeRows: () => {
+				hijackXHR((request: any) => {
+					if (
+						request.method !== "POST" ||
+						!/^https:\/\/apis\.roblox\.com\/discovery-api\/omni-recommendation$/i.test(
+							request.url,
+						)
+					) {
+						return
+					}
+
+					request.onResponse.push((json: any) => {
+						if (!Array.isArray(json?.sorts)) {
+							return
+						}
+
+						contentScript.send(
+							"homeRows",
+							json.sorts.map((sort: any) => ({
+								id: String(sort.topicId),
+								title: sort.topic,
+								subtitle: sort.subtitle,
+							})),
+						)
+
+						let hidden: string[] = []
+
+						try {
+							hidden = JSON.parse(settings.home?.hiddenRows || "[]")
+						} catch {}
+
+						if (Array.isArray(hidden) && hidden.length) {
+							for (let i = json.sorts.length - 1; i >= 0; i--) {
+								if (hidden.includes(String(json.sorts[i].topicId))) {
+									json.sorts.splice(i, 1)
+								}
+							}
+						}
+					})
+				})
+			},
 			hideFriendActivity: () => {
 				hijackXHR((request: any) => {
 					if (
@@ -4353,6 +4397,7 @@ const startInject = () => {
 			["cacheRobuxAmount", "general.cacheRobuxAmount"],
 			["higherRobuxPrecision", "general.higherRobuxPrecision"],
 			["hideFriendActivity", "home.hideFriendActivity"],
+			["homeRows"],
 			["ignoreR6Warning"],
 			["hijackAuth"],
 			["webpackHook", "create.enabled"],
