@@ -46,6 +46,7 @@ export const DEFAULT_SETTINGS = {
 
 		cacheRobuxAmount: { value: true },
 		higherRobuxPrecision: { value: true },
+		twelveHourClock: { value: false },
 		enableContextMenus: { value: true },
 
 		experiments: { value: "", hidden: true },

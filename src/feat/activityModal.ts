@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { clockFormat } from "@/feat/clock"
 import { onPresenceHistoryChange, getPresenceHistory, type PresenceSegment } from "@/feat/presenceHistory"
 
 // The activity a profile's last seen opens: everything ReBTRoblox saw the
@@ -143,10 +144,10 @@ const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
 	const when = item.$req(".btr-activity-when")
 
 	if (segment.type === 0 || (!current && end - segment.from < 60e3)) {
-		when.textContent = from.$format("h:mm A")
+		when.textContent = from.$format(clockFormat())
 	} else {
-		const until = current ? "now" : new Date(end).$format("h:mm A")
-		when.textContent = `${from.$format("h:mm A")} – ${until} · ${formatDuration(end - segment.from)}`
+		const until = current ? "now" : new Date(end).$format(clockFormat())
+		when.textContent = `${from.$format(clockFormat())} – ${until} · ${formatDuration(end - segment.from)}`
 	}
 
 	// Started before it was noticed, so the real start may be earlier.
@@ -163,45 +164,71 @@ const dayRow = (
 	day: number,
 	blocks: Block[],
 	expanded: Set<number>,
-	rerender: () => void,
 ) => {
 	const length = nextDay(day) - day
 	const total = blocks.reduce((sum, block) => sum + block.end - block.start, 0)
-	const open = expanded.has(day)
 	const label = dayLabel(day)
 
 	const row = html`<div class="btr-activity-day">
-		<button type="button" class="btr-activity-day-row" aria-expanded="${open}" data-day="${day}">
+		<button type="button" class="btr-activity-day-row">
 			<span class="btr-activity-day-label">${label}</span>
 			<span class="btr-activity-bar"></span>
 			<span class="btr-activity-day-total">${formatDuration(total)}</span>
+			<svg class="btr-activity-chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+				<path
+					d="M6 9l6 6 6-6"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
 		</button>
+		<div class="btr-activity-details">
+			<div class="btr-activity-details-inner">
+				<ol class="btr-activity-day-list"></ol>
+			</div>
+		</div>
 	</div>`
 
 	const toggle = row.$req(".btr-activity-day-row")
+	const details = row.$req(".btr-activity-details")
+
+	// Details stay in the page and fold away, so opening can animate, but
+	// nothing in a folded day is reachable.
+	const setOpen = (open: boolean) => {
+		row.classList.toggle("btr-activity-day-open", open)
+		toggle.setAttribute("aria-expanded", String(open))
+		details.inert = !open
+	}
+
 	toggle.setAttribute("aria-label", `${label}, online ${formatDuration(total)}`)
 	toggle.$on("click", () => {
+		const open = !expanded.has(day)
+
 		if (open) {
-			expanded.delete(day)
-		} else {
 			expanded.add(day)
+		} else {
+			expanded.delete(day)
 		}
 
-		// The rows are rebuilt, so focus goes back to this day's new one.
-		rerender()
-		document.querySelector<HTMLElement>(`.btr-activity-day-row[data-day="${day}"]`)?.focus()
+		setOpen(open)
 	})
+
+	setOpen(expanded.has(day))
 
 	const bar = row.$req(".btr-activity-bar")
 
 	for (const block of blocks) {
 		const segment = segments[block.index]
 		const piece = html`<span class="btr-activity-block" data-type="${segment.type}"></span>`
-		const range = `${new Date(block.start).$format("h:mm A")} – ${new Date(block.end).$format("h:mm A")}`
+		const range = `${new Date(block.start).$format(clockFormat())} – ${new Date(block.end).$format(clockFormat())}`
 
 		piece.style.left = `${((block.start - day) / length) * 100}%`
 		piece.style.width = `${((block.end - block.start) / length) * 100}%`
-		piece.title = `${stateText(segment)}\n${range} · ${formatDuration(block.end - block.start)}`
+		piece.title = `${stateText(segment)}
+${range} · ${formatDuration(block.end - block.start)}`
 		bar.append(piece)
 	}
 
@@ -211,28 +238,31 @@ const dayRow = (
 		bar.append(now)
 	}
 
-	if (open) {
-		const list = html`<ol class="btr-activity-day-list"></ol>`
+	const list = row.$req(".btr-activity-day-list")
 
-		for (let i = segments.length; i--;) {
-			const segment = segments[i]
-			const inDay =
-				segment.type === 0
-					? segment.from >= day && segment.from < day + length
-					: blocks.some((block) => block.index === i)
+	for (let i = segments.length; i--;) {
+		const segment = segments[i]
+		const inDay =
+			segment.type === 0
+				? segment.from >= day && segment.from < day + length
+				: blocks.some((block) => block.index === i)
 
-			if (inDay) {
-				list.append(entry(segments, i, online))
-			}
+		if (inDay) {
+			list.append(entry(segments, i, online))
 		}
-
-		row.append(list)
 	}
 
 	return row
 }
 
-const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean, expanded: Set<number>) => {
+/** `intro` plays the opening animation, which live updates skip. */
+const render = (
+	body: HTMLElement,
+	segments: PresenceSegment[],
+	online: boolean,
+	expanded: Set<number>,
+	intro = false,
+) => {
 	const seen = lastSeenAt(segments)
 
 	const summary = html`<div class="btr-activity-summary">
@@ -260,31 +290,39 @@ const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean,
 		status.textContent = "Online now"
 	} else if (seen) {
 		status.textContent = new Date(seen).$since()
-		status.title = new Date(seen).$format("MMM D, YYYY, h:mm A")
+		status.title = new Date(seen).$format(`MMM D, YYYY, ${clockFormat()}`)
 	} else {
 		status.textContent = "Not yet"
 	}
 
 	const timeline = html`<div class="btr-activity-timeline">
-		<div class="btr-activity-scale" aria-hidden="true">
-			<span>12 AM</span>
-			<span>6 AM</span>
-			<span>12 PM</span>
-			<span>6 PM</span>
-		</div>
+		<div class="btr-activity-scale" aria-hidden="true"></div>
 	</div>`
 
-	const days = [...blocksByDay(segments, online)].toSorted((a, b) => b[0] - a[0])
-	const rerender = () => render(body, segments, online, expanded)
+	const twelveHour = clockFormat().endsWith("A")
+	timeline
+		.$req(".btr-activity-scale")
+		.append(
+			...[0, 6, 12, 18].map(
+				(hour) =>
+					html`<span
+						>${twelveHour ? `${hour % 12 || 12} ${hour < 12 ? "AM" : "PM"}` : `${String(hour).padStart(2, "0")}:00`}</span
+					>`,
+			),
+		)
 
-	for (const [day, blocks] of days) {
-		timeline.append(dayRow(segments, online, day, blocks, expanded, rerender))
-	}
+	const days = [...blocksByDay(segments, online)].toSorted((a, b) => b[0] - a[0])
+	days.forEach(([day, blocks], index) => {
+		const row = dayRow(segments, online, day, blocks, expanded)
+		row.style.setProperty("--btr-index", String(index))
+		timeline.append(row)
+	})
 
 	if (!days.length) {
 		timeline.replaceChildren(html`<p class="btr-activity-empty">Not seen online yet.</p>`)
 	}
 
+	body.classList.toggle("btr-activity-intro", intro)
 	body.replaceChildren(summary, timeline)
 }
 
@@ -334,7 +372,7 @@ export const openActivity = async (userId: number, name: string, isOnline: () =>
 	const latest = Math.max(...blocksByDay(segments, isOnline()).keys())
 	const expanded = new Set(Number.isFinite(latest) ? [latest] : [])
 
-	render(body, segments, isOnline(), expanded)
+	render(body, segments, isOnline(), expanded, true)
 	const stopWatching = onPresenceHistoryChange(userId, (changed) =>
 		render(body, changed, isOnline(), expanded),
 	)

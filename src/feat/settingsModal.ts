@@ -295,6 +295,11 @@ export const SettingsModal: SettingsModalState = {
 								path="cacheRobuxAmount"
 								desc="Shows your last balance while the current one loads"
 							></toggle>
+							<toggle
+								label="12-Hour Clock"
+								path="twelveHourClock"
+								desc="Shows times like 5:30 PM instead of 17:30"
+							></toggle>
 
 							<heading>Chat</heading>
 							<toggle

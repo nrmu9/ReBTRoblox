@@ -4,6 +4,7 @@ import type { ItemPreviewer } from "@/rbx/Preview"
 import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { RobuxToCash } from "@/feat/robuxToCash"
+import { clockFormat } from "@/feat/clock"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
@@ -189,12 +190,12 @@ pageInit.itemdetails = () => {
 								if (created) {
 									createdContainer.$req(".btr-row-value").textContent = new Date(
 										created,
-									).$format("MMM DD, YYYY h:mm:ss A")
+									).$format(`MMM DD, YYYY ${clockFormat(true)}`)
 								}
 								if (updated) {
 									updatedContainer.$req(".btr-row-value").textContent = new Date(
 										updated,
-									).$format("MMM DD, YYYY h:mm:ss A")
+									).$format(`MMM DD, YYYY ${clockFormat(true)}`)
 								}
 								createdContainer.style.display = ""
 								updatedContainer.style.display = ""

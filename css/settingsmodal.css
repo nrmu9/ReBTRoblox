@@ -1269,7 +1269,7 @@ div.btr-setting-text {
 
 /* Days share one grid, so every bar lines up with the hour scale above. */
 .btr-activity-timeline {
-	--btr-day-columns: 88px minmax(0, 1fr) 56px;
+	--btr-day-columns: 88px minmax(0, 1fr) 56px 16px;
 	margin-top: 16px;
 }
 
@@ -1379,6 +1379,8 @@ div.btr-setting-text {
 		background: #f68802;
 	}
 
+	transition: filter 150ms var(--btr-ease-out);
+
 	&:hover {
 		filter: brightness(1.2);
 	}
@@ -1394,10 +1396,96 @@ div.btr-setting-text {
 	opacity: 0.6;
 }
 
+.btr-activity-chevron {
+	color: var(--btr-content-muted);
+	transition: transform 300ms var(--btr-ease-out);
+
+	.btr-activity-day-open & {
+		transform: rotate(180deg);
+	}
+}
+
+/* Folding animates the row height from nothing to its content's. */
+.btr-activity-details {
+	display: grid;
+	grid-template-rows: 0fr;
+	opacity: 0;
+	transition:
+		grid-template-rows 300ms var(--btr-ease-out),
+		opacity 200ms var(--btr-ease-out);
+
+	.btr-activity-day-open > & {
+		grid-template-rows: 1fr;
+		opacity: 1;
+	}
+}
+
+.btr-activity-details-inner {
+	min-height: 0;
+	overflow: hidden;
+}
+
 .btr-activity-day-list {
 	margin: 4px 0 8px;
 	padding: 4px 8px 0 16px;
 	list-style: none;
+	transform: translateY(-8px);
+	transition: transform 300ms var(--btr-ease-out);
+
+	.btr-activity-day-open & {
+		transform: none;
+	}
+}
+
+/* Opening: the cards rise in, then each day's bar fills from the left. */
+@keyframes btr-activity-rise {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+@keyframes btr-activity-grow {
+	from {
+		transform: scaleX(0);
+	}
+}
+
+.btr-activity-intro {
+	.btr-activity-stat {
+		animation: btr-activity-rise 300ms var(--btr-ease-out) backwards;
+	}
+
+	.btr-activity-stat:nth-child(2) {
+		animation-delay: 40ms;
+	}
+
+	.btr-activity-stat:nth-child(3) {
+		animation-delay: 80ms;
+	}
+
+	.btr-activity-day {
+		animation: btr-activity-rise 300ms var(--btr-ease-out) backwards;
+		animation-delay: calc(100ms + min(var(--btr-index), 10) * 30ms);
+	}
+
+	.btr-activity-block {
+		transform-origin: left;
+		animation: btr-activity-grow 500ms var(--btr-ease-out) backwards;
+		animation-delay: calc(160ms + min(var(--btr-index), 10) * 30ms);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-activity-intro * {
+		animation: none !important;
+	}
+
+	.btr-activity-chevron,
+	.btr-activity-details,
+	.btr-activity-day-list {
+		transition: none;
+	}
 }
 
 /* The line runs through every node but stops at the last one of the day. */
@@ -1501,6 +1589,6 @@ div.btr-setting-text {
 	}
 
 	.btr-activity-timeline {
-		--btr-day-columns: 64px minmax(0, 1fr) 48px;
+		--btr-day-columns: 64px minmax(0, 1fr) 48px 16px;
 	}
 }

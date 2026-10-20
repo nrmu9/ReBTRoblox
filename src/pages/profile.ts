@@ -4,6 +4,7 @@ import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
 import { lastSeenAt, openActivity } from "@/feat/activityModal"
+import { clockFormat } from "@/feat/clock"
 import { getPresenceHistory, onPresenceHistoryChange, type PresenceSegment } from "@/feat/presenceHistory"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
@@ -490,7 +491,9 @@ pageInit.profile = () => {
 
 								const value = stat.$req(".btr-stats-lastseen")
 								value.textContent = online ? "Now" : new Date(when!).$since()
-								value.title = online ? "" : new Date(when!).$format("MMM D, YYYY, h:mm A")
+								value.title = online
+									? ""
+									: new Date(when!).$format(`MMM D, YYYY, ${clockFormat()}`)
 								stat.style.display = ""
 							}
 

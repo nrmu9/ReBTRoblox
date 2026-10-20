@@ -5,6 +5,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ContextMenu } from "@/feat/contextMenu"
 import { RobuxToCash } from "@/feat/robuxToCash"
+import { clockFormat } from "@/feat/clock"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
@@ -638,7 +639,8 @@ pageInit.gamedetails = () => {
 													class="btr-unlock-date"
 													title="${awardedDate.$since()}"
 												>
-													Unlocked ${awardedDate.$format("MMM D, YYYY, h:mm A")}
+													Unlocked
+													${awardedDate.$format(`MMM D, YYYY, ${clockFormat()}`)}
 												</span>`,
 											)
 										}
@@ -824,7 +826,9 @@ pageInit.gamedetails = () => {
 							".game-stat .text-lead",
 							(x: any) => x.previousElementSibling?.textContent === "Created",
 							(label: any) => {
-								label.title = new Date(data.Created).$format("M/D/YYYY h:mm:ss A (T)")
+								label.title = new Date(data.Created).$format(
+									`M/D/YYYY ${clockFormat(true)} (T)`,
+								)
 							},
 						)
 						.$watch(
@@ -833,7 +837,9 @@ pageInit.gamedetails = () => {
 							(label: any) => {
 								label.classList.remove("date-time-i18n") // Otherwise roblox rewrites the label
 
-								label.title = new Date(data.Updated).$format("M/D/YYYY h:mm:ss A (T)")
+								label.title = new Date(data.Updated).$format(
+									`M/D/YYYY ${clockFormat(true)} (T)`,
+								)
 								label.textContent = `${dateSince(data.Updated)}`
 							},
 						)
