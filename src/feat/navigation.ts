@@ -556,7 +556,7 @@ export const Navigation = {
 		})
 
 		Navigation.register("sidebar_friends", {
-			label: "Show Connect",
+			label: "Show Friends",
 
 			settings: {
 				show_notifs: { label: "Show Requests", enabled: true, class: "!hide_notifs" },

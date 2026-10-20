@@ -156,7 +156,8 @@ a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 }
 
 .btr-nav-hide_notifs .btr-nav-notif,
-.btr-nav-hide_notifs .notification-blue {
+.btr-nav-hide_notifs .notification-blue,
+.btr-nav-hide_notifs .foundation-web-badge {
 	display: none !important;
 }
 
