@@ -8,3 +8,24 @@
 .btr-game-hover-fix {
 	transition-delay: 0s !important;
 }
+
+/* Home's link back to the rows you hid */
+
+.btr-hidden-rows {
+	padding: 16px 0 24px;
+	text-align: center;
+}
+
+.btr-hidden-rows-manage {
+	padding: 0;
+	background: none;
+	border: none;
+	color: inherit;
+	font: inherit;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.btr-hidden-rows-manage:hover {
+	color: var(--color-content-emphasis, inherit);
+}

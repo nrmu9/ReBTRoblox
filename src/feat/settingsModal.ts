@@ -117,6 +117,12 @@ export const SettingsModal: SettingsModalState = {
 		this.enabled = true
 		document.$on("click", ".btr-settings-toggle", () => this.toggle())
 
+		// Opens on a given page, for links elsewhere such as Home's hidden rows.
+		document.addEventListener("btr-open-settings", (ev: Event) => {
+			this.toggle(true)
+			this.switchContent((ev as CustomEvent).detail || "general")
+		})
+
 		// we only want to remember settings visibility when navigating same-origin or through history
 		if (
 			sessionStorage.getItem("btr-settings-open") &&
