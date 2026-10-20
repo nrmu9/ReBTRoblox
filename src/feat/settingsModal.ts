@@ -206,6 +206,16 @@ export const SettingsModal: SettingsModalState = {
 						<span class="btr-settings-brand-version"
 							>v${chrome.runtime.getManifest().version}</span
 						>
+						<a
+							class="btr-settings-brand-link"
+							href="https://www.roblox.com/users/864843843/profile"
+							target="_blank"
+							rel="noopener"
+							title="Made by pwu_p"
+							aria-label="Made by pwu_p, on Roblox"
+						>
+							<span class="icon icon-filled-tilt" aria-hidden="true"></span>
+						</a>
 					</div>
 					<label class="btr-settings-search">
 						<span class="icon icon-regular-magnifying-glass" aria-hidden="true"></span>
@@ -679,6 +689,11 @@ export const SettingsModal: SettingsModalState = {
 									Reset all
 								</button>
 							</div>
+							<p class="btr-exp-intro">
+								Roblox sends some of these for its apps only, so the website never reads them.
+								Those are greyed out, and changing them does nothing here. Most changes apply
+								after a reload.
+							</p>
 							<p class="btr-exp-note"></p>
 							<div id="btr-settings-experiments"></div>
 							<heading>Reset</heading>
@@ -1879,14 +1894,8 @@ export const SettingsModal: SettingsModalState = {
 
 					const edited = entries.filter((entry: any) => entry.edited).length
 					const used = entries.filter((entry: any) => !entry.unused).length
-					const count = [
-						edited ? `${edited} edited` : "",
-						SettingsModal.experimentHints
-							? `${used} of ${entries.length} used here`
-							: `${entries.length}`,
-					]
 
-					details.$req(".btr-exp-count").textContent = count.filter(Boolean).join(" · ")
+					details.$req(".btr-exp-count").textContent = edited ? `${edited} edited` : ""
 					details.classList.toggle("btr-exp-unused", !!SettingsModal.experimentHints && used === 0)
 
 					const groups = Object.values(SettingsModal.experiments).toSorted(

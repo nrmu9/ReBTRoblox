@@ -309,6 +309,30 @@
 	white-space: nowrap;
 }
 
+/* Roblox's own logo, from its icon set, linking to the author's profile. */
+.btr-settings-brand-link {
+	display: flex;
+	align-self: center;
+	margin-left: auto;
+	padding: 4px;
+
+	border-radius: 50%;
+	color: var(--btr-content-muted);
+	transition:
+		background-color 150ms var(--btr-ease-out),
+		color 150ms var(--btr-ease-out);
+}
+
+.btr-settings-brand-link:hover {
+	background: var(--btr-hover);
+	color: var(--btr-content-emphasis);
+}
+
+.btr-settings-brand-link .icon {
+	width: 18px;
+	height: 18px;
+}
+
 /* Main column */
 
 .btr-settings-main {
@@ -899,6 +923,13 @@ div.btr-setting-text {
 .btr-exp-filter {
 	flex: 1;
 	min-width: 0;
+}
+
+.btr-exp-intro {
+	margin: 0 0 12px;
+	color: var(--btr-content);
+	font-size: 14px;
+	line-height: 20px;
 }
 
 .btr-exp-note {
