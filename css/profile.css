@@ -640,12 +640,3 @@ html .btr-profile .btr-profile-favorites {
 		outline-offset: 2px;
 	}
 }
-
-/* The value reads as a link into the activity. */
-.btr-stats-lastseen::after {
-	content: "›";
-	margin-left: 4px;
-	color: var(--color-content-muted, inherit);
-	text-decoration: none;
-	display: inline-block;
-}
