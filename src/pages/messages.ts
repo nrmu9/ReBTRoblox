@@ -126,15 +126,6 @@ class MarkAllAsReadAction {
 					this.pagesToCheck.push(i)
 				}
 
-				// Shuffle
-				// for(let i = 0; i < this.pagesToCheck.length; i++) {
-				// 	const j = Math.floor(Math.random() * (this.pagesToCheck.length + 1))
-				// 	const v = this.pagesToCheck[i]
-
-				// 	this.pagesToCheck[i] = this.pagesToCheck[j]
-				// 	this.pagesToCheck[j] = v
-				// }
-
 				for (let i = 0; i < this.threadCount; i++) {
 					threads.push(this.initThread())
 				}

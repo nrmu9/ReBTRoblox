@@ -36,8 +36,6 @@
 .icon-nav-message-btr {
 	background-position: 0 0;
 }
-/* a:hover .icon-nav-friend-btr { background-position: -28px -28px; }
-a:hover .icon-nav-message-btr { background-position: -28px 0; } */
 
 .light-theme .icon-nav-friend-btr {
 	filter: invert(76%);
@@ -314,11 +312,6 @@ body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > section > div:first
 			text-overflow: ellipsis;
 			-webkit-line-clamp: 7;
 		}
-
-		/* .btr-feed:hover > .btr-feeddesc {
-			max-height: 106px;
-			margin-bottom: 4px;
-		} */
 	}
 }
 
@@ -1173,7 +1166,6 @@ a:not(.disabled):hover > .btr-icon-content {
 
 .btr-item-owned {
 	position: absolute;
-	/* bottom: -2px; */
 	top: 2px;
 	right: -2px;
 	bottom: auto;

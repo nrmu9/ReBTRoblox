@@ -74,8 +74,6 @@ export const PAGE_INFO: Record<string, any> = {
 	},
 }
 
-//
-
 const activeStyleSheets: Record<string, HTMLLinkElement> = {}
 const reloadingStyleSheets: Record<string, number> = {}
 
@@ -157,8 +155,6 @@ export const removeCSS = (...paths: string[]) => {
 		delete reloadingStyleSheets[path]
 	}
 }
-
-//
 
 let currentPageCSS: string[] = []
 

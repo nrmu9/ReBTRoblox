@@ -14,8 +14,6 @@ pageInit.create = () => {
 	// Reachable even with the create features off.
 	watchSettingsMenu(`a[role=menuitem][href^="/settings"]`)
 
-	//
-
 	injectScript.call("hijackAuth")
 
 	injectScript.listen(
@@ -28,8 +26,6 @@ pageInit.create = () => {
 		},
 		{ once: true },
 	)
-
-	//
 
 	if (!SETTINGS.get("create.enabled")) {
 		return

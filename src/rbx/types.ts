@@ -65,8 +65,6 @@ export interface Listed<T> {
 	data: T[]
 }
 
-//
-
 export type ThumbnailState =
 	"Completed" | "Pending" | "Blocked" | "Error" | "InReview" | "TemporarilyUnavailable"
 
@@ -85,8 +83,6 @@ export interface UniverseThumbnails {
 }
 
 export type ThumbnailSize = string
-
-//
 
 export interface UserDetail {
 	id: UserId
@@ -121,8 +117,6 @@ export interface UserPresence {
 export interface PresenceResponse {
 	userPresences: UserPresence[]
 }
-
-//
 
 export interface AssetDetails {
 	AssetId: AssetId
@@ -165,8 +159,6 @@ export interface BundleDetails {
 	creator?: { id: UserId; name: string; type: string }
 }
 
-//
-
 export interface PlaceDetails {
 	placeId: PlaceId
 	name: string
@@ -193,8 +185,6 @@ export interface GameDetails {
 	favoritedCount?: number
 }
 
-//
-
 export interface BadgeDetails {
 	id: BadgeId
 	name: string
@@ -209,8 +199,6 @@ export interface AwardedDate {
 	badgeId: BadgeId
 	awardedDate: string
 }
-
-//
 
 export interface AvatarRules {
 	playerAvatarTypes?: string[]
@@ -242,8 +230,6 @@ export interface OutfitDetails extends AvatarDefinition {
 	name: string
 }
 
-//
-
 export interface GamePassDetails {
 	TargetId?: GamePassId
 	Name?: string
@@ -262,8 +248,6 @@ export interface GroupRolesResponse {
 	data: GroupRole[]
 }
 
-//
-
 export interface InventoryItem {
 	assetId: AssetId
 	name?: string
@@ -279,8 +263,6 @@ export interface AssetOwner {
 	created?: string
 	updated?: string
 }
-
-//
 
 export interface PrivateMessage {
 	id: number
@@ -301,8 +283,6 @@ export interface Conversation {
 	title?: string
 	participants?: { targetId: UserId; name: string }[]
 }
-
-//
 
 /**
  * Google.Protobuf.WellKnownTypes.Timestamp, so the fields are capitalised.

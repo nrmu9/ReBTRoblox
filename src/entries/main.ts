@@ -63,8 +63,6 @@ SETTINGS.load(() => {
 		injectScript.send("updateSettings", SETTINGS.serialize(), RobuxToCash.getSelectedOption()),
 	)
 
-	//
-
 	const initialized: Record<string, boolean> = {}
 
 	const onPageChanged = () => {
@@ -143,8 +141,6 @@ SETTINGS.load(() => {
 			}).observe(content, { childList: true })
 		})
 	}
-
-	//
 
 	SETTINGS.onChange("general.theme", () => updatePageCSS())
 })

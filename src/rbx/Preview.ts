@@ -164,8 +164,6 @@ class AvatarPreviewer extends EventEmitter {
 		})
 	}
 
-	//
-
 	setEnabled(bool: boolean) {
 		if (this.enabled === !!bool) {
 			return
@@ -228,8 +226,6 @@ class AvatarPreviewer extends EventEmitter {
 		}
 	}
 
-	//
-
 	setOutfit(outfitId: any, outfitType?: any) {
 		this.outfitLoaded = false
 
@@ -289,8 +285,6 @@ class AvatarPreviewer extends EventEmitter {
 		this.outfitLoaded = true
 		this.trigger("appearanceLoaded")
 	}
-
-	//
 
 	waitForOutfit() {
 		if (this.outfitLoaded) {
@@ -379,8 +373,6 @@ class AvatarPreviewer extends EventEmitter {
 
 		return asset
 	}
-
-	//
 
 	loadAnimation(assetId: any, fadeIn?: any) {
 		this.loadingAnim = assetId
@@ -1173,8 +1165,6 @@ export const HoverPreview = (() => {
 			addedObjects.add(preview.avatar.root)
 		}
 
-		//
-
 		const box = new THREE.Box3()
 		const tempVector = new THREE.Vector3()
 
@@ -1244,8 +1234,6 @@ export const HoverPreview = (() => {
 			}
 		})
 
-		// preview.container.style.position = "absolute"
-		// preview.container.style.top = "0"
 		preview.container.style.pointerEvents = "none"
 
 		preview.scene.cameraControlsEnabled = false

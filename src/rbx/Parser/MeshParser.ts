@@ -355,8 +355,6 @@ export const RBXMeshParser = {
 			reader.Jump(facsDataSize)
 		}
 
-		//
-
 		return mesh
 	},
 

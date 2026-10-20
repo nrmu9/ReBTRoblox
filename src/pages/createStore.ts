@@ -125,8 +125,6 @@ pageInit.create_store = () => {
 		}
 	}
 
-	//
-
 	let currPageParams: any
 	let currPageObj: any
 	let currPage: any
@@ -143,8 +141,6 @@ pageInit.create_store = () => {
 			nextPage = AssetDetailsPage
 			nextPageParams = [assetId]
 		}
-
-		//
 
 		if (currPage) {
 			if (nextPage === currPage && JSON.stringify(nextPageParams) === JSON.stringify(currPageParams)) {

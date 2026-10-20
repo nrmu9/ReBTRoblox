@@ -271,8 +271,6 @@ export const RBXAvatar = (() => {
 		geom.deleteAttribute("uv")
 		geom.setIndex(null)
 
-		// geom.computeBoundingSphere()
-
 		obj.visible = false
 	}
 
@@ -1286,8 +1284,6 @@ export const RBXAvatar = (() => {
 				textures.pbr[name] = new MergeTexture(1024, 1024, sources.bodyColors[limb], sources.pbr[name])
 			}
 
-			//
-
 			const loaders: any[] = []
 
 			loaders.push(
@@ -1468,7 +1464,6 @@ export const RBXAvatar = (() => {
 			this.animator.update()
 
 			this.root.position.copy(this.offset)
-			// this.root.rotation.copy(this.offsetRot)
 
 			const rootPart = this.parts.HumanoidRootPart
 			rootPart?.matrixNoScale
@@ -1718,8 +1713,6 @@ export const RBXAvatar = (() => {
 			}
 			this.shouldRefreshRig = false
 
-			//
-
 			const recDispose = (tar: any) => {
 				if (tar.isMesh) {
 					if (tar.geometry) {
@@ -1740,8 +1733,6 @@ export const RBXAvatar = (() => {
 				recDispose(child)
 				this.root.remove(child)
 			}
-
-			//
 
 			this.sortedJointsArray = []
 
@@ -1784,7 +1775,6 @@ export const RBXAvatar = (() => {
 				obj.matrixNoScale = new THREE.Matrix4()
 				obj.skinnedNoScale = new THREE.Matrix4()
 				obj.skinnedPoseMatrix = new THREE.Matrix4()
-				//
 
 				this.root.add(obj)
 				parts[tree.name] = obj
@@ -2096,8 +2086,6 @@ export const RBXAvatar = (() => {
 						})
 					}
 				}
-
-				//
 
 				this.activeMaterials.push(material)
 			}
@@ -2451,8 +2439,6 @@ export const RBXAvatar = (() => {
 						tempMatrix.makeTranslation(...(<[number, number, number]>acc.offset)),
 					)
 				}
-
-				//
 
 				acc.attachment = attachment
 				acc.parent = parent
@@ -2866,8 +2852,6 @@ export const RBXAvatar = (() => {
 			// NOTE: As far as I can tell, the character seems to be consistently positioned at (0, 100.01 + characterAndAccessoriesAABB.Size.Y / 2, 0)
 			// so we could technically skip this anchor stuff and do the aabb calculation ourselves...
 
-			//
-
 			const transform = new THREE.Matrix4()
 			const vertex = new THREE.Matrix4()
 
@@ -3067,7 +3051,6 @@ export const RBXAvatar = (() => {
 					for (let i = 0; i < faces.length; i++) {
 						faces[i] = mapping[faces[i]]
 					}
-					//
 
 					part.geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3))
 					part.geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3))

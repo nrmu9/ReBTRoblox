@@ -129,8 +129,6 @@ export const btrFastSearch = {
 			console.error(ex)
 		}
 
-		//
-
 		const requestThumbnail = (userId: number) => {
 			if (thumbnailCache[userId]) {
 				return thumbnailCache[userId]
@@ -212,8 +210,6 @@ export const btrFastSearch = {
 			presenceCache[userId] = { at: Date.now(), promise }
 			return promise
 		}
-
-		//
 
 		const getMatches = (search: any) => {
 			const matches: Record<string, any>[] = Object.entries(userCache)

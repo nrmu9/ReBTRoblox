@@ -501,8 +501,6 @@ export const SourceViewer = (() => {
 			}
 		}
 
-		//
-
 		const matchUntil = (...matches: any[]) => {
 			const startIndex = ParseRegex.lastIndex
 			let lastIndex = startIndex
@@ -582,8 +580,6 @@ export const SourceViewer = (() => {
 			return [text, textType]
 		}
 
-		//
-
 		const finishLine = () => {
 			if (!current) {
 				return
@@ -650,8 +646,6 @@ export const SourceViewer = (() => {
 		}
 
 		lineNumber = 0
-
-		//
 
 		const indexState: any[] = []
 		const stack: any[] = []

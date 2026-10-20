@@ -343,17 +343,8 @@ pageInit.profile = () => {
 										></a
 									>`,
 								)
-
-								// } else if(game) {
-								// 	statusDiv.replaceChildren(html`<span class="btr-header-status-text btr-status-ingame">${game.title}</span>`)
-
-								// } else if(status?.$find(".studio")) {
-								// 	statusDiv.replaceChildren(html`<span class="btr-header-status-text btr-status-studio">Studio</span>`)
-
-								// } else if(status?.$find(".online")) {
-								// 	statusDiv.replaceChildren(html`<span class="btr-header-status-text btr-status-online">Online</span>`)
 							} else {
-								statusDiv.replaceChildren() // html`<span class="btr-header-status-text btr-status-offline">Offline</span>`
+								statusDiv.replaceChildren()
 							}
 						}
 
@@ -532,11 +523,6 @@ pageInit.profile = () => {
 			})
 
 			const initPlayerBadges = () => {
-				// if(userId === 1) {
-				// 	newCont.$find(".btr-profile-playerbadges").remove()
-				// 	return
-				// }
-
 				const list = newCont.$req(".btr-profile-playerbadges .btr-card-list")
 				const pager = createPager(true, undefined)
 
@@ -1278,8 +1264,6 @@ pageInit.profile = () => {
 							const thumb = json.data.find((x: any) => x.targetId === placeId)
 							item.$req<HTMLImageElement>(".btr-game-icon").src = thumb.imageUrl
 						})
-
-						//
 
 						const _placeDetails = await RobloxApi.games.getPlaceDetails.batch(placeId)
 						const placeDetails = _placeDetails.find((x: any) => x.placeId === placeId)

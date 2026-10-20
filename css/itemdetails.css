@@ -48,8 +48,6 @@
 	--btr-menu-offset-y: 4px;
 }
 
-/* */
-
 .btr-preview-container-itempage {
 	position: absolute;
 	height: 420px;
@@ -78,8 +76,6 @@
 	display: none;
 }
 
-/* */
-
 .btr-preview-inactive .btr-preview-container {
 	display: none;
 }
@@ -91,8 +87,6 @@
 .dark-theme .btr-preview-container {
 	background: rgba(39, 41, 48, 0.5);
 }
-
-/* */
 
 .btr-thumb-btn-container {
 	display: inline-flex;
@@ -143,10 +137,6 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	cursor: pointer;
 }
 
-/* .btr-thumb-btn:hover {
-	box-shadow: 0 1px 3px rgba(150,150,150,0.74);
-} */
-
 .btr-thumb-btn [class^="btr-icon"] {
 	flex: 0 0 auto;
 	display: inline-block;
@@ -181,8 +171,6 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	opacity: 1;
 }
 
-/* */
-
 .btr-thumb-btn-container .btr-thumb-popup {
 	position: absolute;
 	left: 100%;
@@ -196,7 +184,6 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	--popup-bg: #fafafa;
 
 	background: var(--popup-bg);
-	/* color: rgb(96, 97, 98); */
 
 	border-radius: 4px;
 	box-shadow: 0 -5px 20px rgba(25, 25, 25, 0.15);
@@ -313,7 +300,6 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 	height: 6px;
 	width: 100%;
 	border-radius: 3px;
-	/* cursor: pointer; */
 
 	display: block;
 	height: 20px;
@@ -374,8 +360,6 @@ html body .btr-thumb-btn-container .btr-thumb-btn {
 		top: 369px;
 	}
 }
-
-/* */
 
 .btr-animation-name {
 	margin: 0 12px 12px;
@@ -527,8 +511,6 @@ body .btr-bundle-animations .btr-bundle-btn-alt {
 	font-weight: 900;
 	color: light-dark(#333, #fff);
 }
-
-/* */
 
 #AssetThumbnail[data-btr-bg="white"] .thumbnail-span {
 	background: white;

@@ -349,8 +349,6 @@ const startInject = () => {
 			}
 		}
 
-		//
-
 		const formatNumber = (num: number | string) =>
 			String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,") // Intl.NumberFormat().format(num)
 
@@ -432,8 +430,6 @@ const startInject = () => {
 			cachedTemplates: {},
 			templateCaches: [],
 
-			//
-
 			moduleListeners: [],
 			loadedModules: {},
 
@@ -489,8 +485,6 @@ const startInject = () => {
 					return callback(target, thisArg, args, argsMap)
 				})
 			},
-
-			//
 
 			hijackModule(moduleName: string, objects: any) {
 				if (health) {
@@ -549,8 +543,6 @@ const startInject = () => {
 				this.moduleListeners[moduleName].__configs = this.moduleListeners[moduleName].__configs ?? []
 				this.moduleListeners[moduleName].__configs.push(callback)
 			},
-
-			//
 
 			initModule(module: any) {
 				if (this.loadedModules[module.name] === module) {
@@ -710,8 +702,6 @@ const startInject = () => {
 			injectedContent: [],
 			globalHijackState: [],
 			renderTarget: null as any,
-
-			//
 
 			parseReactStringSelector(selector: string) {
 				if (this.cachedSelectors[selector]) {
@@ -1059,8 +1049,6 @@ const startInject = () => {
 				return all
 			},
 
-			//
-
 			wrappedProto: Object.defineProperties(
 				<Record<string, any>>{
 					btrIsWrapped: true,
@@ -1209,8 +1197,6 @@ const startInject = () => {
 				return wrapped
 			},
 
-			//
-
 			createGlobalState(value: any) {
 				return {
 					listeners: new Set(),
@@ -1244,8 +1230,6 @@ const startInject = () => {
 
 				return globalState.value
 			},
-
-			//
 
 			hijackConstructor(filter: (...args: any[]) => any, handler: (...args: any[]) => any) {
 				const info = {
@@ -1312,8 +1296,6 @@ const startInject = () => {
 					callback: callback,
 				})
 			},
-
-			//
 
 			nextConstructorReplace(render: any, index: any, thisArg?: any, args?: any) {
 				for (; index < reactHook.constructorReplaces.length; index++) {
@@ -1604,8 +1586,6 @@ const startInject = () => {
 				return this.React.createElement(...args)
 			},
 
-			//
-
 			init() {
 				onSet(window, "React", this.onReact.bind(this))
 				onSet(window, "ReactJSX", (jsx: any) => {
@@ -1614,8 +1594,6 @@ const startInject = () => {
 				})
 			},
 		}
-
-		//
 
 		/**
 		 * Whether a game stays in a list: sponsored ones go with Hide Sponsored,
@@ -3308,9 +3286,6 @@ const startInject = () => {
 								if (assetDetail) {
 									const assetId = assetDetail.props.assetId
 
-									// let index = children.indexOf(assetDetail)
-									// if(index !== -1) { children.splice(index, 1) }
-
 									let index = children.findIndex((x) => x?.key === "copy-asset-id")
 									if (index !== -1) {
 										children.splice(index, 1)
@@ -3319,7 +3294,6 @@ const startInject = () => {
 									children.splice(
 										children.indexOf(assetDetail) + 1,
 										0,
-										// objects.jsx(objects.Mui.Divider, {}),
 										Link(
 											`/dashboard/creations/store/${assetId}/configure`,
 											objects.jsx(objects.Mui.MenuItem, {
@@ -4722,8 +4696,6 @@ const startInject = () => {
 				callInjected(name)
 			}
 		}
-
-		//
 
 		// init only fires once, so without this the page world would keep running
 		// against the settings it booted with. Every hook that reads through the

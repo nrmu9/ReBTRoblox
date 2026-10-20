@@ -207,7 +207,6 @@ export const RBXScene = (() => {
 
 			this.cameraDir.set(0, 0, 1).applyEuler(this.cameraRotation)
 
-			//
 			if (this.cameraSlideEnabled) {
 				let minSlide = 2
 				let maxSlide = 5.5
@@ -228,7 +227,6 @@ export const RBXScene = (() => {
 
 				this.cameraSlide = Math.max(minSlide, Math.min(maxSlide, this.cameraSlide))
 			}
-			//
 
 			const focus = this.cameraFocus.clone()
 			focus.add(this.cameraOffset)

@@ -71,8 +71,6 @@ export const AccessoryAssetTypeIds = [
 	8, 41, 42, 43, 44, 45, 46, 47, 57, 58, 64, 65, 66, 67, 68, 69, 70, 71, 72,
 ]
 
-//
-
 export const formatNumber = (num: number | string) =>
 	String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,")
 /**
@@ -109,8 +107,6 @@ export const formatUrlName = (name: string, def = "Name") =>
 			.replace(/^-+|-+$/g, "") || def,
 	)
 
-//
-
 export function onMouseEnter(
 	element: HTMLElement,
 	selector: string | ((el: HTMLElement) => void),
@@ -140,8 +136,6 @@ export function onMouseEnter(
 		}
 	})
 }
-
-//
 
 export function startDownload(blobUrl: string, fileName: string) {
 	const link = document.createElement("a")
@@ -200,8 +194,6 @@ export function getAssetFileType(assetTypeId: number, input: ArrayBuffer | Uint8
 			return (buffer && buffer[7] !== 0x21 && "rbxmx") || "rbxm"
 	}
 }
-
-//
 
 /**
  * A pager element, augmented in place by createPager.
@@ -368,8 +360,6 @@ export function createPager(noSelect?: boolean, hideWhenEmpty?: boolean): Pager 
 	return pager
 }
 
-//
-
 let redirectIndexCounter = 0
 export const redirectEvents = (from: HTMLElement, to: HTMLElement) => {
 	const redirectIndex = redirectIndexCounter
@@ -385,8 +375,6 @@ export const redirectEvents = (from: HTMLElement, to: HTMLElement) => {
 	)
 }
 
-//
-
 const initReactFriends = () => {
 	injectScript.call("initReactFriends")
 }
@@ -398,8 +386,6 @@ const initReactRobuxToCash = () => {
 
 	injectScript.call("initReactRobuxToCash")
 }
-
-//
 
 const angularTemplateCache: Record<string, any> = {}
 
@@ -484,8 +470,6 @@ const initAngularTemplates = () => {
 		}
 	})
 }
-
-//
 
 export const initPreview = async (assetId: number, assetTypeId: number | null, isBundle: boolean) => {
 	if (!SETTINGS.get("itemdetails.itemPreviewer")) {
@@ -1176,8 +1160,6 @@ export const initContentButton = async (assetId: any, assetTypeId: any, _isBundl
 	return btnCont
 }
 
-//
-
 export const robloxExperiments: Record<string, any> = {}
 
 pageInit.www = () => {
@@ -1190,8 +1172,6 @@ pageInit.www = () => {
 	initReactRobuxToCash()
 
 	initAngularTemplates()
-
-	//
 
 	const headWatcher = document.$watch(">head").$then()
 
@@ -1220,8 +1200,6 @@ pageInit.www = () => {
 	})
 
 	ready(() => loggedInUserPromise.$resolve(-1))
-
-	//
 
 	watchSettingsMenu(`a[role=menuitem][href*="/my/account"]`)
 

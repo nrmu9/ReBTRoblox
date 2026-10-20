@@ -1364,13 +1364,9 @@ export const Explorer = (() => {
 				}, 0)
 			}
 
-			//
-
 			this.innerList.style.paddingTop = `${visibleStartOffset * this.lineHeight}px`
 			this.innerList.style.height = `${(view.numOpenDescendants.get(model) ?? 0) * this.lineHeight + 4}px`
 			this.innerList.style.width = `${model.calculatedWidths ? (view.maxOpenWidth.get(model) ?? model).width : model.maxWidth}px`
-
-			//
 
 			const setLineItem = (line: any, item: any, depth = 0) => {
 				if (item !== line.item) {

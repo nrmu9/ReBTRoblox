@@ -169,8 +169,6 @@ export const DracoBitstream = {
 		// DecodeAttributes
 		this.decodeAttributes(stream, parser)
 
-		//
-
 		parser.attributes = parser.decoders.at(-1)?.attributes ?? []
 
 		return parser
@@ -197,8 +195,6 @@ export const DracoBitstream = {
 			flags: flags,
 		}
 	},
-
-	//
 
 	decodeConnectivityData(stream: ByteReader, parser: DracoParser, encoderMethod: number) {
 		// DecodeConnectivityData
@@ -340,12 +336,6 @@ export const DracoBitstream = {
 
 			for (const attribute of decoder.attributes ?? []) {
 				const decoderType = attribute.decoderType
-
-				// console.log(
-				// 	DRACO_DATA_TYPES[attribute.dataType],
-				// 	attribute,
-				// 	"index:", stream.GetIndex()
-				// )
 
 				if (decoderType === SEQUENTIAL_ATTRIBUTE_ENCODER_GENERIC) {
 					this.decodeAttribute_Generic(stream, parser, decoder, attribute)
@@ -571,35 +561,8 @@ export const DracoBitstream = {
 
 		if (predictionScheme === MESH_PREDICTION_CONSTRAINED_MULTI_PARALLELOGRAM) {
 			throw "draco edgebreaker not implemented"
-			// const isCreaseEdge = attribute.isCreaseEdge = []
-
-			// for(let i = 0; i < 4; i++) {
-			// 	const numFlags = this.LEB128(stream)
-
-			// 	if(numFlags > 0) {
-			// 		parser.rans.init_bits(stream)
-
-			// 		for(let j = 0; j < numFlags; j++) {
-			// 			isCreaseEdge[i][j] = parser.rans.read_bit() > 0
-			// 		}
-			// 	}
-			// }
 		} else if (predictionScheme === MESH_PREDICTION_TEX_COORDS_PORTABLE) {
 			throw "draco edgebreaker not implemented"
-			// const numOrientations = stream.Int32LE()
-
-			// const texOrientations = attribute.texOrientations = []
-
-			// parser.rans.init_bits(stream)
-
-			// let last_orientation = true
-			// for(let i = 0; i < numOrientations; i++) {
-			// 	if(!parser.rans.read_bit()) {
-			// 		last_orientation = !last_orientation
-			// 	}
-
-			// 	texOrientations.push(last_orientation)
-			// }
 		}
 
 		// DecodeTransformData
@@ -619,14 +582,6 @@ export const DracoBitstream = {
 
 		if (predictionScheme === MESH_PREDICTION_GEOMETRIC_NORMAL) {
 			throw "draco edgebreaker not implemented"
-			// const flipNormals = attribute.flipNormals = []
-			// const numEntries = numValues / numComponents // ew
-
-			// parser.rans.init_bits(stream)
-
-			// for(let i = 0; i < numEntries; i++) {
-			// 	flipNormals.push(parser.rans.read_bit() > 0)
-			// }
 		}
 	},
 
@@ -939,8 +894,6 @@ export const DracoBitstream = {
 			}
 		}
 	},
-
-	//
 
 	LEB128(stream: ByteReader) {
 		let result = 0

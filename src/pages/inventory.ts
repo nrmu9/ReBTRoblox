@@ -74,8 +74,6 @@ pageInit.inventory = () => {
 				.$then()
 				.$watch("#chat-container", (chat: any) => chat.remove())
 
-			//
-
 			const scripts = document.getElementsByTagName("script")
 			const checked = new WeakSet()
 

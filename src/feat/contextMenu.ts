@@ -370,8 +370,6 @@ if (IS_BACKGROUND_PAGE) {
 		ContextMenu.items.push(pageEntry)
 	}
 
-	//
-
 	chrome.contextMenus.onClicked.addListener((...args) => ContextMenu.onClick(...args))
 	SETTINGS.onChange("general.enableContextMenus", () => ContextMenu.update())
 
