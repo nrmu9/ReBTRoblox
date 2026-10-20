@@ -463,53 +463,60 @@ pageInit.profile = () => {
 				newCont.$req(".btr-profile-stats").style.display = ""
 
 				if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
+					const stat = newCont.$req(".btr-stats-lastseen-stat")
+					let segments: PresenceSegment[] = []
+					let presenceOnline = false
+
+					// Live changes since the page loaded say more than its presence.
+					const isOnline = () => {
+						const current = segments.at(-1)
+						return current && current.to > Date.now() - 60e3 ? current.type > 0 : presenceOnline
+					}
+
+					const render = () => {
+						const online = isOnline()
+
+						// Shown with no history too, as the dialog is where watching starts.
+						const when = lastSeenAt(segments)
+						const value = stat.$req(".btr-stats-lastseen")
+						value.textContent = online ? "Now" : when ? new Date(when).$since() : "Not seen yet"
+						value.title =
+							online || !when ? "" : new Date(when).$format(`MMM D, YYYY, ${clockFormat()}`)
+						stat.style.display = ""
+					}
+
+					// The history is on this device, so the stat shows straight away. Whether
+					// they are online right now follows once their presence is in.
+					void getPresenceHistory(userId).then((history) => {
+						segments = history
+						render()
+					})
+
+					onPresenceHistoryChange(userId, (history) => {
+						segments = history
+						render()
+					})
+
 					waitForRobloxResponse(
 						(url, json) =>
 							url.includes("presence.roblox.com/v1/presence/users") &&
 							json?.userPresences?.some((entry: any) => entry.userId === userId),
 					)
 						.then((json) => json ?? RobloxApi.presence.getPresence([userId]))
-						.then(async (presences) => {
-							const stat = newCont.$req(".btr-stats-lastseen-stat")
-							let online =
+						.then((presences) => {
+							presenceOnline =
 								presences?.userPresences?.find((entry: any) => entry.userId === userId)
 									?.userPresenceType > 0
-
-							const render = (segments: PresenceSegment[]) => {
-								// Live changes since the page loaded say more than its presence.
-								const current = segments.at(-1)
-								if (current && current.to > Date.now() - 60e3) {
-									online = current.type > 0
-								}
-
-								// Shown with no history too, as the dialog is where watching starts.
-								const when = lastSeenAt(segments)
-								const value = stat.$req(".btr-stats-lastseen")
-								value.textContent = online
-									? "Now"
-									: when
-										? new Date(when).$since()
-										: "Not seen yet"
-								value.title =
-									online || !when
-										? ""
-										: new Date(when).$format(`MMM D, YYYY, ${clockFormat()}`)
-								stat.style.display = ""
-							}
-
-							render(await getPresenceHistory(userId))
-							onPresenceHistoryChange(userId, render)
-
-							stat.$req(".btr-lastseen-toggle").$on("click", () => {
-								const name =
-									document.querySelector(".stylistic-alts-username")?.textContent?.trim() ||
-									document.title.replace(/ - Roblox$/, "")
-
-								void openActivity(userId, name, () => online, {
-									isOwn: userId === loggedInUser,
-								})
-							})
+							render()
 						})
+
+					stat.$req(".btr-lastseen-toggle").$on("click", () => {
+						const name =
+							document.querySelector(".stylistic-alts-username")?.textContent?.trim() ||
+							document.title.replace(/ - Roblox$/, "")
+
+						void openActivity(userId, name, isOnline, { isOwn: userId === loggedInUser })
+					})
 				}
 
 				const joinDate = json?.components?.About?.joinDateTime

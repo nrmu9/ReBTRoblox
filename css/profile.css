@@ -5,9 +5,10 @@
 	display: none;
 }
 
+/* Up to 1072px, and no wider than the window allows. */
 .btr-profile .content {
-	max-width: none;
-	width: 1072px;
+	max-width: 1072px;
+	width: 100%;
 }
 
 .btr-profile .btr-profile-left,
@@ -23,6 +24,16 @@
 
 .btr-profile .btr-profile-right {
 	padding-left: 6px;
+}
+
+/* Too narrow for two columns side by side, so one goes under the other. */
+@media (max-width: 991px) {
+	.btr-profile .btr-profile-left,
+	.btr-profile .btr-profile-right {
+		display: block;
+		width: 100%;
+		padding: 0;
+	}
 }
 
 .btr-profile .container-header {
