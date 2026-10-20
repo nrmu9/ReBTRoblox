@@ -123,7 +123,8 @@ pageInit.groups = () => {
 			(ev) => {
 				if (
 					(ev.target as Element).closest?.(
-						".group-profile-header .actions-container .MuiIconButton-root",
+						// The button, or its narrow window copy.
+						".group-profile-header .contextual-menu-actions-btn, .group-profile-header .actions-container .MuiIconButton-root",
 					)
 				) {
 					pressed = Date.now()
@@ -132,32 +133,40 @@ pageInit.groups = () => {
 			true,
 		)
 
+		// Watched by entry, as the list can be drawn before its entries are.
 		document.$watch(
-			".MuiMenu-list",
-			(list: HTMLElement) => {
-				const template = list.firstElementChild
+			".MuiMenu-list > li:not(.btr-track-menu-item)",
+			(template: HTMLElement) => {
+				const list = template.parentElement!
 
-				if (Date.now() - pressed > 2000 || !template || list.$find(".btr-track-menu-item")) {
+				if (Date.now() - pressed > 5000) {
 					return
 				}
 
-				// Roblox's own entries' look, without their ripple.
-				const item = document.createElement("li")
-				item.className = `${template.className} btr-track-menu-item`
-				item.setAttribute("role", "menuitem")
-				item.tabIndex = -1
-				keepTrackLabel(item, "group", groupId)
+				let item = list.$find<HTMLElement>(":scope > .btr-track-menu-item")
 
-				item.$on("click", () => {
-					list.closest(".MuiPopover-root")?.querySelector<HTMLElement>(".MuiBackdrop-root")?.click()
-					// The page title is the name followed by - Roblox.
-					openTracked(
-						"group",
-						groupId,
-						document.title.replace(/ - Roblox$/, "") || `Community ${groupId}`,
-					)
-				})
+				if (!item) {
+					// Roblox's own entries' look, without their ripple.
+					item = document.createElement("li")
+					item.className = `${template.className} btr-track-menu-item`
+					item.setAttribute("role", "menuitem")
+					item.tabIndex = -1
+					keepTrackLabel(item, "group", groupId)
 
+					item.$on("click", () => {
+						list.closest(".MuiPopover-root")
+							?.querySelector<HTMLElement>(".MuiBackdrop-root")
+							?.click()
+						// The page title is the name followed by - Roblox.
+						openTracked(
+							"group",
+							groupId,
+							document.title.replace(/ - Roblox$/, "") || `Community ${groupId}`,
+						)
+					})
+				}
+
+				// Last, after any entries drawn later.
 				list.append(item)
 			},
 			{ continuous: true },
