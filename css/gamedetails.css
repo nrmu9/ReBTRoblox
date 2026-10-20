@@ -298,3 +298,7 @@ html body .btr-universe-box {
 .btr-server-filter-empty {
 	padding: 12px 0;
 }
+
+.btr-copy-server-link {
+	margin-top: 4px;
+}

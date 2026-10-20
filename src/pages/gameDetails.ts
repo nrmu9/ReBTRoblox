@@ -127,6 +127,20 @@ const trackDislike = () => {
 	})
 }
 
+/** A server's region, written the way the server cards write it: states for the US. */
+const regionLabel = (location: any): string =>
+	location
+		? `${location.city}, ${location.country.name === "United States" ? location.region.code : location.country.code}`
+		: ""
+
+const lookUpLocation = (placeId: number, jobId: string): Promise<any> =>
+	new Promise((resolve) =>
+		getServerDetails(placeId, jobId, (details: any) => resolve(details?.location ?? null)),
+	)
+
+/** How many servers Join Smallest may look up to find one in the chosen region. */
+const REGION_LOOKUPS = 10
+
 /** A button beside Refresh that joins the emptiest public server with room. */
 const addJoinSmallest = (placeId: number) => {
 	document.$watchAll(`${PUBLIC_SERVERS} .server-list-container-header`, (header: HTMLElement) => {
@@ -162,15 +176,45 @@ const addJoinSmallest = (placeId: number) => {
 				const json = await res.json()
 
 				// Fewest players first, then the best connection among those.
-				const smallest = ((json?.data ?? []) as any[])
+				const candidates = ((json?.data ?? []) as any[])
 					.filter((server) => server.playing < server.maxPlayers)
-					.toSorted((a, b) => a.playing - b.playing || (a.ping ?? 999) - (b.ping ?? 999))[0]
+					.toSorted((a, b) => a.playing - b.playing || (a.ping ?? 999) - (b.ping ?? 999))
+
+				// With a region picked in the filter, the smallest server in it. Known
+				// regions are free; the rest take a lookup each, so only a few.
+				const region = document.querySelector<HTMLSelectElement>(
+					`${PUBLIC_SERVERS} .btr-region-filter select`,
+				)?.value
+				let smallest = region ? null : candidates[0]
+
+				if (region) {
+					let lookups = 0
+
+					for (const server of candidates) {
+						let location = getCachedServerLocation(server.id)
+
+						if (!location) {
+							if (lookups >= REGION_LOOKUPS) {
+								continue
+							}
+
+							lookups++
+							button.textContent = `Checking ${lookups}/${REGION_LOOKUPS}...`
+							location = await lookUpLocation(placeId, server.id)
+						}
+
+						if (regionLabel(location) === region) {
+							smallest = server
+							break
+						}
+					}
+				}
 
 				if (smallest) {
 					injectScript.call("gamedetailsJoinServer", placeId, smallest.id)
 					reset("Joining...")
 				} else {
-					reset("No servers")
+					reset(region ? "None in region" : "No servers")
 				}
 			} catch {
 				reset("Try again")
@@ -183,6 +227,48 @@ const addJoinSmallest = (placeId: number) => {
 		} else {
 			header.append(button)
 		}
+	})
+}
+
+/**
+ * A button on every server card that copies a link straight into that server,
+ * for sending to someone. Roblox's start page takes the server's id.
+ */
+const addServerLinks = (placeId: number) => {
+	document.$watchAll("[data-btr-instance-id]", (join: HTMLElement) => {
+		const jobId = join.dataset.btrInstanceId
+
+		if (!jobId || join.parentElement?.$find(":scope > .btr-copy-server-link")) {
+			return
+		}
+
+		const button = html<HTMLButtonElement>`<button
+			type="button"
+			class="btn-control-xs btn-full-width btr-copy-server-link"
+			title="Copies a link that joins this server"
+		>
+			Copy Link
+		</button>`
+
+		button.$on("click", async (ev: Event) => {
+			ev.preventDefault()
+			ev.stopPropagation()
+
+			const link = `https://www.roblox.com/games/start?placeId=${placeId}&gameInstanceId=${jobId}`
+
+			try {
+				await navigator.clipboard.writeText(link)
+				button.textContent = "Copied"
+			} catch {
+				button.textContent = "Couldn't copy"
+			}
+
+			setTimeout(() => {
+				button.textContent = "Copy Link"
+			}, 2000)
+		})
+
+		join.after(button)
 	})
 }
 
@@ -227,9 +313,7 @@ const addRegionFilter = () => {
 				const jobId = item.$find<HTMLElement>("[data-btr-instance-id]")?.dataset.btrInstanceId
 				const location = jobId ? getCachedServerLocation(jobId) : null
 				// Written the way the server cards write it, states for the US.
-				const region = location
-					? `${location.city}, ${location.country.name === "United States" ? location.region.code : location.country.code}`
-					: ""
+				const region = regionLabel(location)
 
 				if (region) {
 					regions.add(region)
@@ -290,6 +374,7 @@ pageInit.gamedetails = () => {
 
 		if (SETTINGS.get("gamedetails.serverTools")) {
 			addJoinSmallest(placeId)
+			addServerLinks(placeId)
 
 			if (["region", "both", "combined"].includes(SETTINGS.get("gamedetails.showServerRegion"))) {
 				addRegionFilter()

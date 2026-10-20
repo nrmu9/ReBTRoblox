@@ -3746,8 +3746,14 @@ const startInject = () => {
 									x.props.className?.includes("rbx-game-status"),
 								)
 							if (status) {
-								if (regionSetting !== "region") {
-									status.props.children += `\nPing: ${props.ping ?? -1}ms`
+								// Roblox leaves the ping out for some servers, which
+								// used to read as -1ms.
+								if (
+									regionSetting !== "region" &&
+									typeof props.ping === "number" &&
+									props.ping >= 0
+								) {
+									status.props.children += `\nPing: ${props.ping}ms`
 								}
 
 								if (regionSetting !== "ping") {
