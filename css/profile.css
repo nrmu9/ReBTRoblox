@@ -625,3 +625,112 @@ html .btr-profile .btr-profile-favorites {
 	font-weight: 600;
 	line-height: 14px;
 }
+
+/* Last seen, and the activity timeline it opens */
+
+.btr-stats-lastseen-stat {
+	position: relative;
+}
+
+.btr-lastseen-toggle {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	max-width: 100%;
+	padding: 0 8px;
+	background: none;
+	border: none;
+	border-radius: 8px;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+
+	&:hover .btr-stats-lastseen,
+	&[aria-expanded="true"] .btr-stats-lastseen {
+		text-decoration: underline;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-selection-start, #335fff);
+		outline-offset: 2px;
+	}
+}
+
+.btr-lastseen-popover {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 1002;
+
+	width: 300px;
+	max-height: 360px;
+	overflow-y: auto;
+	padding: 12px 0;
+
+	background: var(--color-surface-100, light-dark(#fff, #232527));
+	border: 1px solid var(--color-stroke-muted, light-dark(#e3e3e3, #393b3d));
+	border-radius: 12px;
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+	text-align: left;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.btr-lastseen-title {
+	padding: 0 16px 4px;
+	color: var(--color-content-emphasis, inherit);
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.btr-lastseen-day {
+	padding: 8px 16px 4px;
+	color: var(--color-content-muted, #8b8d8f);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.btr-lastseen-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 16px;
+	color: var(--color-content-default, inherit);
+	font-size: 14px;
+}
+
+.btr-lastseen-dot {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--color-content-muted, #8b8d8f);
+
+	[data-type="1"] > & {
+		background: #00a2ff;
+	}
+
+	[data-type="2"] > & {
+		background: #02b757;
+	}
+
+	[data-type="3"] > & {
+		background: #f68802;
+	}
+}
+
+.btr-lastseen-state {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.btr-lastseen-time {
+	flex: none;
+	color: var(--color-content-muted, #8b8d8f);
+	font-size: 12px;
+}

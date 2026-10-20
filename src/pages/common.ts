@@ -7,7 +7,7 @@ import { assert, bufferToString, formatFileName, ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
-import { recordPresences } from "@/feat/lastSeen"
+import { recordPresences } from "@/feat/presenceHistory"
 import { onRobloxResponse } from "@/feat/robloxResponses"
 import { recordExperimentPage } from "@/feat/experimentHints"
 import { SETTINGS } from "@/feat/settings"
@@ -1333,7 +1333,8 @@ pageInit.www = () => {
 
 	// Experiments
 
-	// Presence Roblox fetched itself, recorded for the profile's last seen.
+	// Presence Roblox fetched itself or was pushed live, recorded for the
+	// profile's last seen and timeline.
 	onRobloxResponse(
 		(url) => url.includes("presence.roblox.com/v1/presence/users"),
 		(json) => {
@@ -1342,6 +1343,12 @@ pageInit.www = () => {
 			}
 		},
 	)
+
+	injectScript.listen("robloxPresenceLive", (presences: any[], starts: Record<number, number>) => {
+		if (SETTINGS.get("profile.lastSeen")) {
+			recordPresences(presences, starts)
+		}
+	})
 
 	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
 		robloxExperiments[experiment] ??= {}

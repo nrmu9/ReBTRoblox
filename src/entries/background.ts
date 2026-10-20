@@ -10,6 +10,7 @@ import "@/feat/contextMenu"
 import "@/feat/serverDetails"
 import "@/feat/loadFeature"
 import "@/feat/blogFeed"
+import "@/feat/presenceHistory"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 

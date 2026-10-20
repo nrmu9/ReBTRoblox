@@ -2326,6 +2326,49 @@ const startInject = () => {
 						contentScript.send("robloxResponse", url, json)
 					}
 				})
+
+				// Presence changes Roblox's realtime connection pushes as they
+				// happen, each with the report Roblox would fetch and when the
+				// session began. Ones without a report make Roblox fetch it,
+				// which the hook above passes on.
+				let tries = 0
+				const subscribe = () => {
+					const client = (window as any).Roblox?.RealTime?.Factory?.GetClient?.()
+
+					if (!client) {
+						if (++tries < 30) {
+							setTimeout(subscribe, 1000)
+						}
+						return
+					}
+
+					client.Subscribe("PresenceBulkNotifications", (notifications: any) => {
+						const presences: any[] = []
+						const starts: Record<number, number> = {}
+
+						for (const notification of Array.isArray(notifications) ? notifications : []) {
+							const report = notification?.PresenceReport
+
+							if (notification?.Type !== "PresenceChanged" || !report) {
+								continue
+							}
+
+							presences.push({ ...report, userId: report.userId ?? notification.UserId })
+
+							// Going offline starts now, not when the last session did.
+							starts[notification.UserId] =
+								report.userPresenceType > 0
+									? Date.parse(notification.SessionStarted) || Date.now()
+									: Date.now()
+						}
+
+						if (presences.length) {
+							contentScript.send("robloxPresenceLive", presences, starts)
+						}
+					})
+				}
+
+				subscribe()
 			},
 			// Reports the rows Home loads, so the settings can list them, and drops
 			// the hidden ones from the response before Roblox renders any of it.

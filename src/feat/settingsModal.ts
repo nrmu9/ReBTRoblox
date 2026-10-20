@@ -420,7 +420,7 @@ export const SettingsModal: SettingsModalState = {
 							<toggle
 								label="Last Seen Online"
 								path="lastSeen"
-								desc="Shows when ReBTRoblox last saw an offline user online. Only what this device has seen, so it can be out of date"
+								desc="Shows when someone was last online and a timeline of what they were doing, as seen by ReBTRoblox on this device"
 							></toggle>
 							<toggle
 								label="Exact Follower Counts"

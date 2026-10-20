@@ -3,7 +3,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
-import { getLastSeen } from "@/feat/lastSeen"
+import { getPresenceHistory, onPresenceHistoryChange, type PresenceSegment } from "@/feat/presenceHistory"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import {
@@ -17,6 +17,76 @@ import {
 } from "@/pages/common"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
+
+// When a segment ended: when the next one began if that was seen live,
+// otherwise the last time it was seen.
+const segmentEnd = (segments: PresenceSegment[], index: number) => {
+	const next = segments[index + 1]
+	return next?.exact ? next.from : segments[index].to
+}
+
+/** When the user was last seen online, or null if never. */
+const lastSeenAt = (segments: PresenceSegment[]): number | null => {
+	for (let i = segments.length; i--;) {
+		if (segments[i].type > 0) {
+			return segmentEnd(segments, i)
+		}
+	}
+
+	return null
+}
+
+const STATE_LABELS = ["Offline", "Online", "In an experience", "In Studio"]
+
+/** The history newest first, under a heading for each day. */
+const timelineRows = (segments: PresenceSegment[]): HTMLElement[] => {
+	const rows: HTMLElement[] = []
+	const today = new Date().toDateString()
+	const yesterday = new Date(Date.now() - 24 * 60 * 60e3).toDateString()
+	let day = ""
+
+	for (let i = segments.length; i--;) {
+		const segment = segments[i]
+		const from = new Date(segment.from)
+		const end = segmentEnd(segments, i)
+
+		if (from.toDateString() !== day) {
+			day = from.toDateString()
+			rows.push(
+				html`<div class="btr-lastseen-day">
+					${day === today ? "Today" : day === yesterday ? "Yesterday" : from.$format("MMM D, YYYY")}
+				</div>`,
+			)
+		}
+
+		// Offline only matters for when it began.
+		const time =
+			segment.type === 0 || end - segment.from < 60e3
+				? from.$format("h:mm A")
+				: `${from.$format("h:mm A")} – ${new Date(end).$format("h:mm A")}`
+
+		const row = html`<div class="btr-lastseen-row" data-type="${segment.type}">
+			<span class="btr-lastseen-dot"></span>
+			<span class="btr-lastseen-state">${STATE_LABELS[segment.type]}</span>
+			<span class="btr-lastseen-time">${time}</span>
+		</div>`
+
+		if (segment.location) {
+			const place = segment.placeId
+				? html`<a class="btr-lastseen-place text-link" href="/games/${segment.placeId}"
+						>${segment.location}</a
+					>`
+				: html`<span class="btr-lastseen-place">${segment.location}</span>`
+
+			row.$req(".btr-lastseen-state").replaceChildren(place)
+			row.title = STATE_LABELS[segment.type]
+		}
+
+		rows.push(row)
+	}
+
+	return rows
+}
 
 // Roblox rounds the follower and following counts once they get big, so a
 // popular profile reads "17M Followers". Friends never needs this, the cap is
@@ -191,13 +261,20 @@ pageInit.profile = () => {
 									<div class="text-lead text-overflow btr-stats-placevisits"></div>
 								</div>
 								<div class="btr-profile-stat btr-stats-lastseen-stat" style="display:none">
-									<div class="text-label">Last Seen Online</div>
-									<div class="text-lead text-overflow btr-stats-lastseen"></div>
+									<button
+										type="button"
+										class="btr-lastseen-toggle"
+										aria-expanded="false"
+										aria-haspopup="true"
+									>
+										<span class="text-label">Last Seen Online</span>
+										<span class="text-lead text-overflow btr-stats-lastseen"></span>
+									</button>
+									<div class="btr-lastseen-popover" hidden>
+										<div class="btr-lastseen-title">Activity</div>
+										<div class="btr-lastseen-timeline"></div>
+									</div>
 								</div>
-							</div>
-							<div class="btr-profile-lastseen-note text-label" style="display:none">
-								Last seen is when ReBTRoblox last saw them online on this device, so it may be
-								out of date.
 							</div>
 						</div>
 					</div>
@@ -464,8 +541,6 @@ pageInit.profile = () => {
 
 				newCont.$req(".btr-profile-stats").style.display = ""
 
-				// Roblox shows when someone is online, so this only fills in the
-				// offline case, and only from what this device has seen.
 				if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
 					waitForRobloxResponse(
 						(url, json) =>
@@ -473,25 +548,57 @@ pageInit.profile = () => {
 							json?.userPresences?.some((entry: any) => entry.userId === userId),
 					)
 						.then((json) => json ?? RobloxApi.presence.getPresence([userId]))
-						.then((presences) => {
-							const presence = presences?.userPresences?.[0]
-							const seen = getLastSeen(userId)
+						.then(async (presences) => {
+							const stat = newCont.$req(".btr-stats-lastseen-stat")
+							let online =
+								presences?.userPresences?.find((entry: any) => entry.userId === userId)
+									?.userPresenceType > 0
 
-							if (!presence || presence.userPresenceType !== 0 || !seen) {
-								return
+							const render = (segments: PresenceSegment[]) => {
+								// Live changes since the page loaded say more than its presence.
+								const current = segments.at(-1)
+								if (current && current.to > Date.now() - 60e3) {
+									online = current.type > 0
+								}
+
+								const when = lastSeenAt(segments)
+								if (!online && !when) {
+									return
+								}
+
+								const value = stat.$req(".btr-stats-lastseen")
+								value.textContent = online ? "Now" : new Date(when!).$since()
+								value.title = online ? "" : new Date(when!).$format("MMM D, YYYY, h:mm A")
+
+								stat.$req(".btr-lastseen-timeline").replaceChildren(...timelineRows(segments))
+								stat.style.display = ""
 							}
 
-							const when = new Date(seen.at)
-							const value = newCont.$req(".btr-stats-lastseen")
-
-							value.textContent = when.$since()
-							value.title =
-								when.$format("MMM D, YYYY, h:mm A") +
-								(seen.location ? ` in ${seen.location}` : "")
-
-							newCont.$req(".btr-stats-lastseen-stat").style.display = ""
-							newCont.$req(".btr-profile-lastseen-note").style.display = ""
+							render(await getPresenceHistory(userId))
+							onPresenceHistoryChange(userId, render)
 						})
+
+					const stat = newCont.$req(".btr-stats-lastseen-stat")
+					const toggle = stat.$req(".btr-lastseen-toggle")
+					const popover = stat.$req(".btr-lastseen-popover")
+
+					const setOpen = (open: boolean) => {
+						popover.hidden = !open
+						toggle.setAttribute("aria-expanded", String(open))
+					}
+
+					toggle.$on("click", () => setOpen(!!popover.hidden))
+					document.addEventListener("click", (ev) => {
+						if (!stat.contains(ev.target as Node)) {
+							setOpen(false)
+						}
+					})
+					stat.$on("keydown", (ev: KeyboardEvent) => {
+						if (ev.key === "Escape" && !popover.hidden) {
+							setOpen(false)
+							toggle.focus()
+						}
+					})
 				}
 
 				const joinDate = json?.components?.About?.joinDateTime
