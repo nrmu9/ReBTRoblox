@@ -35,6 +35,7 @@
 				"*://*/*/userads/*",
 				"*://*/*/user-sponsorship/*"
 			],
+			"css": ["css/early.css"],
 			"run_at": "document_start",
 			"all_frames": true
 		},

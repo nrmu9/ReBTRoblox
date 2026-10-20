@@ -29,6 +29,28 @@ const writeCachedSettings = (value: any) => {
 }
 
 let pageSettings: any = readCachedSettings() ?? {}
+
+// Pages whose Roblox sections the page code replaces. css/early.css hides those
+// sections under this attribute, and the browser applies that stylesheet before
+// the first paint, so they never flash while the page code is still loading.
+// Set here because this runs at document_start with the cached settings.
+const EARLY_PAGES: Array<[name: string, path: RegExp, group: string]> = [
+	["profile", /^(?:\/[a-z]{2}(?:-[a-z]{2,3})?)?\/users\/\d+\/profile/i, "profile"],
+]
+
+const markEarlyPages = () => {
+	const pages = EARLY_PAGES.filter(
+		([, path, group]) => path.test(location.pathname) && pageSettings?.[group]?.enabled !== false,
+	).map(([name]) => name)
+
+	if (pages.length) {
+		document.documentElement.dataset.btrEarly = pages.join(" ")
+	} else {
+		delete document.documentElement.dataset.btrEarly
+	}
+}
+
+markEarlyPages()
 let IS_DEV_MODE = false
 let selectedRobuxToCashOption: any = null
 
@@ -4410,6 +4432,7 @@ const startInject = () => {
 		applySettings = (newSettings, isDevMode, cashOption) => {
 			pageSettings = newSettings
 			writeCachedSettings(newSettings)
+			markEarlyPages()
 			IS_DEV_MODE = isDevMode
 			selectedRobuxToCashOption = cashOption
 			RobuxToCash.selectedRobuxToCashOption = cashOption
@@ -4427,6 +4450,7 @@ const startInject = () => {
 		contentScript.listen("updateSettings", (newSettings: any, cashOption: any) => {
 			pageSettings = newSettings
 			writeCachedSettings(newSettings)
+			markEarlyPages()
 			selectedRobuxToCashOption = cashOption
 			RobuxToCash.selectedRobuxToCashOption = cashOption
 		})

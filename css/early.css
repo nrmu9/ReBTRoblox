@@ -1,0 +1,9 @@
+/* Applied by the browser before the first paint. Hides the Roblox sections
+   that the page code replaces, so they never show while that code loads.
+   inject.js marks the page from the cached settings, so a disabled feature
+   leaves Roblox's page alone. */
+
+html[data-btr-early~="profile"] .profile-content,
+html[data-btr-early~="profile"] .user-profile-header div:has(> .description-content) {
+	display: none !important;
+}
