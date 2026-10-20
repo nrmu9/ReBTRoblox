@@ -214,8 +214,6 @@ pageInit.itemdetails = () => {
 				)
 
 				if (isReactItemDetails) {
-					// modern item details page
-
 					container.$watch(".btr-buttons", (buttons: HTMLElement) => {
 						const assetId = +buttons.dataset.btrAssetId!
 						const itemType = buttons.dataset.btrItemType
@@ -242,7 +240,7 @@ pageInit.itemdetails = () => {
 							void initPreview(assetId, assetTypeId, isBundle).then((preview) => {
 								if (!preview) {
 									return
-								} // preview didnt load
+								}
 								if (!document.contains(buttons)) {
 									return
 								} // already changed page

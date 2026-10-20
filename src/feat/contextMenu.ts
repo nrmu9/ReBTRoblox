@@ -334,8 +334,6 @@ if (IS_BACKGROUND_PAGE) {
 						return
 					}
 
-					// Actually update context menus
-
 					this._lastEnabledItems = enabledItems
 					this.apply()
 				})

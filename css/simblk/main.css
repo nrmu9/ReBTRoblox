@@ -13,8 +13,6 @@ html body {
 	background: none !important;
 }
 
-/* Header */
-
 #header {
 	background-color: var(--btr-header-color);
 	border-bottom-color: var(--btr-header-color);
@@ -69,8 +67,6 @@ html body {
 #navigation li > :hover span[class^="icon"] {
 	opacity: 0.75;
 }
-
-/* Feed */
 
 #navigation #btr-blogfeed .btr-feed {
 	color: rgba(255, 255, 255, 0.75);

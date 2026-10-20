@@ -300,7 +300,6 @@ const addRegionFilter = () => {
 			for (const item of list.$findAll<HTMLElement>(":scope > li")) {
 				const jobId = item.$find<HTMLElement>("[data-btr-instance-id]")?.dataset.btrInstanceId
 				const location = jobId ? getCachedServerLocation(jobId) : null
-				// Written the way the server cards write it, states for the US.
 				const region = regionLabel(location)
 
 				if (region) {

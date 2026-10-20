@@ -382,16 +382,16 @@ export const SETTINGS: Record<string, any> = {
 		const setting = this._getSetting(settingPath, this.loadedSettings)
 
 		if (!setting) {
-			return false // Invalid setting
+			return false
 		}
 
 		if (typeof value !== typeof setting.value) {
-			return false // Type mismatch
+			return false
 		}
 
 		const defaultSetting = this._getSetting(settingPath, DEFAULT_SETTINGS)
 		if (defaultSetting.validValues && !defaultSetting.validValues.includes(value)) {
-			return false // Invalid value
+			return false
 		}
 
 		return true

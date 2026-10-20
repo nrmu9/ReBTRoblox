@@ -55,7 +55,6 @@ html .dark-theme.btr-profile .btr-section-content-off {
 .btr-profile .btr-profile-about {
 	position: relative;
 
-	/* Social buttons */
 	.btr-profile-social-links {
 		display: flex;
 		float: right;
@@ -78,7 +77,6 @@ html .dark-theme.btr-profile .btr-section-content-off {
 		}
 	}
 
-	/* Description */
 	.btr-profile-description {
 		padding: 6px 12px;
 
@@ -110,8 +108,6 @@ html .dark-theme.btr-profile .btr-section-content-off {
 			text-align: justify;
 		}
 	}
-
-	/* Stats */
 
 	.btr-profile-stats {
 		display: flex;
@@ -224,7 +220,6 @@ html .dark-theme.btr-profile .btr-section-content-off {
 .btr-profile .user-profile-header {
 	margin-bottom: 10px;
 
-	/* Hide new description */
 	div:has(> .description-content) {
 		display: none;
 	}
@@ -590,8 +585,6 @@ html .btr-profile .btr-profile-favorites {
 		padding: 6px 10px;
 	}
 }
-
-/* Inventory */
 
 #btr-injected-inventory {
 	border: 0;

@@ -530,9 +530,9 @@ export const RobloxApi = {
 						return { inCollection: addToCollection }
 					}
 
-					return null // return null if error
+					return null
 				},
-				() => null, // return null if error
+				() => null,
 			),
 	},
 	presence: {

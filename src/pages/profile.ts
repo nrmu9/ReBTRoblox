@@ -168,7 +168,7 @@ pageInit.profile = () => {
 		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-profile"))
 
 		document.$watch(".profile-platform-container", async (profileContainer: HTMLElement) => {
-			await profileContainer.$watch(">*").$promise() // wait for first child
+			await profileContainer.$watch(">*").$promise()
 
 			const newCont = html` <div class="btr-profile-container">
 				<div class="btr-profile-left">

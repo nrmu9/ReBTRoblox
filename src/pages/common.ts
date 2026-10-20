@@ -1186,12 +1186,8 @@ pageInit.www = () => {
 	Navigation.init()
 	SettingsModal.enable()
 
-	// Init common react
-
 	initReactFriends()
 	initReactRobuxToCash()
-
-	// Init common angular
 
 	initAngularTemplates()
 

@@ -226,7 +226,6 @@ const RBXBinaryParser = {
 			meta: {},
 		}
 
-		// preallocate some arrays
 		for (let i = 0; i < 10; i++) {
 			parser.arrays.push(new Array(256))
 		}
@@ -292,7 +291,7 @@ const RBXBinaryParser = {
 				}
 
 				const chunkReader = new ByteReader(data)
-				parser.arrayIndex = 0 // reset arrays
+				parser.arrayIndex = 0
 
 				switch (chunkType) {
 					case "INST":

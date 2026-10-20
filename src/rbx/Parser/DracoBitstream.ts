@@ -329,7 +329,6 @@ export const DracoBitstream = {
 	},
 
 	decodeAttributes(stream: ByteReader, parser: DracoParser) {
-		// initialize rans
 		parser.rans = this.createRans()
 
 		// initialize values for bits methods

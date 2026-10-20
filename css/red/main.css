@@ -3,8 +3,6 @@ html {
 	--btr-header-text-color: #fff;
 }
 
-/* Header */
-
 #header {
 	background-color: var(--btr-header-color);
 	border-bottom-color: var(--btr-header-color);

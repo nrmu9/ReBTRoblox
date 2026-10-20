@@ -1171,8 +1171,6 @@ a:not(.disabled):hover > .btr-icon-content {
 	filter: brightness(125%);
 }
 
-/* Owned Item */
-
 .btr-item-owned {
 	position: absolute;
 	/* bottom: -2px; */

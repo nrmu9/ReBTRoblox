@@ -9,9 +9,9 @@ export const SourceViewer = (() => {
 
 	const _ParseRegex = new RegExp(
 		[
-			WhitespaceRegex.source.slice(1, -1), // whitespace
-			NumberRegex.source.slice(1, -1), // number
-			WordRegex.source.slice(1, -1), // word
+			WhitespaceRegex.source.slice(1, -1),
+			NumberRegex.source.slice(1, -1),
+			WordRegex.source.slice(1, -1),
 			/[+\-*/^%~=><]=|\.\.[.=]?|::|->|\/\//.source, // multi-char ops
 			/--(?:\[=*\[)?/.source, // comments
 			/@(?:\[|\w+)?/.source, // attributes

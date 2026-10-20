@@ -148,7 +148,7 @@ pageInit.create_store = () => {
 
 		if (currPage) {
 			if (nextPage === currPage && JSON.stringify(nextPageParams) === JSON.stringify(currPageParams)) {
-				return // no change in page
+				return
 			}
 
 			currPageObj?.close?.()

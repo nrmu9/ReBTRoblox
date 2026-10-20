@@ -908,7 +908,6 @@ export class ItemPreviewer extends AvatarPreviewer {
 					(Object.values(this.animMap) as any[]).find((x: any) => x.assetId === this.currentAnim)
 						?.name || ""
 
-				// Move camera down
 				this.scene.cameraOffset.y -= 1
 			}
 
@@ -923,7 +922,6 @@ export class ItemPreviewer extends AvatarPreviewer {
 				this.hasBundleAnims = false
 				this.bundleAnims.style.display = "none"
 
-				// Move camera back up
 				this.scene.cameraOffset.y += 1
 			}
 

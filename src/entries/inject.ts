@@ -767,7 +767,7 @@ const startInject = () => {
 						if (previous) {
 							previous.next = obj
 						} else {
-							result.push(obj) // Add first selector to result
+							result.push(obj)
 						}
 
 						previous = obj
@@ -1643,7 +1643,6 @@ const startInject = () => {
 		}
 
 		const injectedFunctions: Record<string, (...args: any[]) => any> = {
-			// Insert injected functions here,
 			avatar: () => {
 				let openAdvancedAccessories: any
 
@@ -4605,7 +4604,6 @@ const startInject = () => {
 					}
 				})
 			},
-			// Stop inserting injected functions here
 		}
 
 		// Hooks that install a react or angular interception. They must be
