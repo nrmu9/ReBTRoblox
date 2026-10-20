@@ -1,3 +1,4 @@
+import { STORAGE } from "@/core/env"
 import { compareFriendList, onFriendshipChanged } from "@/feat/friendLog"
 import { recordPresences, setLiveSince } from "@/feat/presenceHistory"
 import { SETTINGS } from "@/feat/settings"
@@ -8,6 +9,14 @@ import { SETTINGS } from "@/feat/settings"
 // Roblox cookies like any other request to roblox.com.
 
 const ENDPOINT = "wss://realtime-signalr.roblox.com/userhub"
+
+// Pushes that only tell pages something changed, by the time it did. Roblox's
+// website reads neither, so what they carry is left alone and any message
+// counts.
+const SIGNALS: Record<string, string> = {
+	AvatarAssetOwnershipNotifications: "assetOwnershipChangedAt",
+	VoiceNotifications: "voiceChangedAt",
+}
 // SignalR's json protocol ends every message with this.
 const SEPARATOR = "\u001e"
 const PING_INTERVAL = 15e3
@@ -130,6 +139,8 @@ const onMessage = (message: any) => {
 				const notifications = JSON.parse(detail)
 				void onPresenceChanged(Array.isArray(notifications) ? notifications : [notifications])
 			} catch {}
+		} else if (SIGNALS[namespace]) {
+			STORAGE.set({ [SIGNALS[namespace]]: Date.now() })
 		} else if (
 			namespace === "FriendshipNotifications" &&
 			ownUserId &&

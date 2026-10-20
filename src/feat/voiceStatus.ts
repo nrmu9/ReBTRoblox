@@ -303,6 +303,14 @@ export const btrVoiceStatus = {
 
 		SETTINGS.onChange(SETTING, apply)
 
+		// Roblox says live when your voice status changes, such as a suspension
+		// starting or ending early.
+		chrome.storage.onChanged.addListener((changes, areaName) => {
+			if (areaName === "local" && changes.voiceChangedAt && SETTINGS.get(SETTING)) {
+				void refresh()
+			}
+		})
+
 		apply()
 	},
 }

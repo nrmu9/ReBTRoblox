@@ -30,8 +30,9 @@ interface Observation {
 }
 
 // A state seen again after this long without live updates in between may
-// have ended and started again unseen, so it starts a new segment.
-const GAP = 10 * 60e3
+// have ended and started again unseen, so it starts a new segment. Pages
+// check presence every quarter hour or so, which this leaves room for.
+const GAP = 30 * 60e3
 
 /** Since when the background's live connection has missed nothing, or null while it is down. */
 let liveSince: number | null = null

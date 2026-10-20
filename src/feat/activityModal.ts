@@ -10,6 +10,49 @@ import {
 	type PresenceSegment,
 } from "@/feat/presenceHistory"
 
+// Sightings of the same state closer together than this read as one stretch.
+// Pages only check now and then, so someone online all afternoon is seen every
+// quarter hour or so, which would otherwise list each sighting on its own.
+const JOIN_GAP = 30 * 60e3
+
+/**
+ * The history as it reads: back to back sightings of the same state joined
+ * into one, and who played along moved to the joined start.
+ */
+const joinSightings = (segments: PresenceSegment[], together: Together) => {
+	const joined: PresenceSegment[] = []
+	const startOf = new Map<number, number>()
+
+	for (const segment of segments) {
+		const last = joined.at(-1)
+
+		if (
+			last &&
+			last.type === segment.type &&
+			last.location === segment.location &&
+			last.placeId === segment.placeId &&
+			segment.type !== 0 &&
+			segment.from - last.to < JOIN_GAP
+		) {
+			last.to = Math.max(last.to, segment.to)
+			startOf.set(segment.from, last.from)
+		} else {
+			joined.push({ ...segment })
+			startOf.set(segment.from, segment.from)
+		}
+	}
+
+	const joinedTogether: Together = new Map()
+
+	for (const [from, people] of together) {
+		const start = startOf.get(from) ?? from
+		const all = [...(joinedTogether.get(start) ?? []), ...people]
+		joinedTogether.set(start, [...new Map(all.map((person) => [person.userId, person])).values()])
+	}
+
+	return { segments: joined, together: joinedTogether }
+}
+
 /** The people a session was shared with, by the session's start. */
 type Together = Map<number, Array<{ userId: number; name: string }>>
 
@@ -177,8 +220,10 @@ const entry = (segments: PresenceSegment[], index: number, online: boolean, toge
 	// Offline only matters for when it began, and a state seen once has no span.
 	const when = item.$req(".btr-activity-when")
 
-	if (segment.type === 0 || (!current && end - segment.from < 60e3)) {
+	if (segment.type === 0) {
 		when.textContent = from.$format(clockFormat())
+	} else if (!current && end - segment.from < 60e3) {
+		when.textContent = `Seen at ${from.$format(clockFormat())}`
 	} else {
 		const until = current ? "now" : new Date(end).$format(clockFormat())
 		when.textContent = `${from.$format(clockFormat())} – ${until} · ${formatDuration(end - segment.from)}`
@@ -832,11 +877,12 @@ export const openActivity = async (
 	const friendFilter = { kind: "all" }
 	const changeFilter = { group: "all" }
 
-	const [segments, together, events] = await Promise.all([
+	const [history, playedTogether, events] = await Promise.all([
 		getPresenceHistory(userId),
 		loadTogether(userId),
 		options.isOwn ? Promise.resolve(null) : getActivityEvents(userId),
 	])
+	const { segments, together } = joinSightings(history, playedTogether)
 
 	// The latest day starts open, the rest wait for a click.
 	const latest = Math.max(...blocksByDay(segments, isOnline()).keys())
@@ -910,11 +956,10 @@ export const openActivity = async (
 	selectTab(tabs.hidden ? "activity" : (options.tab ?? "activity"))
 
 	const stopWatching = onActivityChange([userId], async () => {
-		const [changed, changedTogether] = await Promise.all([
-			getPresenceHistory(userId),
-			loadTogether(userId),
-		])
-		render(activityPanel, changed, isOnline(), changedTogether, expanded)
+		const joined = joinSightings(
+			...(await Promise.all([getPresenceHistory(userId), loadTogether(userId)])),
+		)
+		render(activityPanel, joined.segments, isOnline(), joined.together, expanded)
 
 		if (friendsPanel.childElementCount) {
 			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)

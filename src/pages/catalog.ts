@@ -1,4 +1,5 @@
 import { setImmediate } from "@/core/dom"
+import { STORAGE } from "@/core/env"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
@@ -360,7 +361,39 @@ pageInit.catalog = () => {
 					}
 
 					injectScript.send("updateOwnedAssets", initData)
-					OwnerAssetCache.update((changes: any) => injectScript.send("updateOwnedAssets", changes))
+
+					const update = () =>
+						OwnerAssetCache.update((changes: any) =>
+							injectScript.send("updateOwnedAssets", changes),
+						)
+
+					// Roblox says live when what you own changes, whether bought here,
+					// in another tab or in an experience. A full recheck finds items gone
+					// as well as new ones, which a normal update only does every 5 minutes.
+					const recheck = () => {
+						for (const next of Object.values(OwnerAssetCache.data.types) as any[]) {
+							next.lastPopulate = 0
+						}
+
+						void update()
+					}
+
+					STORAGE.get("assetOwnershipChangedAt", (data) => {
+						const changedAt = Number(data.assetOwnershipChangedAt ?? 0)
+						const types = Object.values(OwnerAssetCache.data.types) as any[]
+
+						if (types.some((next) => (next.lastPopulate ?? 0) < changedAt)) {
+							recheck()
+						} else {
+							void update()
+						}
+					})
+
+					chrome.storage.onChanged.addListener((changes, areaName) => {
+						if (areaName === "local" && changes.assetOwnershipChangedAt) {
+							recheck()
+						}
+					})
 
 					currentRequest = null
 				})
