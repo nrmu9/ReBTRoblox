@@ -396,6 +396,11 @@ export const SettingsModal: SettingsModalState = {
 								desc="Shows the inventory on the profile"
 							></toggle>
 							<toggle
+								label="Mark Mutual Communities"
+								path="mutualCommunities"
+								desc="Puts the communities you share first and marks them"
+							></toggle>
+							<toggle
 								label="Last Seen Online"
 								path="lastSeen"
 								desc="Shows when ReBTRoblox last saw an offline user online. Only what this device has seen, so it can be out of date"

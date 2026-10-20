@@ -636,8 +636,27 @@ pageInit.profile = () => {
 
 				pager.onsetpage = loadPage
 
+				// Your own communities, to mark the ones you share. Skipped on your
+				// own profile, where every one would match.
+				const mineReady: Promise<Set<number>> = SETTINGS.get("profile.mutualCommunities")
+					? loggedInUserPromise.then((me) =>
+							me > 0 && me !== userId
+								? RobloxApi.groups
+										.getUserGroupRoles(me)
+										.then(
+											(mine) =>
+												new Set<number>(
+													(mine?.data ?? []).map((entry: any) => entry.group.id),
+												),
+										)
+										.catch(() => new Set<number>())
+								: new Set<number>(),
+						)
+					: Promise.resolve(new Set<number>())
+
 				ready(() => {
 					RobloxApi.groups.getUserGroupRoles(userId).then(async (json) => {
+						const mine = await mineReady
 						const numGroups = json.data.length
 
 						pager.setMaxPage(Math.floor((numGroups - 1) / pageSize) + 1)
@@ -653,9 +672,17 @@ pageInit.profile = () => {
 						list.replaceChildren()
 
 						const thumbs: Record<string, any> = {}
-						const groups = json.data.toSorted((a: any, b: any) =>
-							a.isPrimaryGroup ? -1 : b.isPrimaryGroup ? 1 : 0,
-						)
+						// The primary community first, then the ones you share.
+						const rank = (entry: any) =>
+							entry.isPrimaryGroup ? 0 : mine.has(entry.group.id) ? 1 : 2
+						const groups = json.data.toSorted((a: any, b: any) => rank(a) - rank(b))
+
+						const mutual = groups.filter((entry: any) => mine.has(entry.group.id)).length
+						if (mutual) {
+							newCont
+								.$req(".btr-profile-groups h2")
+								.append(html`<span class="btr-mutual-count">· ${mutual} mutual</span>`)
+						}
 
 						for (const [index, { group, role }] of (groups as any[]).entries()) {
 							const parent = html` <div class="card">
@@ -675,6 +702,13 @@ pageInit.profile = () => {
 								</div>
 								<div class="text-overflow text-secondary small">${role.name}</div>
 							</div>`
+
+							if (mine.has(group.id)) {
+								parent.classList.add("btr-mutual-group")
+								parent
+									.$req(".card-thumb-container")
+									.append(html`<span class="btr-mutual-badge">Mutual</span>`)
+							}
 
 							parent.style.display = index < pageSize ? "" : "none"
 
