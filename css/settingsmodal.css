@@ -2115,3 +2115,147 @@ div.btr-setting-text {
 .btr-activity-empty[hidden] {
 	display: none;
 }
+
+/* Stats */
+
+.btr-stats[hidden] {
+	display: none;
+}
+
+.btr-stats-cards {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	margin-top: 8px;
+}
+
+.btr-activity-stat-detail {
+	color: var(--btr-content-muted);
+	font-size: 12px;
+
+	&:empty {
+		display: none;
+	}
+}
+
+.btr-stats-heading {
+	margin: 20px 0 8px;
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.btr-stats-game {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 0;
+}
+
+.btr-stats-game-icon {
+	flex: none;
+	width: 40px;
+	height: 40px;
+	overflow: hidden;
+	border-radius: 8px;
+	background: var(--btr-surface-raised);
+
+	img {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+}
+
+.btr-stats-game-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.btr-stats-game-line {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.btr-stats-game-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--btr-content-emphasis);
+	font-size: 15px;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	a {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.btr-stats-game-time {
+	flex: none;
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+.btr-stats-bar {
+	height: 6px;
+	margin: 4px 0 2px;
+	overflow: hidden;
+	border-radius: 3px;
+	background: var(--btr-surface-raised);
+
+	span {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: #02b757;
+	}
+}
+
+.btr-stats-game-sessions,
+.btr-stats-none {
+	margin: 0;
+	color: var(--btr-content-muted);
+	font-size: 12px;
+}
+
+.btr-stats-session {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	padding: 6px 0;
+	font-size: 14px;
+
+	& + & {
+		border-top: 1px solid var(--btr-stroke-muted);
+	}
+}
+
+.btr-stats-session-length {
+	flex: none;
+	width: 72px;
+	color: var(--btr-content-emphasis);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.btr-stats-session-what {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--btr-content);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.btr-stats-session-when {
+	flex: none;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+}
