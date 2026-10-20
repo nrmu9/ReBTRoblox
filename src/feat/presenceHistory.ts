@@ -1,45 +1,37 @@
 import { IS_BACKGROUND_PAGE, STORAGE } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
+import {
+	announceChange,
+	checkLevel,
+	committed,
+	done,
+	isFull,
+	openDb,
+	type PresenceRecord,
+	userRange,
+} from "@/feat/activityStore"
 
 // What ReBTRoblox has seen each user doing, for the profile's last seen and
 // its timeline. Roblox no longer says when someone was last online, so this
 // keeps what Roblox's realtime connection pushes, to the background and to
-// pages, and the presence pages ask for anyway. It lives in extension storage,
-// out of Roblox's own localStorage, and only the background writes it so tabs
-// cannot race.
+// pages, and the presence pages ask for anyway. Only the background writes it,
+// into the activity database, so tabs cannot race.
 
-export interface PresenceSegment {
-	/** 0 offline, 1 on the website, 2 in an experience, 3 in Studio. */
-	type: number
-	/** When this state was first and last seen, epoch ms. */
-	from: number
-	to: number
-	/** The start is when it happened rather than when it was noticed. */
-	exact?: boolean
-	/** Experience or Studio place name. */
-	location?: string
-	placeId?: number
-}
+export type PresenceSegment = Omit<PresenceRecord, "id" | "userId">
 
 interface Observation {
 	userId: number
 	type: number
 	location?: string
 	placeId?: number
+	gameId?: string
 	seen: number
 	start?: number
 }
 
-const KEY_PREFIX = "presence:"
-const SEGMENT_LIMIT = 30
-const USER_LIMIT = 600
-const MAX_AGE = 90 * 24 * 60 * 60e3
-
 // A state seen again after this long without live updates in between may
 // have ended and started again unseen, so it starts a new segment.
 const GAP = 10 * 60e3
-
-const storageKey = (userId: number) => KEY_PREFIX + userId
 
 /** Since when the background's live connection has missed nothing, or null while it is down. */
 let liveSince: number | null = null
@@ -51,7 +43,8 @@ export const setLiveSince = (since: number | null): void => {
 const sameState = (segment: PresenceSegment, observation: Observation) =>
 	segment.type === observation.type &&
 	segment.location === observation.location &&
-	segment.placeId === observation.placeId
+	segment.placeId === observation.placeId &&
+	segment.gameId === observation.gameId
 
 // Pages hand what they see to the background, which writes it in order.
 let record = (observations: Observation[]) => backgroundScript.send("recordPresences", observations)
@@ -60,16 +53,25 @@ if (IS_BACKGROUND_PAGE) {
 	let queue = Promise.resolve()
 
 	const apply = async (observations: Observation[]) => {
-		const keys = [...new Set(observations.map((observation) => storageKey(observation.userId)))]
-		const stored = await new Promise<Record<string, PresenceSegment[]>>((resolve) =>
-			STORAGE.get(keys, (data) => resolve(data as Record<string, PresenceSegment[]>)),
-		)
-		const changed: Record<string, PresenceSegment[]> = {}
+		if (await isFull()) {
+			return
+		}
 
-		for (const observation of observations) {
-			const key = storageKey(observation.userId)
-			const segments = changed[key] ?? stored[key] ?? []
-			const last = segments.at(-1)
+		const db = await openDb()
+		const tx = db.transaction("presence", "readwrite")
+		const presence = tx.objectStore("presence")
+		const changed = new Set<number>()
+		const lastByUser = new Map<number, PresenceRecord | null>()
+
+		for (const observation of observations.toSorted((a, b) => a.seen - b.seen)) {
+			let last = lastByUser.get(observation.userId)
+
+			if (last === undefined) {
+				const cursor = await done(
+					presence.index("user").openCursor(userRange(observation.userId), "prev"),
+				)
+				last = cursor?.value ?? null
+			}
 
 			if (!last) {
 				// Offline says nothing about someone never seen online.
@@ -90,62 +92,78 @@ if (IS_BACKGROUND_PAGE) {
 					last.exact = true
 				}
 
-				changed[key] = segments
+				presence.put(last)
+				changed.add(observation.userId)
 				continue
 			} else if (observation.seen < last.to) {
 				// Older than what is already known, from a slow response.
 				continue
 			}
 
-			const from = Math.max(observation.start ?? observation.seen, last?.from ?? 0)
-
-			segments.push({
+			const next: PresenceRecord = {
+				userId: observation.userId,
 				type: observation.type,
-				from,
+				from: Math.max(observation.start ?? observation.seen, last?.from ?? 0),
 				to: observation.seen,
 				...(observation.start ? { exact: true } : {}),
 				...(observation.location ? { location: observation.location } : {}),
 				...(observation.placeId ? { placeId: observation.placeId } : {}),
-			})
+				...(observation.gameId ? { gameId: observation.gameId } : {}),
+			}
 
-			changed[key] = segments.slice(-SEGMENT_LIMIT)
+			next.id = (await done(presence.add(next))) as number
+			lastByUser.set(observation.userId, next)
+			changed.add(observation.userId)
 		}
 
-		if (Object.keys(changed).length) {
-			await new Promise<void>((resolve) => STORAGE.set(changed, resolve))
-		}
-	}
+		await committed(tx)
 
-	// Drops users not seen in a long time, and the oldest past the limit, at
-	// most once a day.
-	const prune = async () => {
-		const all: Record<string, any> = await new Promise((resolve) => STORAGE.get(null, resolve))
-
-		if (Date.now() - (all.presencePrunedAt ?? 0) < 24 * 60 * 60e3) {
-			return
+		if (changed.size) {
+			announceChange(changed)
 		}
 
-		const users = Object.entries(all)
-			.filter(([key]) => key.startsWith(KEY_PREFIX))
-			.map(([key, segments]: [string, PresenceSegment[]]) => [key, segments.at(-1)?.to ?? 0] as const)
-			.toSorted((a, b) => b[1] - a[1])
-
-		const stale = users
-			.filter(([, to], index) => index >= USER_LIMIT || Date.now() - to > MAX_AGE)
-			.map(([key]) => key)
-
-		await new Promise<void>((resolve) => STORAGE.remove(stale, resolve))
-		await new Promise<void>((resolve) => STORAGE.set({ presencePrunedAt: Date.now() }, resolve))
+		void checkLevel()
 	}
 
 	record = (observations) => {
-		queue = queue
-			.then(() => apply(observations))
-			.then(prune)
-			.catch((err) => console.error(err))
+		queue = queue.then(() => apply(observations)).catch((err) => console.error(err))
 	}
 
+	// History from before the database, kept in extension storage one key per
+	// user, moved over once.
+	queue = queue
+		.then(async () => {
+			const all: Record<string, any> = await new Promise((resolve) => STORAGE.get(null, resolve))
+			const keys = Object.keys(all).filter((key) => key.startsWith("presence:"))
+
+			if (!keys.length) {
+				return
+			}
+
+			const db = await openDb()
+			const tx = db.transaction("presence", "readwrite")
+
+			for (const key of keys) {
+				for (const segment of all[key] as PresenceSegment[]) {
+					tx.objectStore("presence").add({ ...segment, userId: Number(key.slice(9)) })
+				}
+			}
+
+			await committed(tx)
+			await new Promise<void>((resolve) => STORAGE.remove([...keys, "presencePrunedAt"], resolve))
+		})
+		.catch((err) => console.error("[btr] could not move presence history", err))
+
 	contentScript.listen("recordPresences", (observations: Observation[]) => record(observations))
+
+	contentScript.listen("getPresenceHistory", async (userId: number, respond: (value: any) => void) => {
+		const db = await openDb()
+		const records = await done(
+			db.transaction("presence").objectStore("presence").index("user").getAll(userRange(userId)),
+		)
+
+		respond(records.map(({ id: _id, userId: _userId, ...segment }) => segment))
+	})
 }
 
 /**
@@ -178,6 +196,9 @@ export const recordPresences = (presences: any[], starts?: Record<number, number
 			...(type === 2 && (presence.rootPlaceId || presence.placeId)
 				? { placeId: presence.rootPlaceId || presence.placeId }
 				: {}),
+			...(type === 2 && typeof presence.gameId === "string" && presence.gameId
+				? { gameId: presence.gameId }
+				: {}),
 			// A start in the future or long gone is not one to trust.
 			...(start && start <= seen && seen - start < 24 * 60 * 60e3 ? { start } : {}),
 		})
@@ -189,24 +210,28 @@ export const recordPresences = (presences: any[], starts?: Record<number, number
 }
 
 export const getPresenceHistory = (userId: number): Promise<PresenceSegment[]> =>
-	new Promise((resolve) => {
-		const key = storageKey(userId)
-		STORAGE.get(key, (data) => resolve((data?.[key] as PresenceSegment[]) ?? []))
-	})
+	new Promise((resolve) => backgroundScript.send("getPresenceHistory", userId, resolve))
 
-/** Calls back with the user's history whenever it changes, until the returned function is called. */
-export const onPresenceHistoryChange = (
-	userId: number,
-	callback: (segments: PresenceSegment[]) => void,
-): (() => void) => {
-	const key = storageKey(userId)
-
+/** Calls back whenever the activity of any of `userIds` changes, until the returned function is called. */
+export const onActivityChange = (userIds: number[], callback: () => void): (() => void) => {
 	const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-		if (areaName === "local" && changes[key]) {
-			callback((changes[key].newValue as PresenceSegment[]) ?? [])
+		const change = changes.activityChanged?.newValue as { users: number[] | null } | undefined
+
+		if (
+			areaName === "local" &&
+			change &&
+			(!change.users || change.users.some((id) => userIds.includes(id)))
+		) {
+			callback()
 		}
 	}
 
 	chrome.storage.onChanged.addListener(listener)
 	return () => chrome.storage.onChanged.removeListener(listener)
 }
+
+/** Calls back with the user's history whenever it changes, until the returned function is called. */
+export const onPresenceHistoryChange = (
+	userId: number,
+	callback: (segments: PresenceSegment[]) => void,
+): (() => void) => onActivityChange([userId], () => void getPresenceHistory(userId).then(callback))

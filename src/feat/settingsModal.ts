@@ -9,6 +9,7 @@ import { robloxExperiments } from "@/pages/common"
 import { discoverExperimentHints, getExperimentPage, type ExperimentHint } from "@/feat/experimentHints"
 import { HOME_ROWS_KEY } from "@/pages/home"
 import { btrLocalStorage } from "@/core/storage"
+import { clearActivityBefore, exportActivity, formatBytes, getActivityUsage } from "@/feat/activityData"
 
 interface SettingsModalState {
 	enabled: boolean
@@ -18,6 +19,42 @@ interface SettingsModalState {
 	currentContent?: any
 	themeObserver?: any
 	[key: string]: any
+}
+
+/** Runs `action` on a second click within three seconds, the first one counting down. */
+const confirmClick = (button: HTMLButtonElement, action: () => void) => {
+	const label = button.textContent ?? ""
+	let timer: ReturnType<typeof setInterval> | null = null
+	let left = 0
+
+	const stop = () => {
+		if (timer !== null) {
+			clearInterval(timer)
+		}
+		timer = null
+		button.textContent = label
+		button.classList.remove("btr-settings-button-armed")
+	}
+
+	button.$on("click", () => {
+		if (timer === null) {
+			left = 3
+			button.textContent = `Confirm (${left})`
+			button.classList.add("btr-settings-button-armed")
+
+			timer = setInterval(() => {
+				if (--left > 0) {
+					button.textContent = `Confirm (${left})`
+				} else {
+					stop()
+				}
+			}, 1e3)
+			return
+		}
+
+		stop()
+		action()
+	})
 }
 
 export const SettingsModal: SettingsModalState = {
@@ -192,6 +229,8 @@ export const SettingsModal: SettingsModalState = {
 
 		if (name === "advanced") {
 			this.loadExperimentHints()
+		} else if (name === "activity") {
+			void this.refreshActivity?.()
 		}
 	},
 
@@ -423,6 +462,14 @@ export const SettingsModal: SettingsModalState = {
 								desc="Puts the communities you share first and marks them"
 							></toggle>
 							<toggle
+								label="Exact Follower Counts"
+								path="exactCounts"
+								desc="Shows exact follower and following counts"
+							></toggle>
+						</page>
+
+						<page name="activity" label="Activity" icon="clock" path="profile">
+							<toggle
 								label="Last Seen Online"
 								path="lastSeen"
 								desc="Shows when someone was last online and a timeline of what they were doing, as seen by ReBTRoblox on this device"
@@ -433,11 +480,81 @@ export const SettingsModal: SettingsModalState = {
 								require="lastSeen"
 								desc="Records your friends' activity as it happens, even with no Roblox tab open, while the browser runs"
 							></toggle>
-							<toggle
-								label="Exact Follower Counts"
-								path="exactCounts"
-								desc="Shows exact follower and following counts"
-							></toggle>
+
+							<heading>Stored Activity</heading>
+							<choice
+								label="Storage Limit"
+								path="activityLimit"
+								desc="Recording stops at this size until you clear some or raise it. Nothing is ever deleted on its own"
+							>
+								<option value="100">100 MB</option>
+								<option value="250">250 MB</option>
+								<option value="500">500 MB</option>
+								<option value="1000">1 GB</option>
+								<option value="2000">2 GB</option>
+								<option value="0">No limit</option>
+							</choice>
+							<div
+								class="btr-setting-row btr-activity-usage-row"
+								data-search="storage size usage space"
+							>
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">Space Used</span>
+									<span class="btr-setting-desc btr-activity-usage-text">Checking…</span>
+									<span class="btr-activity-meter" aria-hidden="true"><span></span></span>
+									<span class="btr-activity-warning" hidden></span>
+								</div>
+							</div>
+							<div class="btr-setting-row" data-search="clear old entries delete">
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">Clear Old Entries</span>
+									<span class="btr-setting-desc"
+										>Deletes activity last seen before then</span
+									>
+								</div>
+								<div class="btr-setting-selects">
+									<span class="btr-select"
+										><select
+											class="btr-activity-age"
+											aria-label="Clear entries older than"
+										>
+											<option value="7">Older than a week</option>
+											<option value="30" selected>Older than a month</option>
+											<option value="90">Older than 3 months</option>
+											<option value="180">Older than 6 months</option>
+											<option value="365">Older than a year</option>
+										</select></span
+									>
+									<button type="button" class="btr-settings-button btr-activity-clear-old">
+										Clear
+									</button>
+								</div>
+							</div>
+							<div class="btr-setting-row" data-search="export download backup json">
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">Export</span>
+									<span class="btr-setting-desc"
+										>Downloads everything recorded as a JSON file</span
+									>
+								</div>
+								<button type="button" class="btr-settings-button btr-activity-export">
+									Export
+								</button>
+							</div>
+							<div class="btr-setting-row" data-search="clear all activity delete everything">
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">Clear All Activity</span>
+									<span class="btr-setting-desc"
+										>Deletes everything recorded. Settings are kept</span
+									>
+								</div>
+								<button
+									type="button"
+									class="btr-settings-button btr-settings-button-alert btr-activity-clear-all"
+								>
+									Clear all
+								</button>
+							</div>
 						</page>
 
 						<page
@@ -1285,39 +1402,70 @@ export const SettingsModal: SettingsModalState = {
 			updateRate()
 		}
 
-		// Reset all, which asks for a second click within three seconds.
+		confirmClick(this.settingsDiv.$req("#btr-reset-settings"), () => SETTINGS.resetToDefault())
+
+		// Stored activity: how much space it takes, and clearing or exporting it.
 		{
-			const resetButton = this.settingsDiv.$req("#btr-reset-settings") as HTMLButtonElement
-			let timer: ReturnType<typeof setInterval> | null = null
-			let left = 0
+			const page: HTMLElement = this.contentDivs.activity
+			const row = page.$req(".btr-activity-usage-row")
+			const text = page.$req(".btr-activity-usage-text")
+			const meter = page.$req(".btr-activity-meter")
+			const warning = page.$req(".btr-activity-warning")
 
-			const stop = () => {
-				if (timer !== null) {
-					clearInterval(timer)
-				}
-				timer = null
-				resetButton.textContent = "Reset"
-				resetButton.classList.remove("btr-settings-button-armed")
-			}
+			const refresh = async () => {
+				const usage = await getActivityUsage()
 
-			resetButton.$on("click", () => {
-				if (timer === null) {
-					left = 3
-					resetButton.textContent = `Confirm (${left})`
-					resetButton.classList.add("btr-settings-button-armed")
-
-					timer = setInterval(() => {
-						if (--left > 0) {
-							resetButton.textContent = `Confirm (${left})`
-						} else {
-							stop()
-						}
-					}, 1e3)
+				if (!usage) {
+					text.textContent = "Couldn't read the stored activity"
 					return
 				}
 
-				stop()
-				SETTINGS.resetToDefault()
+				const share = usage.limitBytes ? usage.bytes / usage.limitBytes : 0
+				const entries = (usage.presence + usage.events).toLocaleString("en-US")
+				const since = usage.oldest ? ` since ${new Date(usage.oldest).$format("MMM D, YYYY")}` : ""
+
+				text.textContent =
+					`${formatBytes(usage.bytes)}${usage.limitBytes ? ` of ${formatBytes(usage.limitBytes)}` : ""}` +
+					` · ${entries} entries${since}`
+
+				meter.hidden = !usage.limitBytes
+				meter.$req("span").style.width = `${Math.min(100, share * 100)}%`
+				row.dataset.level = share >= 1 ? "full" : share >= 0.8 ? "high" : ""
+
+				warning.hidden = share < 0.8
+				warning.textContent =
+					share >= 1
+						? "Full. New activity isn't recorded until you clear some or raise the limit."
+						: "Nearly full. Recording stops once it reaches the limit."
+			}
+
+			this.refreshActivity = refresh
+			// The background works the new limit out first.
+			SETTINGS.onChange("profile.activityLimit", () => setTimeout(refresh, 300))
+
+			confirmClick(page.$req(".btr-activity-clear-old"), () => {
+				const days = Number(page.$req<HTMLSelectElement>(".btr-activity-age").value)
+				void clearActivityBefore(Date.now() - days * 24 * 60 * 60e3).then(refresh)
+			})
+
+			confirmClick(page.$req(".btr-activity-clear-all"), () => {
+				void clearActivityBefore(null).then(refresh)
+			})
+
+			page.$req(".btr-activity-export").$on("click", async () => {
+				const data = await exportActivity()
+
+				if (!data) {
+					return
+				}
+
+				const link = document.createElement("a")
+				link.href = URL.createObjectURL(
+					new Blob([JSON.stringify(data)], { type: "application/json" }),
+				)
+				link.download = `rebtroblox-activity-${new Date().$format("YYYY-MM-DD")}.json`
+				link.click()
+				setTimeout(() => URL.revokeObjectURL(link.href), 60e3)
 			})
 		}
 
@@ -1489,6 +1637,7 @@ export const SettingsModal: SettingsModalState = {
 				"general.voiceChatStatus",
 				"general.hoverPreviewMode",
 				"profile.liveTracking",
+				"profile.activityLimit",
 				"itemdetails.itemPreviewer",
 				"itemdetails.explorerButton",
 				"itemdetails.downloadButton",

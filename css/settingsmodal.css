@@ -1592,3 +1592,51 @@ div.btr-setting-text {
 		--btr-day-columns: 64px minmax(0, 1fr) 48px 16px;
 	}
 }
+
+/* Stored activity: the space it takes against the limit */
+
+.btr-activity-meter {
+	display: block;
+	height: 6px;
+	margin-top: 8px;
+	overflow: hidden;
+	background: var(--btr-standard);
+	border-radius: 3px;
+
+	&[hidden] {
+		display: none;
+	}
+
+	& > span {
+		display: block;
+		height: 100%;
+		background: var(--btr-contrast);
+		border-radius: inherit;
+		transition: width 300ms var(--btr-ease-out);
+	}
+}
+
+/* Amber as it nears the limit, the alert colour once recording has stopped. */
+.btr-activity-usage-row[data-level="high"] .btr-activity-meter > span {
+	background: #f68802;
+}
+
+.btr-activity-usage-row[data-level="full"] .btr-activity-meter > span {
+	background: var(--btr-alert-content);
+}
+
+.btr-activity-warning {
+	display: block;
+	margin-top: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #f68802;
+
+	&[hidden] {
+		display: none;
+	}
+
+	[data-level="full"] & {
+		color: var(--btr-alert-content);
+	}
+}
