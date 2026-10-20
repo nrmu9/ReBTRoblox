@@ -172,16 +172,19 @@ export const getPresenceHistory = (userId: number): Promise<PresenceSegment[]> =
 		STORAGE.get(key, (data) => resolve((data?.[key] as PresenceSegment[]) ?? []))
 	})
 
-/** Calls back with the user's history whenever it changes. */
+/** Calls back with the user's history whenever it changes, until the returned function is called. */
 export const onPresenceHistoryChange = (
 	userId: number,
 	callback: (segments: PresenceSegment[]) => void,
-): void => {
+): (() => void) => {
 	const key = storageKey(userId)
 
-	chrome.storage.onChanged.addListener((changes, areaName) => {
+	const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
 		if (areaName === "local" && changes[key]) {
 			callback((changes[key].newValue as PresenceSegment[]) ?? [])
 		}
-	})
+	}
+
+	chrome.storage.onChanged.addListener(listener)
+	return () => chrome.storage.onChanged.removeListener(listener)
 }

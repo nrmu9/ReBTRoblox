@@ -1179,3 +1179,209 @@ div.btr-setting-text {
 	font-weight: 400;
 	cursor: help;
 }
+
+/* Activity, the timeline a profile's last seen opens */
+
+.btr-activity {
+	display: flex;
+	flex-direction: column;
+
+	width: min(520px, 100%);
+	max-height: min(680px, 100%);
+	overflow: hidden;
+
+	background: var(--btr-surface);
+	border: 1px solid var(--btr-stroke-muted);
+	border-radius: 16px;
+	box-shadow: var(--btr-shadow);
+
+	transform: scale(0.975);
+	transition: transform 300ms var(--btr-ease-out);
+}
+
+.btr-settings-open .btr-activity {
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-activity {
+		transition: none;
+	}
+}
+
+.btr-activity-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 24px 20px 16px 32px;
+}
+
+.btr-activity-title {
+	margin: 0;
+	color: var(--btr-content-emphasis);
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.btr-activity-subtitle {
+	margin-top: 4px;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+}
+
+.btr-activity-body {
+	flex: 1;
+	min-height: 0;
+	margin: 0 6px 12px 0;
+	padding: 0 26px 20px 32px;
+	overflow-y: auto;
+	scrollbar-gutter: stable;
+}
+
+.btr-activity-summary {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.btr-activity-stat {
+	padding: 12px 16px;
+	background: var(--btr-surface-raised);
+	border-radius: 12px;
+}
+
+.btr-activity-stat-label {
+	color: var(--btr-content-muted);
+	font-size: 12px;
+}
+
+.btr-activity-stat-value {
+	overflow: hidden;
+	color: var(--btr-content-emphasis);
+	font-size: 16px;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.btr-activity-day {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	margin: 0;
+	padding: 16px 0 8px;
+	background: var(--btr-surface);
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.btr-activity-day-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* The line runs through every node but stops at the last one of the day. */
+.btr-activity-entry {
+	position: relative;
+	display: flex;
+	gap: 16px;
+	padding-bottom: 16px;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 16px;
+		bottom: -4px;
+		left: 5px;
+		width: 2px;
+		background: var(--btr-stroke-muted);
+	}
+
+	&:last-child {
+		padding-bottom: 4px;
+
+		&::before {
+			display: none;
+		}
+	}
+}
+
+.btr-activity-node {
+	position: relative;
+	flex: none;
+	width: 12px;
+	height: 12px;
+	margin-top: 5px;
+	border-radius: 50%;
+	background: var(--btr-surface);
+	border: 2px solid var(--btr-content-muted);
+
+	[data-type="1"] > & {
+		background: #00a2ff;
+		border-color: #00a2ff;
+	}
+
+	[data-type="2"] > & {
+		background: #02b757;
+		border-color: #02b757;
+	}
+
+	[data-type="3"] > & {
+		background: #f68802;
+		border-color: #f68802;
+	}
+}
+
+.btr-activity-text {
+	min-width: 0;
+}
+
+.btr-activity-state {
+	overflow: hidden;
+	color: var(--btr-content-emphasis);
+	font-size: 16px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	[data-type="0"] & {
+		color: var(--btr-content-muted);
+	}
+
+	a {
+		color: inherit;
+		font-weight: 700;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.btr-activity-when {
+	color: var(--btr-content-muted);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+.btr-activity-empty {
+	margin: 24px 0;
+	color: var(--btr-content-muted);
+	text-align: center;
+}
+
+@media (max-width: 480px) {
+	.btr-activity-header,
+	.btr-activity-body {
+		padding-left: 20px;
+	}
+
+	.btr-activity-summary {
+		grid-template-columns: 1fr;
+	}
+}

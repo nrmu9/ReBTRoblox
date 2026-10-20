@@ -1,0 +1,250 @@
+import { html } from "@/core/html"
+import { onPresenceHistoryChange, getPresenceHistory, type PresenceSegment } from "@/feat/presenceHistory"
+
+// The activity a profile's last seen opens: everything ReBTRoblox saw the
+// user doing, as a timeline by day, over the page like the settings panel.
+
+const DAY = 24 * 60 * 60e3
+
+// When a segment ended: when the next one began if that was seen live,
+// otherwise the last time it was seen. The current one runs until now.
+const segmentEnd = (segments: PresenceSegment[], index: number, online: boolean) => {
+	const next = segments[index + 1]
+
+	if (!next && online && segments[index].type > 0) {
+		return Date.now()
+	}
+
+	return next?.exact ? next.from : segments[index].to
+}
+
+/** When the user was last seen online, or null if never. */
+export const lastSeenAt = (segments: PresenceSegment[]): number | null => {
+	for (let i = segments.length; i--;) {
+		if (segments[i].type > 0) {
+			return segmentEnd(segments, i, false)
+		}
+	}
+
+	return null
+}
+
+const formatDuration = (ms: number) => {
+	const minutes = Math.round(ms / 60e3)
+
+	if (minutes < 1) {
+		return "under a minute"
+	}
+
+	const hours = Math.floor(minutes / 60)
+	return hours ? `${hours}h ${minutes % 60}m` : `${minutes}m`
+}
+
+/** Time online that falls after `since`. */
+const onlineSince = (segments: PresenceSegment[], online: boolean, since: number) => {
+	let total = 0
+
+	segments.forEach((segment, index) => {
+		if (segment.type > 0) {
+			total += Math.max(0, segmentEnd(segments, index, online) - Math.max(segment.from, since))
+		}
+	})
+
+	return total
+}
+
+const dayLabel = (date: Date) => {
+	const day = date.toDateString()
+
+	if (day === new Date().toDateString()) {
+		return "Today"
+	}
+
+	if (day === new Date(Date.now() - DAY).toDateString()) {
+		return "Yesterday"
+	}
+
+	return date.$format("DDDD, MMM D")
+}
+
+const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
+	const segment = segments[index]
+	const from = new Date(segment.from)
+	const end = segmentEnd(segments, index, online)
+	const current = online && index === segments.length - 1 && segment.type > 0
+
+	const item = html`<li class="btr-activity-entry" data-type="${segment.type}">
+		<span class="btr-activity-node" aria-hidden="true"></span>
+		<div class="btr-activity-text">
+			<div class="btr-activity-state"></div>
+			<div class="btr-activity-when"></div>
+		</div>
+	</li>`
+
+	const state = item.$req(".btr-activity-state")
+
+	if (segment.type === 0) {
+		state.textContent = "Went offline"
+	} else if (segment.type === 1) {
+		state.textContent = "Online on the website"
+	} else if (segment.type === 2) {
+		if (segment.location && segment.placeId) {
+			state.append("Playing ", html`<a href="/games/${segment.placeId}">${segment.location}</a>`)
+		} else {
+			state.textContent = segment.location ? `Playing ${segment.location}` : "In an experience"
+		}
+	} else {
+		state.textContent = segment.location ? `In Studio, ${segment.location}` : "In Studio"
+	}
+
+	// Offline only matters for when it began, and a state seen once has no span.
+	const when = item.$req(".btr-activity-when")
+
+	if (segment.type === 0 || (!current && end - segment.from < 60e3)) {
+		when.textContent = from.$format("h:mm A")
+	} else {
+		const until = current ? "now" : new Date(end).$format("h:mm A")
+		when.textContent = `${from.$format("h:mm A")} – ${until} · ${formatDuration(end - segment.from)}`
+	}
+
+	// Started before it was noticed, so the real start may be earlier.
+	if (segment.type > 0 && !segment.exact) {
+		when.title = "First seen at this time"
+	}
+
+	return item
+}
+
+const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean) => {
+	const seen = lastSeenAt(segments)
+
+	const summary = html`<div class="btr-activity-summary">
+		<div class="btr-activity-stat">
+			<div class="btr-activity-stat-label">${online ? "Status" : "Last seen"}</div>
+			<div class="btr-activity-stat-value"></div>
+		</div>
+		<div class="btr-activity-stat">
+			<div class="btr-activity-stat-label">Today</div>
+			<div class="btr-activity-stat-value">
+				${formatDuration(onlineSince(segments, online, new Date().setHours(0, 0, 0, 0)))}
+			</div>
+		</div>
+		<div class="btr-activity-stat">
+			<div class="btr-activity-stat-label">Last 7 days</div>
+			<div class="btr-activity-stat-value">
+				${formatDuration(onlineSince(segments, online, Date.now() - 7 * DAY))}
+			</div>
+		</div>
+	</div>`
+
+	const status = summary.$req(".btr-activity-stat-value")
+
+	if (online) {
+		status.textContent = "Online now"
+	} else if (seen) {
+		status.textContent = new Date(seen).$since()
+		status.title = new Date(seen).$format("MMM D, YYYY, h:mm A")
+	} else {
+		status.textContent = "Not yet"
+	}
+
+	const timeline = html`<div class="btr-activity-timeline"></div>`
+	let list: HTMLElement | null = null
+	let day = ""
+
+	for (let i = segments.length; i--;) {
+		const label = dayLabel(new Date(segments[i].from))
+
+		if (label !== day) {
+			day = label
+			list = html`<ol class="btr-activity-day-list"></ol>`
+			timeline.append(html`<h3 class="btr-activity-day">${label}</h3>`, list)
+		}
+
+		list!.append(entry(segments, i, online))
+	}
+
+	if (!segments.length) {
+		timeline.append(html`<p class="btr-activity-empty">Nothing seen yet.</p>`)
+	}
+
+	body.replaceChildren(summary, timeline)
+}
+
+let modal: HTMLElement | null = null
+
+/** `isOnline` is asked again on every change, as the profile keeps it current. */
+export const openActivity = async (userId: number, name: string, isOnline: () => boolean): Promise<void> => {
+	modal?.remove()
+
+	const opener = document.activeElement as HTMLElement | null
+	const root = html`<div class="btr-settings-modal btr-activity-modal">
+		<div class="btr-activity" role="dialog" aria-modal="true" aria-labelledby="btr-activity-title">
+			<header class="btr-activity-header">
+				<div>
+					<h2 id="btr-activity-title" class="btr-activity-title">Activity</h2>
+					<div class="btr-activity-subtitle">${name}</div>
+				</div>
+				<button
+					type="button"
+					class="btr-settings-icon-button btr-activity-close"
+					aria-label="Close"
+					title="Close"
+				>
+					<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+						<path
+							d="M6 6l12 12M18 6L6 18"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+						/>
+					</svg>
+				</button>
+			</header>
+			<div class="btr-activity-body"></div>
+		</div>
+	</div>`
+
+	modal = root
+
+	// Matches the page's theme, as the settings panel does.
+	root.classList.toggle("btr-dark-theme", !!document.querySelector(".dark-theme:not(.btr-settings-modal)"))
+
+	const body = root.$req(".btr-activity-body")
+	render(body, await getPresenceHistory(userId), isOnline())
+	const stopWatching = onPresenceHistoryChange(userId, (segments) => render(body, segments, isOnline()))
+
+	const close = () => {
+		if (modal !== root) {
+			return
+		}
+
+		modal = null
+		stopWatching()
+		root.classList.remove("btr-settings-open")
+		document.removeEventListener("keydown", onKey, true)
+		setTimeout(() => root.remove(), 320)
+		opener?.focus()
+	}
+
+	const onKey = (ev: KeyboardEvent) => {
+		if (ev.key === "Escape") {
+			ev.stopPropagation()
+			close()
+		}
+	}
+
+	document.addEventListener("keydown", onKey, true)
+	root.$req(".btr-activity-close").$on("click", close)
+	root.$on("click", (ev: MouseEvent) => {
+		if (ev.target === root) {
+			close()
+		}
+	})
+
+	document.body.append(root)
+	root.$req<HTMLElement>(".btr-activity-close").focus()
+
+	// A later frame than the mount, or there is no start to transition from.
+	requestAnimationFrame(() => root.classList.add("btr-settings-open"))
+}
