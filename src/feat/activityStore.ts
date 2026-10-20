@@ -222,15 +222,14 @@ export const getEvents = async (userId: number, kinds?: string[]): Promise<Activ
 	return events.filter((event) => !kinds || kinds.includes(event.kind)).toReversed()
 }
 
-export const exportActivity = async () => {
+/**
+ * A page of one store's records, those after the id `after`. Exports go a page
+ * at a time, as one message holding all of it can pass what the browser lets
+ * a message carry.
+ */
+export const exportPage = async (store: "presence" | "events", after: number, limit: number) => {
 	const db = await openDb()
-	const tx = db.transaction(["presence", "events"])
-
-	return {
-		exportedAt: new Date().toISOString(),
-		presence: await done(tx.objectStore("presence").getAll()),
-		events: await done(tx.objectStore("events").getAll()),
-	}
+	return done(db.transaction(store).objectStore(store).getAll(IDBKeyRange.lowerBound(after, true), limit))
 }
 
 // Warnings
@@ -291,8 +290,11 @@ if (IS_BACKGROUND_PAGE) {
 		) {
 			answer(getEvents(userId, kinds), respond)
 		},
-		activityExport(_: unknown, respond: (value: unknown) => void) {
-			answer(exportActivity(), respond)
+		activityExportPage(
+			{ store, after, limit }: { store: "presence" | "events"; after: number; limit: number },
+			respond: (value: unknown) => void,
+		) {
+			answer(exportPage(store, after, limit), respond)
 		},
 	})
 }

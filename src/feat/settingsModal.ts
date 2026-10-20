@@ -1546,16 +1546,8 @@ export const SettingsModal: SettingsModalState = {
 			})
 
 			page.$req(".btr-activity-export").$on("click", async () => {
-				const data = await exportActivity()
-
-				if (!data) {
-					return
-				}
-
 				const link = document.createElement("a")
-				link.href = URL.createObjectURL(
-					new Blob([JSON.stringify(data)], { type: "application/json" }),
-				)
+				link.href = URL.createObjectURL(await exportActivity())
 				link.download = `rebtroblox-activity-${new Date().$format("YYYY-MM-DD")}.json`
 				link.click()
 				setTimeout(() => URL.revokeObjectURL(link.href), 60e3)

@@ -8,7 +8,7 @@ import {
 	type ActivityEvent,
 } from "@/feat/activityStore"
 import { compareFriendList } from "@/feat/friendLog"
-import { recordPresences } from "@/feat/presenceHistory"
+import { isLive, recordPresences } from "@/feat/presenceHistory"
 import { SETTINGS } from "@/feat/settings"
 
 // People you chose to watch, checked from the background: where they are,
@@ -177,9 +177,12 @@ const tick = async () => {
 		if (Date.now() - lastPresence >= PRESENCE_EVERY) {
 			lastPresence = Date.now()
 
-			// Friends' presence already comes live.
+			// Friends' presence comes live while the connection is up, so only
+			// the rest are asked for. Without it, everyone is.
 			ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
-			const friends = new Set((ownUserId && (await getState<number[]>(`friends:${ownUserId}`))) || [])
+			const friends = new Set(
+				(isLive() && ownUserId && (await getState<number[]>(`friends:${ownUserId}`))) || [],
+			)
 			const ids = watched.filter((id) => !friends.has(id))
 
 			if (ids.length) {

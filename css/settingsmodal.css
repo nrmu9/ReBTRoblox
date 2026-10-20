@@ -1734,18 +1734,6 @@ div.btr-setting-text {
 	}
 }
 
-.btr-friendlog-day {
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	margin: 0;
-	padding: 16px 0 8px;
-	background: var(--btr-surface);
-	color: var(--btr-content-emphasis);
-	font-size: 14px;
-	font-weight: 700;
-}
-
 .btr-friendlog-row {
 	display: flex;
 	align-items: center;
@@ -1878,45 +1866,175 @@ div.btr-setting-text {
 	}
 }
 
-/* Profile changes */
+/* Day headings in the logs: a quiet label and a rule, not a floating bar */
 
-.btr-change-row {
+.btr-log-day {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 20px 0 6px;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+	font-weight: 600;
+
+	&::after {
+		content: "";
+		flex: 1;
+		height: 1px;
+		background: var(--btr-stroke-muted);
+	}
+}
+
+.btr-friendlog > .btr-log-day:first-child,
+.btr-change-day:first-child .btr-log-day {
+	margin-top: 8px;
+}
+
+.btr-activity-more {
+	display: block;
+	width: 100%;
+	height: 36px;
+	margin-top: 12px;
+	background: var(--btr-standard);
+	border: none;
+	border-radius: 8px;
+	color: var(--btr-content-emphasis);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 150ms var(--btr-ease-out);
+
+	&:hover {
+		background: var(--btr-press);
+	}
+}
+
+/* Profile changes: an icon for the kind of change, what it was, and when it was found */
+
+.btr-change-note {
+	margin: 4px 0 0;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+}
+
+.btr-change-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.btr-change-day {
+	list-style: none;
+}
+
+.btr-change {
 	display: flex;
 	align-items: flex-start;
 	gap: 12px;
-	padding: 8px;
+	padding: 8px 0;
+}
+
+.btr-change-icon {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--btr-standard);
+	color: var(--btr-content-emphasis);
+
+	&[data-icon="names"] {
+		background: rgb(0 162 255 / 0.16);
+		color: #00a2ff;
+	}
+
+	&[data-icon="avatar"] {
+		background: rgb(169 112 255 / 0.16);
+		color: #a970ff;
+	}
+
+	&[data-icon="joined"] {
+		background: rgb(2 183 87 / 0.16);
+		color: #02b757;
+	}
+
+	&[data-icon="left"],
+	&[data-icon="account"] {
+		background: color-mix(in srgb, var(--btr-alert-content) 16%, transparent);
+		color: var(--btr-alert-content);
+	}
+}
+
+.btr-change-body {
+	flex: 1;
+	min-width: 0;
+	padding-top: 5px;
+	overflow-wrap: anywhere;
+}
+
+.btr-change-title {
 	color: var(--btr-content-emphasis);
 	font-size: 15px;
+	font-weight: 600;
 
 	a {
 		color: inherit;
-		font-weight: 700;
-		text-decoration: none;
+		text-decoration: underline;
+		text-decoration-color: var(--btr-stroke);
+		text-underline-offset: 3px;
 
 		&:hover {
-			text-decoration: underline;
+			text-decoration-color: currentColor;
 		}
 	}
 }
 
-.btr-change-text {
-	flex: 1;
-	min-width: 0;
-	overflow-wrap: anywhere;
+.btr-change-time {
+	flex: none;
+	padding-top: 7px;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+
+.btr-change-swap {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-top: 4px;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+
+	.btr-change-old {
+		text-decoration: line-through;
+	}
+
+	.btr-change-new {
+		color: var(--btr-content-emphasis);
+	}
 }
 
 .btr-change-details {
-	margin-top: 6px;
+	margin-top: 4px;
 	color: var(--btr-content);
 	font-size: 14px;
 
 	summary {
+		width: fit-content;
 		color: var(--btr-content-muted);
 		cursor: pointer;
+
+		&:hover {
+			color: var(--btr-content-emphasis);
+		}
 	}
 
 	& > div {
-		margin-top: 6px;
+		margin-top: 8px;
 		padding: 8px 12px;
 		border-radius: 8px;
 		background: var(--btr-surface-raised);
@@ -1944,19 +2062,30 @@ div.btr-setting-text {
 .btr-change-avatars {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	margin-top: 6px;
+	gap: 12px;
+	margin-top: 8px;
 	color: var(--btr-content-muted);
 
+	figure {
+		margin: 0;
+		text-align: center;
+	}
+
 	img {
-		width: 72px;
-		height: 72px;
-		border-radius: 8px;
+		display: block;
+		width: 88px;
+		height: 88px;
+		border-radius: 12px;
 		background: var(--btr-surface-raised);
 	}
 
-	/* Roblox drops avatar images after 30 days. */
-	img.btr-change-expired {
-		visibility: hidden;
+	figcaption {
+		margin-top: 4px;
+		font-size: 12px;
+	}
+
+	/* Roblox drops avatar images after 30 days, which leaves the empty tile. */
+	.btr-change-expired img {
+		content: url("data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
 	}
 }

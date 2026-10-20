@@ -40,6 +40,9 @@ export const setLiveSince = (since: number | null): void => {
 	liveSince = since
 }
 
+/** Whether friends' presence is arriving live right now. */
+export const isLive = (): boolean => liveSince !== null
+
 const sameState = (segment: PresenceSegment, observation: Observation) =>
 	segment.type === observation.type &&
 	segment.location === observation.location &&

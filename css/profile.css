@@ -640,3 +640,27 @@ html .btr-profile .btr-profile-favorites {
 		outline-offset: 2px;
 	}
 }
+
+/* The value reads as a link into the activity, and someone watched says so. */
+.btr-stats-lastseen::after {
+	content: "›";
+	margin-left: 4px;
+	color: var(--color-content-muted, inherit);
+	text-decoration: none;
+	display: inline-block;
+}
+
+.btr-lastseen-watching {
+	margin-left: 6px;
+	padding: 1px 6px;
+	border-radius: 8px;
+	background: var(--color-action-standard-background, rgb(128 128 128 / 0.2));
+	color: var(--color-content-emphasis, inherit);
+	font-size: 11px;
+	font-weight: 700;
+	vertical-align: 1px;
+
+	&[hidden] {
+		display: none;
+	}
+}

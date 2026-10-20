@@ -3,7 +3,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
-import { lastSeenAt, openActivity } from "@/feat/activityModal"
+import { isWatched, lastSeenAt, openActivity } from "@/feat/activityModal"
 import { clockFormat } from "@/feat/clock"
 import { getPresenceHistory, onPresenceHistoryChange, type PresenceSegment } from "@/feat/presenceHistory"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
@@ -194,8 +194,17 @@ pageInit.profile = () => {
 									<div class="text-lead text-overflow btr-stats-placevisits"></div>
 								</div>
 								<div class="btr-profile-stat btr-stats-lastseen-stat" style="display:none">
-									<button type="button" class="btr-lastseen-toggle" aria-haspopup="dialog">
-										<span class="text-label">Last Seen Online</span>
+									<button
+										type="button"
+										class="btr-lastseen-toggle"
+										aria-haspopup="dialog"
+										title="View activity"
+									>
+										<span class="text-label"
+											>Last Seen Online<span class="btr-lastseen-watching" hidden
+												>Watching</span
+											></span
+										>
 										<span class="text-lead text-overflow btr-stats-lastseen"></span>
 									</button>
 								</div>
@@ -493,6 +502,15 @@ pageInit.profile = () => {
 
 							render(await getPresenceHistory(userId))
 							onPresenceHistoryChange(userId, render)
+
+							// Marks someone you watch, whose activity is checked from the background.
+							const watching = stat.$req(".btr-lastseen-watching")
+							const updateWatching = () => {
+								watching.hidden = userId === loggedInUser || !isWatched(userId)
+							}
+
+							SETTINGS.onChange("profile.watchedUsers", updateWatching)
+							updateWatching()
 
 							stat.$req(".btr-lastseen-toggle").$on("click", () => {
 								const name =

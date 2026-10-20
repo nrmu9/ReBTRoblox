@@ -307,6 +307,21 @@ ${range} · ${formatDuration(block.end - block.start)}`
 	return row
 }
 
+// Long histories are built a page at a time, so a year of it opens as fast
+// as a week.
+const PAGE_DAYS = 30
+const PAGE_ROWS = 150
+const shownDays = new WeakMap<HTMLElement, number>()
+
+const showMore = (label: string, onClick: () => void) => {
+	const button = html`<button type="button" class="btr-activity-more">${label}</button>`
+	button.$on("click", onClick)
+	return button
+}
+
+/** A day heading in a log, a quiet label with a rule after it. */
+const dayHeading = (day: number) => html`<h3 class="btr-log-day">${dayLabel(day)}</h3>`
+
 /** `intro` plays the opening animation, which live updates skip. */
 const render = (
 	body: HTMLElement,
@@ -365,11 +380,22 @@ const render = (
 		)
 
 	const days = [...blocksByDay(segments, online)].toSorted((a, b) => b[0] - a[0])
-	days.forEach(([day, blocks], index) => {
+	const limit = shownDays.get(body) ?? PAGE_DAYS
+
+	days.slice(0, limit).forEach(([day, blocks], index) => {
 		const row = dayRow(segments, online, together, day, blocks, expanded)
 		row.style.setProperty("--btr-index", String(index))
 		timeline.append(row)
 	})
+
+	if (days.length > limit) {
+		timeline.append(
+			showMore(`Show earlier days (${days.length - limit} more)`, () => {
+				shownDays.set(body, limit + PAGE_DAYS)
+				render(body, segments, online, together, expanded)
+			}),
+		)
+	}
 
 	if (!days.length) {
 		timeline.replaceChildren(html`<p class="btr-activity-empty">Not seen online yet.</p>`)
@@ -412,10 +438,11 @@ const renderFriends = async (
 	panel: HTMLElement,
 	userId: number,
 	isOwn: boolean,
-	filter: { kind: string },
+	filter: { kind: string; limit?: number },
 ) => {
 	const events = (await getActivityEvents(userId, ["friendAdded", "friendRemoved"])) ?? []
-	const shown = events.filter((event) => filter.kind === "all" || event.kind === filter.kind)
+	const matching = events.filter((event) => filter.kind === "all" || event.kind === filter.kind)
+	const shown = matching.slice(0, filter.limit ?? PAGE_ROWS)
 
 	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
 
@@ -431,6 +458,7 @@ const renderFriends = async (
 
 		button.$on("click", () => {
 			filter.kind = kind
+			filter.limit = PAGE_ROWS
 			void renderFriends(panel, userId, isOwn, filter)
 		})
 
@@ -445,7 +473,7 @@ const renderFriends = async (
 
 		if (eventDay !== day) {
 			day = eventDay
-			list.append(html`<h3 class="btr-friendlog-day">${dayLabel(day)}</h3>`)
+			list.append(dayHeading(day))
 		}
 
 		const row = html`<a
@@ -470,6 +498,15 @@ const renderFriends = async (
 		}
 
 		list.append(row)
+	}
+
+	if (matching.length > shown.length) {
+		list.append(
+			showMore(`Show more (${matching.length - shown.length})`, () => {
+				filter.limit = shown.length + PAGE_ROWS
+				void renderFriends(panel, userId, isOwn, filter)
+			}),
+		)
 	}
 
 	if (!shown.length) {
@@ -501,92 +538,212 @@ const renderFriends = async (
 
 // Profile changes
 
-const changeText = (event: ActivityEvent): Array<string | Node> => {
-	const group = (value: unknown) => {
-		const { id, name } = value as { id: number; name: string }
-		return html`<a href="/communities/${id}">${name}</a>`
-	}
-
-	switch (event.field) {
-		case "name":
-			return [`Changed their username from @${event.before} to @${event.after}`]
-		case "displayName":
-			return [`Changed their display name from ${event.before} to ${event.after}`]
-		case "description":
-			return ["Changed their bio"]
-		case "isBanned":
-			return [event.after ? "Was banned" : "Was unbanned"]
-		case "avatar":
-			return ["Changed their avatar"]
-		case "groupJoined":
-			return ["Joined ", group(event.after)]
-		case "groupLeft":
-			return ["Left ", group(event.before)]
-		default:
-			return [`Changed ${event.field}`]
-	}
+const ICONS: Record<string, string> = {
+	names: "M4 20h4L18.5 9.5a2.1 2.1 0 0 0-4-4L4 16v4z",
+	bio: "M5 7h14M5 12h14M5 17h9",
+	avatar: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-4 4-6 8-6s8 2 8 6",
+	joined: "M12 5v14M5 12h14",
+	left: "M5 12h14",
+	account: "M12 7v6M12 17h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
 }
 
-/** What changed on someone's profile, newest first under a heading for each day. */
-const renderChanges = async (panel: HTMLElement, userId: number) => {
+const CHANGE_GROUPS = [
+	["all", "All"],
+	["names", "Names"],
+	["bio", "Bio"],
+	["avatar", "Avatar"],
+	["communities", "Communities"],
+	["account", "Account"],
+] as const
+
+const groupOf = (event: ActivityEvent) =>
+	event.field === "name" || event.field === "displayName"
+		? "names"
+		: event.field === "description"
+			? "bio"
+			: event.field === "avatar"
+				? "avatar"
+				: event.field === "groupJoined" || event.field === "groupLeft"
+					? "communities"
+					: "account"
+
+const icon = (name: string) =>
+	html`<span class="btr-change-icon" data-icon="${name}" aria-hidden="true">
+		<svg viewBox="0 0 24 24" width="16" height="16">
+			<path
+				d="${ICONS[name]}"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			/>
+		</svg>
+	</span>`
+
+/** "old → new", for a name. */
+const swap = (before: unknown, after: unknown) => {
+	const line = html`<div class="btr-change-swap">
+		<span class="btr-change-old"></span>
+		<span aria-label="changed to">→</span>
+		<span class="btr-change-new"></span>
+	</div>`
+
+	line.$req(".btr-change-old").textContent = String(before ?? "")
+	line.$req(".btr-change-new").textContent = String(after ?? "")
+	return line
+}
+
+const changeEntry = (event: ActivityEvent) => {
+	const group = groupOf(event)
+	const iconName = event.field === "groupJoined" ? "joined" : event.field === "groupLeft" ? "left" : group
+
+	const item = html`<li class="btr-change" data-icon="${iconName}">
+		<div class="btr-change-body">
+			<div class="btr-change-title"></div>
+		</div>
+		<span class="btr-change-time">${new Date(event.at).$format(clockFormat())}</span>
+	</li>`
+
+	item.prepend(icon(iconName))
+
+	const title = item.$req(".btr-change-title")
+	const body = item.$req(".btr-change-body")
+
+	if (event.field === "name") {
+		title.textContent = "Username changed"
+		body.append(swap(`@${event.before}`, `@${event.after}`))
+	} else if (event.field === "displayName") {
+		title.textContent = "Display name changed"
+		body.append(swap(event.before, event.after))
+	} else if (event.field === "description") {
+		title.textContent = event.after ? "Bio changed" : "Bio cleared"
+
+		const details = html`<details class="btr-change-details">
+			<summary>Compare</summary>
+			<div class="btr-change-before"></div>
+			<div class="btr-change-after"></div>
+		</details>`
+
+		details.$req(".btr-change-before").textContent = String(event.before || "(empty)")
+		details.$req(".btr-change-after").textContent = String(event.after || "(empty)")
+		body.append(details)
+	} else if (event.field === "avatar") {
+		title.textContent = "Avatar changed"
+
+		const images = html`<div class="btr-change-avatars">
+			<figure>
+				<img alt="" src="${event.before}" />
+				<figcaption>Before</figcaption>
+			</figure>
+			<span aria-hidden="true">→</span>
+			<figure>
+				<img alt="" src="${event.after}" />
+				<figcaption>After</figcaption>
+			</figure>
+		</div>`
+
+		// Roblox keeps these images for 30 days.
+		for (const img of images.$findAll<HTMLImageElement>("img")) {
+			img.$on("error", () => img.closest("figure")?.classList.add("btr-change-expired"))
+		}
+
+		body.append(images)
+	} else if (event.field === "groupJoined" || event.field === "groupLeft") {
+		const { id, name } = (event.field === "groupJoined" ? event.after : event.before) as {
+			id: number
+			name: string
+		}
+
+		title.append(
+			event.field === "groupJoined" ? "Joined " : "Left ",
+			html`<a href="/communities/${id}">${name}</a>`,
+		)
+	} else if (event.field === "isBanned") {
+		title.textContent = event.after ? "Account banned" : "Account unbanned"
+	} else {
+		title.textContent = `${event.field} changed`
+	}
+
+	return item
+}
+
+/** What changed on someone's profile, newest first by day, filtered by kind of change. */
+const renderChanges = async (
+	panel: HTMLElement,
+	userId: number,
+	filter: { group: string; limit?: number },
+) => {
 	const events = (await getActivityEvents(userId, ["profileChanged"])) ?? []
-	const list = html`<div class="btr-friendlog"></div>`
+	const matching = events.filter((event) => filter.group === "all" || groupOf(event) === filter.group)
+	const shown = matching.slice(0, filter.limit ?? PAGE_ROWS)
+
+	// Only the kinds of change that happened get a chip, besides All.
+	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
+
+	for (const [group, label] of CHANGE_GROUPS) {
+		const count =
+			group === "all" ? events.length : events.filter((event) => groupOf(event) === group).length
+
+		if (group !== "all" && !count) {
+			continue
+		}
+
+		const button = html`<button
+			type="button"
+			class="btr-friendlog-filter"
+			aria-pressed="${filter.group === group}"
+		>
+			${label} <span>${count}</span>
+		</button>`
+
+		button.$on("click", () => {
+			filter.group = group
+			filter.limit = PAGE_ROWS
+			void renderChanges(panel, userId, filter)
+		})
+
+		toolbar.append(button)
+	}
+
+	const note = html`<p class="btr-change-note">
+		Profiles are checked every few hours, so each change happened some time before the time shown.
+	</p>`
+
+	const list = html`<ol class="btr-change-list"></ol>`
 	let day = -1
 
-	for (const event of events) {
+	for (const event of shown) {
 		const eventDay = startOfDay(event.at)
 
 		if (eventDay !== day) {
 			day = eventDay
-			list.append(html`<h3 class="btr-friendlog-day">${dayLabel(day)}</h3>`)
+			list.append(html`<li class="btr-change-day"></li>`)
+			list.lastElementChild!.append(dayHeading(day))
 		}
 
-		const row = html`<div class="btr-change-row">
-			<div class="btr-change-text"></div>
-			<span class="btr-friendlog-time" title="Noticed at this time"
-				>${new Date(event.at).$format(clockFormat())}</span
-			>
-		</div>`
-
-		row.$req(".btr-change-text").append(...changeText(event))
-
-		if (event.field === "description") {
-			const details = html`<details class="btr-change-details">
-				<summary>Show the change</summary>
-				<div class="btr-change-before"></div>
-				<div class="btr-change-after"></div>
-			</details>`
-
-			details.$req(".btr-change-before").textContent = String(event.before || "(empty)")
-			details.$req(".btr-change-after").textContent = String(event.after || "(empty)")
-			row.$req(".btr-change-text").append(details)
-		} else if (event.field === "avatar") {
-			const images = html`<div class="btr-change-avatars">
-				<img alt="Before" src="${event.before}" />
-				<span aria-hidden="true">→</span>
-				<img alt="After" src="${event.after}" />
-			</div>`
-
-			// Roblox keeps these images for 30 days.
-			for (const img of images.$findAll<HTMLImageElement>("img")) {
-				img.$on("error", () => img.classList.add("btr-change-expired"))
-			}
-
-			row.$req(".btr-change-text").append(images)
-		}
-
-		list.append(row)
+		list.append(changeEntry(event))
 	}
 
-	if (!events.length) {
+	if (matching.length > shown.length) {
 		list.append(
-			html`<p class="btr-activity-empty">
-				No changes yet. Names, bio, avatar and communities are checked every few hours.
-			</p>`,
+			showMore(`Show more (${matching.length - shown.length})`, () => {
+				filter.limit = shown.length + PAGE_ROWS
+				void renderChanges(panel, userId, filter)
+			}),
 		)
 	}
 
-	panel.replaceChildren(list)
+	if (!events.length) {
+		panel.replaceChildren(
+			html`<p class="btr-activity-empty">
+				No changes yet. Their names, bio, avatar and communities are checked every few hours.
+			</p>`,
+		)
+		return
+	}
+
+	panel.replaceChildren(toolbar, note, list)
 }
 
 // Watching
@@ -673,6 +830,7 @@ export const openActivity = async (
 	const friendsPanel = body.$req('[data-tab="friends"]')
 	const changesPanel = body.$req('[data-tab="changes"]')
 	const friendFilter = { kind: "all" }
+	const changeFilter = { group: "all" }
 
 	const [segments, together, events] = await Promise.all([
 		getPresenceHistory(userId),
@@ -741,7 +899,7 @@ export const openActivity = async (
 		if (tab === "friends" && !friendsPanel.childElementCount) {
 			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)
 		} else if (tab === "changes" && !changesPanel.childElementCount) {
-			void renderChanges(changesPanel, userId)
+			void renderChanges(changesPanel, userId, changeFilter)
 		}
 	}
 
@@ -763,7 +921,7 @@ export const openActivity = async (
 		}
 
 		if (changesPanel.childElementCount) {
-			void renderChanges(changesPanel, userId)
+			void renderChanges(changesPanel, userId, changeFilter)
 		}
 	})
 

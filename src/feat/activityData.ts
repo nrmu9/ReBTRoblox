@@ -13,7 +13,41 @@ export const clearActivityBefore = (before: number | null) => ask<boolean>("acti
 
 export const clearUserActivity = (userId: number) => ask<boolean>("activityClearUser", userId)
 
-export const exportActivity = () => ask<unknown>("activityExport")
+/** Everything recorded, as a JSON file built a page of records at a time. */
+export const exportActivity = async (): Promise<Blob> => {
+	const parts: string[] = [`{"exportedAt":${JSON.stringify(new Date().toISOString())}`]
+
+	for (const store of ["presence", "events"] as const) {
+		parts.push(`,"${store}":[`)
+		let after = 0
+		let first = true
+
+		for (;;) {
+			const page =
+				(await ask<Array<{ id: number }> | null>("activityExportPage", {
+					store,
+					after,
+					limit: 5000,
+				})) ?? []
+
+			for (const record of page) {
+				parts.push((first ? "" : ",") + JSON.stringify(record))
+				first = false
+			}
+
+			if (page.length < 5000) {
+				break
+			}
+
+			after = page.at(-1)!.id
+		}
+
+		parts.push("]")
+	}
+
+	parts.push("}")
+	return new Blob(parts, { type: "application/json" })
+}
 
 export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][]) =>
 	ask<ActivityEvent[] | null>("activityEvents", { userId, kinds })
