@@ -104,6 +104,7 @@ export const DEFAULT_SETTINGS = {
 		showBadgeOwned: { value: true },
 		addServerPager: { value: true },
 		showServerRegion: { value: "none", validValues: ["none", "ping", "region", "both", "combined"] },
+		previewVideos: { value: "paused", validValues: ["paused", "autoplay", "hidden"] },
 		compactBadgeStats: { value: true },
 		exactCounts: { value: true },
 	},

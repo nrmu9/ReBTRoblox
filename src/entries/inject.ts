@@ -2550,6 +2550,20 @@ const startInject = () => {
 				)
 			},
 			experiments: () => {
+				const forcedExperiments = (experiment: string): Record<string, any> => {
+					const game = settings.gamedetails
+
+					if (
+						experiment === "Website.GameDetails" &&
+						game?.enabled !== false &&
+						game?.previewVideos === "hidden"
+					) {
+						return { IsGamePreviewVideoEnabled: false }
+					}
+
+					return {}
+				}
+
 				const modified: Record<string, any> = {}
 				const initial: Record<string, any> = {}
 				const layers: Record<string, any> = {}
@@ -2628,6 +2642,16 @@ const startInject = () => {
 
 											layers[experiment] ??= []
 											layers[experiment].push(layer)
+
+											// Features built on Roblox's own flags. A value
+											// set in the experiment editor still wins.
+											for (const [key, value] of Object.entries(
+												forcedExperiments(experiment),
+											)) {
+												if (!(key in (modified[experiment] ?? {}))) {
+													layer[key] = value
+												}
+											}
 
 											if (modified[experiment]) {
 												for (const [key, modifiedValue] of Object.entries(
@@ -3606,7 +3630,10 @@ const startInject = () => {
 					}
 				})
 
-				const regionSetting = settings.gamedetails.showServerRegion
+				const regionSetting = ((value: any) =>
+					value === true ? "both" : value === false || !value ? "none" : value)(
+					settings.gamedetails.showServerRegion,
+				)
 				const addServerPager = settings.gamedetails.addServerPager
 
 				reactHook.hijackConstructor(

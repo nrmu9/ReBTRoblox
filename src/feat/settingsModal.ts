@@ -401,11 +401,26 @@ export const SettingsModal: SettingsModalState = {
 								path="addServerPager"
 								desc="Splits the server list into pages"
 							></toggle>
-							<toggle
-								label="Show Server Region"
+							<choice
+								label="Server Info"
 								path="showServerRegion"
-								desc="Shows where each server is located"
-							></toggle>
+								desc="Shows each server's ping or location"
+							>
+								<option value="none">Off</option>
+								<option value="ping">Ping</option>
+								<option value="region">Region</option>
+								<option value="both">Ping and region</option>
+								<option value="combined">Country only</option>
+							</choice>
+							<choice
+								label="Preview Videos"
+								path="previewVideos"
+								desc="How trailers on game pages behave"
+							>
+								<option value="paused">Don't autoplay</option>
+								<option value="autoplay">Autoplay</option>
+								<option value="hidden">Hide</option>
+							</choice>
 							<toggle
 								label="Highlight Owned Badges"
 								path="showBadgeOwned"

@@ -174,7 +174,9 @@ pageInit.gamedetails = () => {
 
 	injectScript.call("gamedetails")
 
-	if (SETTINGS.get("gamedetails.showServerRegion")) {
+	const serverInfo = SETTINGS.get("gamedetails.showServerRegion")
+
+	if (serverInfo && serverInfo !== "none") {
 		const requesting: Record<string, any> = {}
 
 		injectScript.listen("getServerRegion", (placeId: number, jobId: string) => {
@@ -460,6 +462,10 @@ pageInit.gamedetails = () => {
 					// The rebuilt carousel has no attribute to turn autoplay off, so the
 					// first play is paused unless it came from using the carousel.
 					.$watch("#game-details-carousel-container", (carousel: HTMLElement) => {
+						if (SETTINGS.get("gamedetails.previewVideos") !== "paused") {
+							return
+						}
+
 						let touched = false
 
 						for (const type of ["pointerdown", "keydown"]) {
