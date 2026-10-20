@@ -6,7 +6,7 @@ import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { robloxExperiments } from "@/pages/common"
-import { discoverExperimentHints, type ExperimentHint } from "@/feat/experimentHints"
+import { discoverExperimentHints, getExperimentPage, type ExperimentHint } from "@/feat/experimentHints"
 import { HOME_ROWS_KEY } from "@/pages/home"
 import { btrLocalStorage } from "@/core/storage"
 
@@ -181,6 +181,7 @@ export const SettingsModal: SettingsModalState = {
 			const selected = tab.dataset.page === name
 			tab.classList.toggle("selected", selected)
 			tab.setAttribute("aria-selected", String(selected))
+			tab.tabIndex = selected ? 0 : -1
 		}
 
 		this.settingsDiv.$req(".btr-settings-title").textContent = this.contentDivs[name].dataset.label
@@ -691,6 +692,14 @@ export const SettingsModal: SettingsModalState = {
 										autocomplete="off"
 									/>
 								</label>
+								<button
+									type="button"
+									id="btr-exp-edited"
+									class="btr-settings-button"
+									aria-pressed="false"
+								>
+									Edited only
+								</button>
 								<button type="button" id="btr-exp-reset" class="btr-settings-button">
 									Reset all
 								</button>
@@ -1024,9 +1033,33 @@ export const SettingsModal: SettingsModalState = {
 			</button>`
 			tab.dataset.page = name
 			tab.firstElementChild!.classList.add(`icon-regular-${pageElem.getAttribute("icon") ?? "gear"}`)
+			tab.tabIndex = -1
 			tab.$on("click", () => this.switchContent(name))
 			tabs.append(tab)
 		}
+
+		// Arrow keys move between sections, as in any tab list.
+		tabs.$on("keydown", (ev: KeyboardEvent) => {
+			const all = [...tabs.children] as HTMLElement[]
+			const index = all.indexOf(document.activeElement as HTMLElement)
+
+			const target =
+				ev.key === "ArrowDown"
+					? all[(index + 1) % all.length]
+					: ev.key === "ArrowUp"
+						? all[(index - 1 + all.length) % all.length]
+						: ev.key === "Home"
+							? all[0]
+							: ev.key === "End"
+								? all[all.length - 1]
+								: null
+
+			if (index !== -1 && target) {
+				ev.preventDefault()
+				target.focus()
+				this.switchContent(target.dataset.page!)
+			}
+		})
 
 		// Navigation buttons, which keep their state in navigation.elements
 		// rather than in a setting each.
@@ -1489,6 +1522,10 @@ export const SettingsModal: SettingsModalState = {
 				}
 
 				bar.hidden = dirty.size === 0
+
+				for (const row of this.settingsDiv.$findAll(".btr-setting-row[data-path]")) {
+					row.classList.toggle("btr-setting-pending", dirty.has(row.dataset.path))
+				}
 			})
 		}
 
@@ -1767,6 +1804,13 @@ export const SettingsModal: SettingsModalState = {
 			})
 
 			this.settingsDiv.$req("#btr-exp-reset").$on("click", () => this.resetExperiments())
+
+			const editedOnly = this.settingsDiv.$req("#btr-exp-edited") as HTMLButtonElement
+			editedOnly.$on("click", () => {
+				const on = editedOnly.getAttribute("aria-pressed") !== "true"
+				editedOnly.setAttribute("aria-pressed", String(on))
+				this.settingsDiv.$req("#btr-settings-experiments").classList.toggle("btr-exp-edited-only", on)
+			})
 		}
 
 		this.robloxExperimentsChanged()
@@ -1882,6 +1926,13 @@ export const SettingsModal: SettingsModalState = {
 			</details>`
 
 			details.$req(".btr-exp-title").textContent = experiment
+
+			// Experiments only show up on the page that asked for them, so where
+			// one came from tells you where to look for its effect.
+			const page = getExperimentPage(experiment)
+			if (page) {
+				details.$req(".btr-exp-count").before(html`<span class="btr-exp-page">${page}</span>`)
+			}
 			details.title = experiment
 
 			const group = {

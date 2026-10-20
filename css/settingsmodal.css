@@ -1140,3 +1140,34 @@ div.btr-setting-text {
 		flex-wrap: wrap;
 	}
 }
+
+/* A setting changed since the page loaded that only applies after a reload */
+
+.btr-setting-pending .btr-setting-label::after {
+	content: "Reload to apply";
+	margin-left: 8px;
+	padding: 2px 6px;
+	background: var(--btr-standard);
+	border-radius: 4px;
+	color: var(--btr-content);
+	font-size: 12px;
+	font-weight: 400;
+	vertical-align: 2px;
+}
+
+.btr-exp-page {
+	flex: none;
+	color: var(--btr-content-muted);
+	font-family: ui-monospace, Consolas, monospace;
+	font-size: 12px;
+}
+
+#btr-exp-edited[aria-pressed="true"] {
+	background: var(--btr-contrast);
+	color: var(--btr-inverse);
+}
+
+.btr-exp-edited-only .btr-exp-row:not(.btr-exp-edited),
+.btr-exp-edited-only .btr-exp-group:not(:has(.btr-exp-edited)) {
+	display: none;
+}

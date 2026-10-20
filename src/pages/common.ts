@@ -9,6 +9,7 @@ import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { recordPresences } from "@/feat/lastSeen"
 import { onRobloxResponse } from "@/feat/robloxResponses"
+import { recordExperimentPage } from "@/feat/experimentHints"
 import { SETTINGS } from "@/feat/settings"
 import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { AssetCache } from "@/rbx/AssetCache"
@@ -1345,6 +1346,7 @@ pageInit.www = () => {
 	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
 		robloxExperiments[experiment] ??= {}
 		robloxExperiments[experiment][key] = value
+		recordExperimentPage(experiment)
 
 		if (typeof SettingsModal !== "undefined") {
 			SettingsModal.robloxExperimentsChanged()

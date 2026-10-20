@@ -162,3 +162,30 @@ export const discoverExperimentHints = async (keys: string[]): Promise<Record<st
 
 	return hints
 }
+
+const PAGES_KEY = "ReBTRoblox:experimentPages"
+
+/** Remembers the first page an experiment turned up on, numbers left out. */
+export const recordExperimentPage = (experiment: string): void => {
+	try {
+		const pages = JSON.parse(localStorage.getItem(PAGES_KEY) || "{}")
+
+		if (!pages[experiment]) {
+			// Ids become …, and the name slug after an id goes: /games/…, /users/…/profile.
+			pages[experiment] = location.pathname
+				.split("/")
+				.map((part) => (/^\d+$/.test(part) ? "…" : part))
+				.filter((part, i, all) => all[i - 1] !== "…" || /^[a-z]+$/.test(part))
+				.join("/")
+			localStorage.setItem(PAGES_KEY, JSON.stringify(pages))
+		}
+	} catch {}
+}
+
+export const getExperimentPage = (experiment: string): string | null => {
+	try {
+		return JSON.parse(localStorage.getItem(PAGES_KEY) || "{}")[experiment] ?? null
+	} catch {
+		return null
+	}
+}
