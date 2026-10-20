@@ -3,9 +3,10 @@ import { backgroundScript, contentScript } from "@/core/messaging"
 
 // What ReBTRoblox has seen each user doing, for the profile's last seen and
 // its timeline. Roblox no longer says when someone was last online, so this
-// keeps what its realtime connection pushes to the page and the presence the
-// page asks for anyway. It lives in extension storage, out of Roblox's own
-// localStorage, and only the background writes it so tabs cannot race.
+// keeps what Roblox's realtime connection pushes, to the background and to
+// pages, and the presence pages ask for anyway. It lives in extension storage,
+// out of Roblox's own localStorage, and only the background writes it so tabs
+// cannot race.
 
 export interface PresenceSegment {
 	/** 0 offline, 1 on the website, 2 in an experience, 3 in Studio. */
@@ -34,12 +35,26 @@ const SEGMENT_LIMIT = 30
 const USER_LIMIT = 600
 const MAX_AGE = 90 * 24 * 60 * 60e3
 
+// A state seen again after this long without live updates in between may
+// have ended and started again unseen, so it starts a new segment.
+const GAP = 10 * 60e3
+
 const storageKey = (userId: number) => KEY_PREFIX + userId
+
+/** Since when the background's live connection has missed nothing, or null while it is down. */
+let liveSince: number | null = null
+
+export const setLiveSince = (since: number | null): void => {
+	liveSince = since
+}
 
 const sameState = (segment: PresenceSegment, observation: Observation) =>
 	segment.type === observation.type &&
 	segment.location === observation.location &&
 	segment.placeId === observation.placeId
+
+// Pages hand what they see to the background, which writes it in order.
+let record = (observations: Observation[]) => backgroundScript.send("recordPresences", observations)
 
 if (IS_BACKGROUND_PAGE) {
 	let queue = Promise.resolve()
@@ -61,7 +76,12 @@ if (IS_BACKGROUND_PAGE) {
 				if (observation.type === 0) {
 					continue
 				}
-			} else if (sameState(last, observation)) {
+			} else if (
+				sameState(last, observation) &&
+				(observation.start ||
+					observation.seen - last.to < GAP ||
+					(liveSince !== null && liveSince <= last.to))
+			) {
 				last.to = Math.max(last.to, observation.seen)
 
 				// A live start can arrive after a poll already noticed the state.
@@ -118,12 +138,14 @@ if (IS_BACKGROUND_PAGE) {
 		await new Promise<void>((resolve) => STORAGE.set({ presencePrunedAt: Date.now() }, resolve))
 	}
 
-	contentScript.listen("recordPresences", (observations: Observation[]) => {
+	record = (observations) => {
 		queue = queue
 			.then(() => apply(observations))
 			.then(prune)
 			.catch((err) => console.error(err))
-	})
+	}
+
+	contentScript.listen("recordPresences", (observations: Observation[]) => record(observations))
 }
 
 /**
@@ -162,7 +184,7 @@ export const recordPresences = (presences: any[], starts?: Record<number, number
 	}
 
 	if (observations.length) {
-		backgroundScript.send("recordPresences", observations)
+		record(observations)
 	}
 }
 

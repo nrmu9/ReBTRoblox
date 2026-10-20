@@ -69,11 +69,15 @@ const TARGETS = {
 	chrome: {
 		manifest_version: 3,
 		apply(manifest, shared) {
-			manifest.minimum_chrome_version = "111"
+			// 116 is where websocket traffic keeps the service worker running, which
+			// the background presence connection relies on.
+			manifest.minimum_chrome_version = "116"
 			manifest.incognito = "split"
 			manifest.action = { default_title: shared.action_title, default_icon: shared.icons }
 			// Chrome blocks ads through declarativeNetRequest rather than webRequest.
-			manifest.permissions = ["declarativeNetRequestWithHostAccess", ...shared.permissions]
+			// Alarms wake the service worker should Chrome stop it, to reconnect the
+			// presence connection; the Firefox background page never stops.
+			manifest.permissions = ["declarativeNetRequestWithHostAccess", "alarms", ...shared.permissions]
 			manifest.host_permissions = shared.host_permissions
 			// The content script reaches main.js through a dynamic import, and
 			// chrome only resolves those for web accessible resources: without

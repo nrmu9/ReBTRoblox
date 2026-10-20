@@ -428,6 +428,12 @@ export const SettingsModal: SettingsModalState = {
 								desc="Shows when someone was last online and a timeline of what they were doing, as seen by ReBTRoblox on this device"
 							></toggle>
 							<toggle
+								label="Track Friends in the Background"
+								path="liveTracking"
+								require="lastSeen"
+								desc="Records your friends' activity as it happens, even with no Roblox tab open, while the browser runs"
+							></toggle>
+							<toggle
 								label="Exact Follower Counts"
 								path="exactCounts"
 								desc="Shows exact follower and following counts"
@@ -1482,6 +1488,7 @@ export const SettingsModal: SettingsModalState = {
 				"general.smallChatButton",
 				"general.voiceChatStatus",
 				"general.hoverPreviewMode",
+				"profile.liveTracking",
 				"itemdetails.itemPreviewer",
 				"itemdetails.explorerButton",
 				"itemdetails.downloadButton",

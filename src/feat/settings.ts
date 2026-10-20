@@ -126,6 +126,7 @@ export const DEFAULT_SETTINGS = {
 		embedInventoryEnabled: { value: true },
 		exactCounts: { value: true },
 		lastSeen: { value: true },
+		liveTracking: { value: true },
 		mutualCommunities: { value: true },
 	},
 }
