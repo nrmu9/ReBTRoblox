@@ -268,6 +268,13 @@ export const settingsMarkup = () =>
 						</p>
 						<div class="btr-setting-card btr-activity-watched"></div>
 
+						<heading>Tracked Games and Communities</heading>
+						<p class="btr-exp-intro">
+							Player counts, visits and updates for games, and members, shouts and new games for
+							communities, checked from the background. Track one from its page.
+						</p>
+						<div class="btr-setting-card btr-activity-tracked"></div>
+
 						<heading>Stored Activity</heading>
 						<choice
 							label="Storage Limit"

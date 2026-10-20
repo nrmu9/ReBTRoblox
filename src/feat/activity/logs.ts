@@ -61,7 +61,7 @@ interface LogOptions {
  * A log of events by day, built a page at a time. Filters only show and hide
  * what is built, so switching between them never reloads or redraws it.
  */
-const buildLog = (options: LogOptions) => {
+export const buildLog = (options: LogOptions) => {
 	const { panel, events, groups, groupOf, entry, state } = options
 	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
 	const list = html`<div class="btr-log"></div>`
@@ -296,6 +296,9 @@ const ICONS: Record<string, string> = {
 	favorites: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
 	followers:
 		"M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.4 3 5",
+	updates: "M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4",
+	shouts: "M4 10v4h3l5 4V6L7 10H4zM16 9a4 4 0 0 1 0 6",
+	games: "M6 9h12a3 3 0 0 1 3 3v2a3 3 0 0 1-5 2l-1-1H9l-1 1a3 3 0 0 1-5-2v-2a3 3 0 0 1 3-3zM8 11v3M6.5 12.5h3",
 }
 
 const CHANGE_GROUPS = [
@@ -327,7 +330,7 @@ const groupOf = (event: ActivityEvent) =>
 								? "followers"
 								: "account"
 
-const icon = (name: string) =>
+export const icon = (name: string) =>
 	html`<span class="btr-change-icon" data-icon="${name}" aria-hidden="true">
 		<svg viewBox="0 0 24 24" width="16" height="16">
 			<path
@@ -342,7 +345,7 @@ const icon = (name: string) =>
 	</span>`
 
 /** "old → new", for a name. */
-const swap = (before: unknown, after: unknown) => {
+export const swap = (before: unknown, after: unknown) => {
 	const line = html`<div class="btr-change-swap">
 		<span class="btr-change-old"></span>
 		<span aria-label="changed to">→</span>

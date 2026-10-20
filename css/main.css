@@ -1515,3 +1515,29 @@ html
 		}
 	}
 }
+
+/* Opens a game's or community's activity, as a chip like Roblox's own */
+
+.btr-track-button {
+	display: inline-flex;
+	align-items: center;
+	height: 36px;
+	margin-top: 8px;
+	padding: 0 14px;
+	border: none;
+	border-radius: 18px;
+	background: var(--color-action-standard-background, rgb(128 128 128 / 0.2));
+	color: var(--color-content-emphasis, inherit);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+
+	&:hover {
+		filter: brightness(1.15);
+	}
+
+	.profile-insights-container & {
+		margin-top: 0;
+	}
+}

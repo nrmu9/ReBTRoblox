@@ -13,10 +13,12 @@ import "@/feat/blogFeed"
 import "@/feat/activity/presence"
 import "@/feat/activity/live"
 import { startWatching } from "@/feat/activity/watch"
+import { startTracking } from "@/feat/activity/tracked"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 
 startWatching()
+startTracking()
 
 // Service workers need listeners registered synchronously at startup.
 chrome.runtime.onStartup.addListener(() => {})

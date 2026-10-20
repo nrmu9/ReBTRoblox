@@ -4,6 +4,7 @@ import { loadOptionalFeature } from "@/feat/loadFeature"
 import { btrLocalStorage } from "@/core/storage"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
+import { trackButton } from "@/feat/activity/trackButton"
 import {
 	formatNumber,
 	keepText,
@@ -103,6 +104,27 @@ pageInit.groups = () => {
 	if (!SETTINGS.get("groups.enabled")) {
 		return
 	}
+
+	// Opens the community's activity, where tracking it starts and stops.
+	onPageLoad((groupIdString: string) => {
+		const groupId = Number.parseInt(groupIdString, 10)
+
+		if (!Number.isSafeInteger(groupId)) {
+			return
+		}
+
+		const button = trackButton(
+			"group",
+			groupId,
+			// The page title is the name followed by - Roblox.
+			() => document.title.replace(/ - Roblox$/, "") || `Community ${groupId}`,
+		)
+
+		// The header is drawn again at times, and the same button goes back in.
+		document.$watch(".profile-insights-container", (row: HTMLElement) => row.append(button), {
+			continuous: true,
+		})
+	})
 
 	if (SETTINGS.get("groups.exactCounts")) {
 		onPageLoad((groupIdString: string) => {

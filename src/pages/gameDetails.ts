@@ -6,6 +6,7 @@ import { pageInit } from "@/core/page"
 import { ContextMenu } from "@/feat/contextMenu"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { clockFormat } from "@/feat/clock"
+import { trackButton } from "@/feat/activity/trackButton"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
@@ -482,6 +483,23 @@ pageInit.gamedetails = () => {
 		const placeId = Number.parseInt(placeIdString, 10)
 
 		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-gamedetails"))
+
+		// Opens the game's activity, where tracking it starts and stops.
+		document.$watch("#game-detail-meta-data", (meta: HTMLElement) => {
+			const universeId = Number.parseInt(meta.dataset.universeId ?? "", 10)
+
+			if (Number.isSafeInteger(universeId)) {
+				const button = trackButton(
+					"game",
+					universeId,
+					() => document.querySelector(".game-title-container h1")?.textContent?.trim() || "Game",
+				)
+
+				document.$watch(".game-buttons-container", (container: HTMLElement) =>
+					container.append(button),
+				)
+			}
+		})
 
 		document
 			.$watch("#content")

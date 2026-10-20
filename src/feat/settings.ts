@@ -130,6 +130,9 @@ export const DEFAULT_SETTINGS = {
 		friendLog: { value: true },
 		// JSON list of the user ids being watched, managed from the activity dialog
 		watchedUsers: { value: "", hidden: true },
+		// JSON lists of the universe and community ids being tracked
+		trackedGames: { value: "", hidden: true },
+		trackedGroups: { value: "", hidden: true },
 		activityLimit: { value: "250", validValues: ["100", "250", "500", "1000", "2000", "0"] },
 		mutualCommunities: { value: true },
 	},

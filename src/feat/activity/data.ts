@@ -49,8 +49,8 @@ export const exportActivity = async (): Promise<Blob> => {
 	return new Blob(parts, { type: "application/json" })
 }
 
-export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][]) =>
-	ask<ActivityEvent[] | null>("activityEvents", { userId, kinds })
+export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][], since?: number) =>
+	ask<ActivityEvent[] | null>("activityEvents", { userId, kinds, ...(since ? { since } : {}) })
 
 // One decimal, dropped when it is a zero: 250 MB, 12.4 MB.
 const oneDecimal = (value: number) => String(Number(value.toFixed(1)))

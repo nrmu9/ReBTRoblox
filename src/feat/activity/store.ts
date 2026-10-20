@@ -24,6 +24,11 @@ export interface PresenceRecord {
 	gameId?: string
 }
 
+// Tracked games and communities keep their events with people's, under ids
+// that cannot be a user's: negative, odd for communities and even for games.
+export const groupSubject = (groupId: number): number => -(groupId * 2 + 1)
+export const gameSubject = (universeId: number): number => -(universeId * 2 + 2)
+
 export interface AvatarItem {
 	id: number
 	name: string
@@ -47,6 +52,10 @@ export interface ActivityEvent {
 		| "requestSent"
 		| "requestDeclined"
 		| "profileChanged"
+		| "sample"
+		| "gameUpdated"
+		| "shoutChanged"
+		| "groupGameAdded"
 	/** The friend or follower added or removed, and their names at the time. */
 	otherId?: number
 	name?: string
@@ -229,11 +238,19 @@ export const clearUser = async (userId: number): Promise<void> => {
 	announceChange([userId])
 }
 
-/** A user's events, newest first, of the given kinds or all. */
-export const getEvents = async (userId: number, kinds?: string[]): Promise<ActivityEvent[]> => {
+/** A user's events, newest first, of the given kinds or all, and from `since` on if given. */
+export const getEvents = async (
+	userId: number,
+	kinds?: string[],
+	since = -Infinity,
+): Promise<ActivityEvent[]> => {
 	const db = await openDb()
 	const events: ActivityEvent[] = await done(
-		db.transaction("events").objectStore("events").index("user").getAll(userRange(userId)),
+		db
+			.transaction("events")
+			.objectStore("events")
+			.index("user")
+			.getAll(IDBKeyRange.bound([userId, since], [userId, Infinity])),
 	)
 
 	return events.filter((event) => !kinds || kinds.includes(event.kind)).toReversed()
@@ -302,10 +319,10 @@ if (IS_BACKGROUND_PAGE) {
 			)
 		},
 		activityEvents(
-			{ userId, kinds }: { userId: number; kinds?: string[] },
+			{ userId, kinds, since }: { userId: number; kinds?: string[]; since?: number },
 			respond: (value: unknown) => void,
 		) {
-			answer(getEvents(userId, kinds), respond)
+			answer(getEvents(userId, kinds, since), respond)
 		},
 		activityExportPage(
 			{ store, after, limit }: { store: "presence" | "events"; after: number; limit: number },

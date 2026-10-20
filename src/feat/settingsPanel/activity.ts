@@ -2,6 +2,7 @@ import { html } from "@/core/html"
 import { SETTINGS } from "@/feat/settings"
 import { loggedInUser } from "@/pages/common"
 import { openActivity, setWatched } from "@/feat/activity/dialog"
+import { openTracked, setTracked, type TrackedKind } from "@/feat/activity/trackDialog"
 import {
 	clearActivityBefore,
 	exportActivity,
@@ -94,8 +95,86 @@ export const setupStoredActivity = (modal: SettingsModalState) => {
 
 	SETTINGS.onChange("profile.watchedUsers", () => void refreshWatched())
 
+	const trackedCard = page.$req(".btr-activity-tracked")
+
+	const idsOf = (path: string): number[] => {
+		try {
+			const list = JSON.parse(SETTINGS.get(path) || "[]")
+			return Array.isArray(list) ? list : []
+		} catch {
+			return []
+		}
+	}
+
+	const refreshTracked = async () => {
+		const games = idsOf("profile.trackedGames")
+		const groups = idsOf("profile.trackedGroups")
+
+		if (!games.length && !groups.length) {
+			trackedCard.replaceChildren(
+				html`<div class="btr-setting-row">
+					<span class="btr-setting-desc">Nothing yet.</span>
+				</div>`,
+			)
+			return
+		}
+
+		const [gameData, groupData] = await Promise.all([
+			games.length
+				? fetch(`https://games.roblox.com/v1/games?universeIds=${games.join(",")}`, {
+						credentials: "include",
+					})
+						.then((res) => res.json())
+						.catch(() => null)
+				: null,
+			groups.length
+				? fetch(`https://groups.roblox.com/v2/groups?groupIds=${groups.join(",")}`, {
+						credentials: "include",
+					})
+						.then((res) => res.json())
+						.catch(() => null)
+				: null,
+		])
+
+		const names = new Map<string, { name: string; href: string }>()
+
+		for (const game of gameData?.data ?? []) {
+			names.set(`game:${game.id}`, { name: game.name, href: `/games/${game.rootPlaceId}` })
+		}
+
+		for (const group of groupData?.data ?? []) {
+			names.set(`group:${group.id}`, { name: group.name, href: `/communities/${group.id}` })
+		}
+
+		const row = (kind: TrackedKind, id: number) => {
+			const known = names.get(`${kind}:${id}`)
+			const name = known?.name ?? (kind === "game" ? `Game ${id}` : `Community ${id}`)
+			const element = html`<div class="btr-setting-row">
+				<div class="btr-setting-text">
+					<a class="btr-setting-label" href="${known?.href ?? "#"}">${name}</a>
+					<span class="btr-setting-desc">${kind === "game" ? "Game" : "Community"}</span>
+				</div>
+				<button type="button" class="btr-settings-button btr-activity-view">Activity</button>
+				<button type="button" class="btr-settings-button">Stop tracking</button>
+			</div>`
+
+			element.$req(".btr-activity-view").$on("click", () => openTracked(kind, id, name))
+			element.$req("button:last-child").$on("click", () => setTracked(kind, id, false))
+			return element
+		}
+
+		trackedCard.replaceChildren(
+			...games.map((id) => row("game", id)),
+			...groups.map((id) => row("group", id)),
+		)
+	}
+
+	SETTINGS.onChange("profile.trackedGames", () => void refreshTracked())
+	SETTINGS.onChange("profile.trackedGroups", () => void refreshTracked())
+
 	modal.refreshActivity = () => {
 		void refreshWatched()
+		void refreshTracked()
 		return refresh()
 	}
 	// The background works the new limit out first.
