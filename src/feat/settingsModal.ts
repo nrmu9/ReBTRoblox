@@ -1395,7 +1395,11 @@ export const SettingsModal: SettingsModalState = {
 
 							input.classList.toggle("invalid", !valid)
 
-							if (initial) {
+							// Focusing a field and leaving it as it was is not a change.
+							if (
+								initial ||
+								input.value === (this.getSavedExperiments()[experiment]?.[key] || "")
+							) {
 								return
 							}
 
@@ -1416,7 +1420,11 @@ export const SettingsModal: SettingsModalState = {
 								}
 							}
 
-							SETTINGS.set("general.experiments", JSON.stringify(data))
+							// Nothing left goes back to the default, not to "{}".
+							SETTINGS.set(
+								"general.experiments",
+								Object.keys(data).length ? JSON.stringify(data) : "",
+							)
 						}
 
 						input.value = this.getSavedExperiments()[experiment]?.[key] || ""
