@@ -121,6 +121,7 @@ export const DEFAULT_SETTINGS = {
 		enabled: { value: true },
 		embedInventoryEnabled: { value: true },
 		exactCounts: { value: true },
+		lastSeen: { value: true },
 	},
 }
 

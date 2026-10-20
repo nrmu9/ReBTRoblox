@@ -15,6 +15,7 @@ import type {
 } from "@/rbx/types"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { IS_BACKGROUND_PAGE } from "@/core/env"
+import { recordPresences } from "@/feat/lastSeen"
 
 const invalidXsrfTokens: Record<string, boolean> = {}
 let cachedXsrfToken: string | null = null
@@ -541,7 +542,16 @@ export const RobloxApi = {
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ userIds }),
-			}).then((res) => res.json()),
+			})
+				.then((res) => res.json())
+				.then((json) => {
+					// Every presence asked for feeds the profile's last seen.
+					if (!IS_BACKGROUND_PAGE && Array.isArray(json?.userPresences)) {
+						recordPresences(json.userPresences)
+					}
+
+					return json
+				}),
 	},
 	privatemessages: {
 		getMessages: (pageNumber = 1, pageSize = 20, messageTab = "Inbox") =>

@@ -391,6 +391,11 @@ export const SettingsModal: SettingsModalState = {
 								desc="Shows the inventory on the profile"
 							></toggle>
 							<toggle
+								label="Last Seen Online"
+								path="lastSeen"
+								desc="Shows when ReBTRoblox last saw an offline user online. Only what this device has seen, so it can be out of date"
+							></toggle>
+							<toggle
 								label="Exact Follower Counts"
 								path="exactCounts"
 								desc="Shows exact follower and following counts"

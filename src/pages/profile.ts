@@ -2,6 +2,7 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
+import { getLastSeen } from "@/feat/lastSeen"
 import { SETTINGS } from "@/feat/settings"
 import {
 	createPager,
@@ -153,6 +154,14 @@ pageInit.profile = () => {
 									<div class="text-label">Place Visits</div>
 									<div class="text-lead text-overflow btr-stats-placevisits"></div>
 								</div>
+								<div class="btr-profile-stat btr-stats-lastseen-stat" style="display:none">
+									<div class="text-label">Last Seen Online</div>
+									<div class="text-lead text-overflow btr-stats-lastseen"></div>
+								</div>
+							</div>
+							<div class="btr-profile-lastseen-note text-label" style="display:none">
+								Last seen is when ReBTRoblox last saw them online on this device, so it may be
+								out of date.
 							</div>
 						</div>
 					</div>
@@ -419,6 +428,30 @@ pageInit.profile = () => {
 				}
 
 				newCont.$req(".btr-profile-stats").style.display = ""
+
+				// Roblox shows when someone is online, so this only fills in the
+				// offline case, and only from what this device has seen.
+				if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
+					RobloxApi.presence.getPresence([userId]).then((presences) => {
+						const presence = presences?.userPresences?.[0]
+						const seen = getLastSeen(userId)
+
+						if (!presence || presence.userPresenceType !== 0 || !seen) {
+							return
+						}
+
+						const when = new Date(seen.at)
+						const value = newCont.$req(".btr-stats-lastseen")
+
+						value.textContent = when.$since()
+						value.title =
+							when.$format("MMM D, YYYY, h:mm A") +
+							(seen.location ? ` in ${seen.location}` : "")
+
+						newCont.$req(".btr-stats-lastseen-stat").style.display = ""
+						newCont.$req(".btr-profile-lastseen-note").style.display = ""
+					})
+				}
 
 				const joinDate = json?.components?.About?.joinDateTime
 				if (joinDate) {
