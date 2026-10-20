@@ -133,6 +133,7 @@ export const openActivity = async (
 
 	// Watching anyone but yourself.
 	const watch = root.$req<HTMLButtonElement>(".btr-activity-watch")
+	let stopWatchingList: (() => void) | null = null
 
 	if (!options.isOwn) {
 		const updateWatch = () => {
@@ -146,12 +147,9 @@ export const openActivity = async (
 
 		watch.hidden = false
 		watch.$on("click", () => setWatched(userId, !isWatched(userId)))
-		// Settings listeners stay for good, so a closed dialog ignores them.
-		SETTINGS.onChange("profile.watchedUsers", () => {
-			if (modal === root) {
-				updateWatch()
-				updateTabs()
-			}
+		stopWatchingList = SETTINGS.onChange("profile.watchedUsers", () => {
+			updateWatch()
+			updateTabs()
 		})
 		updateWatch()
 	}
@@ -209,6 +207,7 @@ export const openActivity = async (
 
 		modal = null
 		stopWatching()
+		stopWatchingList?.()
 		root.classList.remove("btr-settings-open")
 		document.removeEventListener("keydown", onKey, true)
 		setTimeout(() => root.remove(), 320)

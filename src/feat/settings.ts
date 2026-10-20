@@ -523,17 +523,22 @@ export const SETTINGS: Record<string, any> = {
 		}
 	},
 
-	onChange(settingPath: string | ((...args: any[]) => void), fn?: (...args: any[]) => void) {
+	/** Calls fn when the setting changes, until the returned function is called. */
+	onChange(settingPath: string | ((...args: any[]) => void), fn?: (...args: any[]) => void): () => void {
 		if (typeof settingPath === "function") {
 			fn = settingPath
 			settingPath = "*"
 		}
 
-		if (!this._onChangeListeners[settingPath]) {
-			this._onChangeListeners[settingPath] = []
-		}
+		const listeners = (this._onChangeListeners[settingPath] ??= [])
+		listeners.push(fn)
 
-		this._onChangeListeners[settingPath].push(fn)
+		return () => {
+			const index = listeners.indexOf(fn)
+			if (index !== -1) {
+				listeners.splice(index, 1)
+			}
+		}
 	},
 }
 
