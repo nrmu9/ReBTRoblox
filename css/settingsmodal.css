@@ -1640,3 +1640,186 @@ div.btr-setting-text {
 		color: var(--btr-alert-content);
 	}
 }
+
+/* Activity tabs, under the header */
+
+.btr-activity-tabs {
+	display: flex;
+	gap: 4px;
+	margin: 0 32px;
+	border-bottom: 1px solid var(--btr-stroke-muted);
+
+	&[hidden] {
+		display: none;
+	}
+
+	button {
+		position: relative;
+		padding: 8px 12px 12px;
+		background: none;
+		border: none;
+		color: var(--btr-content-muted);
+		font: inherit;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: color 150ms var(--btr-ease-out);
+
+		&::after {
+			content: "";
+			position: absolute;
+			left: 12px;
+			right: 12px;
+			bottom: -1px;
+			height: 2px;
+			border-radius: 1px;
+			background: var(--btr-content-emphasis);
+			transform: scaleX(0);
+			transition: transform 300ms var(--btr-ease-out);
+		}
+
+		&:hover,
+		&[aria-selected="true"] {
+			color: var(--btr-content-emphasis);
+		}
+
+		&[aria-selected="true"]::after {
+			transform: none;
+		}
+	}
+}
+
+.btr-activity-tabs:not([hidden]) + .btr-activity-body {
+	padding-top: 16px;
+}
+
+.btr-activity-panel[hidden] {
+	display: none;
+}
+
+/* Friend log */
+
+.btr-friendlog-filters {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.btr-friendlog-filter {
+	height: 32px;
+	padding: 0 12px;
+	background: var(--btr-standard);
+	border: none;
+	border-radius: 16px;
+	color: var(--btr-content-emphasis);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 150ms var(--btr-ease-out);
+
+	span {
+		color: var(--btr-content-muted);
+		font-weight: 400;
+	}
+
+	&[aria-pressed="true"] {
+		background: var(--btr-contrast);
+		color: var(--btr-inverse);
+
+		span {
+			color: inherit;
+			opacity: 0.7;
+		}
+	}
+}
+
+.btr-friendlog-day {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	margin: 0;
+	padding: 16px 0 8px;
+	background: var(--btr-surface);
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.btr-friendlog-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 8px;
+	border-radius: 8px;
+	color: inherit;
+	text-decoration: none;
+	transition: background-color 150ms var(--btr-ease-out);
+
+	&:hover {
+		background: var(--btr-hover);
+	}
+}
+
+.btr-friendlog-avatar {
+	flex: none;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: var(--btr-surface-raised);
+}
+
+.btr-friendlog-names {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+
+	span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+.btr-friendlog-name {
+	color: var(--btr-content-emphasis);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.btr-friendlog-username {
+	color: var(--btr-content-muted);
+	font-size: 13px;
+}
+
+.btr-friendlog-kind {
+	flex: none;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 12px;
+	font-weight: 700;
+	background: rgb(2 183 87 / 0.16);
+	color: #02b757;
+
+	[data-kind="friendRemoved"] & {
+		background: color-mix(in srgb, var(--btr-alert-content) 16%, transparent);
+		color: var(--btr-alert-content);
+	}
+}
+
+.btr-friendlog-time {
+	flex: none;
+	width: 64px;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.btr-activity-clear-controls {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 8px;
+}

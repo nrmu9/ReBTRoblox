@@ -1,3 +1,4 @@
+import { compareFriendList, onFriendshipChanged } from "@/feat/friendLog"
 import { recordPresences, setLiveSince } from "@/feat/presenceHistory"
 import { SETTINGS } from "@/feat/settings"
 
@@ -18,6 +19,7 @@ let socket: WebSocket | null = null
 let lastMessage = 0
 let attempts = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+let ownUserId: number | null = null
 
 const enabled = () => SETTINGS.get("profile.lastSeen") && SETTINGS.get("profile.liveTracking")
 
@@ -56,8 +58,11 @@ const recordFriends = async () => {
 		return
 	}
 
+	ownUserId = me.id
+
 	const friendIds: number[] = []
 	let cursor = ""
+	let complete = true
 
 	do {
 		const page = await fetch(
@@ -65,11 +70,17 @@ const recordFriends = async () => {
 			{ credentials: "include" },
 		).then((res) => (res.ok ? res.json() : null))
 
+		complete &&= !!page
 		friendIds.push(...(page?.PageItems ?? []).map((item: any) => item.id))
 		cursor = page?.NextCursor ?? ""
 	} while (cursor)
 
 	recordPresences(await presenceOf(friendIds))
+
+	// A list missing a page would read as friends removed.
+	if (complete && SETTINGS.get("profile.friendLog")) {
+		await compareFriendList(me.id, friendIds)
+	}
 }
 
 const onPresenceChanged = async (notifications: any[]) => {
@@ -118,6 +129,18 @@ const onMessage = (message: any) => {
 			try {
 				const notifications = JSON.parse(detail)
 				void onPresenceChanged(Array.isArray(notifications) ? notifications : [notifications])
+			} catch {}
+		} else if (
+			namespace === "FriendshipNotifications" &&
+			ownUserId &&
+			SETTINGS.get("profile.friendLog")
+		) {
+			try {
+				const notifications = JSON.parse(detail)
+
+				for (const notification of Array.isArray(notifications) ? notifications : [notifications]) {
+					void onFriendshipChanged(ownUserId, notification)
+				}
 			} catch {}
 		}
 	} else if (message.type === 7) {

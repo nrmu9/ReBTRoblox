@@ -127,6 +127,7 @@ export const DEFAULT_SETTINGS = {
 		exactCounts: { value: true },
 		lastSeen: { value: true },
 		liveTracking: { value: true },
+		friendLog: { value: true },
 		activityLimit: { value: "250", validValues: ["100", "250", "500", "1000", "2000", "0"] },
 		mutualCommunities: { value: true },
 	},

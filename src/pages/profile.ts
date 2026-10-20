@@ -12,6 +12,7 @@ import {
 	createPager,
 	formatNumber,
 	formatUrlName,
+	loggedInUser,
 	loggedInUserPromise,
 	onPageLoad,
 	onPageReset,
@@ -496,7 +497,9 @@ pageInit.profile = () => {
 									document.querySelector(".stylistic-alts-username")?.textContent?.trim() ||
 									document.title.replace(/ - Roblox$/, "")
 
-								void openActivity(userId, name, () => online)
+								void openActivity(userId, name, () => online, {
+									isOwn: userId === loggedInUser,
+								})
 							})
 						})
 				}

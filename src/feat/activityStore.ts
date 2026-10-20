@@ -32,8 +32,10 @@ export interface ActivityEvent {
 	/** Seen as it happened, rather than found by comparing lists later. */
 	exact?: boolean
 	kind: "friendAdded" | "friendRemoved" | "profileChanged"
-	/** The friend added or removed. */
+	/** The friend added or removed, and their names at the time. */
 	otherId?: number
+	name?: string
+	displayName?: string
 	field?: string
 	before?: unknown
 	after?: unknown
@@ -202,6 +204,16 @@ export const clearUser = async (userId: number): Promise<void> => {
 	announceChange([userId])
 }
 
+/** A user's events, newest first, of the given kinds or all. */
+export const getEvents = async (userId: number, kinds?: string[]): Promise<ActivityEvent[]> => {
+	const db = await openDb()
+	const events: ActivityEvent[] = await done(
+		db.transaction("events").objectStore("events").index("user").getAll(userRange(userId)),
+	)
+
+	return events.filter((event) => !kinds || kinds.includes(event.kind)).toReversed()
+}
+
 export const exportActivity = async () => {
 	const db = await openDb()
 	const tx = db.transaction(["presence", "events"])
@@ -264,6 +276,12 @@ if (IS_BACKGROUND_PAGE) {
 				clearUser(userId).then(() => checkLevel(true)),
 				respond,
 			)
+		},
+		activityEvents(
+			{ userId, kinds }: { userId: number; kinds?: string[] },
+			respond: (value: unknown) => void,
+		) {
+			answer(getEvents(userId, kinds), respond)
 		},
 		activityExport(_: unknown, respond: (value: unknown) => void) {
 			answer(exportActivity(), respond)

@@ -1,6 +1,7 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import { onPresenceHistoryChange, getPresenceHistory, type PresenceSegment } from "@/feat/presenceHistory"
+import { getActivityEvents } from "@/feat/activityData"
+import { getPresenceHistory, onActivityChange, type PresenceSegment } from "@/feat/presenceHistory"
 
 // The activity a profile's last seen opens: everything ReBTRoblox saw the
 // user doing, over the page like the settings panel. Each day is a bar across
@@ -326,10 +327,142 @@ const render = (
 	body.replaceChildren(summary, timeline)
 }
 
+// Friends
+
+const headshots = async (userIds: number[]) => {
+	const urls = new Map<number, string>()
+
+	for (let i = 0; i < userIds.length; i += 100) {
+		const json = await fetch(
+			`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds.slice(i, i + 100).join(",")}&size=48x48&format=Png&isCircular=true`,
+		)
+			.then((res) => res.json())
+			.catch(() => null)
+
+		for (const item of json?.data ?? []) {
+			if (item.imageUrl) {
+				urls.set(item.targetId, item.imageUrl)
+			}
+		}
+	}
+
+	return urls
+}
+
+const FILTERS = [
+	["all", "All"],
+	["friendAdded", "Added"],
+	["friendRemoved", "Removed"],
+] as const
+
+/** A friends list's changes, newest first under a heading for each day. */
+const renderFriends = async (
+	panel: HTMLElement,
+	userId: number,
+	isOwn: boolean,
+	filter: { kind: string },
+) => {
+	const events = (await getActivityEvents(userId, ["friendAdded", "friendRemoved"])) ?? []
+	const shown = events.filter((event) => filter.kind === "all" || event.kind === filter.kind)
+
+	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
+
+	for (const [kind, label] of FILTERS) {
+		const count = kind === "all" ? events.length : events.filter((event) => event.kind === kind).length
+		const button = html`<button
+			type="button"
+			class="btr-friendlog-filter"
+			aria-pressed="${filter.kind === kind}"
+		>
+			${label} <span>${count}</span>
+		</button>`
+
+		button.$on("click", () => {
+			filter.kind = kind
+			void renderFriends(panel, userId, isOwn, filter)
+		})
+
+		toolbar.append(button)
+	}
+
+	const list = html`<div class="btr-friendlog"></div>`
+	let day = -1
+
+	for (const event of shown) {
+		const eventDay = startOfDay(event.at)
+
+		if (eventDay !== day) {
+			day = eventDay
+			list.append(html`<h3 class="btr-friendlog-day">${dayLabel(day)}</h3>`)
+		}
+
+		const row = html`<a
+			class="btr-friendlog-row"
+			href="/users/${event.otherId}/profile"
+			data-kind="${event.kind}"
+		>
+			<img class="btr-friendlog-avatar" alt="" data-user="${event.otherId}" />
+			<span class="btr-friendlog-names">
+				<span class="btr-friendlog-name"
+					>${event.displayName || event.name || `User ${event.otherId}`}</span
+				>
+				<span class="btr-friendlog-username">${event.name ? `@${event.name}` : ""}</span>
+			</span>
+			<span class="btr-friendlog-kind">${event.kind === "friendAdded" ? "Added" : "Removed"}</span>
+			<span class="btr-friendlog-time">${new Date(event.at).$format(clockFormat())}</span>
+		</a>`
+
+		// Found by comparing lists, so it happened some time before this.
+		if (!event.exact) {
+			row.$req(".btr-friendlog-time").title = "Noticed at this time"
+		}
+
+		list.append(row)
+	}
+
+	if (!shown.length) {
+		list.append(
+			html`<p class="btr-activity-empty">
+				${
+					events.length
+						? "Nothing here with this filter."
+						: isOwn
+							? "No changes yet. Friends you add or lose from now on show up here."
+							: "No changes to their friends recorded yet."
+				}
+			</p>`,
+		)
+	}
+
+	panel.replaceChildren(toolbar, list)
+
+	const ids = [...new Set(shown.map((event) => event.otherId!))]
+	const urls = await headshots(ids)
+
+	for (const img of list.$findAll<HTMLImageElement>(".btr-friendlog-avatar")) {
+		const url = urls.get(Number(img.dataset.user))
+		if (url) {
+			img.src = url
+		}
+	}
+}
+
+// The dialog
+
 let modal: HTMLElement | null = null
 
-/** `isOnline` is asked again on every change, as the profile keeps it current. */
-export const openActivity = async (userId: number, name: string, isOnline: () => boolean): Promise<void> => {
+type Tab = "activity" | "friends"
+
+/**
+ * Someone's activity, over the page. `isOnline` is asked again on every
+ * change, as the profile keeps it current.
+ */
+export const openActivity = async (
+	userId: number,
+	name: string,
+	isOnline: () => boolean,
+	options: { tab?: Tab; isOwn?: boolean } = {},
+): Promise<void> => {
 	modal?.remove()
 
 	const opener = document.activeElement as HTMLElement | null
@@ -356,7 +489,14 @@ export const openActivity = async (userId: number, name: string, isOnline: () =>
 					</svg>
 				</button>
 			</header>
-			<div class="btr-activity-body"></div>
+			<div class="btr-activity-tabs" role="tablist" hidden>
+				<button type="button" role="tab" data-tab="activity">Activity</button>
+				<button type="button" role="tab" data-tab="friends">Friends</button>
+			</div>
+			<div class="btr-activity-body">
+				<div class="btr-activity-panel" data-tab="activity" role="tabpanel"></div>
+				<div class="btr-activity-panel" data-tab="friends" role="tabpanel"></div>
+			</div>
 		</div>
 	</div>`
 
@@ -366,16 +506,54 @@ export const openActivity = async (userId: number, name: string, isOnline: () =>
 	root.classList.toggle("btr-dark-theme", !!document.querySelector(".dark-theme:not(.btr-settings-modal)"))
 
 	const body = root.$req(".btr-activity-body")
-	const segments = await getPresenceHistory(userId)
+	const activityPanel = body.$req('[data-tab="activity"]')
+	const friendsPanel = body.$req('[data-tab="friends"]')
+	const friendFilter = { kind: "all" }
+
+	const [segments, friendEvents] = await Promise.all([
+		getPresenceHistory(userId),
+		options.isOwn ? Promise.resolve(null) : getActivityEvents(userId, ["friendAdded", "friendRemoved"]),
+	])
 
 	// The latest day starts open, the rest wait for a click.
 	const latest = Math.max(...blocksByDay(segments, isOnline()).keys())
 	const expanded = new Set(Number.isFinite(latest) ? [latest] : [])
 
-	render(body, segments, isOnline(), expanded, true)
-	const stopWatching = onPresenceHistoryChange(userId, (changed) =>
-		render(body, changed, isOnline(), expanded),
-	)
+	render(activityPanel, segments, isOnline(), expanded, true)
+
+	// Friends shows for your own list, and anyone whose list has been followed.
+	const tabs = root.$req(".btr-activity-tabs")
+	tabs.hidden = !options.isOwn && !friendEvents?.length
+
+	const selectTab = (tab: Tab) => {
+		for (const button of tabs.$findAll<HTMLElement>("[data-tab]")) {
+			const selected = button.dataset.tab === tab
+			button.setAttribute("aria-selected", String(selected))
+			button.tabIndex = selected ? 0 : -1
+		}
+
+		for (const panel of body.$findAll<HTMLElement>(".btr-activity-panel")) {
+			panel.hidden = panel.dataset.tab !== tab
+		}
+
+		if (tab === "friends" && !friendsPanel.childElementCount) {
+			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)
+		}
+	}
+
+	for (const button of tabs.$findAll<HTMLElement>("[data-tab]")) {
+		button.$on("click", () => selectTab(button.dataset.tab as Tab))
+	}
+
+	selectTab(tabs.hidden ? "activity" : (options.tab ?? "activity"))
+
+	const stopWatching = onActivityChange([userId], async () => {
+		render(activityPanel, await getPresenceHistory(userId), isOnline(), expanded)
+
+		if (friendsPanel.childElementCount) {
+			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)
+		}
+	})
 
 	const close = () => {
 		if (modal !== root) {

@@ -1,5 +1,5 @@
 import { backgroundScript } from "@/core/messaging"
-import type { ActivityUsage } from "@/feat/activityStore"
+import type { ActivityEvent, ActivityUsage } from "@/feat/activityStore"
 
 // The page side of the activity database, which only the background opens.
 
@@ -14,6 +14,9 @@ export const clearActivityBefore = (before: number | null) => ask<boolean>("acti
 export const clearUserActivity = (userId: number) => ask<boolean>("activityClearUser", userId)
 
 export const exportActivity = () => ask<unknown>("activityExport")
+
+export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][]) =>
+	ask<ActivityEvent[] | null>("activityEvents", { userId, kinds })
 
 // One decimal, dropped when it is a zero: 250 MB, 12.4 MB.
 const oneDecimal = (value: number) => String(Number(value.toFixed(1)))

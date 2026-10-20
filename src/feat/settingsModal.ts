@@ -5,7 +5,8 @@ import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
-import { robloxExperiments } from "@/pages/common"
+import { loggedInUser, robloxExperiments } from "@/pages/common"
+import { openActivity } from "@/feat/activityModal"
 import { discoverExperimentHints, getExperimentPage, type ExperimentHint } from "@/feat/experimentHints"
 import { HOME_ROWS_KEY } from "@/pages/home"
 import { btrLocalStorage } from "@/core/storage"
@@ -472,6 +473,7 @@ export const SettingsModal: SettingsModalState = {
 							<toggle
 								label="Last Seen Online"
 								path="lastSeen"
+								require="true"
 								desc="Shows when someone was last online and a timeline of what they were doing, as seen by ReBTRoblox on this device"
 							></toggle>
 							<toggle
@@ -480,11 +482,32 @@ export const SettingsModal: SettingsModalState = {
 								require="lastSeen"
 								desc="Records your friends' activity as it happens, even with no Roblox tab open, while the browser runs"
 							></toggle>
+							<toggle
+								label="Friend Log"
+								path="friendLog"
+								require="liveTracking"
+								desc="Records friends you add and lose, as it happens or the next time the browser runs"
+							></toggle>
+							<div
+								class="btr-setting-row"
+								data-search="friend log unfriend removed added history"
+							>
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">View Friend Log</span>
+									<span class="btr-setting-desc"
+										>Everyone added to or removed from your friends</span
+									>
+								</div>
+								<button type="button" class="btr-settings-button btr-activity-friendlog">
+									View
+								</button>
+							</div>
 
 							<heading>Stored Activity</heading>
 							<choice
 								label="Storage Limit"
 								path="activityLimit"
+								require="true"
 								desc="Recording stops at this size until you clear some or raise it. Nothing is ever deleted on its own"
 							>
 								<option value="100">100 MB</option>
@@ -512,7 +535,7 @@ export const SettingsModal: SettingsModalState = {
 										>Deletes activity last seen before then</span
 									>
 								</div>
-								<div class="btr-setting-selects">
+								<div class="btr-activity-clear-controls">
 									<span class="btr-select"
 										><select
 											class="btr-activity-age"
@@ -1452,6 +1475,12 @@ export const SettingsModal: SettingsModalState = {
 				void clearActivityBefore(null).then(refresh)
 			})
 
+			page.$req(".btr-activity-friendlog").$on("click", () => {
+				if (loggedInUser > 0) {
+					void openActivity(loggedInUser, "You", () => false, { tab: "friends", isOwn: true })
+				}
+			})
+
 			page.$req(".btr-activity-export").$on("click", async () => {
 				const data = await exportActivity()
 
@@ -1638,6 +1667,7 @@ export const SettingsModal: SettingsModalState = {
 				"general.hoverPreviewMode",
 				"profile.liveTracking",
 				"profile.activityLimit",
+				"profile.friendLog",
 				"itemdetails.itemPreviewer",
 				"itemdetails.explorerButton",
 				"itemdetails.downloadButton",
