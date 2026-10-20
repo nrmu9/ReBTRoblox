@@ -1885,8 +1885,7 @@ div.btr-setting-text {
 	}
 }
 
-.btr-friendlog > .btr-log-day:first-child,
-.btr-change-day:first-child .btr-log-day {
+.btr-log > .btr-log-day:first-child {
 	margin-top: 8px;
 }
 
@@ -1918,15 +1917,7 @@ div.btr-setting-text {
 	font-size: 13px;
 }
 
-.btr-change-list {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
 
-.btr-change-day {
-	list-style: none;
-}
 
 .btr-change {
 	display: flex;
@@ -2117,4 +2108,12 @@ div.btr-setting-text {
 	height: 32px;
 	border-radius: 50%;
 	object-fit: cover;
+}
+
+/* Filters hide entries, headings and the more button by attribute, which the
+   display set on each would otherwise override. */
+.btr-log > [hidden],
+.btr-activity-more[hidden],
+.btr-activity-empty[hidden] {
+	display: none;
 }

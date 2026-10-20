@@ -455,133 +455,232 @@ const render = (
 
 // Friends
 
-const headshots = async (userIds: number[]) => {
-	const urls = new Map<number, string>()
+// Images found once stay found, so a log built again shows them at once.
+const imageCache = new Map<string, string>()
 
-	for (let i = 0; i < userIds.length; i += 100) {
-		const json = await fetch(
-			`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds.slice(i, i + 100).join(",")}&size=48x48&format=Png&isCircular=true`,
-		)
+/** Thumbnail urls for ids of one kind, asked for 100 at a time and cached. */
+const thumbnails = async (kind: "headshot" | "badge", ids: number[]) => {
+	const missing = [...new Set(ids)].filter((id) => !imageCache.has(`${kind}:${id}`))
+	const url =
+		kind === "headshot"
+			? (batch: number[]) =>
+					`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${batch.join(",")}&size=48x48&format=Png&isCircular=true`
+			: (batch: number[]) =>
+					`https://thumbnails.roblox.com/v1/badges/icons?badgeIds=${batch.join(",")}&size=150x150&format=Png`
+
+	for (let i = 0; i < missing.length; i += 100) {
+		const json = await fetch(url(missing.slice(i, i + 100)))
 			.then((res) => res.json())
 			.catch(() => null)
 
 		for (const item of json?.data ?? []) {
 			if (item.imageUrl) {
-				urls.set(item.targetId, item.imageUrl)
+				imageCache.set(`${kind}:${item.targetId}`, item.imageUrl)
 			}
 		}
 	}
 
-	return urls
+	return (id: number) => imageCache.get(`${kind}:${id}`)
 }
 
-const FILTERS = [
+interface LogOptions {
+	panel: HTMLElement
+	events: ActivityEvent[]
+	/** [key, label] pairs, the first being everything. */
+	groups: ReadonlyArray<readonly [string, string]>
+	groupOf: (event: ActivityEvent) => string
+	entry: (event: ActivityEvent) => HTMLElement
+	/** Kept across rebuilds, so a live update stays on the chosen filter. */
+	state: { group: string }
+	/** Shown between the filters and the list. */
+	intro?: HTMLElement
+	/** Hides filters with nothing in them. */
+	hideEmpty?: boolean
+	/** Called with each page of entries once they are in the page. */
+	onPage?: (entries: HTMLElement[]) => void
+}
+
+/**
+ * A log of events by day, built a page at a time. Filters only show and hide
+ * what is built, so switching between them never reloads or redraws it.
+ */
+const buildLog = (options: LogOptions) => {
+	const { panel, events, groups, groupOf, entry, state } = options
+	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
+	const list = html`<div class="btr-log"></div>`
+	const empty = html`<p class="btr-activity-empty" hidden>Nothing here yet.</p>`
+	const more = html<HTMLButtonElement>`<button type="button" class="btr-activity-more">Show more</button>`
+	const chips: HTMLElement[] = []
+	let built = 0
+	let lastDay = -1
+
+	const matches = (group: string) => state.group === groups[0][0] || group === state.group
+
+	const appendPage = () => {
+		const page = events.slice(built, built + PAGE_ROWS)
+		const entries: HTMLElement[] = []
+
+		for (const event of page) {
+			const day = startOfDay(event.at)
+
+			if (day !== lastDay) {
+				lastDay = day
+				list.append(dayHeading(day))
+			}
+
+			const element = entry(event)
+			element.dataset.group = groupOf(event)
+			entries.push(element)
+			list.append(element)
+		}
+
+		built += page.length
+		options.onPage?.(entries)
+	}
+
+	const apply = () => {
+		// A filter with nothing built yet loads on until it has something.
+		while (built < events.length && !events.slice(0, built).some((event) => matches(groupOf(event)))) {
+			appendPage()
+		}
+
+		let heading: HTMLElement | null = null
+		let headingShown = false
+		let anyShown = false
+
+		for (const child of list.children as HTMLCollectionOf<HTMLElement>) {
+			if (child.classList.contains("btr-log-day")) {
+				if (heading) {
+					heading.hidden = !headingShown
+				}
+				heading = child
+				headingShown = false
+			} else {
+				child.hidden = !matches(child.dataset.group ?? "")
+				headingShown ||= !child.hidden
+				anyShown ||= !child.hidden
+			}
+		}
+
+		if (heading) {
+			heading.hidden = !headingShown
+		}
+
+		for (const chip of chips) {
+			chip.setAttribute("aria-pressed", String(chip.dataset.group === state.group))
+		}
+
+		empty.hidden = anyShown
+		more.hidden = built >= events.length
+		more.textContent = `Show more (${events.length - built})`
+	}
+
+	for (const [group, label] of groups) {
+		const count =
+			group === groups[0][0] ? events.length : events.filter((event) => groupOf(event) === group).length
+
+		if (options.hideEmpty && group !== groups[0][0] && !count) {
+			continue
+		}
+
+		const chip = html`<button type="button" class="btr-friendlog-filter" data-group="${group}">
+			${label} <span>${count}</span>
+		</button>`
+
+		chip.$on("click", () => {
+			state.group = group
+			apply()
+		})
+
+		chips.push(chip)
+		toolbar.append(chip)
+	}
+
+	more.$on("click", () => {
+		appendPage()
+		apply()
+	})
+
+	appendPage()
+	apply()
+	panel.replaceChildren(toolbar, ...(options.intro ? [options.intro] : []), list, empty, more)
+}
+
+const FRIEND_GROUPS = [
 	["all", "All"],
 	["friendAdded", "Added"],
 	["friendRemoved", "Removed"],
 ] as const
+
+const friendEntry = (event: ActivityEvent) => {
+	const row = html`<a
+		class="btr-friendlog-row"
+		href="/users/${event.otherId}/profile"
+		data-kind="${event.kind}"
+	>
+		<img class="btr-friendlog-avatar" alt="" data-user="${event.otherId}" />
+		<span class="btr-friendlog-names">
+			<span class="btr-friendlog-name"
+				>${event.displayName || event.name || `User ${event.otherId}`}</span
+			>
+			<span class="btr-friendlog-username">${event.name ? `@${event.name}` : ""}</span>
+		</span>
+		<span class="btr-friendlog-kind">${event.kind === "friendAdded" ? "Added" : "Removed"}</span>
+		<span class="btr-friendlog-time">${new Date(event.at).$format(clockFormat())}</span>
+	</a>`
+
+	// Found by comparing lists, so it happened some time before this.
+	if (!event.exact) {
+		row.$req(".btr-friendlog-time").title = "Noticed at this time"
+	}
+
+	return row
+}
 
 /** A friends list's changes, newest first under a heading for each day. */
 const renderFriends = async (
 	panel: HTMLElement,
 	userId: number,
 	isOwn: boolean,
-	filter: { kind: string; limit?: number },
+	state: { group: string },
 ) => {
 	const events = (await getActivityEvents(userId, ["friendAdded", "friendRemoved"])) ?? []
-	const matching = events.filter((event) => filter.kind === "all" || event.kind === filter.kind)
-	const shown = matching.slice(0, filter.limit ?? PAGE_ROWS)
 
-	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
-
-	for (const [kind, label] of FILTERS) {
-		const count = kind === "all" ? events.length : events.filter((event) => event.kind === kind).length
-		const button = html`<button
-			type="button"
-			class="btr-friendlog-filter"
-			aria-pressed="${filter.kind === kind}"
-		>
-			${label} <span>${count}</span>
-		</button>`
-
-		button.$on("click", () => {
-			filter.kind = kind
-			filter.limit = PAGE_ROWS
-			void renderFriends(panel, userId, isOwn, filter)
-		})
-
-		toolbar.append(button)
-	}
-
-	const list = html`<div class="btr-friendlog"></div>`
-	let day = -1
-
-	for (const event of shown) {
-		const eventDay = startOfDay(event.at)
-
-		if (eventDay !== day) {
-			day = eventDay
-			list.append(dayHeading(day))
-		}
-
-		const row = html`<a
-			class="btr-friendlog-row"
-			href="/users/${event.otherId}/profile"
-			data-kind="${event.kind}"
-		>
-			<img class="btr-friendlog-avatar" alt="" data-user="${event.otherId}" />
-			<span class="btr-friendlog-names">
-				<span class="btr-friendlog-name"
-					>${event.displayName || event.name || `User ${event.otherId}`}</span
-				>
-				<span class="btr-friendlog-username">${event.name ? `@${event.name}` : ""}</span>
-			</span>
-			<span class="btr-friendlog-kind">${event.kind === "friendAdded" ? "Added" : "Removed"}</span>
-			<span class="btr-friendlog-time">${new Date(event.at).$format(clockFormat())}</span>
-		</a>`
-
-		// Found by comparing lists, so it happened some time before this.
-		if (!event.exact) {
-			row.$req(".btr-friendlog-time").title = "Noticed at this time"
-		}
-
-		list.append(row)
-	}
-
-	if (matching.length > shown.length) {
-		list.append(
-			showMore(`Show more (${matching.length - shown.length})`, () => {
-				filter.limit = shown.length + PAGE_ROWS
-				void renderFriends(panel, userId, isOwn, filter)
-			}),
-		)
-	}
-
-	if (!shown.length) {
-		list.append(
+	if (!events.length) {
+		panel.replaceChildren(
 			html`<p class="btr-activity-empty">
 				${
-					events.length
-						? "Nothing here with this filter."
-						: isOwn
-							? "No changes yet. Friends you add or lose from now on show up here."
-							: "No changes to their friends recorded yet."
+					isOwn
+						? "No changes yet. Friends you add or lose from now on show up here."
+						: "No changes to their friends recorded yet."
 				}
 			</p>`,
 		)
+		return
 	}
 
-	panel.replaceChildren(toolbar, list)
+	buildLog({
+		panel,
+		events,
+		groups: FRIEND_GROUPS,
+		groupOf: (event) => event.kind,
+		entry: friendEntry,
+		state,
+		onPage: async (entries) => {
+			const images = entries.map((row) => row.$req<HTMLImageElement>(".btr-friendlog-avatar"))
+			const urlOf = await thumbnails(
+				"headshot",
+				images.map((img) => Number(img.dataset.user)),
+			)
 
-	const ids = [...new Set(shown.map((event) => event.otherId!))]
-	const urls = await headshots(ids)
-
-	for (const img of list.$findAll<HTMLImageElement>(".btr-friendlog-avatar")) {
-		const url = urls.get(Number(img.dataset.user))
-		if (url) {
-			img.src = url
-		}
-	}
+			for (const img of images) {
+				const url = urlOf(Number(img.dataset.user))
+				if (url) {
+					img.src = url
+				}
+			}
+		},
+	})
 }
 
 // Profile changes
@@ -650,12 +749,12 @@ const changeEntry = (event: ActivityEvent) => {
 	const group = groupOf(event)
 	const iconName = event.field === "groupJoined" ? "joined" : event.field === "groupLeft" ? "left" : group
 
-	const item = html`<li class="btr-change" data-icon="${iconName}">
+	const item = html`<div class="btr-change" data-icon="${iconName}">
 		<div class="btr-change-body">
 			<div class="btr-change-title"></div>
 		</div>
 		<span class="btr-change-time">${new Date(event.at).$format(clockFormat())}</span>
-	</li>`
+	</div>`
 
 	item.prepend(icon(iconName))
 
@@ -733,116 +832,49 @@ const changeEntry = (event: ActivityEvent) => {
 	return item
 }
 
-const badgeIcons = async (badgeIds: number[]) => {
-	const urls = new Map<number, string>()
-
-	for (let i = 0; i < badgeIds.length; i += 100) {
-		const json = await fetch(
-			`https://thumbnails.roblox.com/v1/badges/icons?badgeIds=${badgeIds.slice(i, i + 100).join(",")}&size=150x150&format=Png`,
-		)
-			.then((res) => res.json())
-			.catch(() => null)
-
-		for (const item of json?.data ?? []) {
-			if (item.imageUrl) {
-				urls.set(item.targetId, item.imageUrl)
-			}
-		}
-	}
-
-	return urls
-}
-
 /** What changed on someone's profile, newest first by day, filtered by kind of change. */
-const renderChanges = async (
-	panel: HTMLElement,
-	userId: number,
-	filter: { group: string; limit?: number },
-) => {
+const renderChanges = async (panel: HTMLElement, userId: number, state: { group: string }) => {
 	const events = (await getActivityEvents(userId, ["profileChanged"])) ?? []
-	const matching = events.filter((event) => filter.group === "all" || groupOf(event) === filter.group)
-	const shown = matching.slice(0, filter.limit ?? PAGE_ROWS)
-
-	// Only the kinds of change that happened get a chip, besides All.
-	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Show"></div>`
-
-	for (const [group, label] of CHANGE_GROUPS) {
-		const count =
-			group === "all" ? events.length : events.filter((event) => groupOf(event) === group).length
-
-		if (group !== "all" && !count) {
-			continue
-		}
-
-		const button = html`<button
-			type="button"
-			class="btr-friendlog-filter"
-			aria-pressed="${filter.group === group}"
-		>
-			${label} <span>${count}</span>
-		</button>`
-
-		button.$on("click", () => {
-			filter.group = group
-			filter.limit = PAGE_ROWS
-			void renderChanges(panel, userId, filter)
-		})
-
-		toolbar.append(button)
-	}
-
-	const note = html`<p class="btr-change-note">
-		Profiles are checked every few hours, so most changes happened some time before the time shown. Badges
-		show when they were earned.
-	</p>`
-
-	const list = html`<ol class="btr-change-list"></ol>`
-	let day = -1
-
-	for (const event of shown) {
-		const eventDay = startOfDay(event.at)
-
-		if (eventDay !== day) {
-			day = eventDay
-			list.append(html`<li class="btr-change-day"></li>`)
-			list.lastElementChild!.append(dayHeading(day))
-		}
-
-		list.append(changeEntry(event))
-	}
-
-	if (matching.length > shown.length) {
-		list.append(
-			showMore(`Show more (${matching.length - shown.length})`, () => {
-				filter.limit = shown.length + PAGE_ROWS
-				void renderChanges(panel, userId, filter)
-			}),
-		)
-	}
 
 	if (!events.length) {
 		panel.replaceChildren(
 			html`<p class="btr-activity-empty">
-				No changes yet. Their names, bio, avatar and communities are checked every few hours.
+				No changes yet. Their names, bio, avatar, communities and badges are checked every few hours.
 			</p>`,
 		)
 		return
 	}
 
-	panel.replaceChildren(toolbar, note, list)
-
-	const badges = [...list.$findAll<HTMLElement>("[data-badge]")]
-	const icons = badges.length ? await badgeIcons(badges.map((item) => Number(item.dataset.badge))) : null
-
-	for (const item of badges) {
-		const url = icons?.get(Number(item.dataset.badge))
-
-		if (url) {
-			item.$req(".btr-change-icon").replaceWith(
-				html`<img class="btr-change-badge" alt="" src="${url}" />`,
+	buildLog({
+		panel,
+		events,
+		groups: CHANGE_GROUPS,
+		groupOf,
+		entry: changeEntry,
+		state,
+		hideEmpty: true,
+		intro: html`<p class="btr-change-note">
+			Profiles are checked every few hours, so most changes happened some time before the time shown.
+			Badges show when they were earned.
+		</p>`,
+		onPage: async (entries) => {
+			const badges = entries.filter((item) => item.dataset.badge)
+			const urlOf = await thumbnails(
+				"badge",
+				badges.map((item) => Number(item.dataset.badge)),
 			)
-		}
-	}
+
+			for (const item of badges) {
+				const url = urlOf(Number(item.dataset.badge))
+
+				if (url) {
+					item.$find(".btr-change-icon")?.replaceWith(
+						html`<img class="btr-change-badge" alt="" src="${url}" />`,
+					)
+				}
+			}
+		},
+	})
 }
 
 // Watching
@@ -928,7 +960,7 @@ export const openActivity = async (
 	const activityPanel = body.$req('[data-tab="activity"]')
 	const friendsPanel = body.$req('[data-tab="friends"]')
 	const changesPanel = body.$req('[data-tab="changes"]')
-	const friendFilter = { kind: "all" }
+	const friendFilter = { group: "all" }
 	const changeFilter = { group: "all" }
 
 	const [history, playedTogether, events] = await Promise.all([
