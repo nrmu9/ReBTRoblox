@@ -6,11 +6,17 @@ import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { loggedInUser, robloxExperiments } from "@/pages/common"
-import { openActivity } from "@/feat/activityModal"
+import { openActivity, setWatched } from "@/feat/activityModal"
 import { discoverExperimentHints, getExperimentPage, type ExperimentHint } from "@/feat/experimentHints"
 import { HOME_ROWS_KEY } from "@/pages/home"
 import { btrLocalStorage } from "@/core/storage"
-import { clearActivityBefore, exportActivity, formatBytes, getActivityUsage } from "@/feat/activityData"
+import {
+	clearActivityBefore,
+	exportActivity,
+	formatBytes,
+	getActivityUsage,
+	getUserNames,
+} from "@/feat/activityData"
 
 interface SettingsModalState {
 	enabled: boolean
@@ -502,6 +508,14 @@ export const SettingsModal: SettingsModalState = {
 									View
 								</button>
 							</div>
+
+							<heading>Watched People</heading>
+							<p class="btr-exp-intro">
+								ReBTRoblox checks on these people from the background: where they are, whose
+								friends they add and lose, and changes to their profile. Watch someone from
+								Last Seen Online on their profile.
+							</p>
+							<div class="btr-setting-card btr-activity-watched"></div>
 
 							<heading>Stored Activity</heading>
 							<choice
@@ -1462,7 +1476,57 @@ export const SettingsModal: SettingsModalState = {
 						: "Nearly full. Recording stops once it reaches the limit."
 			}
 
-			this.refreshActivity = refresh
+			const watchedCard = page.$req(".btr-activity-watched")
+
+			const refreshWatched = async () => {
+				let ids: number[] = []
+
+				try {
+					ids = JSON.parse(SETTINGS.get("profile.watchedUsers") || "[]")
+				} catch {}
+
+				if (!ids.length) {
+					watchedCard.replaceChildren(
+						html`<div class="btr-setting-row">
+							<span class="btr-setting-desc">No one yet.</span>
+						</div>`,
+					)
+					return
+				}
+
+				const names = await getUserNames(ids)
+
+				watchedCard.replaceChildren(
+					...ids.map((id) => {
+						const user = names.get(id)
+						const row = html`<div class="btr-setting-row">
+							<div class="btr-setting-text">
+								<a class="btr-setting-label" href="/users/${id}/profile"
+									>${user?.displayName ?? `User ${id}`}</a
+								>
+								<span class="btr-setting-desc">${user ? `@${user.name}` : ""}</span>
+							</div>
+							<button type="button" class="btr-settings-button btr-activity-view">
+								Activity
+							</button>
+							<button type="button" class="btr-settings-button">Stop watching</button>
+						</div>`
+
+						row.$req(".btr-activity-view").$on("click", () => {
+							void openActivity(id, user ? `@${user.name}` : `User ${id}`, () => false)
+						})
+						row.$req("button:last-child").$on("click", () => setWatched(id, false))
+						return row
+					}),
+				)
+			}
+
+			SETTINGS.onChange("profile.watchedUsers", () => void refreshWatched())
+
+			this.refreshActivity = () => {
+				void refreshWatched()
+				return refresh()
+			}
 			// The background works the new limit out first.
 			SETTINGS.onChange("profile.activityLimit", () => setTimeout(refresh, 300))
 

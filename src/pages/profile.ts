@@ -476,16 +476,18 @@ pageInit.profile = () => {
 									online = current.type > 0
 								}
 
+								// Shown with no history too, as the dialog is where watching starts.
 								const when = lastSeenAt(segments)
-								if (!online && !when) {
-									return
-								}
-
 								const value = stat.$req(".btr-stats-lastseen")
-								value.textContent = online ? "Now" : new Date(when!).$since()
-								value.title = online
-									? ""
-									: new Date(when!).$format(`MMM D, YYYY, ${clockFormat()}`)
+								value.textContent = online
+									? "Now"
+									: when
+										? new Date(when).$since()
+										: "Not seen yet"
+								value.title =
+									online || !when
+										? ""
+										: new Date(when).$format(`MMM D, YYYY, ${clockFormat()}`)
 								stat.style.display = ""
 							}
 

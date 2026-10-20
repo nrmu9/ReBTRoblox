@@ -1,6 +1,8 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
 import { getActivityEvents, getUserNames } from "@/feat/activityData"
+import type { ActivityEvent } from "@/feat/activityStore"
+import { SETTINGS } from "@/feat/settings"
 import {
 	getPlayedTogether,
 	getPresenceHistory,
@@ -497,11 +499,119 @@ const renderFriends = async (
 	}
 }
 
+// Profile changes
+
+const changeText = (event: ActivityEvent): Array<string | Node> => {
+	const group = (value: unknown) => {
+		const { id, name } = value as { id: number; name: string }
+		return html`<a href="/communities/${id}">${name}</a>`
+	}
+
+	switch (event.field) {
+		case "name":
+			return [`Changed their username from @${event.before} to @${event.after}`]
+		case "displayName":
+			return [`Changed their display name from ${event.before} to ${event.after}`]
+		case "description":
+			return ["Changed their bio"]
+		case "isBanned":
+			return [event.after ? "Was banned" : "Was unbanned"]
+		case "avatar":
+			return ["Changed their avatar"]
+		case "groupJoined":
+			return ["Joined ", group(event.after)]
+		case "groupLeft":
+			return ["Left ", group(event.before)]
+		default:
+			return [`Changed ${event.field}`]
+	}
+}
+
+/** What changed on someone's profile, newest first under a heading for each day. */
+const renderChanges = async (panel: HTMLElement, userId: number) => {
+	const events = (await getActivityEvents(userId, ["profileChanged"])) ?? []
+	const list = html`<div class="btr-friendlog"></div>`
+	let day = -1
+
+	for (const event of events) {
+		const eventDay = startOfDay(event.at)
+
+		if (eventDay !== day) {
+			day = eventDay
+			list.append(html`<h3 class="btr-friendlog-day">${dayLabel(day)}</h3>`)
+		}
+
+		const row = html`<div class="btr-change-row">
+			<div class="btr-change-text"></div>
+			<span class="btr-friendlog-time" title="Noticed at this time"
+				>${new Date(event.at).$format(clockFormat())}</span
+			>
+		</div>`
+
+		row.$req(".btr-change-text").append(...changeText(event))
+
+		if (event.field === "description") {
+			const details = html`<details class="btr-change-details">
+				<summary>Show the change</summary>
+				<div class="btr-change-before"></div>
+				<div class="btr-change-after"></div>
+			</details>`
+
+			details.$req(".btr-change-before").textContent = String(event.before || "(empty)")
+			details.$req(".btr-change-after").textContent = String(event.after || "(empty)")
+			row.$req(".btr-change-text").append(details)
+		} else if (event.field === "avatar") {
+			const images = html`<div class="btr-change-avatars">
+				<img alt="Before" src="${event.before}" />
+				<span aria-hidden="true">→</span>
+				<img alt="After" src="${event.after}" />
+			</div>`
+
+			// Roblox keeps these images for 30 days.
+			for (const img of images.$findAll<HTMLImageElement>("img")) {
+				img.$on("error", () => img.classList.add("btr-change-expired"))
+			}
+
+			row.$req(".btr-change-text").append(images)
+		}
+
+		list.append(row)
+	}
+
+	if (!events.length) {
+		list.append(
+			html`<p class="btr-activity-empty">
+				No changes yet. Names, bio, avatar and communities are checked every few hours.
+			</p>`,
+		)
+	}
+
+	panel.replaceChildren(list)
+}
+
+// Watching
+
+const watchedList = (): number[] => {
+	try {
+		const list = JSON.parse(SETTINGS.get("profile.watchedUsers") || "[]")
+		return Array.isArray(list) ? list : []
+	} catch {
+		return []
+	}
+}
+
+export const isWatched = (userId: number): boolean => watchedList().includes(userId)
+
+export const setWatched = (userId: number, watched: boolean): void => {
+	const list = watchedList().filter((id) => id !== userId)
+	SETTINGS.set("profile.watchedUsers", JSON.stringify(watched ? [...list, userId] : list))
+}
+
 // The dialog
 
 let modal: HTMLElement | null = null
 
-type Tab = "activity" | "friends"
+type Tab = "activity" | "friends" | "changes"
 
 /**
  * Someone's activity, over the page. `isOnline` is asked again on every
@@ -523,6 +633,7 @@ export const openActivity = async (
 					<h2 id="btr-activity-title" class="btr-activity-title">Activity</h2>
 					<div class="btr-activity-subtitle">${name}</div>
 				</div>
+				<button type="button" class="btr-activity-watch" aria-pressed="false" hidden></button>
 				<button
 					type="button"
 					class="btr-settings-icon-button btr-activity-close"
@@ -542,10 +653,12 @@ export const openActivity = async (
 			<div class="btr-activity-tabs" role="tablist" hidden>
 				<button type="button" role="tab" data-tab="activity">Activity</button>
 				<button type="button" role="tab" data-tab="friends">Friends</button>
+				<button type="button" role="tab" data-tab="changes">Changes</button>
 			</div>
 			<div class="btr-activity-body">
 				<div class="btr-activity-panel" data-tab="activity" role="tabpanel"></div>
 				<div class="btr-activity-panel" data-tab="friends" role="tabpanel"></div>
+				<div class="btr-activity-panel" data-tab="changes" role="tabpanel"></div>
 			</div>
 		</div>
 	</div>`
@@ -558,12 +671,13 @@ export const openActivity = async (
 	const body = root.$req(".btr-activity-body")
 	const activityPanel = body.$req('[data-tab="activity"]')
 	const friendsPanel = body.$req('[data-tab="friends"]')
+	const changesPanel = body.$req('[data-tab="changes"]')
 	const friendFilter = { kind: "all" }
 
-	const [segments, together, friendEvents] = await Promise.all([
+	const [segments, together, events] = await Promise.all([
 		getPresenceHistory(userId),
 		loadTogether(userId),
-		options.isOwn ? Promise.resolve(null) : getActivityEvents(userId, ["friendAdded", "friendRemoved"]),
+		options.isOwn ? Promise.resolve(null) : getActivityEvents(userId),
 	])
 
 	// The latest day starts open, the rest wait for a click.
@@ -572,9 +686,46 @@ export const openActivity = async (
 
 	render(activityPanel, segments, isOnline(), together, expanded, true)
 
-	// Friends shows for your own list, and anyone whose list has been followed.
+	// Friends shows for your own list and for people watched now or before,
+	// Changes for people watched now or before.
 	const tabs = root.$req(".btr-activity-tabs")
-	tabs.hidden = !options.isOwn && !friendEvents?.length
+	const friendsTab = tabs.$req('[data-tab="friends"]')
+	const changesTab = tabs.$req('[data-tab="changes"]')
+
+	const updateTabs = () => {
+		const watched = !options.isOwn && isWatched(userId)
+		friendsTab.hidden =
+			!options.isOwn && !watched && !events?.some((event) => event.kind !== "profileChanged")
+		changesTab.hidden = !watched && !events?.some((event) => event.kind === "profileChanged")
+		tabs.hidden = friendsTab.hidden && changesTab.hidden
+	}
+
+	updateTabs()
+
+	// Watching anyone but yourself.
+	const watch = root.$req<HTMLButtonElement>(".btr-activity-watch")
+
+	if (!options.isOwn) {
+		const updateWatch = () => {
+			const watched = isWatched(userId)
+			watch.setAttribute("aria-pressed", String(watched))
+			watch.textContent = watched ? "Watching" : "Watch"
+			watch.title = watched
+				? "Stop checking on them"
+				: "Checks where they are, their friends and their profile from the background"
+		}
+
+		watch.hidden = false
+		watch.$on("click", () => setWatched(userId, !isWatched(userId)))
+		// Settings listeners stay for good, so a closed dialog ignores them.
+		SETTINGS.onChange("profile.watchedUsers", () => {
+			if (modal === root) {
+				updateWatch()
+				updateTabs()
+			}
+		})
+		updateWatch()
+	}
 
 	const selectTab = (tab: Tab) => {
 		for (const button of tabs.$findAll<HTMLElement>("[data-tab]")) {
@@ -589,6 +740,8 @@ export const openActivity = async (
 
 		if (tab === "friends" && !friendsPanel.childElementCount) {
 			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)
+		} else if (tab === "changes" && !changesPanel.childElementCount) {
+			void renderChanges(changesPanel, userId)
 		}
 	}
 
@@ -607,6 +760,10 @@ export const openActivity = async (
 
 		if (friendsPanel.childElementCount) {
 			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)
+		}
+
+		if (changesPanel.childElementCount) {
+			void renderChanges(changesPanel, userId)
 		}
 	})
 

@@ -1838,3 +1838,125 @@ div.btr-setting-text {
 		}
 	}
 }
+
+/* Watching, from the activity dialog's header */
+
+.btr-activity-header {
+	align-items: center;
+}
+
+.btr-activity-header > div:first-child {
+	flex: 1;
+	min-width: 0;
+}
+
+.btr-activity-watch {
+	flex: none;
+	height: 36px;
+	padding: 0 16px;
+	background: var(--btr-standard);
+	border: none;
+	border-radius: 8px;
+	color: var(--btr-content-emphasis);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 150ms var(--btr-ease-out);
+
+	&[hidden] {
+		display: none;
+	}
+
+	&:hover {
+		background: var(--btr-press);
+	}
+
+	&[aria-pressed="true"] {
+		background: var(--btr-contrast);
+		color: var(--btr-inverse);
+	}
+}
+
+/* Profile changes */
+
+.btr-change-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 8px;
+	color: var(--btr-content-emphasis);
+	font-size: 15px;
+
+	a {
+		color: inherit;
+		font-weight: 700;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.btr-change-text {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.btr-change-details {
+	margin-top: 6px;
+	color: var(--btr-content);
+	font-size: 14px;
+
+	summary {
+		color: var(--btr-content-muted);
+		cursor: pointer;
+	}
+
+	& > div {
+		margin-top: 6px;
+		padding: 8px 12px;
+		border-radius: 8px;
+		background: var(--btr-surface-raised);
+		white-space: pre-wrap;
+	}
+
+	.btr-change-before::before,
+	.btr-change-after::before {
+		display: block;
+		margin-bottom: 2px;
+		color: var(--btr-content-muted);
+		font-size: 12px;
+		font-weight: 700;
+	}
+
+	.btr-change-before::before {
+		content: "Before";
+	}
+
+	.btr-change-after::before {
+		content: "After";
+	}
+}
+
+.btr-change-avatars {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 6px;
+	color: var(--btr-content-muted);
+
+	img {
+		width: 72px;
+		height: 72px;
+		border-radius: 8px;
+		background: var(--btr-surface-raised);
+	}
+
+	/* Roblox drops avatar images after 30 days. */
+	img.btr-change-expired {
+		visibility: hidden;
+	}
+}

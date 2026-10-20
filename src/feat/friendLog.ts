@@ -75,7 +75,9 @@ const log = async (userId: number, added: number[], removed: number[], exact: bo
  * Logs how `userId`'s friends changed since the list was last seen. The first
  * list seen for someone only becomes the one to compare against.
  */
-export const compareFriendList = async (userId: number, friendIds: number[]): Promise<void> => {
+export const compareFriendList = async (userId: number, allIds: number[]): Promise<void> => {
+	// Friends someone hides from their list come as -1.
+	const friendIds = allIds.filter((id) => id > 0)
 	const previous = await getState<number[]>(listKey(userId))
 	await setState(listKey(userId), friendIds)
 
@@ -89,7 +91,7 @@ export const compareFriendList = async (userId: number, friendIds: number[]): Pr
 	await log(
 		userId,
 		friendIds.filter((id) => !before.has(id)),
-		previous.filter((id) => !now.has(id)),
+		previous.filter((id) => id > 0 && !now.has(id)),
 		false,
 	)
 }

@@ -128,6 +128,8 @@ export const DEFAULT_SETTINGS = {
 		lastSeen: { value: true },
 		liveTracking: { value: true },
 		friendLog: { value: true },
+		// JSON list of the user ids being watched, managed from the activity dialog
+		watchedUsers: { value: "", hidden: true },
 		activityLimit: { value: "250", validValues: ["100", "250", "500", "1000", "2000", "0"] },
 		mutualCommunities: { value: true },
 	},
