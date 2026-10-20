@@ -9,7 +9,7 @@ import {
 	openDb,
 	type PresenceRecord,
 	userRange,
-} from "@/feat/activityStore"
+} from "@/feat/activity/store"
 
 // What ReBTRoblox has seen each user doing, for the profile's last seen and
 // its timeline. Roblox no longer says when someone was last online, so this

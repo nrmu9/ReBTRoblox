@@ -1,0 +1,97 @@
+import { html } from "@/core/html"
+import type { PresenceSegment } from "@/feat/activity/presence"
+
+// Time and layout helpers the activity dialog's tabs share.
+
+// Sightings of the same state closer together than this read as one stretch.
+// Pages only check now and then, so someone online all afternoon is seen every
+// quarter hour or so, which would otherwise list each sighting on its own.
+export const JOIN_GAP = 30 * 60e3
+
+export const DAY = 24 * 60 * 60e3
+
+// When a segment ended: when the next one began if that was seen live,
+// otherwise the last time it was seen. The current one runs until now.
+export const segmentEnd = (segments: PresenceSegment[], index: number, online: boolean) => {
+	const next = segments[index + 1]
+
+	if (!next && online && segments[index].type > 0) {
+		return Date.now()
+	}
+
+	return next?.exact ? next.from : segments[index].to
+}
+
+/** When the user was last seen online, or null if never. */
+export const lastSeenAt = (segments: PresenceSegment[]): number | null => {
+	for (let i = segments.length; i--;) {
+		if (segments[i].type > 0) {
+			return segmentEnd(segments, i, false)
+		}
+	}
+
+	return null
+}
+
+export const formatDuration = (ms: number) => {
+	const minutes = Math.round(ms / 60e3)
+
+	if (minutes < 1) {
+		return "<1m"
+	}
+
+	const hours = Math.floor(minutes / 60)
+	return hours ? `${hours}h ${minutes % 60}m` : `${minutes}m`
+}
+
+/** Time online that falls after `since`. */
+export const onlineSince = (segments: PresenceSegment[], online: boolean, since: number) => {
+	let total = 0
+
+	segments.forEach((segment, index) => {
+		if (segment.type > 0) {
+			total += Math.max(0, segmentEnd(segments, index, online) - Math.max(segment.from, since))
+		}
+	})
+
+	return total
+}
+
+export const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0)
+
+// Through the date rather than adding 24 hours, which DST days are not.
+export const nextDay = (day: number) => {
+	const date = new Date(day)
+	date.setDate(date.getDate() + 1)
+	return date.getTime()
+}
+
+export const dayLabel = (day: number) => {
+	if (day === startOfDay(Date.now())) {
+		return "Today"
+	}
+
+	if (day === startOfDay(Date.now() - DAY)) {
+		return "Yesterday"
+	}
+
+	// The year only once it is not this one.
+	return new Date(day).$format(
+		new Date(day).getFullYear() === new Date().getFullYear() ? "DDD, MMM D" : "DDD, MMM D, YYYY",
+	)
+}
+
+// Long histories are built a page at a time, so a year of it opens as fast
+// as a week.
+export const PAGE_DAYS = 30
+export const PAGE_ROWS = 150
+export const shownDays = new WeakMap<HTMLElement, number>()
+
+export const showMore = (label: string, onClick: () => void) => {
+	const button = html`<button type="button" class="btr-activity-more">${label}</button>`
+	button.$on("click", onClick)
+	return button
+}
+
+/** A day heading in a log, a quiet label with a rule after it. */
+export const dayHeading = (day: number) => html`<h3 class="btr-log-day">${dayLabel(day)}</h3>`

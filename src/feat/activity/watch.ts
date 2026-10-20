@@ -6,9 +6,9 @@ import {
 	openDb,
 	setState,
 	type ActivityEvent,
-} from "@/feat/activityStore"
-import { compareFriendList } from "@/feat/friendLog"
-import { isLive, recordPresences } from "@/feat/presenceHistory"
+} from "@/feat/activity/store"
+import { compareFriendList } from "@/feat/activity/friends"
+import { isLive, recordPresences } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
 
 // People you chose to watch, checked from the background: where they are,

@@ -15,7 +15,7 @@ import type {
 } from "@/rbx/types"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { IS_BACKGROUND_PAGE } from "@/core/env"
-import { recordPresences } from "@/feat/presenceHistory"
+import { recordPresences } from "@/feat/activity/presence"
 
 const invalidXsrfTokens: Record<string, boolean> = {}
 let cachedXsrfToken: string | null = null

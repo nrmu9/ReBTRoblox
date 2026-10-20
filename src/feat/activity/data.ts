@@ -1,5 +1,5 @@
 import { backgroundScript } from "@/core/messaging"
-import type { ActivityEvent, ActivityUsage } from "@/feat/activityStore"
+import type { ActivityEvent, ActivityUsage } from "@/feat/activity/store"
 
 // The page side of the activity database, which only the background opens.
 

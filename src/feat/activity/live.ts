@@ -1,6 +1,6 @@
 import { STORAGE } from "@/core/env"
-import { compareFriendList, onFriendshipChanged } from "@/feat/friendLog"
-import { recordPresences, setLiveSince } from "@/feat/presenceHistory"
+import { compareFriendList, onFriendshipChanged } from "@/feat/activity/friends"
+import { recordPresences, setLiveSince } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
 
 // Keeps the background on Roblox's realtime connection, the one its pages

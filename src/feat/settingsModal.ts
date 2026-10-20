@@ -6,7 +6,7 @@ import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { loggedInUser, robloxExperiments } from "@/pages/common"
-import { openActivity, setWatched } from "@/feat/activityModal"
+import { openActivity, setWatched } from "@/feat/activity/dialog"
 import { discoverExperimentHints, getExperimentPage, type ExperimentHint } from "@/feat/experimentHints"
 import { HOME_ROWS_KEY } from "@/pages/home"
 import { btrLocalStorage } from "@/core/storage"
@@ -16,7 +16,7 @@ import {
 	formatBytes,
 	getActivityUsage,
 	getUserNames,
-} from "@/feat/activityData"
+} from "@/feat/activity/data"
 
 interface SettingsModalState {
 	enabled: boolean

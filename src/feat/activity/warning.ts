@@ -1,6 +1,6 @@
 import { STORAGE } from "@/core/env"
 import { html } from "@/core/html"
-import { formatBytes } from "@/feat/activityData"
+import { formatBytes } from "@/feat/activity/data"
 import { SETTINGS } from "@/feat/settings"
 
 // A notice on Roblox pages once the stored activity nears its limit, and

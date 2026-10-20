@@ -6,7 +6,7 @@ import {
 	openDb,
 	setState,
 	type ActivityEvent,
-} from "@/feat/activityStore"
+} from "@/feat/activity/store"
 
 // Friends added and removed, for your own list and for people you watch.
 // Live changes come from Roblox's realtime connection; anything that happened
