@@ -412,6 +412,11 @@ export const SettingsModal: SettingsModalState = {
 								<option value="both">Ping and region</option>
 								<option value="combined">Country only</option>
 							</choice>
+							<toggle
+								label="Server Tools"
+								path="serverTools"
+								desc="Adds a button to join the smallest server, and a region filter when Server Info shows regions"
+							></toggle>
 							<choice
 								label="Preview Videos"
 								path="previewVideos"

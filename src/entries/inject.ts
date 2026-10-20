@@ -3852,6 +3852,9 @@ const startInject = () => {
 					}
 				})
 			},
+			gamedetailsJoinServer: (placeId: number, jobId: string) => {
+				Roblox.GameLauncher.joinGameInstance(placeId, jobId)
+			},
 			gamedetailsPlayGame: (placeId: number) => {
 				Roblox.GameLauncher.joinMultiplayerGame(placeId, true)
 			},

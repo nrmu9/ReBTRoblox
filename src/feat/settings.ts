@@ -105,6 +105,7 @@ export const DEFAULT_SETTINGS = {
 		addServerPager: { value: true },
 		showServerRegion: { value: "none", validValues: ["none", "ping", "region", "both", "combined"] },
 		previewVideos: { value: "paused", validValues: ["paused", "autoplay", "hidden"] },
+		serverTools: { value: true },
 		compactBadgeStats: { value: true },
 		exactCounts: { value: true },
 	},

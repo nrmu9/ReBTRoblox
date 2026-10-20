@@ -20,7 +20,7 @@ import {
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { getServerDetails } from "@/feat/serverDetails"
+import { getCachedServerLocation, getServerDetails } from "@/feat/serverDetails"
 import { queryReq } from "@/core/query"
 
 // Roblox rounds the big numbers on this page: visits turn into "1.8M+" and the
@@ -86,9 +86,174 @@ const showExactCounts = () => {
 	})
 }
 
+const PUBLIC_SERVERS = "#rbx-public-running-games"
+
+/** A button beside Refresh that joins the emptiest public server with room. */
+const addJoinSmallest = (placeId: number) => {
+	document.$watchAll(`${PUBLIC_SERVERS} .server-list-container-header`, (header: HTMLElement) => {
+		if (header.$find(".btr-join-smallest")) {
+			return
+		}
+
+		const button = html<HTMLButtonElement>`<button
+			type="button"
+			class="btn-control-xs btn-min-width btr-join-smallest"
+			title="Joins the public server with the fewest players"
+		>
+			Join Smallest
+		</button>`
+
+		const reset = (text: string) => {
+			button.textContent = text
+			setTimeout(() => {
+				button.disabled = false
+				button.textContent = "Join Smallest"
+			}, 3000)
+		}
+
+		button.$on("click", async () => {
+			button.disabled = true
+			button.textContent = "Finding..."
+
+			try {
+				const res = await fetch(
+					`https://games.roblox.com/v1/games/${placeId}/servers/Public?sortOrder=Asc&excludeFullGames=true&limit=25`,
+					{ credentials: "include" },
+				)
+				const json = await res.json()
+
+				// Fewest players first, then the best connection among those.
+				const smallest = ((json?.data ?? []) as any[])
+					.filter((server) => server.playing < server.maxPlayers)
+					.toSorted((a, b) => a.playing - b.playing || (a.ping ?? 999) - (b.ping ?? 999))[0]
+
+				if (smallest) {
+					injectScript.call("gamedetailsJoinServer", placeId, smallest.id)
+					reset("Joining...")
+				} else {
+					reset("No servers")
+				}
+			} catch {
+				reset("Try again")
+			}
+		})
+
+		const refresh = header.$find(".rbx-refresh")
+		if (refresh) {
+			refresh.after(button)
+		} else {
+			header.append(button)
+		}
+	})
+}
+
+/**
+ * A region menu beside Sort By, listing the regions of the servers on screen.
+ * It reads the locations Server Info already looked up, so it asks Roblox for
+ * nothing more.
+ */
+const addRegionFilter = () => {
+	document.$watchAll(`${PUBLIC_SERVERS} .server-list-options`, (options: HTMLElement) => {
+		if (options.$find(".btr-region-filter")) {
+			return
+		}
+
+		const group = html`<div class="select-group btr-region-filter">
+			<label class="select-label text-label">Region</label>
+			<div class="rbx-select-group select-group">
+				<select class="input-field rbx-select select-option">
+					<option value="">All regions</option>
+				</select>
+			</div>
+		</div>`
+
+		const select = group.$req<HTMLSelectElement>("select")
+		options.append(group)
+
+		const section = options.closest(PUBLIC_SERVERS)!
+		const empty = html`<p class="btr-server-filter-empty text-label">
+			No servers from this region on this page
+		</p>`
+
+		const apply = () => {
+			const list = section.$find(".rbx-public-game-server-item-container")
+			if (!list) {
+				return
+			}
+
+			const regions = new Set<string>()
+			let shown = 0
+
+			for (const item of list.$findAll<HTMLElement>(":scope > li")) {
+				const jobId = item.$find<HTMLElement>("[data-btr-instance-id]")?.dataset.btrInstanceId
+				const location = jobId ? getCachedServerLocation(jobId) : null
+				// Written the way the server cards write it, states for the US.
+				const region = location
+					? `${location.city}, ${location.country.name === "United States" ? location.region.code : location.country.code}`
+					: ""
+
+				if (region) {
+					regions.add(region)
+				}
+
+				const hide = !!select.value && region !== select.value
+				item.classList.toggle("btr-server-filtered", hide)
+				shown += hide ? 0 : 1
+			}
+
+			// The chosen region stays listed even when this page has none of it.
+			if (select.value) {
+				regions.add(select.value)
+			}
+
+			const wanted = ["", ...[...regions].toSorted()]
+			const have = [...select.options].map((option) => option.value)
+
+			if (wanted.join("\n") !== have.join("\n")) {
+				const value = select.value
+				select.replaceChildren(
+					...wanted.map((region) => {
+						const option = document.createElement("option")
+						option.value = region
+						option.textContent = region || "All regions"
+						return option
+					}),
+				)
+				select.value = value
+			}
+
+			if (select.value && !shown) {
+				list.after(empty)
+			} else {
+				empty.remove()
+			}
+		}
+
+		select.$on("change", apply)
+
+		// Roblox renders the list again on every page, sort and refresh, and the
+		// regions arrive one by one, so any change in the list runs this again.
+		new MutationObserver((mutations) => {
+			if (mutations.some((mutation) => !group.contains(mutation.target) && mutation.target !== empty)) {
+				apply()
+			}
+		}).observe(section, { childList: true, subtree: true, characterData: true })
+
+		apply()
+	})
+}
+
 pageInit.gamedetails = () => {
 	onPageLoad((placeIdString: string) => {
 		const placeId = Number.parseInt(placeIdString, 10)
+
+		if (SETTINGS.get("gamedetails.serverTools")) {
+			addJoinSmallest(placeId)
+
+			if (["region", "both", "combined"].includes(SETTINGS.get("gamedetails.showServerRegion"))) {
+				addRegionFilter()
+			}
+		}
 
 		if (RobuxToCash.isEnabled()) {
 			// Game passes and developer products sit side by side in the store.

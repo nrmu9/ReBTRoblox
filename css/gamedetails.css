@@ -280,3 +280,21 @@ html body .btr-universe-box {
 .btr-gamedetails #my-recommended-games .hlist {
 	text-align: center;
 }
+
+/* Server tools */
+
+.btr-join-smallest {
+	margin-left: 8px;
+}
+
+.btr-region-filter {
+	margin-left: 12px;
+}
+
+.btr-gamedetails .btr-server-filtered {
+	display: none !important;
+}
+
+.btr-server-filter-empty {
+	padding: 12px 0;
+}

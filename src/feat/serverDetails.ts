@@ -2176,6 +2176,12 @@ const resolveServerDetails = (details: any) => {
 	}
 }
 
+/** A server's location if it has been looked up already, without asking again. */
+export const getCachedServerLocation = (jobId: string): any => {
+	const cached = btrLocalStorage.getItem(`serverDetailsV2-${jobId}`)
+	return cached ? (resolveServerDetails(cached).location ?? null) : null
+}
+
 export const getServerDetails = (placeId: number, jobId: string, callback: (...args: any[]) => void) => {
 	const cached = btrLocalStorage.getItem(`serverDetailsV2-${jobId}`)
 
