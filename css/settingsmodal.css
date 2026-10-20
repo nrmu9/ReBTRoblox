@@ -1823,3 +1823,18 @@ div.btr-setting-text {
 	align-items: center;
 	gap: 8px;
 }
+
+.btr-activity-with {
+	color: var(--btr-content-muted);
+	font-size: 14px;
+
+	a {
+		color: var(--btr-content-emphasis);
+		font-weight: 600;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}

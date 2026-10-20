@@ -1,7 +1,38 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import { getActivityEvents } from "@/feat/activityData"
-import { getPresenceHistory, onActivityChange, type PresenceSegment } from "@/feat/presenceHistory"
+import { getActivityEvents, getUserNames } from "@/feat/activityData"
+import {
+	getPlayedTogether,
+	getPresenceHistory,
+	onActivityChange,
+	type PresenceSegment,
+} from "@/feat/presenceHistory"
+
+/** The people a session was shared with, by the session's start. */
+type Together = Map<number, Array<{ userId: number; name: string }>>
+
+const loadTogether = async (userId: number): Promise<Together> => {
+	const together = await getPlayedTogether(userId)
+	const ids = [...new Set(Object.values(together).flatMap((others) => others.map((other) => other.userId)))]
+	const names = ids.length ? await getUserNames(ids) : new Map()
+	const result: Together = new Map()
+
+	for (const [from, others] of Object.entries(together)) {
+		const people = new Map(
+			others.map((other) => [
+				other.userId,
+				{
+					userId: other.userId,
+					name: names.get(other.userId)?.displayName ?? `User ${other.userId}`,
+				},
+			]),
+		)
+
+		result.set(Number(from), [...people.values()])
+	}
+
+	return result
+}
 
 // The activity a profile's last seen opens: everything ReBTRoblox saw the
 // user doing, over the page like the settings panel. Each day is a bar across
@@ -117,7 +148,7 @@ const blocksByDay = (segments: PresenceSegment[], online: boolean) => {
 	return days
 }
 
-const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
+const entry = (segments: PresenceSegment[], index: number, online: boolean, together: Together) => {
 	const segment = segments[index]
 	const from = new Date(segment.from)
 	const end = segmentEnd(segments, index, online)
@@ -156,12 +187,30 @@ const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
 		when.title = "First seen at this time"
 	}
 
+	const people = segment.type === 2 ? together.get(segment.from) : undefined
+
+	if (people?.length) {
+		const line = html`<div class="btr-activity-with"></div>`
+		line.append("With ")
+
+		people.forEach((person, i) => {
+			if (i > 0) {
+				line.append(i === people.length - 1 ? " and " : ", ")
+			}
+
+			line.append(html`<a href="/users/${person.userId}/profile">${person.name}</a>`)
+		})
+
+		item.$req(".btr-activity-text").append(line)
+	}
+
 	return item
 }
 
 const dayRow = (
 	segments: PresenceSegment[],
 	online: boolean,
+	together: Together,
 	day: number,
 	blocks: Block[],
 	expanded: Set<number>,
@@ -249,7 +298,7 @@ ${range} · ${formatDuration(block.end - block.start)}`
 				: blocks.some((block) => block.index === i)
 
 		if (inDay) {
-			list.append(entry(segments, i, online))
+			list.append(entry(segments, i, online, together))
 		}
 	}
 
@@ -261,6 +310,7 @@ const render = (
 	body: HTMLElement,
 	segments: PresenceSegment[],
 	online: boolean,
+	together: Together,
 	expanded: Set<number>,
 	intro = false,
 ) => {
@@ -314,7 +364,7 @@ const render = (
 
 	const days = [...blocksByDay(segments, online)].toSorted((a, b) => b[0] - a[0])
 	days.forEach(([day, blocks], index) => {
-		const row = dayRow(segments, online, day, blocks, expanded)
+		const row = dayRow(segments, online, together, day, blocks, expanded)
 		row.style.setProperty("--btr-index", String(index))
 		timeline.append(row)
 	})
@@ -510,8 +560,9 @@ export const openActivity = async (
 	const friendsPanel = body.$req('[data-tab="friends"]')
 	const friendFilter = { kind: "all" }
 
-	const [segments, friendEvents] = await Promise.all([
+	const [segments, together, friendEvents] = await Promise.all([
 		getPresenceHistory(userId),
+		loadTogether(userId),
 		options.isOwn ? Promise.resolve(null) : getActivityEvents(userId, ["friendAdded", "friendRemoved"]),
 	])
 
@@ -519,7 +570,7 @@ export const openActivity = async (
 	const latest = Math.max(...blocksByDay(segments, isOnline()).keys())
 	const expanded = new Set(Number.isFinite(latest) ? [latest] : [])
 
-	render(activityPanel, segments, isOnline(), expanded, true)
+	render(activityPanel, segments, isOnline(), together, expanded, true)
 
 	// Friends shows for your own list, and anyone whose list has been followed.
 	const tabs = root.$req(".btr-activity-tabs")
@@ -548,7 +599,11 @@ export const openActivity = async (
 	selectTab(tabs.hidden ? "activity" : (options.tab ?? "activity"))
 
 	const stopWatching = onActivityChange([userId], async () => {
-		render(activityPanel, await getPresenceHistory(userId), isOnline(), expanded)
+		const [changed, changedTogether] = await Promise.all([
+			getPresenceHistory(userId),
+			loadTogether(userId),
+		])
+		render(activityPanel, changed, isOnline(), changedTogether, expanded)
 
 		if (friendsPanel.childElementCount) {
 			void renderFriends(friendsPanel, userId, !!options.isOwn, friendFilter)

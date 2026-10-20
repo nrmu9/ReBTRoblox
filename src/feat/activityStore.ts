@@ -47,21 +47,29 @@ let dbPromise: Promise<IDBDatabase> | null = null
 
 export const openDb = (): Promise<IDBDatabase> =>
 	(dbPromise ??= new Promise((resolve, reject) => {
-		const req = indexedDB.open(DB_NAME, 1)
+		const req = indexedDB.open(DB_NAME, 2)
 
-		req.onupgradeneeded = () => {
+		// Each step brings a database from the version before it up to date.
+		req.onupgradeneeded = (ev) => {
 			const db = req.result
 
-			const presence = db.createObjectStore("presence", { keyPath: "id", autoIncrement: true })
-			presence.createIndex("user", ["userId", "from"])
-			presence.createIndex("to", "to")
+			if (ev.oldVersion < 1) {
+				const presence = db.createObjectStore("presence", { keyPath: "id", autoIncrement: true })
+				presence.createIndex("user", ["userId", "from"])
+				presence.createIndex("to", "to")
 
-			const events = db.createObjectStore("events", { keyPath: "id", autoIncrement: true })
-			events.createIndex("user", ["userId", "at"])
-			events.createIndex("at", "at")
+				const events = db.createObjectStore("events", { keyPath: "id", autoIncrement: true })
+				events.createIndex("user", ["userId", "at"])
+				events.createIndex("at", "at")
 
-			// Snapshots compared against to find changes: friend lists, profiles.
-			db.createObjectStore("state")
+				// Snapshots compared against to find changes: friend lists, profiles.
+				db.createObjectStore("state")
+			}
+
+			if (ev.oldVersion < 2) {
+				// Who else was in a server, for playing together.
+				req.transaction!.objectStore("presence").createIndex("game", "gameId")
+			}
 		}
 
 		req.onsuccess = () => resolve(req.result)

@@ -21,6 +21,28 @@ export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][
 // One decimal, dropped when it is a zero: 250 MB, 12.4 MB.
 const oneDecimal = (value: number) => String(Number(value.toFixed(1)))
 
+/** Current names for user ids, asked for 100 at a time. */
+export const getUserNames = async (userIds: number[]) => {
+	const names = new Map<number, { name: string; displayName: string }>()
+
+	for (let i = 0; i < userIds.length; i += 100) {
+		const json = await fetch("https://users.roblox.com/v1/users", {
+			method: "POST",
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ userIds: userIds.slice(i, i + 100), excludeBannedUsers: false }),
+		})
+			.then((res) => res.json())
+			.catch(() => null)
+
+		for (const user of json?.data ?? []) {
+			names.set(user.id, { name: user.name, displayName: user.displayName })
+		}
+	}
+
+	return names
+}
+
 export const formatBytes = (bytes: number): string =>
 	bytes >= 1024 ** 3
 		? `${oneDecimal(bytes / 1024 ** 3)} GB`

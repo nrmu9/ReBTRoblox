@@ -164,6 +164,54 @@ if (IS_BACKGROUND_PAGE) {
 
 		respond(records.map(({ id: _id, userId: _userId, ...segment }) => segment))
 	})
+
+	// When a record's state ended: when the next one began if that was seen
+	// live, now if it is still going under the live connection, otherwise the
+	// last time it was seen.
+	const endOf = async (presence: IDBObjectStore, record: PresenceRecord) => {
+		const next = await done(
+			presence
+				.index("user")
+				.openCursor(IDBKeyRange.bound([record.userId, record.from], [record.userId, Infinity], true)),
+		)
+
+		if (next) {
+			return next.value.exact ? next.value.from : record.to
+		}
+
+		return liveSince !== null && record.to >= liveSince ? Date.now() : record.to
+	}
+
+	/** Everyone who shared a server with the user while they were both in it, by the user's session start. */
+	contentScript.listen("getPlayedTogether", async (userId: number, respond: (value: any) => void) => {
+		const db = await openDb()
+		const presence = db.transaction("presence").objectStore("presence")
+		const sessions = (await done(presence.index("user").getAll(userRange(userId)))).filter(
+			(record) => record.gameId,
+		)
+		const together: Record<number, Array<{ userId: number; from: number; to: number }>> = {}
+
+		for (const session of sessions) {
+			const end = await endOf(presence, session)
+			const others = (await done(presence.index("game").getAll(session.gameId))).filter(
+				(other) => other.userId !== userId,
+			)
+
+			for (const other of others) {
+				const otherEnd = await endOf(presence, other)
+
+				if (other.from < end && otherEnd > session.from) {
+					;(together[session.from] ??= []).push({
+						userId: other.userId,
+						from: other.from,
+						to: otherEnd,
+					})
+				}
+			}
+		}
+
+		respond(together)
+	})
 }
 
 /**
@@ -211,6 +259,14 @@ export const recordPresences = (presences: any[], starts?: Record<number, number
 
 export const getPresenceHistory = (userId: number): Promise<PresenceSegment[]> =>
 	new Promise((resolve) => backgroundScript.send("getPresenceHistory", userId, resolve))
+
+export type PlayedTogether = Record<number, Array<{ userId: number; from: number; to: number }>>
+
+/** Who shared a server with the user, by the start of each of their sessions. */
+export const getPlayedTogether = (userId: number): Promise<PlayedTogether> =>
+	new Promise((resolve) =>
+		backgroundScript.send("getPlayedTogether", userId, (value: any) => resolve(value ?? {})),
+	)
 
 /** Calls back whenever the activity of any of `userIds` changes, until the returned function is called. */
 export const onActivityChange = (userIds: number[], callback: () => void): (() => void) => {
