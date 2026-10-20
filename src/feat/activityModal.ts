@@ -2,7 +2,8 @@ import { html } from "@/core/html"
 import { onPresenceHistoryChange, getPresenceHistory, type PresenceSegment } from "@/feat/presenceHistory"
 
 // The activity a profile's last seen opens: everything ReBTRoblox saw the
-// user doing, as a timeline by day, over the page like the settings panel.
+// user doing, over the page like the settings panel. Each day is a bar across
+// its 24 hours for the overview, and opens into a list for the details.
 
 const DAY = 24 * 60 * 60e3
 
@@ -33,7 +34,7 @@ const formatDuration = (ms: number) => {
 	const minutes = Math.round(ms / 60e3)
 
 	if (minutes < 1) {
-		return "under a minute"
+		return "<1m"
 	}
 
 	const hours = Math.floor(minutes / 60)
@@ -53,18 +54,65 @@ const onlineSince = (segments: PresenceSegment[], online: boolean, since: number
 	return total
 }
 
-const dayLabel = (date: Date) => {
-	const day = date.toDateString()
+const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0)
 
-	if (day === new Date().toDateString()) {
+// Through the date rather than adding 24 hours, which DST days are not.
+const nextDay = (day: number) => {
+	const date = new Date(day)
+	date.setDate(date.getDate() + 1)
+	return date.getTime()
+}
+
+const dayLabel = (day: number) => {
+	if (day === startOfDay(Date.now())) {
 		return "Today"
 	}
 
-	if (day === new Date(Date.now() - DAY).toDateString()) {
+	if (day === startOfDay(Date.now() - DAY)) {
 		return "Yesterday"
 	}
 
-	return date.$format("DDDD, MMM D")
+	return new Date(day).$format("DDD, MMM D")
+}
+
+const STATE_LABELS = ["Offline", "Online on the website", "In an experience", "In Studio"]
+
+const stateText = (segment: PresenceSegment) =>
+	segment.type === 2 && segment.location
+		? `Playing ${segment.location}`
+		: segment.type === 3 && segment.location
+			? `In Studio, ${segment.location}`
+			: STATE_LABELS[segment.type]
+
+interface Block {
+	index: number
+	start: number
+	end: number
+}
+
+/** Online time cut at midnight, by the start of each day. */
+const blocksByDay = (segments: PresenceSegment[], online: boolean) => {
+	const days = new Map<number, Block[]>()
+
+	segments.forEach((segment, index) => {
+		if (segment.type === 0) {
+			return
+		}
+
+		const end = Math.max(segmentEnd(segments, index, online), segment.from)
+		let day = startOfDay(segment.from)
+
+		do {
+			const next = nextDay(day)
+			const blocks = days.get(day) ?? []
+
+			blocks.push({ index, start: Math.max(segment.from, day), end: Math.min(end, next) })
+			days.set(day, blocks)
+			day = next
+		} while (day < end)
+	})
+
+	return days
 }
 
 const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
@@ -85,16 +133,10 @@ const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
 
 	if (segment.type === 0) {
 		state.textContent = "Went offline"
-	} else if (segment.type === 1) {
-		state.textContent = "Online on the website"
-	} else if (segment.type === 2) {
-		if (segment.location && segment.placeId) {
-			state.append("Playing ", html`<a href="/games/${segment.placeId}">${segment.location}</a>`)
-		} else {
-			state.textContent = segment.location ? `Playing ${segment.location}` : "In an experience"
-		}
+	} else if (segment.type === 2 && segment.location && segment.placeId) {
+		state.append("Playing ", html`<a href="/games/${segment.placeId}">${segment.location}</a>`)
 	} else {
-		state.textContent = segment.location ? `In Studio, ${segment.location}` : "In Studio"
+		state.textContent = stateText(segment)
 	}
 
 	// Offline only matters for when it began, and a state seen once has no span.
@@ -115,7 +157,82 @@ const entry = (segments: PresenceSegment[], index: number, online: boolean) => {
 	return item
 }
 
-const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean) => {
+const dayRow = (
+	segments: PresenceSegment[],
+	online: boolean,
+	day: number,
+	blocks: Block[],
+	expanded: Set<number>,
+	rerender: () => void,
+) => {
+	const length = nextDay(day) - day
+	const total = blocks.reduce((sum, block) => sum + block.end - block.start, 0)
+	const open = expanded.has(day)
+	const label = dayLabel(day)
+
+	const row = html`<div class="btr-activity-day">
+		<button type="button" class="btr-activity-day-row" aria-expanded="${open}" data-day="${day}">
+			<span class="btr-activity-day-label">${label}</span>
+			<span class="btr-activity-bar"></span>
+			<span class="btr-activity-day-total">${formatDuration(total)}</span>
+		</button>
+	</div>`
+
+	const toggle = row.$req(".btr-activity-day-row")
+	toggle.setAttribute("aria-label", `${label}, online ${formatDuration(total)}`)
+	toggle.$on("click", () => {
+		if (open) {
+			expanded.delete(day)
+		} else {
+			expanded.add(day)
+		}
+
+		// The rows are rebuilt, so focus goes back to this day's new one.
+		rerender()
+		document.querySelector<HTMLElement>(`.btr-activity-day-row[data-day="${day}"]`)?.focus()
+	})
+
+	const bar = row.$req(".btr-activity-bar")
+
+	for (const block of blocks) {
+		const segment = segments[block.index]
+		const piece = html`<span class="btr-activity-block" data-type="${segment.type}"></span>`
+		const range = `${new Date(block.start).$format("h:mm A")} – ${new Date(block.end).$format("h:mm A")}`
+
+		piece.style.left = `${((block.start - day) / length) * 100}%`
+		piece.style.width = `${((block.end - block.start) / length) * 100}%`
+		piece.title = `${stateText(segment)}\n${range} · ${formatDuration(block.end - block.start)}`
+		bar.append(piece)
+	}
+
+	if (day === startOfDay(Date.now())) {
+		const now = html`<span class="btr-activity-now"></span>`
+		now.style.left = `${((Date.now() - day) / length) * 100}%`
+		bar.append(now)
+	}
+
+	if (open) {
+		const list = html`<ol class="btr-activity-day-list"></ol>`
+
+		for (let i = segments.length; i--;) {
+			const segment = segments[i]
+			const inDay =
+				segment.type === 0
+					? segment.from >= day && segment.from < day + length
+					: blocks.some((block) => block.index === i)
+
+			if (inDay) {
+				list.append(entry(segments, i, online))
+			}
+		}
+
+		row.append(list)
+	}
+
+	return row
+}
+
+const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean, expanded: Set<number>) => {
 	const seen = lastSeenAt(segments)
 
 	const summary = html`<div class="btr-activity-summary">
@@ -126,7 +243,7 @@ const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean)
 		<div class="btr-activity-stat">
 			<div class="btr-activity-stat-label">Today</div>
 			<div class="btr-activity-stat-value">
-				${formatDuration(onlineSince(segments, online, new Date().setHours(0, 0, 0, 0)))}
+				${formatDuration(onlineSince(segments, online, startOfDay(Date.now())))}
 			</div>
 		</div>
 		<div class="btr-activity-stat">
@@ -148,24 +265,24 @@ const render = (body: HTMLElement, segments: PresenceSegment[], online: boolean)
 		status.textContent = "Not yet"
 	}
 
-	const timeline = html`<div class="btr-activity-timeline"></div>`
-	let list: HTMLElement | null = null
-	let day = ""
+	const timeline = html`<div class="btr-activity-timeline">
+		<div class="btr-activity-scale" aria-hidden="true">
+			<span>12 AM</span>
+			<span>6 AM</span>
+			<span>12 PM</span>
+			<span>6 PM</span>
+		</div>
+	</div>`
 
-	for (let i = segments.length; i--;) {
-		const label = dayLabel(new Date(segments[i].from))
+	const days = [...blocksByDay(segments, online)].toSorted((a, b) => b[0] - a[0])
+	const rerender = () => render(body, segments, online, expanded)
 
-		if (label !== day) {
-			day = label
-			list = html`<ol class="btr-activity-day-list"></ol>`
-			timeline.append(html`<h3 class="btr-activity-day">${label}</h3>`, list)
-		}
-
-		list!.append(entry(segments, i, online))
+	for (const [day, blocks] of days) {
+		timeline.append(dayRow(segments, online, day, blocks, expanded, rerender))
 	}
 
-	if (!segments.length) {
-		timeline.append(html`<p class="btr-activity-empty">Nothing seen yet.</p>`)
+	if (!days.length) {
+		timeline.replaceChildren(html`<p class="btr-activity-empty">Not seen online yet.</p>`)
 	}
 
 	body.replaceChildren(summary, timeline)
@@ -211,8 +328,16 @@ export const openActivity = async (userId: number, name: string, isOnline: () =>
 	root.classList.toggle("btr-dark-theme", !!document.querySelector(".dark-theme:not(.btr-settings-modal)"))
 
 	const body = root.$req(".btr-activity-body")
-	render(body, await getPresenceHistory(userId), isOnline())
-	const stopWatching = onPresenceHistoryChange(userId, (segments) => render(body, segments, isOnline()))
+	const segments = await getPresenceHistory(userId)
+
+	// The latest day starts open, the rest wait for a click.
+	const latest = Math.max(...blocksByDay(segments, isOnline()).keys())
+	const expanded = new Set(Number.isFinite(latest) ? [latest] : [])
+
+	render(body, segments, isOnline(), expanded)
+	const stopWatching = onPresenceHistoryChange(userId, (changed) =>
+		render(body, changed, isOnline(), expanded),
+	)
 
 	const close = () => {
 		if (modal !== root) {

@@ -1267,21 +1267,136 @@ div.btr-setting-text {
 	white-space: nowrap;
 }
 
-.btr-activity-day {
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	margin: 0;
-	padding: 16px 0 8px;
-	background: var(--btr-surface);
-	color: var(--btr-content-emphasis);
+/* Days share one grid, so every bar lines up with the hour scale above. */
+.btr-activity-timeline {
+	--btr-day-columns: 88px minmax(0, 1fr) 56px;
+	margin-top: 16px;
+}
+
+.btr-activity-scale {
+	display: grid;
+	grid-template-columns: var(--btr-day-columns);
+	gap: 12px;
+	padding: 0 8px 6px;
+	color: var(--btr-content-muted);
+	font-size: 12px;
+
+	&::before {
+		content: "";
+	}
+
+	& > span {
+		grid-column: 2;
+		grid-row: 1;
+		justify-self: start;
+	}
+
+	/* Each label sits centred on its quarter of the day, the first at the start. */
+	& > span:not(:first-child) {
+		transform: translateX(-50%);
+	}
+	& > span:nth-child(2) {
+		margin-left: 25%;
+	}
+
+	& > span:nth-child(3) {
+		margin-left: 50%;
+	}
+
+	& > span:nth-child(4) {
+		margin-left: 75%;
+	}
+}
+
+.btr-activity-day-row {
+	display: grid;
+	grid-template-columns: var(--btr-day-columns);
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	padding: 8px;
+
+	background: none;
+	border: none;
+	border-radius: 8px;
+	color: var(--btr-content);
+	font: inherit;
 	font-size: 14px;
-	font-weight: 700;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 150ms var(--btr-ease-out);
+
+	&:hover {
+		background: var(--btr-hover);
+	}
+
+	&[aria-expanded="true"] .btr-activity-day-label {
+		color: var(--btr-content-emphasis);
+		font-weight: 700;
+	}
+}
+
+.btr-activity-day-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.btr-activity-day-total {
+	color: var(--btr-content-muted);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+/* A day's 24 hours, with a faint line every six. */
+.btr-activity-bar {
+	position: relative;
+	height: 20px;
+	overflow: hidden;
+	border-radius: 6px;
+	background:
+		linear-gradient(to right, transparent calc(25% - 1px), var(--btr-stroke-muted) 0 25%, transparent 0) 0
+			0 / 100% 100%,
+		linear-gradient(to right, transparent calc(50% - 1px), var(--btr-stroke-muted) 0 50%, transparent 0) 0
+			0 / 100% 100%,
+		linear-gradient(to right, transparent calc(75% - 1px), var(--btr-stroke-muted) 0 75%, transparent 0) 0
+			0 / 100% 100%,
+		var(--btr-surface-raised);
+}
+
+.btr-activity-block {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	min-width: 3px;
+	background: #00a2ff;
+
+	&[data-type="2"] {
+		background: #02b757;
+	}
+
+	&[data-type="3"] {
+		background: #f68802;
+	}
+
+	&:hover {
+		filter: brightness(1.2);
+	}
+}
+
+.btr-activity-now {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	margin-left: -1px;
+	background: var(--btr-content-emphasis);
+	opacity: 0.6;
 }
 
 .btr-activity-day-list {
-	margin: 0;
-	padding: 0;
+	margin: 4px 0 8px;
+	padding: 4px 8px 0 16px;
 	list-style: none;
 }
 
@@ -1383,5 +1498,9 @@ div.btr-setting-text {
 
 	.btr-activity-summary {
 		grid-template-columns: 1fr;
+	}
+
+	.btr-activity-timeline {
+		--btr-day-columns: 64px minmax(0, 1fr) 48px;
 	}
 }
