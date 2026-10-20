@@ -239,35 +239,77 @@ const startInject = () => {
 						}
 
 						if (request.onResponse.length) {
-							const responseText = {
-								configurable: true,
+							// The handlers run once, on whichever of responseText and
+							// response the page reads first. Angular reads response, so
+							// hooking responseText alone missed every Angular request.
+							let transformed: { text: string; json: any } | null = null
+							const descriptors: Record<string, PropertyDescriptor> = {}
 
-								get() {
-									delete xhr.responseText
-									let text = xhr.responseText
+							const native = (prop: string) => {
+								delete xhr[prop]
+								const value = xhr[prop]
+								Object.defineProperty(xhr, prop, descriptors[prop])
+								return value
+							}
 
+							const transform = () => {
+								if (transformed || xhr.readyState !== 4) {
+									return transformed
+								}
+
+								let json: any
+
+								try {
+									json =
+										xhr.responseType === "json"
+											? native("response")
+											: JSON.parse(native("responseText"))
+								} catch {
+									return null
+								}
+
+								if (json === null || typeof json !== "object") {
+									return null
+								}
+
+								for (const fn of request.onResponse) {
 									try {
-										const json = JSON.parse(text)
-
-										for (const fn of request.onResponse) {
-											try {
-												;(fn as any)(json, request)
-											} catch (ex) {
-												console.error(ex)
-											}
-										}
-
-										text = JSON.stringify(json)
+										;(fn as any)(json, request)
 									} catch (ex) {
 										console.error(ex)
 									}
+								}
 
-									Object.defineProperty(xhr, "responseText", responseText)
-									return text
+								transformed = { text: JSON.stringify(json), json }
+								return transformed
+							}
+
+							const isText = () => xhr.responseType === "" || xhr.responseType === "text"
+
+							descriptors.responseText = {
+								configurable: true,
+								get() {
+									return (isText() && transform()?.text) || native("responseText")
 								},
 							}
 
-							Object.defineProperty(xhr, "responseText", responseText)
+							descriptors.response = {
+								configurable: true,
+								get() {
+									if (isText()) {
+										return transform()?.text ?? native("response")
+									}
+
+									if (xhr.responseType === "json") {
+										return transform()?.json ?? native("response")
+									}
+
+									return native("response")
+								},
+							}
+
+							Object.defineProperty(xhr, "responseText", descriptors.responseText)
+							Object.defineProperty(xhr, "response", descriptors.response)
 						}
 
 						args[0] = request.method
@@ -2189,19 +2231,37 @@ const startInject = () => {
 					)
 				})
 			},
-			// Passes on the presence Roblox asks for itself, such as the friends row
-			// polling it, so last seen stays fresh without a request of our own.
-			recordPresence: () => {
+			// Passes on responses to requests Roblox makes anyway, so features read
+			// them instead of asking again. The last few are kept, as the content
+			// script can start listening after the first ones have come and gone.
+			robloxResponses: () => {
+				const PATTERNS = [
+					/^https:\/\/presence\.roblox\.com\/v1\/presence\/users$/i,
+					/^https:\/\/groups\.roblox\.com\/v1\/users\/\d+\/groups\/roles(?:\?|$)/i,
+					/^https:\/\/games\.roblox\.com\/v1\/games\?universeIds=/i,
+				]
+
+				const kept: Array<[string, any]> = []
+
 				hijackXHR((request: any) => {
-					if (!/^https:\/\/presence\.roblox\.com\/v1\/presence\/users$/i.test(request.url)) {
+					if (!PATTERNS.some((pattern) => pattern.test(request.url))) {
 						return
 					}
 
 					request.onResponse.push((json: any) => {
-						if (Array.isArray(json?.userPresences)) {
-							contentScript.send("presences", json.userPresences)
+						kept.push([request.url, json])
+						if (kept.length > 40) {
+							kept.shift()
 						}
+
+						contentScript.send("robloxResponse", request.url, json)
 					})
+				})
+
+				contentScript.listen("replayRobloxResponses", () => {
+					for (const [url, json] of kept) {
+						contentScript.send("robloxResponse", url, json)
+					}
 				})
 			},
 			// Reports the rows Home loads, so the settings can list them, and drops
@@ -4475,7 +4535,7 @@ const startInject = () => {
 			["higherRobuxPrecision", "general.higherRobuxPrecision"],
 			["hideFriendActivity", "home.hideFriendActivity"],
 			["homeRows"],
-			["recordPresence", "profile.lastSeen"],
+			["robloxResponses"],
 			["ignoreR6Warning"],
 			["hijackAuth"],
 			["webpackHook", "create.enabled"],

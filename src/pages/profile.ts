@@ -2,7 +2,9 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
+import { btrLocalStorage } from "@/core/storage"
 import { getLastSeen } from "@/feat/lastSeen"
+import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import {
 	createPager,
@@ -22,9 +24,9 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 const ROUNDED_COUNT = /^[\d.,]+[KMB]\+?\s+(Followers|Following)$/
 
 // Writing the exact number leaves text the pattern no longer matches, so a
-// react re-render is what asks for the count again, and it asks for a fresh
-// one rather than restoring the number we happened to write.
-const showExactCounts = (userId: number) => {
+// react re-render is what asks for the count again. The counts come from the
+// profile data Roblox loads anyway; only without it are they asked for.
+const showExactCounts = (userId: number, getCounts: () => Promise<any>) => {
 	document.$watch(
 		".user-profile-header a span",
 		(span: HTMLElement) => {
@@ -35,15 +37,21 @@ const showExactCounts = (userId: number) => {
 					return
 				}
 
-				const json = await (label === "Followers"
-					? RobloxApi.friends.getFollowerCount(userId)
-					: RobloxApi.friends.getFollowingCount(userId))
+				const counts = await getCounts()
+				let count = label === "Followers" ? counts?.followersCount : counts?.followingsCount
 
-				if (!Number.isSafeInteger(json?.count)) {
+				if (!Number.isSafeInteger(count)) {
+					const json = await (label === "Followers"
+						? RobloxApi.friends.getFollowerCount(userId)
+						: RobloxApi.friends.getFollowingCount(userId))
+					count = json?.count
+				}
+
+				if (!Number.isSafeInteger(count)) {
 					return
 				}
 
-				span.textContent = `${formatNumber(json.count)} ${label}`
+				span.textContent = `${formatNumber(count)} ${label}`
 			}
 
 			new MutationObserver(() => void update()).observe(span, {
@@ -58,19 +66,28 @@ const showExactCounts = (userId: number) => {
 	)
 }
 
+/** The ids of your own communities, kept for ten minutes between profiles. */
+const getOwnCommunities = async (me: number): Promise<Set<number>> => {
+	const cached = btrLocalStorage.getItem<number[]>(`ownCommunities-${me}`)
+
+	if (cached) {
+		return new Set(cached)
+	}
+
+	try {
+		const json = await RobloxApi.groups.getUserGroupRoles(me)
+		const ids: number[] = (json?.data ?? []).map((entry: any) => entry.group.id)
+
+		btrLocalStorage.setItem(`ownCommunities-${me}`, ids, { expires: Date.now() + 10 * 60e3 })
+		return new Set(ids)
+	} catch {
+		return new Set()
+	}
+}
+
 pageInit.profile = () => {
 	if (!SETTINGS.get("profile.enabled")) {
 		return
-	}
-
-	if (SETTINGS.get("profile.exactCounts")) {
-		onPageLoad((userIdString: string) => {
-			const userId = Number.parseInt(userIdString, 10)
-
-			if (Number.isSafeInteger(userId)) {
-				showExactCounts(userId)
-			}
-		})
 	}
 
 	injectScript.call("profile")
@@ -115,6 +132,25 @@ pageInit.profile = () => {
 			componentWaiters.push(check)
 			check()
 		})
+
+	if (SETTINGS.get("profile.exactCounts")) {
+		onPageLoad((userIdString: string) => {
+			const userId = Number.parseInt(userIdString, 10)
+
+			if (Number.isSafeInteger(userId)) {
+				// Usually in long before the counts are drawn; without it in a few
+				// seconds, they are asked for instead.
+				const counts = Promise.race([
+					waitForComponent(userIdString, "UserProfileHeader").then(
+						(json: any) => json?.components?.UserProfileHeader?.counts,
+					),
+					new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+				])
+
+				showExactCounts(userId, () => counts)
+			}
+		})
+	}
 
 	onPageReset(() => {
 		document.body?.classList.remove("btr-profile")
@@ -233,7 +269,6 @@ pageInit.profile = () => {
 				</div>
 			</div>`
 
-			// const presencePromise = new Promise(resolve => resolve(RobloxApi.presence.getPresence([userId]).then(json => json?.userPresences?.[0])))
 			const aboutPromise = waitForComponent(userIdString, "About")
 
 			// The answers may already have come and gone before this listened.
@@ -432,25 +467,31 @@ pageInit.profile = () => {
 				// Roblox shows when someone is online, so this only fills in the
 				// offline case, and only from what this device has seen.
 				if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
-					RobloxApi.presence.getPresence([userId]).then((presences) => {
-						const presence = presences?.userPresences?.[0]
-						const seen = getLastSeen(userId)
+					waitForRobloxResponse(
+						(url, json) =>
+							url.includes("presence.roblox.com/v1/presence/users") &&
+							json?.userPresences?.some((entry: any) => entry.userId === userId),
+					)
+						.then((json) => json ?? RobloxApi.presence.getPresence([userId]))
+						.then((presences) => {
+							const presence = presences?.userPresences?.[0]
+							const seen = getLastSeen(userId)
 
-						if (!presence || presence.userPresenceType !== 0 || !seen) {
-							return
-						}
+							if (!presence || presence.userPresenceType !== 0 || !seen) {
+								return
+							}
 
-						const when = new Date(seen.at)
-						const value = newCont.$req(".btr-stats-lastseen")
+							const when = new Date(seen.at)
+							const value = newCont.$req(".btr-stats-lastseen")
 
-						value.textContent = when.$since()
-						value.title =
-							when.$format("MMM D, YYYY, h:mm A") +
-							(seen.location ? ` in ${seen.location}` : "")
+							value.textContent = when.$since()
+							value.title =
+								when.$format("MMM D, YYYY, h:mm A") +
+								(seen.location ? ` in ${seen.location}` : "")
 
-						newCont.$req(".btr-stats-lastseen-stat").style.display = ""
-						newCont.$req(".btr-profile-lastseen-note").style.display = ""
-					})
+							newCont.$req(".btr-stats-lastseen-stat").style.display = ""
+							newCont.$req(".btr-profile-lastseen-note").style.display = ""
+						})
 				}
 
 				const joinDate = json?.components?.About?.joinDateTime
@@ -640,21 +681,13 @@ pageInit.profile = () => {
 				// own profile, where every one would match.
 				const mineReady: Promise<Set<number>> = SETTINGS.get("profile.mutualCommunities")
 					? loggedInUserPromise.then((me) =>
-							me > 0 && me !== userId
-								? RobloxApi.groups
-										.getUserGroupRoles(me)
-										.then(
-											(mine) =>
-												new Set<number>(
-													(mine?.data ?? []).map((entry: any) => entry.group.id),
-												),
-										)
-										.catch(() => new Set<number>())
-								: new Set<number>(),
+							me > 0 && me !== userId ? getOwnCommunities(me) : new Set<number>(),
 						)
 					: Promise.resolve(new Set<number>())
 
 				ready(() => {
+					// Asked for directly: Roblox only loads this list for its own
+					// communities section, which this layout replaces.
 					RobloxApi.groups.getUserGroupRoles(userId).then(async (json) => {
 						const mine = await mineReady
 						const numGroups = json.data.length

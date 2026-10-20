@@ -22,6 +22,7 @@ import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { getCachedServerLocation, getServerDetails } from "@/feat/serverDetails"
+import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { queryReq } from "@/core/query"
 
 // Roblox rounds the big numbers on this page: visits turn into "1.8M+" and the
@@ -71,19 +72,26 @@ const showExactCounts = () => {
 			return
 		}
 
-		RobloxApi.games.getGameDetails.batch(universeId).then((json: any) => {
-			const visits = json?.data?.find((x: any) => x.id === universeId)?.visits
+		// Roblox asks for the game's details itself; that answer carries the visits.
+		waitForRobloxResponse(
+			(url, json) =>
+				url.includes("games.roblox.com/v1/games?universeIds=") &&
+				json?.data?.some((game: any) => game.id === universeId),
+		)
+			.then((json) => json ?? RobloxApi.games.getGameDetails.batch(universeId))
+			.then((json: any) => {
+				const visits = json?.data?.find((x: any) => x.id === universeId)?.visits
 
-			if (exactText(visits) === null) {
-				return
-			}
+				if (exactText(visits) === null) {
+					return
+				}
 
-			document.$watch(
-				"#game-visits-count",
-				(elem: HTMLElement) => keepExact(elem, () => exactText(visits)),
-				{ continuous: true },
-			)
-		})
+				document.$watch(
+					"#game-visits-count",
+					(elem: HTMLElement) => keepExact(elem, () => exactText(visits)),
+					{ continuous: true },
+				)
+			})
 	})
 }
 

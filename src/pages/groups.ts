@@ -1,6 +1,8 @@
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { loadOptionalFeature } from "@/feat/loadFeature"
+import { btrLocalStorage } from "@/core/storage"
+import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,
@@ -34,13 +36,31 @@ const showExactMemberCounts = (groupId: number) => {
 		.catch(() => {})
 
 	loggedInUserPromise
-		.then((userId) =>
-			userId > 0
-				? fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, {
-						credentials: "include",
-					}).then((res) => res.json())
-				: null,
-		)
+		.then(async (userId) => {
+			if (userId <= 0) {
+				return null
+			}
+
+			// Roblox loads your communities for its own list; that answer is read
+			// rather than asked for again, and kept for the mutual marks on profiles.
+			const json =
+				(await waitForRobloxResponse((url) =>
+					url.includes(`groups.roblox.com/v1/users/${userId}/groups/roles`),
+				)) ??
+				(await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, {
+					credentials: "include",
+				}).then((res) => res.json()))
+
+			if (Array.isArray(json?.data)) {
+				btrLocalStorage.setItem(
+					`ownCommunities-${userId}`,
+					json.data.map((entry: any) => entry.group.id),
+					{ expires: Date.now() + 10 * 60e3 },
+				)
+			}
+
+			return json
+		})
 		.then((json) => {
 			const counts = new Map<string, number>()
 

@@ -8,6 +8,7 @@ import { loadOptionalFeature } from "@/feat/loadFeature"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { recordPresences } from "@/feat/lastSeen"
+import { onRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { AssetCache } from "@/rbx/AssetCache"
@@ -1332,11 +1333,14 @@ pageInit.www = () => {
 	// Experiments
 
 	// Presence Roblox fetched itself, recorded for the profile's last seen.
-	injectScript.listen("presences", (presences: any[]) => {
-		if (SETTINGS.get("profile.lastSeen") && Array.isArray(presences)) {
-			recordPresences(presences)
-		}
-	})
+	onRobloxResponse(
+		(url) => url.includes("presence.roblox.com/v1/presence/users"),
+		(json) => {
+			if (SETTINGS.get("profile.lastSeen") && Array.isArray(json?.userPresences)) {
+				recordPresences(json.userPresences)
+			}
+		},
+	)
 
 	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
 		robloxExperiments[experiment] ??= {}
