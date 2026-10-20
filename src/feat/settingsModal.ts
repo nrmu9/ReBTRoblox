@@ -210,6 +210,15 @@ export const SettingsModal: SettingsModalState = {
 							spellcheck="false"
 							autocomplete="off"
 						/>
+						<button
+							type="button"
+							class="btr-settings-search-clear"
+							aria-label="Clear search"
+							title="Clear search"
+							hidden
+						>
+							<span class="icon icon-regular-x" aria-hidden="true"></span>
+						</button>
 					</label>
 					<nav class="btr-settings-tabs" role="tablist" aria-orientation="vertical"></nav>
 				</aside>
@@ -1291,7 +1300,10 @@ export const SettingsModal: SettingsModalState = {
 			const empty = this.settingsDiv.$req(".btr-settings-empty")
 			const main = this.settingsDiv.$req(".btr-settings")
 
+			const clear = this.settingsDiv.$req(".btr-settings-search-clear")
+
 			const run = () => {
+				clear.hidden = !input.value
 				const words = input.value.toLowerCase().split(/\s+/).filter(Boolean)
 				this.searching = words.length > 0
 				main.classList.toggle("btr-settings-searching", this.searching)
@@ -1329,6 +1341,13 @@ export const SettingsModal: SettingsModalState = {
 			}
 
 			input.$on("input", run)
+
+			clear.$on("click", (ev: Event) => {
+				ev.preventDefault()
+				input.value = ""
+				run()
+				input.focus()
+			})
 
 			this.clearSearch = () => {
 				if (input.value) {
