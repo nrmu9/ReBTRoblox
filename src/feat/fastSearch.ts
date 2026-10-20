@@ -3,7 +3,7 @@ import { injectScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { loggedInUserPromise } from "@/pages/common"
-import { query } from "@/core/query"
+import { queryAll } from "@/core/query"
 
 const btrFriends = {
 	// TODO: Move this elsewhere
@@ -39,28 +39,40 @@ const btrFriends = {
 				return RobloxApi.friends.getFriends(userId).then(async (json) => {
 					const friendsCached: Record<string, any> = {}
 
-					if (json.data.length > 0) {
-						const profiles = await RobloxApi.userProfiles.getProfiles(
-							json.data.map((x: any) => x.id),
-							["isVerified", "names.username", "names.displayName"],
-						)
+					// Asked in batches, so a long friends list stays inside what one
+					// request may carry.
+					const ids: number[] = (json?.data ?? []).map((x: any) => x.id)
+					const details: any[] = []
 
-						for (const profile of profiles.profileDetails) {
-							const friend = {
-								name: profile.names.username,
-								displayName: profile.names.displayName,
-								verified: profile.isVerified,
-							}
+					for (let i = 0; i < ids.length; i += 100) {
+						const profiles = await RobloxApi.userProfiles.getProfiles(ids.slice(i, i + 100), [
+							"isVerified",
+							"names.username",
+							"names.displayName",
+						])
 
-							if (friend.displayName === friend.name) {
-								delete friend.displayName
-							}
-							if (!friend.verified) {
-								delete friend.verified
-							}
+						details.push(...(profiles?.profileDetails ?? []))
+					}
 
-							friendsCached[profile.userId] = friend
+					for (const profile of details) {
+						if (!profile?.names?.username) {
+							continue
 						}
+
+						const friend = {
+							name: profile.names.username,
+							displayName: profile.names.displayName,
+							verified: profile.isVerified,
+						}
+
+						if (friend.displayName === friend.name) {
+							delete friend.displayName
+						}
+						if (!friend.verified) {
+							delete friend.verified
+						}
+
+						friendsCached[profile.userId] = friend
 					}
 
 					this.friendsCached = friendsCached
@@ -70,6 +82,11 @@ const btrFriends = {
 
 					return friendsCached
 				})
+			})
+
+			// A failure is not kept, so the next search tries again.
+			this.friendsPromise.catch(() => {
+				this.friendsPromise = null
 			})
 		}
 
@@ -96,6 +113,10 @@ export const btrFastSearch = {
 
 		try {
 			for (const [idString, entry] of Object.entries(btrFriends.getFriends()) as [string, any][]) {
+				if (!entry?.name) {
+					continue
+				}
+
 				userCache[entry.name.toLowerCase()] = {
 					Username: entry.name,
 					DisplayName: entry.displayName ?? entry.name,
@@ -135,12 +156,21 @@ export const btrFastSearch = {
 
 			return (thumbnailCache[userId] = RobloxApi.thumbnails.getAvatarHeadshots
 				.batch(userId)
-				.then(checkForThumb))
+				.then(checkForThumb)
+				.catch(() => {
+					delete thumbnailCache[userId]
+					return null
+				}))
 		}
 
+		// Kept briefly: someone joining a game should show up on the next search.
+		const PRESENCE_TTL = 30e3
+
 		const requestPresence = (userId: number) => {
-			if (presenceCache[userId]) {
-				return presenceCache[userId]
+			const cached = presenceCache[userId]
+
+			if (cached && Date.now() - cached.at < PRESENCE_TTL) {
+				return cached.promise
 			}
 
 			presencesToRequest.push(userId)
@@ -154,22 +184,33 @@ export const btrFastSearch = {
 
 							lastPresenceRequest = Date.now()
 
-							RobloxApi.presence.getPresence(userIds).then((json) => {
-								const result: Record<string, any> = {}
+							RobloxApi.presence.getPresence(userIds).then(
+								(json) => {
+									const result: Record<string, any> = {}
 
-								for (const info of json.userPresences) {
-									result[info.userId] = info
-								}
+									for (const info of json?.userPresences ?? []) {
+										result[info.userId] = info
+									}
 
-								resolve(result)
-							})
+									resolve(result)
+								},
+								() => {
+									for (const id of userIds) {
+										delete presenceCache[id]
+									}
+
+									resolve({})
+								},
+							)
 						},
 						Math.max(200, 1000 - (Date.now() - lastPresenceRequest)),
 					)
 				})
 			}
 
-			return (presenceCache[userId] = presencePromise.then((presences: any) => presences[userId]))
+			const promise = presencePromise.then((presences: any) => presences[userId])
+			presenceCache[userId] = { at: Date.now(), promise }
+			return promise
 		}
 
 		//
@@ -239,7 +280,14 @@ export const btrFastSearch = {
 		// All or nothing: returning a bare {} on failure made every caller probe
 		// a different field to find out whether the lookup had worked.
 		const getInfo = (): SearchInfo | null => {
-			const search = query<HTMLElement>("#navbar-universal-search, .navbar-search")
+			// Roblox can render more than one search box, a narrow window gets its
+			// own, so this is the one holding focus, else the one on screen.
+			const boxes = [...queryAll<HTMLElement>("#navbar-universal-search, .navbar-search")]
+			const search =
+				boxes.find((box) => box.contains(document.activeElement)) ??
+				boxes.find((box) => box.getClientRects().length > 0) ??
+				boxes[0]
+
 			if (!search) {
 				return null
 			}
@@ -411,6 +459,10 @@ export const btrFastSearch = {
 							return
 						}
 
+						if (!info) {
+							return
+						}
+
 						const status = item.$req(".btr-fastsearch-status")
 						status.classList.remove("game", "studio", "online")
 
@@ -477,7 +529,8 @@ export const btrFastSearch = {
 		}
 
 		const updateSearch = (search: any) => {
-			if (currentSearchText === search) {
+			// Same text is skipped only while its results are still on screen.
+			if (currentSearchText === search && (search === "" || getInfo()?.container.firstElementChild)) {
 				return
 			}
 
@@ -492,61 +545,80 @@ export const btrFastSearch = {
 						Username: search,
 					})
 
-					RobloxApi.users.getUsersByUsernames([search], false).then((json) => {
-						if (userCache[search] !== temp) {
-							return
-						}
-
-						const data = json?.data?.[0]
-
-						if (!data?.name) {
-							temp.NotFound = true
-							reloadSearchResults(true)
-							return
-						}
-
-						const user = userCache[data.name.toLowerCase()]
-
-						if (user && !user.Temporary) {
-							userCache[search] = user
-						} else {
-							userCache[search] = {
-								Username: data.name,
-								DisplayName: data.displayName,
-								UserId: data.id,
-								HasVerifiedBadge: data.hasVerifiedBadge,
+					RobloxApi.users.getUsersByUsernames([search], false).then(
+						(json) => {
+							if (userCache[search] !== temp) {
+								return
 							}
-						}
 
-						reloadSearchResults(true)
-					})
+							const data = json?.data?.[0]
+
+							if (!data?.name) {
+								temp.NotFound = true
+								reloadSearchResults(true)
+								return
+							}
+
+							const user = userCache[data.name.toLowerCase()]
+
+							if (user && !user.Temporary) {
+								userCache[search] = user
+							} else {
+								userCache[search] = {
+									Username: data.name,
+									DisplayName: data.displayName,
+									UserId: data.id,
+									HasVerifiedBadge: data.hasVerifiedBadge,
+								}
+							}
+
+							reloadSearchResults(true)
+						},
+						() => {
+							if (userCache[search] === temp) {
+								delete userCache[search]
+								reloadSearchResults(true)
+							}
+						},
+					)
 				}
 			}
 
 			if (shouldLoadFriends) {
 				shouldLoadFriends = false
 
-				btrFriends.loadFriends().then((friends: any) => {
-					for (const [name, entry] of Object.entries(userCache) as [string, any][]) {
-						if (entry.IsFriend) {
-							delete userCache[name]
+				// The old friends are only dropped once the new list is in hand, and a
+				// failed load is tried again on the next search.
+				btrFriends.loadFriends().then(
+					(friends: any) => {
+						for (const [name, entry] of Object.entries(userCache) as [string, any][]) {
+							if (entry.IsFriend) {
+								delete userCache[name]
+							}
 						}
-					}
 
-					for (const [idString, entry] of Object.entries(friends) as [string, any][]) {
-						const user = (userCache[entry.name.toLowerCase()] = {
-							Username: entry.name,
-							DisplayName: entry.displayName ?? entry.name,
-							HasVerifiedBadge: entry.verified || false,
-							UserId: +idString,
-							IsFriend: true,
-						})
+						for (const [idString, entry] of Object.entries(friends) as [string, any][]) {
+							if (!entry?.name) {
+								continue
+							}
 
-						requestPresence(user.UserId)
-					}
+							const user = (userCache[entry.name.toLowerCase()] = {
+								Username: entry.name,
+								DisplayName: entry.displayName ?? entry.name,
+								HasVerifiedBadge: entry.verified || false,
+								UserId: +idString,
+								IsFriend: true,
+							})
 
-					reloadSearchResults(true)
-				})
+							requestPresence(user.UserId)
+						}
+
+						reloadSearchResults(true)
+					},
+					() => {
+						shouldLoadFriends = true
+					},
+				)
 			}
 
 			reloadSearchResults(false)
