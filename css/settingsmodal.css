@@ -890,106 +890,169 @@ div.btr-setting-text {
 
 /* Experiment editor */
 
-#btr-settings-experiments {
-	overflow: hidden;
-	border: 1px solid var(--btr-stroke-muted);
-	border-radius: 12px;
+.btr-exp-toolbar {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.btr-exp-filter {
+	flex: 1;
+	min-width: 0;
+}
+
+.btr-exp-note {
+	margin: 0 0 8px;
+	color: var(--btr-content-muted);
 	font-size: 14px;
+	line-height: 20px;
+}
 
-	&:empty::before {
-		content: "Experiments show up here as pages ask Roblox for them.";
-		display: block;
-		padding: 16px;
-		color: var(--btr-content-muted);
-	}
+.btr-exp-note:empty {
+	display: none;
+}
 
-	.group + .group {
-		border-top: 1px solid var(--btr-stroke-muted);
-	}
+#btr-settings-experiments:empty::before {
+	content: "Experiments show up here as pages ask Roblox for them";
+	display: block;
+	padding: 16px 0;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+}
 
-	.group > summary {
-		padding: 12px 16px;
-		overflow: hidden;
-		color: var(--btr-content-emphasis);
-		font-weight: 600;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		cursor: pointer;
-	}
+.btr-exp-group {
+	border-top: 1px solid var(--btr-stroke-muted);
+}
 
-	.group > summary:hover {
-		background: var(--btr-hover);
-	}
+.btr-exp-group[hidden] {
+	display: none;
+}
 
-	.group > .contents {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		padding: 0 16px 12px;
-		row-gap: 4px;
-		column-gap: 8px;
-		align-items: center;
-	}
+.btr-exp-group > summary {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	padding: 12px 8px;
+	border-radius: 8px;
+	list-style: none;
+	cursor: pointer;
+	transition: background-color 150ms var(--btr-ease-out);
+}
 
-	.name {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		min-width: 0;
-		overflow: hidden;
-		color: var(--btr-content);
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		user-select: text;
-	}
+.btr-exp-group > summary::-webkit-details-marker {
+	display: none;
+}
 
-	.value {
-		height: 32px;
-		min-width: 0;
-		padding: 0 8px;
+.btr-exp-group > summary::before {
+	content: "";
+	flex: none;
+	align-self: center;
+	width: 6px;
+	height: 6px;
+	margin: 0 4px 0 2px;
+	border-right: 2px solid var(--btr-content-emphasis);
+	border-bottom: 2px solid var(--btr-content-emphasis);
+	transform: rotate(-45deg);
+	transition: transform 200ms var(--btr-ease-out);
+}
 
-		background: var(--btr-shift);
-		border: 1px solid var(--btr-stroke);
-		border-radius: 6px;
-		outline: none;
-		color: var(--btr-content-emphasis);
-		font-family: ui-monospace, Consolas, monospace;
-		font-size: 13px;
+.btr-exp-group[open] > summary::before {
+	transform: rotate(45deg);
+}
 
-		&::placeholder {
-			color: var(--btr-content-muted);
-			opacity: 1;
-		}
+.btr-exp-group > summary:hover {
+	background: var(--btr-hover);
+}
 
-		&:focus {
-			border-color: var(--btr-input-focus);
-		}
+.btr-exp-title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--btr-content-emphasis);
+	font-size: 16px;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 
-		&.invalid {
-			border-color: var(--btr-alert-content);
-		}
-	}
+.btr-exp-count {
+	flex: none;
+	color: var(--btr-content-muted);
+	font-size: 14px;
+}
 
-	.btr-setting-reset-button {
-		flex: none;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 20px;
-		height: 20px;
-		border-radius: 50%;
-		cursor: pointer;
-	}
+.btr-exp-rows {
+	padding: 0 0 12px 24px;
+}
 
-	.btr-setting-reset-button:hover {
-		background: var(--btr-hover);
-	}
+.btr-exp-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	align-items: center;
+	gap: 16px;
+	min-height: 48px;
+	padding: 4px 0;
+}
 
-	.btr-cross::before {
-		content: "×";
-		color: var(--btr-content-muted);
-		font-size: 16px;
-		line-height: 1;
-	}
+.btr-exp-row[hidden] {
+	display: none;
+}
+
+.btr-exp-name {
+	overflow: hidden;
+	color: var(--btr-content-emphasis);
+	font-size: 14px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	user-select: text;
+}
+
+.btr-exp-edited .btr-exp-name::after {
+	content: "Edited";
+	margin-left: 8px;
+	padding: 2px 6px;
+	background: var(--btr-standard);
+	border-radius: 4px;
+	color: var(--btr-content);
+	font-size: 12px;
+}
+
+/* Parameters no script on the page reads, and experiments with none it does. */
+.btr-exp-unused .btr-exp-name,
+.btr-exp-group.btr-exp-unused > summary {
+	opacity: 0.5;
+}
+
+.btr-exp-control .btr-select,
+.btr-exp-input {
+	width: 100%;
+}
+
+.btr-exp-input {
+	height: 40px;
+	padding: 0 12px;
+
+	background: var(--btr-shift);
+	border: 1px solid var(--btr-stroke);
+	border-radius: 8px;
+	outline: none;
+	color: var(--btr-content-emphasis);
+	font-family: ui-monospace, Consolas, monospace;
+	font-size: 14px;
+	transition: border-color 150ms var(--btr-ease-out);
+}
+
+.btr-exp-input::placeholder {
+	color: var(--btr-content-muted);
+	opacity: 1;
+}
+
+.btr-exp-input:focus {
+	border-color: var(--btr-input-focus);
+}
+
+.btr-exp-input.btr-exp-invalid {
+	border-color: var(--btr-alert-content);
 }
 
 /* Narrow windows: the tabs run along the top instead. */

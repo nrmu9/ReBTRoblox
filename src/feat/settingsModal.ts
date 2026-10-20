@@ -6,6 +6,7 @@ import { RobuxToCash } from "@/feat/robuxToCash"
 import { DEFAULT_SETTINGS, SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { robloxExperiments } from "@/pages/common"
+import { discoverExperimentHints, type ExperimentHint } from "@/feat/experimentHints"
 import { HOME_ROWS_KEY } from "@/pages/home"
 import { btrLocalStorage } from "@/core/storage"
 
@@ -181,6 +182,10 @@ export const SettingsModal: SettingsModalState = {
 
 		this.currentContent = name
 		sessionStorage.setItem("btr-settings-open", name)
+
+		if (name === "advanced") {
+			this.loadExperimentHints()
+		}
 	},
 
 	init() {
@@ -632,6 +637,24 @@ export const SettingsModal: SettingsModalState = {
 							<heading>Unlisted Settings</heading>
 							<div id="btr-settings-wip" class="btr-setting-card"></div>
 							<heading>Roblox Experiments</heading>
+							<div class="btr-exp-toolbar">
+								<label class="btr-settings-search btr-exp-filter">
+									<span
+										class="icon icon-regular-magnifying-glass"
+										aria-hidden="true"
+									></span>
+									<input
+										type="search"
+										placeholder="Filter experiments"
+										spellcheck="false"
+										autocomplete="off"
+									/>
+								</label>
+								<button type="button" id="btr-exp-reset" class="btr-settings-button">
+									Reset all
+								</button>
+							</div>
+							<p class="btr-exp-note"></p>
 							<div id="btr-settings-experiments"></div>
 							<heading>Reset</heading>
 							<div class="btr-setting-card">
@@ -1608,7 +1631,7 @@ export const SettingsModal: SettingsModalState = {
 
 			const nativeValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!
 
-			for (const select of modal.$findAll<HTMLSelectElement>(".btr-select select")) {
+			const upgradeSelect = (select: HTMLSelectElement) => {
 				const button = html<HTMLButtonElement>`<button
 					type="button"
 					class="btr-dropdown"
@@ -1667,6 +1690,37 @@ export const SettingsModal: SettingsModalState = {
 
 				refresh()
 			}
+
+			for (const select of modal.$findAll<HTMLSelectElement>(".btr-select select")) {
+				upgradeSelect(select)
+			}
+
+			this.upgradeSelect = upgradeSelect
+		}
+
+		// Experiment editor: a filter over experiments and parameters, and a
+		// reset for all of them.
+		{
+			const filter = this.settingsDiv.$req(".btr-exp-filter input") as HTMLInputElement
+
+			filter.$on("input", () => {
+				const words = filter.value.toLowerCase().split(/\s+/).filter(Boolean)
+
+				for (const group of Object.values(this.experiments) as any[]) {
+					const groupHit = words.every((word) => group.name.toLowerCase().includes(word))
+					let shown = 0
+
+					for (const entry of Object.values(group.entries) as any[]) {
+						const hit = groupHit || words.every((word) => entry.key.toLowerCase().includes(word))
+						entry.row.hidden = !hit
+						shown += hit ? 1 : 0
+					}
+
+					group.details.hidden = shown === 0
+				}
+			})
+
+			this.settingsDiv.$req("#btr-exp-reset").$on("click", () => this.resetExperiments())
 		}
 
 		this.robloxExperimentsChanged()
@@ -1687,134 +1741,302 @@ export const SettingsModal: SettingsModalState = {
 		return saved instanceof Object && !Array.isArray(saved) ? saved : {}
 	},
 
-	robloxExperimentsChanged() {
-		if (!this.settingsDiv) {
+	experimentHints: null as Record<string, ExperimentHint> | null,
+	loadingHints: false,
+
+	/** Reads Roblox's scripts for what each parameter accepts, once, when Advanced opens. */
+	loadExperimentHints() {
+		if (this.experimentHints || this.loadingHints || !this.settingsDiv) {
 			return
 		}
 
-		const populate = (experiments: any, defaultToUndefined?: any) => {
-			for (const [experiment, values] of Object.entries(experiments) as [string, any][]) {
-				let group = this.experiments[experiment]
+		this.loadingHints = true
+		const note: HTMLElement = this.settingsDiv.$req(".btr-exp-note")
+		note.textContent = "Reading Roblox's scripts for the values each parameter accepts..."
 
-				if (!group) {
-					const details = html`<details class="group" open>
-						<summary title=${experiment}>${experiment}</summary>
-						<div class="contents"></div>
-					</details>`
+		const keys = Object.values(this.experiments).flatMap((group: any) => Object.keys(group.entries))
 
-					group = this.experiments[experiment] = {
-						name: experiment,
-						details: details,
-						contents: details.$find(".contents"),
-						entries: {},
-					}
+		discoverExperimentHints(keys).then(
+			async (hints) => {
+				// Parameters that turned up while the scripts were being read are
+				// looked up too; the scripts are cached by now, so this is quick.
+				const missing = Object.values(this.experiments)
+					.flatMap((group: any) => Object.keys(group.entries))
+					.filter((key) => !(key in hints))
 
-					const keys = Object.keys(this.experiments).toSorted()
-					const next = this.experiments[keys[keys.indexOf(experiment) + 1]]
-
-					if (next) {
-						next.details.before(details)
-					} else {
-						this.settingsDiv.$find("#btr-settings-experiments").append(details)
-					}
+				if (missing.length) {
+					Object.assign(hints, await discoverExperimentHints(missing))
 				}
 
-				for (const [key, value] of Object.entries(values) as [string, any][]) {
-					let entry = group.entries[key]
+				this.experimentHints = hints
+				note.textContent = ""
 
-					if (!entry) {
-						const label = html`<div class="name" title=${key}>${key}</div>`
-						const resetButton = html`<span class="btr-setting-reset-button"
-							><span class="btr-cross"></span
-						></span>`
-						const input = html<HTMLInputElement>`<input class="value" type="text" />`
+				for (const group of Object.values(this.experiments) as any[]) {
+					for (const entry of Object.values(group.entries) as any[]) {
+						entry.render()
+					}
+					group.sort()
+				}
+			},
+			() => {
+				this.loadingHints = false
+				note.textContent = "Couldn't read Roblox's scripts, so only typed values are offered"
+			},
+		)
+	},
 
-						const update = (initial?: any) => {
-							resetButton.style.display = input.value ? "" : "none"
+	robloxExperimentsChanged() {
+		const root: HTMLElement | null = this.settingsDiv?.$find("#btr-settings-experiments")
 
+		if (!root) {
+			return
+		}
+
+		const format = (json: string) => {
+			try {
+				const value = JSON.parse(json)
+				return typeof value === "string" ? value : String(value)
+			} catch {
+				return json
+			}
+		}
+
+		const save = (experiment: string, key: string, value: string) => {
+			const data = this.getSavedExperiments()
+
+			// Picking what is already saved is not a change.
+			if ((data[experiment]?.[key] || "") === value) {
+				return
+			}
+
+			injectScript.send("updateExperiment", experiment, key, value)
+
+			if (value) {
+				data[experiment] ??= {}
+				data[experiment][key] = value
+			} else if (data[experiment]) {
+				delete data[experiment][key]
+
+				if (Object.keys(data[experiment]).length === 0) {
+					delete data[experiment]
+				}
+			}
+
+			// Nothing left goes back to the default, not to "{}".
+			SETTINGS.set("general.experiments", Object.keys(data).length ? JSON.stringify(data) : "")
+		}
+
+		const addGroup = (experiment: string) => {
+			const details = html`<details class="btr-exp-group" open>
+				<summary>
+					<span class="btr-exp-title"></span>
+					<span class="btr-exp-count"></span>
+				</summary>
+				<div class="btr-exp-rows"></div>
+			</details>`
+
+			details.$req(".btr-exp-title").textContent = experiment
+			details.title = experiment
+
+			const group = {
+				name: experiment,
+				details,
+				rows: details.$req(".btr-exp-rows"),
+				entries: {} as Record<string, any>,
+
+				/** Parameters the site reads first, then the rest, dimmed. */
+				sort() {
+					const entries = Object.values(this.entries).toSorted(
+						(a: any, b: any) => Number(a.unused) - Number(b.unused) || a.key.localeCompare(b.key),
+					)
+
+					this.rows.append(...entries.map((entry: any) => entry.row))
+
+					const edited = entries.filter((entry: any) => entry.edited).length
+					const used = entries.filter((entry: any) => !entry.unused).length
+					const count = [
+						edited ? `${edited} edited` : "",
+						SettingsModal.experimentHints
+							? `${used} of ${entries.length} used here`
+							: `${entries.length}`,
+					]
+
+					details.$req(".btr-exp-count").textContent = count.filter(Boolean).join(" · ")
+					details.classList.toggle("btr-exp-unused", !!SettingsModal.experimentHints && used === 0)
+
+					const groups = Object.values(SettingsModal.experiments).toSorted(
+						(a: any, b: any) =>
+							Number(a.details.classList.contains("btr-exp-unused")) -
+								Number(b.details.classList.contains("btr-exp-unused")) ||
+							a.name.localeCompare(b.name),
+					)
+
+					root.append(...groups.map((other: any) => other.details))
+				},
+			}
+
+			this.experiments[experiment] = group
+			root.append(details)
+			return group
+		}
+
+		const addEntry = (group: any, key: string) => {
+			const row = html`<div class="btr-exp-row">
+				<span class="btr-exp-name"></span>
+				<span class="btr-exp-control"></span>
+			</div>`
+
+			row.$req(".btr-exp-name").textContent = key
+			row.$req(".btr-exp-name").title = key
+
+			const entry = {
+				key,
+				row,
+				unused: false,
+				edited: false,
+
+				render() {
+					const experiment = group.name
+					const hint = SettingsModal.experimentHints?.[key]
+					const current = robloxExperiments[experiment]?.[key]
+					const saved: string = SettingsModal.getSavedExperiments()[experiment]?.[key] || ""
+					const currentJson = current === undefined ? "" : JSON.stringify(current)
+
+					this.unused = !!hint && !hint.used
+					this.edited = !!saved
+					row.classList.toggle("btr-exp-unused", this.unused)
+					row.classList.toggle("btr-exp-edited", this.edited)
+
+					// Roblox's comparisons, or a boolean's two states, become a list;
+					// anything else stays a typed value.
+					const choices = new Set<string>(
+						hint?.flag || typeof current === "boolean" ? ["true", "false"] : (hint?.values ?? []),
+					)
+
+					const slot = row.$req(".btr-exp-control")
+
+					if (choices.size) {
+						if (currentJson) {
+							choices.add(currentJson)
+						}
+						if (saved) {
+							choices.add(saved)
+						}
+
+						const select = html<HTMLSelectElement>`<select aria-label="${key}"></select>`
+						const defaultOption = document.createElement("option")
+						defaultOption.value = ""
+						defaultOption.textContent = currentJson
+							? `Default (${format(currentJson)})`
+							: "Default"
+						select.append(defaultOption)
+
+						for (const choice of choices) {
+							const option = document.createElement("option")
+							option.value = choice
+							option.textContent = format(choice)
+							select.append(option)
+						}
+
+						select.value = saved
+						select.$on("change", () => {
+							save(experiment, key, select.value)
+							entry.render()
+							group.sort()
+						})
+
+						const wrap = html`<span class="btr-select"></span>`
+						wrap.append(select)
+						slot.replaceChildren(wrap)
+						SettingsModal.upgradeSelect?.(select)
+					} else {
+						const input = html<HTMLInputElement>`<input
+							class="btr-exp-input"
+							type="text"
+							spellcheck="false"
+							aria-label="${key}"
+						/>`
+
+						input.value = saved
+						input.placeholder = currentJson || "Not set"
+
+						const commit = () => {
 							let valid = true
 
 							if (input.value) {
 								try {
 									JSON.parse(input.value)
-								} catch (ex) {
+								} catch {
 									valid = false
 								}
 							}
 
-							input.classList.toggle("invalid", !valid)
+							input.classList.toggle("btr-exp-invalid", !valid)
 
-							// Focusing a field and leaving it as it was is not a change.
-							if (
-								initial ||
-								input.value === (this.getSavedExperiments()[experiment]?.[key] || "")
-							) {
-								return
+							if (valid) {
+								save(experiment, key, input.value)
+								entry.edited = !!input.value
+								row.classList.toggle("btr-exp-edited", entry.edited)
+								group.sort()
 							}
-
-							injectScript.send("updateExperiment", experiment, key, input.value)
-
-							const data = this.getSavedExperiments()
-
-							if (input.value) {
-								data[experiment] ??= {}
-								data[experiment][key] = input.value
-							} else {
-								if (data[experiment]) {
-									delete data[experiment][key]
-
-									if (Object.keys(data[experiment]).length === 0) {
-										delete data[experiment]
-									}
-								}
-							}
-
-							// Nothing left goes back to the default, not to "{}".
-							SETTINGS.set(
-								"general.experiments",
-								Object.keys(data).length ? JSON.stringify(data) : "",
-							)
 						}
 
-						input.value = this.getSavedExperiments()[experiment]?.[key] || ""
-						update(true)
-
-						resetButton.$on("click", () => {
-							input.value = ""
-							update()
-						})
-
-						input.$on("keydown", (ev: KeyboardEvent) => ev.keyCode === 13 && input.blur())
-						input.$on("blur", () => update())
-
-						label.append(resetButton)
-
-						entry = group.entries[key] = {
-							label: label,
-							resetButton: resetButton,
-							input: input,
-
-							experiment: experiment,
-							key: key,
-						}
-
-						const keys = Object.keys(group.entries).toSorted()
-						const next = group.entries[keys[keys.indexOf(key) + 1]]
-
-						if (next) {
-							next.label.before(label, input)
-						} else {
-							group.contents.append(label, input)
-						}
+						input.$on("keydown", (ev: KeyboardEvent) => ev.key === "Enter" && input.blur())
+						input.$on("blur", commit)
+						slot.replaceChildren(input)
 					}
+				},
+			}
 
-					entry.input.placeholder = JSON.stringify(defaultToUndefined ? undefined : value)
+			group.entries[key] = entry
+			entry.render()
+
+			// A parameter that turns up after the scripts were read is looked up on
+			// its own; the scripts themselves are cached by then.
+			if (this.experimentHints && !(key in this.experimentHints)) {
+				void discoverExperimentHints([key]).then((hints) => {
+					Object.assign(this.experimentHints!, hints)
+					entry.render()
+					group.sort()
+				})
+			}
+		}
+
+		const all: Record<string, Set<string>> = {}
+
+		for (const source of [robloxExperiments, this.getSavedExperiments()]) {
+			for (const [experiment, values] of Object.entries(source) as [string, any][]) {
+				for (const key of Object.keys(values ?? {})) {
+					;(all[experiment] ??= new Set()).add(key)
 				}
 			}
 		}
 
-		populate(this.getSavedExperiments(), true)
-		populate(robloxExperiments)
+		for (const [experiment, keys] of Object.entries(all)) {
+			const group = this.experiments[experiment] ?? addGroup(experiment)
+
+			for (const key of keys) {
+				if (group.entries[key]) {
+					group.entries[key].render()
+				} else {
+					addEntry(group, key)
+				}
+			}
+
+			group.sort()
+		}
+	},
+
+	/** Puts every experiment back to what Roblox sends. */
+	resetExperiments() {
+		for (const [experiment, values] of Object.entries(this.getSavedExperiments()) as [string, any][]) {
+			for (const key of Object.keys(values ?? {})) {
+				injectScript.send("updateExperiment", experiment, key, "")
+			}
+		}
+
+		SETTINGS.set("general.experiments", "")
+		this.robloxExperimentsChanged()
 	},
 }
 
