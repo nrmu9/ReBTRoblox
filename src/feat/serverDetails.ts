@@ -2090,14 +2090,23 @@ if (IS_BACKGROUND_PAGE) {
 					body: JSON.stringify({ placeId: info.placeId, gameId: info.jobId }),
 				})
 
-			let res = await request()
+			let json
 
-			if (res.status === 429) {
-				await new Promise((resolve) => setTimeout(resolve, 1000))
-				res = await request()
+			// Without an answer the page would wait on this server for good.
+			try {
+				let res = await request()
+
+				if (res.status === 429) {
+					await new Promise((resolve) => setTimeout(resolve, 1000))
+					res = await request()
+				}
+
+				json = await res.json()
+			} catch {
+				respond({ success: false, status: null })
+				return
 			}
 
-			const json = await res.json()
 			const address = json?.joinScript?.UdmuxEndpoints?.[0]?.Address ?? json?.joinScript?.MachineAddress
 
 			if (address) {
@@ -2108,7 +2117,7 @@ if (IS_BACKGROUND_PAGE) {
 			} else {
 				respond({
 					success: false,
-					status: json.status,
+					status: json?.status ?? null,
 				})
 			}
 		},
@@ -2133,6 +2142,13 @@ const resolveServerDetails = (details: any) => {
 					status: details.status,
 					statusText: "Unknown",
 					statusTextLong: "Unable to fetch server location: You do not have access to this place",
+				}
+			case null:
+				return {
+					success: false,
+					status: null,
+					statusText: "Unknown",
+					statusTextLong: "Unable to fetch server location: Roblox did not answer",
 				}
 			default:
 				return {
@@ -2194,14 +2210,25 @@ export const getServerDetails = (placeId: number, jobId: string, callback: (...a
 
 	if (!promise) {
 		promise = gettingServerDetails[jobId] = new Promise((resolve) => {
-			backgroundScript.send("getServerAddress", { placeId: placeId, jobId: jobId }, (details: any) => {
-				delete gettingServerDetails[jobId]
+			const finish = (details: any) => {
+				clearTimeout(timeout)
 
+				if (gettingServerDetails[jobId] === promise) {
+					delete gettingServerDetails[jobId]
+					resolve(resolveServerDetails(details))
+				}
+			}
+
+			// The background can stop before it answers, which drops the reply.
+			// Not cached, so the next look asks again.
+			const timeout = setTimeout(() => finish({ success: false, status: null }), 20e3)
+
+			backgroundScript.send("getServerAddress", { placeId: placeId, jobId: jobId }, (details: any) => {
 				btrLocalStorage.setItem(`serverDetailsV2-${jobId}`, details, {
 					expires: Date.now() + (details.success ? 60 * 60e3 : 15e3),
 				})
 
-				resolve(resolveServerDetails(details))
+				finish(details)
 			})
 		})
 	}
