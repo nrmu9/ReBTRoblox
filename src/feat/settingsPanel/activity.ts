@@ -9,6 +9,9 @@ import {
 	formatBytes,
 	getActivityUsage,
 	getUserNames,
+	importBackup,
+	readBackup,
+	type Backup,
 } from "@/feat/activity/data"
 import { confirmClick } from "@/feat/settingsPanel/rows"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
@@ -195,11 +198,112 @@ export const setupStoredActivity = (modal: SettingsModalState) => {
 		}
 	})
 
+	const exportText = page.$req(".btr-activity-export-text")
+	const exportDefault = exportText.textContent
+
 	page.$req(".btr-activity-export").$on("click", async () => {
-		const link = document.createElement("a")
-		link.href = URL.createObjectURL(await exportActivity())
-		link.download = `rebtroblox-activity-${new Date().$format("YYYY-MM-DD")}.json`
-		link.click()
-		setTimeout(() => URL.revokeObjectURL(link.href), 60e3)
+		try {
+			const link = document.createElement("a")
+			link.href = URL.createObjectURL(await exportActivity())
+			link.download = `rebtroblox-activity-${new Date().$format("YYYY-MM-DD")}.json`
+			link.click()
+			setTimeout(() => URL.revokeObjectURL(link.href), 60e3)
+			exportText.textContent = exportDefault
+		} catch (err) {
+			exportText.textContent = `Couldn't export: ${(err as Error).message}`
+		}
+	})
+
+	setupImport(page, refresh)
+}
+
+const count = (value: number) => value.toLocaleString("en-US")
+
+/** What a backup holds, in a line: entries, the time it covers, and its lists. */
+const describeBackup = (backup: Backup) => {
+	const entries = backup.presence.length + backup.events.length
+	const span =
+		backup.from && backup.to
+			? ` from ${new Date(backup.from).$format("MMM D, YYYY")} to ${new Date(backup.to).$format("MMM D, YYYY")}`
+			: ""
+	const watched = backup.lists.watchedUsers?.length ?? 0
+	const tracked = (backup.lists.trackedGames?.length ?? 0) + (backup.lists.trackedGroups?.length ?? 0)
+	const lists = [
+		watched ? `${watched} watched ${watched === 1 ? "person" : "people"}` : "",
+		tracked ? `${tracked} tracked` : "",
+	].filter(Boolean)
+
+	return `${count(entries)} entries${span}${lists.length ? `, with ${lists.join(" and ")}` : ""}`
+}
+
+/** Import: pick a file, see what it holds, then add it. */
+const setupImport = (page: HTMLElement, refresh: () => Promise<void>) => {
+	const text = page.$req(".btr-activity-import-text")
+	const button = page.$req<HTMLButtonElement>(".btr-activity-import")
+	const cancel = page.$req<HTMLButtonElement>(".btr-activity-import-cancel")
+	const input = page.$req<HTMLInputElement>(".btr-activity-import-file")
+	const defaultText = text.textContent
+	let pending: Backup | null = null
+
+	const reset = (message = defaultText) => {
+		pending = null
+		text.textContent = message
+		button.textContent = "Import"
+		button.disabled = false
+		cancel.hidden = true
+	}
+
+	input.$on("change", async () => {
+		const file = input.files?.[0]
+		input.value = ""
+
+		if (!file) {
+			return
+		}
+
+		text.textContent = "Reading the file..."
+
+		try {
+			pending = await readBackup(file)
+			const entries = pending.presence.length + pending.events.length
+			text.textContent = `${describeBackup(pending)}. Entries already here are skipped.`
+			button.textContent = `Add ${count(entries)}`
+			cancel.hidden = false
+		} catch (err) {
+			reset((err as Error).message)
+		}
+	})
+
+	cancel.$on("click", () => reset())
+
+	button.$on("click", async () => {
+		if (!pending) {
+			input.click()
+			return
+		}
+
+		const backup = pending
+		button.disabled = true
+		cancel.hidden = true
+
+		try {
+			const result = await importBackup(backup, (share) => {
+				button.textContent = `${Math.round(share * 100)}%`
+			})
+
+			reset(
+				[
+					`Added ${count(result.added)}`,
+					result.skipped ? `skipped ${count(result.skipped)} already here` : "",
+					result.invalid ? `${count(result.invalid)} couldn't be read` : "",
+				]
+					.filter(Boolean)
+					.join(", "),
+			)
+		} catch (err) {
+			reset(`Couldn't import: ${(err as Error).message}`)
+		}
+
+		void refresh()
 	})
 }

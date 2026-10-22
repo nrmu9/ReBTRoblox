@@ -323,13 +323,40 @@ export const settingsMarkup = () =>
 						<div class="btr-setting-row" data-search="export download backup json">
 							<div class="btr-setting-text">
 								<span class="btr-setting-label">Export</span>
-								<span class="btr-setting-desc"
-									>Downloads everything recorded as a JSON file</span
+								<span class="btr-setting-desc btr-activity-export-text"
+									>Downloads everything recorded, and who you watch and track, as a JSON
+									file</span
 								>
 							</div>
 							<button type="button" class="btr-settings-button btr-activity-export">
 								Export
 							</button>
+						</div>
+						<div class="btr-setting-row" data-search="import restore backup json">
+							<div class="btr-setting-text">
+								<span class="btr-setting-label">Import</span>
+								<span class="btr-setting-desc btr-activity-import-text"
+									>Adds activity from an export, keeping what is already here</span
+								>
+							</div>
+							<div class="btr-activity-clear-controls">
+								<button
+									type="button"
+									class="btr-settings-button btr-activity-import-cancel"
+									hidden
+								>
+									Cancel
+								</button>
+								<button type="button" class="btr-settings-button btr-activity-import">
+									Import
+								</button>
+							</div>
+							<input
+								type="file"
+								class="btr-activity-import-file"
+								accept=".json,application/json"
+								hidden
+							/>
 						</div>
 						<div class="btr-setting-row" data-search="clear all activity delete everything">
 							<div class="btr-setting-text">

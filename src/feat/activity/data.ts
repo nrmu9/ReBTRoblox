@@ -1,4 +1,5 @@
 import { backgroundScript } from "@/core/messaging"
+import { SETTINGS } from "@/feat/settings"
 import type { ActivityEvent, ActivityUsage } from "@/feat/activity/store"
 
 // The page side of the activity database, which only the background opens.
@@ -13,9 +14,28 @@ export const clearActivityBefore = (before: number | null) => ask<boolean>("acti
 
 export const clearUserActivity = (userId: number) => ask<boolean>("activityClearUser", userId)
 
-/** Everything recorded, as a JSON file built a page of records at a time. */
+// Who is watched and what is tracked, which a backup carries with the activity.
+const LISTS = {
+	watchedUsers: "profile.watchedUsers",
+	trackedGames: "profile.trackedGames",
+	trackedGroups: "profile.trackedGroups",
+} as const
+
+const listOf = (path: string): number[] => {
+	try {
+		const list = JSON.parse(SETTINGS.get(path) || "[]")
+		return Array.isArray(list) ? list.filter((id) => Number.isSafeInteger(id)) : []
+	} catch {
+		return []
+	}
+}
+
+/** Everything recorded, and who is watched and tracked, as a JSON file built a page of records at a time. */
 export const exportActivity = async (): Promise<Blob> => {
-	const parts: string[] = [`{"exportedAt":${JSON.stringify(new Date().toISOString())}`]
+	const lists = Object.fromEntries(Object.entries(LISTS).map(([key, path]) => [key, listOf(path)]))
+	const parts: string[] = [
+		`{"version":1,"exportedAt":${JSON.stringify(new Date().toISOString())},"lists":${JSON.stringify(lists)}`,
+	]
 
 	for (const store of ["presence", "events"] as const) {
 		parts.push(`,"${store}":[`)
@@ -64,6 +84,111 @@ export interface WatchChecks {
 
 /** When each of a watched person's checks last ran. */
 export const getWatchChecks = (userId: number) => ask<WatchChecks | null>("activityChecks", userId)
+
+export interface Backup {
+	presence: unknown[]
+	events: unknown[]
+	lists: Partial<Record<keyof typeof LISTS, number[]>>
+	exportedAt: string | null
+	/** The oldest and newest times in it. */
+	from: number | null
+	to: number | null
+	people: number
+}
+
+/** A backup file read and checked for its shape, or an error saying why it is not one. */
+export const readBackup = async (file: File): Promise<Backup> => {
+	let json: any
+
+	try {
+		json = JSON.parse(await file.text())
+	} catch {
+		throw new Error("That file isn't JSON")
+	}
+
+	if (!json || !Array.isArray(json.presence) || !Array.isArray(json.events)) {
+		throw new Error("That file isn't an activity export")
+	}
+
+	const times: number[] = []
+	const people = new Set<number>()
+
+	for (const record of [...json.presence, ...json.events]) {
+		const at = record?.from ?? record?.at
+		if (typeof at === "number") {
+			times.push(at)
+		}
+		if (Number.isSafeInteger(record?.userId) && record.userId > 0) {
+			people.add(record.userId)
+		}
+	}
+
+	const lists: Backup["lists"] = {}
+
+	for (const key of Object.keys(LISTS) as Array<keyof typeof LISTS>) {
+		const list = json.lists?.[key]
+		if (Array.isArray(list)) {
+			lists[key] = list.filter((id: unknown) => Number.isSafeInteger(id))
+		}
+	}
+
+	return {
+		presence: json.presence,
+		events: json.events,
+		lists,
+		exportedAt: typeof json.exportedAt === "string" ? json.exportedAt : null,
+		from: times.length ? times.reduce((a, b) => Math.min(a, b)) : null,
+		to: times.length ? times.reduce((a, b) => Math.max(a, b)) : null,
+		people: people.size,
+	}
+}
+
+const IMPORT_PAGE = 2000
+
+/**
+ * Adds a backup to what is recorded, a page at a time, and its watched and
+ * tracked lists to the current ones. Nothing here is replaced.
+ */
+export const importBackup = async (backup: Backup, onProgress: (share: number) => void) => {
+	const importId = `${Date.now()}-${Math.random()}`
+	const total = backup.presence.length + backup.events.length
+	const result = { added: 0, skipped: 0, invalid: 0 }
+	let sent = 0
+
+	for (const store of ["presence", "events"] as const) {
+		const records = backup[store]
+
+		for (let i = 0; i < records.length; i += IMPORT_PAGE) {
+			const page = await ask<typeof result | null>("activityImportPage", {
+				importId,
+				store,
+				records: records.slice(i, i + IMPORT_PAGE),
+			})
+
+			if (!page) {
+				throw new Error("The background stopped while importing")
+			}
+
+			result.added += page.added
+			result.skipped += page.skipped
+			result.invalid += page.invalid
+			sent += Math.min(IMPORT_PAGE, records.length - i)
+			onProgress(total ? sent / total : 1)
+		}
+	}
+
+	for (const [key, path] of Object.entries(LISTS) as Array<[keyof typeof LISTS, string]>) {
+		const incoming = backup.lists[key] ?? []
+		const current = listOf(path)
+		const merged = [...new Set([...current, ...incoming])]
+
+		if (merged.length !== current.length) {
+			SETTINGS.set(path, JSON.stringify(merged))
+		}
+	}
+
+	return result
+}
 
 export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][], since?: number) =>
 	ask<ActivityEvent[] | null>("activityEvents", { userId, kinds, ...(since ? { since } : {}) })

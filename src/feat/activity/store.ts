@@ -266,6 +266,181 @@ export const exportPage = async (store: "presence" | "events", after: number, li
 	return done(db.transaction(store).objectStore(store).getAll(IDBKeyRange.lowerBound(after, true), limit))
 }
 
+// Importing a backup
+
+const EVENT_KINDS = new Set<string>([
+	"friendAdded",
+	"friendRemoved",
+	"followerAdded",
+	"followerRemoved",
+	"followingAdded",
+	"followingRemoved",
+	"requestReceived",
+	"requestSent",
+	"requestDeclined",
+	"profileChanged",
+	"sample",
+	"gameUpdated",
+	"shoutChanged",
+	"groupGameAdded",
+])
+
+const isTime = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value)
+
+/** A presence record from a file with only the fields this keeps, or null if it is not one. */
+const cleanPresence = (record: any): PresenceRecord | null => {
+	if (
+		!Number.isSafeInteger(record?.userId) ||
+		![0, 1, 2, 3].includes(record.type) ||
+		!isTime(record.from) ||
+		!isTime(record.to) ||
+		record.to < record.from
+	) {
+		return null
+	}
+
+	return {
+		userId: record.userId,
+		type: record.type,
+		from: record.from,
+		to: record.to,
+		...(record.exact === true ? { exact: true } : {}),
+		...(typeof record.location === "string" ? { location: record.location } : {}),
+		...(Number.isSafeInteger(record.placeId) ? { placeId: record.placeId } : {}),
+		...(typeof record.gameId === "string" ? { gameId: record.gameId } : {}),
+	}
+}
+
+/** An event from a file without its id, or null if it is not one. */
+const cleanEvent = (record: any): ActivityEvent | null => {
+	if (!Number.isSafeInteger(record?.userId) || !isTime(record.at) || !EVENT_KINDS.has(record.kind)) {
+		return null
+	}
+
+	const { id: _id, ...event } = record
+	return event
+}
+
+const eventKey = (event: ActivityEvent) =>
+	JSON.stringify([event.at, event.kind, event.field ?? null, event.otherId ?? null])
+
+/**
+ * What one import already holds per person, read once and then kept up as it
+ * adds, so a file can come in many pages without reading anyone twice.
+ */
+const importSeen = new Map<string, { id: string; byUser: Map<number, PresenceRecord[] | Set<string>> }>()
+
+const seenFor = async (importId: string, store: "presence" | "events", userId: number) => {
+	let entry = importSeen.get(store)
+
+	if (entry?.id !== importId) {
+		entry = { id: importId, byUser: new Map() }
+		importSeen.set(store, entry)
+	}
+
+	let seen = entry.byUser.get(userId)
+
+	if (!seen) {
+		const db = await openDb()
+		const records = await done(
+			db.transaction(store).objectStore(store).index("user").getAll(userRange(userId)),
+		)
+
+		seen =
+			store === "presence"
+				? (records as PresenceRecord[]).toSorted((a, b) => a.from - b.from)
+				: new Set((records as ActivityEvent[]).map(eventKey))
+
+		entry.byUser.set(userId, seen)
+	}
+
+	return seen
+}
+
+/** Whether `record` covers any time already in `sorted`, which never overlap each other. */
+const overlaps = (sorted: PresenceRecord[], record: PresenceRecord) => {
+	let low = 0
+	let high = sorted.length
+
+	// The first one starting at or after the record ends.
+	while (low < high) {
+		const mid = (low + high) >> 1
+		if (sorted[mid].from < record.to) {
+			low = mid + 1
+		} else {
+			high = mid
+		}
+	}
+
+	const before = sorted[low - 1]
+	return (
+		(!!before && before.to > record.from) ||
+		(!!sorted[low] && sorted[low].from === record.from && sorted[low].to === record.to)
+	)
+}
+
+/**
+ * Adds a page of a backup's records. Ones already here are skipped, and so is
+ * a presence record over time already recorded for that person, which keeps a
+ * history from two browsers from showing the same hours twice.
+ */
+export const importPage = async (
+	importId: string,
+	store: "presence" | "events",
+	records: unknown[],
+): Promise<{ added: number; skipped: number; invalid: number }> => {
+	let invalid = 0
+	const fresh: Array<PresenceRecord | ActivityEvent> = []
+
+	for (const raw of records) {
+		const record = store === "presence" ? cleanPresence(raw) : cleanEvent(raw)
+
+		if (!record) {
+			invalid++
+			continue
+		}
+
+		const seen = await seenFor(importId, store, record.userId)
+
+		if (store === "presence") {
+			const sorted = seen as PresenceRecord[]
+			const presence = record as PresenceRecord
+
+			if (overlaps(sorted, presence)) {
+				continue
+			}
+
+			const at = sorted.findIndex((other) => other.from > presence.from)
+			sorted.splice(at === -1 ? sorted.length : at, 0, presence)
+		} else {
+			const keys = seen as Set<string>
+			const key = eventKey(record as ActivityEvent)
+
+			if (keys.has(key)) {
+				continue
+			}
+
+			keys.add(key)
+		}
+
+		fresh.push(record)
+	}
+
+	if (fresh.length) {
+		const db = await openDb()
+		const tx = db.transaction(store, "readwrite")
+
+		for (const record of fresh) {
+			tx.objectStore(store).add(record)
+		}
+
+		await committed(tx)
+		announceChange(new Set(fresh.map((record) => record.userId)))
+	}
+
+	return { added: fresh.length, skipped: records.length - fresh.length - invalid, invalid }
+}
+
 // Warnings
 
 /** 0 fine, 1 nearly full, 2 full and no longer recording. */
@@ -329,6 +504,26 @@ if (IS_BACKGROUND_PAGE) {
 			respond: (value: unknown) => void,
 		) {
 			answer(exportPage(store, after, limit), respond)
+		},
+		activityImportPage(
+			{
+				importId,
+				store,
+				records,
+			}: { importId: string; store: "presence" | "events"; records: unknown[] },
+			respond: (value: unknown) => void,
+		) {
+			answer(
+				store === "presence" || store === "events"
+					? importPage(importId, store, Array.isArray(records) ? records : []).then(
+							async (result) => {
+								await checkLevel(true)
+								return result
+							},
+						)
+					: Promise.resolve(null),
+				respond,
+			)
 		},
 	})
 }
