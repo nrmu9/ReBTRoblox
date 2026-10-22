@@ -638,7 +638,7 @@ export const settingsMarkup = () =>
 						></toggle>
 					</page>
 
-					<page name="advanced" label="Advanced" icon="nine-dots-grid">
+					<page name="advanced" label="Experiments" icon="flag">
 						<heading>Unlisted Settings</heading>
 						<div id="btr-settings-wip" class="btr-setting-card"></div>
 						<heading>Roblox Experiments</heading>
@@ -671,7 +671,9 @@ export const settingsMarkup = () =>
 						</p>
 						<p class="btr-exp-note"></p>
 						<div id="btr-settings-experiments"></div>
-						<heading>Backup</heading>
+					</page>
+
+					<page name="backup" label="Backup" icon="shield-check">
 						<div class="btr-setting-card">
 							<div
 								class="btr-setting-row"

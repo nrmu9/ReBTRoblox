@@ -38,7 +38,7 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 			{
 				title: "Back up everything",
 				text: "Save your settings and all recorded activity to one file, and restore it on another browser.",
-				page: "advanced",
+				page: "backup",
 			},
 			{
 				title: "Import activity",
@@ -118,7 +118,10 @@ const showReleases = (releases: typeof NOTES, onDismiss?: () => void): void => {
 	const newest = releases[0].version
 	card = html`<div class="btr-whatsnew" role="dialog" aria-labelledby="btr-whatsnew-title">
 		<div class="btr-whatsnew-head">
-			<strong id="btr-whatsnew-title">New in ReBTRoblox ${newest}</strong>
+			<span class="btr-whatsnew-heading">
+				<span class="btr-whatsnew-badge">New</span>
+				<strong id="btr-whatsnew-title">ReBTRoblox ${newest}</strong>
+			</span>
 			<button type="button" class="btr-whatsnew-close" aria-label="Close">
 				<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
 					<path

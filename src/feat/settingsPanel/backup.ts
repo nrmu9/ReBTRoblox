@@ -1,7 +1,7 @@
 import { exportBackup, importBackup, readBackup, type Backup } from "@/feat/activity/data"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
 
-// Backups: the Activity page's import of recorded activity, and the Advanced
+// Backups: the Activity page's import of recorded activity, and the Backup
 // page's backup of everything, settings with activity.
 
 const count = (value: number) => value.toLocaleString("en-US")
@@ -112,9 +112,9 @@ export const setupImport = (options: {
 	})
 }
 
-/** The Advanced page's backup of everything, and restoring one. */
+/** The Backup page's backup of everything, and restoring one. */
 export const setupBackup = (modal: SettingsModalState) => {
-	const page: HTMLElement = modal.contentDivs.advanced
+	const page: HTMLElement = modal.contentDivs.backup
 	const text = page.$req(".btr-backup-export-text")
 	const defaultText = text.textContent
 

@@ -1539,12 +1539,19 @@ html
 	width: min(400px, calc(100vw - 48px));
 	max-height: 480px;
 	min-height: 0;
-	padding: 16px;
+	padding: 20px 16px 16px;
 
-	background: var(--color-surface-100, light-dark(#fff, #191a1f));
+	/* An update is worth noticing: a strip of Roblox's emphasis blue along
+	   the top, and a glow of it under the usual shadow. */
+	background:
+		linear-gradient(var(--color-action-emphasis-background, #335fff) 0 4px, transparent 4px),
+		var(--color-surface-100, light-dark(#fff, #191a1f));
 	border: 1px solid var(--color-stroke-muted, light-dark(#e3e3e3, #393b3d));
 	border-radius: 12px;
-	box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+	box-shadow:
+		0 8px 24px rgb(0 0 0 / 0.3),
+		0 0 0 1px color-mix(in srgb, var(--color-action-emphasis-background, #335fff) 35%, transparent),
+		0 0 32px color-mix(in srgb, var(--color-action-emphasis-background, #335fff) 22%, transparent);
 	color: var(--color-content-default, inherit);
 	font-size: 14px;
 	line-height: 20px;
@@ -1648,6 +1655,43 @@ html
 	}
 }
 
+.btr-whatsnew-heading {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.btr-whatsnew-badge {
+	flex: none;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--color-action-emphasis-background, #335fff);
+	color: var(--color-action-emphasis-foreground, #fff);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	line-height: 16px;
+	text-transform: uppercase;
+}
+
+/* Each change marked with a dot of the same blue */
+.btr-whatsnew-list li {
+	position: relative;
+	padding-left: 14px;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 7px;
+		left: 0;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--color-action-emphasis-background, #335fff);
+	}
+}
+
 .btr-whatsnew-actions {
 	display: flex;
 	justify-content: flex-end;
@@ -1656,10 +1700,10 @@ html
 	button {
 		height: 32px;
 		padding: 0 16px;
-		background: var(--color-action-standard-background, rgb(128 128 128 / 0.2));
+		background: var(--color-action-emphasis-background, #335fff);
 		border: none;
 		border-radius: 8px;
-		color: var(--color-content-emphasis, inherit);
+		color: var(--color-action-emphasis-foreground, #fff);
 		font: inherit;
 		font-weight: 600;
 		cursor: pointer;
