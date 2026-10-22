@@ -3,6 +3,16 @@ const describe = (value: unknown): string => {
 		return String(value.stack || value)
 	}
 
+	// DOMExceptions, and errors from the page's side, are not this world's
+	// Error, and JSON makes them {}.
+	const error = value as { name?: unknown; message?: unknown; stack?: unknown } | null
+
+	if (error && typeof error === "object" && ("message" in error || "name" in error)) {
+		return [`${String(error.name ?? "Error")}: ${String(error.message ?? "")}`, error.stack]
+			.filter(Boolean)
+			.join("\n")
+	}
+
 	if (value !== null && typeof value === "object") {
 		try {
 			return JSON.stringify(value)
