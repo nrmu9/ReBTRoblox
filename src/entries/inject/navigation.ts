@@ -133,6 +133,17 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 
 		const conversationOf = (node: any) => propAbove(node, "conversation", (c) => !!c.id)
 
+		// Previews put a message on one line, and the conversation shows it as
+		// written, so both are compared with their whitespace collapsed.
+		const flatten = (text: string) => text.replace(/s+/g, " ").trim()
+
+		/** Whether the open conversation shows a message of yours on its way out. */
+		const isSending = (shell: Element) =>
+			[...shell.querySelectorAll(".react-chat-message-bubble")].some(
+				(bubble) =>
+					propAbove(bubble, "message", (m) => typeof m === "object" && "isSending" in m)?.isSending,
+			)
+
 		const check = () => {
 			if (settings.general?.fixChatMessages === false) {
 				return
@@ -156,7 +167,7 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 						continue
 					}
 
-					const preview = String(conversation.preview?.text ?? conversation.preview ?? "")
+					const preview = flatten(String(conversation.preview?.text ?? conversation.preview ?? ""))
 					if (!preview || seen.get(conversation.id) === preview) {
 						continue
 					}
@@ -181,7 +192,14 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					// and race the thing it is meant to help.
 					const rendered = shell.querySelectorAll("li").length
 
-					if (!rendered || shell.textContent?.includes(preview)) {
+					if (!rendered || flatten(shell.textContent ?? "").includes(preview)) {
+						continue
+					}
+
+					// Refetching while a message is being sent replaces the copy
+					// that is waiting on its answer, which then shows as sending
+					// for good. Left unrecorded, so it is checked again once sent.
+					if (client.isMutating?.() || isSending(shell)) {
 						continue
 					}
 
@@ -189,18 +207,18 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					// cannot come back around and invalidate again.
 					seen.set(conversation.id, preview)
 
-					// Matched by looking for the conversation id inside the key
-					// rather than by rebuilding roblox's key shape, which is
-					// theirs to change.
-					client.invalidateQueries({
-						predicate: (query: any) => {
-							try {
-								return JSON.stringify(query.queryKey).includes(conversation.id)
-							} catch {
-								return false
-							}
+					// Only the messages themselves. Other entries under the same
+					// conversation, like its failed and moderated messages, live
+					// only in the page, and refetching them empties them.
+					client.invalidateQueries(
+						{
+							predicate: (query: any) =>
+								Array.isArray(query.queryKey) &&
+								query.queryKey.includes("conversationMessages") &&
+								query.queryKey.includes(conversation.id),
 						},
-					})
+						{ cancelRefetch: false },
+					)
 				} catch {}
 			}
 		}
