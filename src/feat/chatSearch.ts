@@ -169,10 +169,26 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 	const conversationId = () => shell.dataset.btrConversation ?? ""
 	let panel: HTMLElement | null = null
 
+	// Slides out, then goes; another open in the meantime gets a panel of its own.
 	const close = () => {
-		panel?.remove()
+		const closing = panel
 		panel = null
 		button.setAttribute("aria-pressed", "false")
+
+		if (!closing) {
+			return
+		}
+
+		// A hidden page draws no animation to wait for.
+		if (document.visibilityState === "hidden") {
+			closing.remove()
+			return
+		}
+
+		closing.setAttribute("data-closing", "")
+		const remove = () => closing.remove()
+		closing.addEventListener("animationend", remove, { once: true })
+		setTimeout(remove, 250)
 	}
 
 	const open = () => {
@@ -184,15 +200,30 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 		const header = shell.$find<HTMLElement>(".react-chat-dialog-header")
 		shell.style.position = "relative"
 
+		// The bar is the message box's shape and colours, with the search icon
+		// inside it and a clear button at its end.
 		panel = html`<div class="btr-chat-search bg-surface-100" role="search">
-			<input
-				type="search"
-				class="foundation-web-input outline-none radius-medium content-emphasis placeholder:content-muted bg-none stroke-standard stroke-contrast-alpha focus-within:stroke-system-emphasis text-body-small padding-x-medium padding-y-small"
-				placeholder="Search this chat"
-				aria-label="Search this chat"
-				spellcheck="false"
-				autocomplete="off"
-			/>
+			<div class="btr-chat-search-bar">
+				<span class="icon icon-regular-magnifying-glass content-muted" aria-hidden="true"></span>
+				<input
+					type="search"
+					class="foundation-web-input outline-none content-emphasis placeholder:content-muted bg-none stroke-standard stroke-contrast-alpha focus-within:stroke-system-emphasis text-body-small"
+					placeholder="Search this chat"
+					aria-label="Search this chat"
+					spellcheck="false"
+					autocomplete="off"
+				/>
+				<button type="button" class="btr-chat-search-clear content-muted" aria-label="Clear" hidden>
+					<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+						<path
+							d="M6 6l12 12M18 6L6 18"
+							stroke="currentColor"
+							stroke-width="2.5"
+							stroke-linecap="round"
+						/>
+					</svg>
+				</button>
+			</div>
 			<div class="btr-chat-search-status text-caption-medium content-muted" aria-live="polite"></div>
 			<div class="btr-chat-search-results"></div>
 		</div>`
@@ -200,6 +231,7 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 		panel.style.top = `${header?.offsetHeight ?? 56}px`
 
 		const input = panel.$req<HTMLInputElement>("input")
+		const clear = panel.$req<HTMLButtonElement>(".btr-chat-search-clear")
 		const status = panel.$req(".btr-chat-search-status")
 		const results = panel.$req(".btr-chat-search-results")
 		const history = historyOf(id)
@@ -238,8 +270,8 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 			if (query.length < 2) {
 				results.replaceChildren()
 				status.textContent = history.messages.length
-					? `${history.messages.length.toLocaleString("en-US")} messages read`
-					: "Type to search"
+					? `${history.messages.length.toLocaleString("en-US")} messages ready to search`
+					: "Type at least 2 letters"
 				return
 			}
 
@@ -247,11 +279,16 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 				(message) => searchable(message) && message.content.toLowerCase().includes(query),
 			)
 			const oldest = history.messages.at(-1)
-			const reach = oldest ? ` back to ${new Date(oldest.created_at).$format("MMM D, YYYY")}` : ""
+			const reach = history.done
+				? "whole chat"
+				: oldest
+					? `back to ${new Date(oldest.created_at).$format("MMM YYYY")}`
+					: ""
+			const read = history.messages.length.toLocaleString("en-US")
 
 			status.textContent = history.loading
-				? `Searching... ${history.messages.length.toLocaleString("en-US")} messages read`
-				: `${found.length ? found.length.toLocaleString("en-US") : "No"} ${found.length === 1 ? "match" : "matches"} in ${history.messages.length.toLocaleString("en-US")} messages${reach}`
+				? `Searching ${read} messages...`
+				: `${found.length ? found.length.toLocaleString("en-US") : "No"} ${found.length === 1 ? "match" : "matches"}${reach ? ` · ${reach}` : ""}`
 
 			const rows = found.slice(0, 200).map((message) => {
 				const row = messageRow(message, query, "button")
@@ -294,6 +331,14 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 		input.$on("input", () => {
 			clearTimeout(timer)
 			timer = setTimeout(search, 250)
+			clear.hidden = !input.value
+		})
+
+		clear.$on("click", () => {
+			input.value = ""
+			clear.hidden = true
+			render()
+			input.focus()
 		})
 
 		input.$on("keydown", (ev: KeyboardEvent) => {

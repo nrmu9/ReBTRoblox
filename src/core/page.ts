@@ -130,10 +130,14 @@ export const insertCSS = (...paths: string[]) => {
 			continue
 		}
 
+		// Firefox keeps a stylesheet by its address through reloads and even
+		// updates, which left new styles out. The address carries the version,
+		// and in dev builds the time, so a change always loads.
 		const styleSheet = document.createElement("link")
-		styleSheet.href = SETTINGS.get("general.themeHotReload")
-			? `${chrome.runtime.getURL(path)}?_=${Date.now()}`
-			: chrome.runtime.getURL(path)
+		styleSheet.href =
+			__DEV__ || SETTINGS.get("general.themeHotReload")
+				? `${chrome.runtime.getURL(path)}?_=${Date.now()}`
+				: `${chrome.runtime.getURL(path)}?v=${chrome.runtime.getManifest().version}`
 		styleSheet.rel = "stylesheet"
 
 		const parent = document.head || document.documentElement

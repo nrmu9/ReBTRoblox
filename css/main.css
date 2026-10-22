@@ -1836,8 +1836,9 @@ html
 	}
 }
 
-/* Searching a chat, over its messages below the header. Spacing, type and
-   colours are Roblox's chat classes; this lays the parts out. */
+/* Searching a chat, over its messages below the header. The bar copies the
+   message box: a pill with a hairline border, 12px text and 12px around it.
+   Type and colours are Roblox's chat classes. */
 
 .btr-chat-search {
 	position: absolute;
@@ -1847,22 +1848,115 @@ html
 	z-index: 2;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 8px 12px 0;
-	border-top: 1px solid var(--color-stroke-muted, rgb(128 128 128 / 0.2));
+	animation: btr-chat-search-in 160ms ease-out;
 
-	input {
-		box-sizing: border-box;
-		width: 100%;
-		height: 36px;
-		border-width: 1px;
-		border-style: solid;
+	&[data-closing] {
+		animation: btr-chat-search-out 120ms ease-in forwards;
+		pointer-events: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation-name: btr-chat-search-fade-in;
+
+		&[data-closing] {
+			animation-name: btr-chat-search-fade-out;
+		}
 	}
 }
 
-/* The header button stays shaded while its search is open */
-.btr-chat-search-button[aria-pressed="true"] {
-	background: var(--color-state-press, rgb(128 128 128 / 0.2));
+@keyframes btr-chat-search-in {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+}
+
+@keyframes btr-chat-search-out {
+	to {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+}
+
+@keyframes btr-chat-search-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes btr-chat-search-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+.btr-chat-search-bar {
+	position: relative;
+	flex: none;
+	padding: 4px 12px 8px;
+
+	> .icon {
+		position: absolute;
+		top: calc(50% - 2px);
+		left: 24px;
+		width: 16px;
+		height: 16px;
+		background-size: contain;
+		transform: translateY(-50%);
+		pointer-events: none;
+	}
+
+	/* Over the input classes' own width, which would spill out of the chat */
+	input.foundation-web-input {
+		box-sizing: border-box;
+		width: 100%;
+		min-width: 0;
+		max-width: 100%;
+		height: 36px;
+		padding: 0 32px 0 36px;
+		border-width: 1px;
+		border-style: solid;
+		border-radius: 18px;
+		font-size: 12px;
+		line-height: 18px;
+		appearance: none;
+
+		&::-webkit-search-cancel-button {
+			display: none;
+		}
+	}
+}
+
+.btr-chat-search-clear {
+	position: absolute;
+	top: calc(50% - 2px);
+	right: 18px;
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+
+	&[hidden] {
+		display: none;
+	}
+
+	&:hover {
+		background: var(--color-state-hover, rgb(128 128 128 / 0.12));
+	}
+}
+
+.btr-chat-search-status {
+	flex: none;
+	overflow: hidden;
+	padding: 0 16px 8px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .btr-chat-search-results {
@@ -1870,18 +1964,19 @@ html
 	flex: 1;
 	flex-direction: column;
 	min-height: 0;
-	margin: 0 -12px;
-	padding-bottom: 8px;
+	padding: 4px 0 8px;
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	border-top: 1px solid var(--color-stroke-muted, rgb(128 128 128 / 0.2));
 }
 
 .btr-chat-search-row {
 	display: flex;
 	flex-direction: column;
+	flex: none;
 	gap: 2px;
 	width: 100%;
-	padding: 8px 12px;
+	padding: 8px 16px;
 	background: none;
 	border: none;
 	color: inherit;
@@ -1890,6 +1985,7 @@ html
 
 	button& {
 		cursor: pointer;
+		transition: background-color 120ms ease-out;
 
 		&:hover,
 		&:focus-visible {
@@ -1932,17 +2028,24 @@ html
 
 .btr-chat-search-back,
 .btr-chat-search-more {
+	flex: none;
 	align-self: flex-start;
-	margin: 4px 12px;
+	margin: 4px 16px;
 	padding: 4px 0;
 	background: none;
 	border: none;
 	color: var(--color-content-link, #335fff);
 	font: inherit;
+	font-size: 12px;
 	font-weight: 600;
 	cursor: pointer;
 
 	&:hover {
 		text-decoration: underline;
 	}
+}
+
+/* The header button stays shaded while its search is open */
+.btr-chat-search-button[aria-pressed="true"] {
+	background: var(--color-state-press, rgb(128 128 128 / 0.2));
 }
