@@ -35,6 +35,7 @@ export const DEFAULT_SETTINGS = {
 		hideChat: { value: false },
 		smallChatButton: { value: true },
 		whatsNew: { value: true },
+		syncSettings: { value: true },
 		quickRemove: { value: true },
 		fixChatMessages: { value: true },
 		chatSearch: { value: true },
@@ -209,7 +210,8 @@ export const SETTINGS: Record<string, any> = {
 	},
 
 	_flush(isRetry = false, onSaved?: () => void) {
-		const payload = { format: STORAGE_FORMAT, values: this._collectOverrides() }
+		// When it was saved, so browser sync can tell which copy is newer.
+		const payload = { format: STORAGE_FORMAT, values: this._collectOverrides(), savedAt: Date.now() }
 
 		STORAGE.set({ [STORAGE_KEY]: payload }, () => {
 			const error = chrome.runtime.lastError

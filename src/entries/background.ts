@@ -13,12 +13,14 @@ import "@/feat/blogFeed"
 import "@/feat/activity/presence"
 import "@/feat/activity/live"
 import { startWatching } from "@/feat/activity/watch"
+import { startSettingsSync } from "@/feat/settingsSync"
 import { startTracking } from "@/feat/activity/tracked"
 import { recordUpdate } from "@/feat/whatsNew"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 
 startWatching()
+startSettingsSync()
 startTracking()
 
 // Service workers need listeners registered synchronously at startup.

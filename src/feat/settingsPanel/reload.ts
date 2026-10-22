@@ -10,6 +10,7 @@ import type { SettingsModalState } from "@/feat/settingsPanel/state"
 // handle being switched off again, not just on.
 export const setupReloadPrompt = (modal: SettingsModalState) => {
 	const APPLIES_LIVE = new Set([
+		"general.syncSettings",
 		"general.theme",
 		"general.enableContextMenus",
 		"general.robuxToUSDRate",

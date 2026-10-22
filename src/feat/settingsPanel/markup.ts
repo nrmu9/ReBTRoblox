@@ -684,7 +684,13 @@ export const settingsMarkup = () =>
 						<div id="btr-settings-experiments"></div>
 					</page>
 
-					<page name="backup" label="Backup" icon="shield-check">
+					<page name="backup" label="Backup" icon="shield-check" path="general">
+						<toggle
+							label="Sync Settings"
+							path="syncSettings"
+							desc="Keeps your settings the same on every browser signed in to the same Firefox or Chrome account, and brings them back after a reinstall. Activity stays on this device"
+						></toggle>
+						<heading>Backups</heading>
 						<div class="btr-setting-card">
 							<div
 								class="btr-setting-row"

@@ -49,6 +49,11 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 				page: "backup",
 			},
 			{
+				title: "Settings sync",
+				text: "Your settings follow your Firefox or Chrome account to your other computers, and come back after a reinstall.",
+				page: "backup",
+			},
+			{
 				title: "Import activity",
 				text: "Add activity from an export without losing what is already recorded.",
 				page: "activity",
