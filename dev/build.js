@@ -198,7 +198,45 @@ const run = async () => {
 	copyAssets()
 	writeManifest()
 
+	if (!dev) {
+		checkNoDevCode()
+	}
+
 	console.log(`built ${path.relative(ROOT, OUT)}/ (${target}${dev ? ", dev" : ""})`)
+}
+
+// Things only a dev build may contain: the bridge and the handles it pokes at.
+// They sit behind __DEV__, which drops them from a release; this fails the
+// build if a change ever lets one through anyway.
+const DEV_ONLY = [
+	"127.0.0.1:8787",
+	"startDevBridge",
+	"__btrAssetCache",
+	"__btrScene",
+	"btrWhatsNew",
+	"devWhatsNew",
+]
+
+const checkNoDevCode = () => {
+	const found = []
+
+	for (const file of fs.readdirSync(path.join(OUT, "js"))) {
+		if (file.endsWith(".map")) {
+			continue
+		}
+
+		const code = fs.readFileSync(path.join(OUT, "js", file), "utf8")
+
+		for (const marker of DEV_ONLY) {
+			if (code.includes(marker)) {
+				found.push(`${file}: ${marker}`)
+			}
+		}
+	}
+
+	if (found.length) {
+		throw new Error(`Dev only code in a release build:\n${found.join("\n")}`)
+	}
 }
 
 run().catch((err) => {

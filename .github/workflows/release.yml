@@ -85,6 +85,10 @@ jobs:
 
       - run: npm ci
 
+      # Only what ships: build tools never reach users, so an advisory in one
+      # should not hold a release back.
+      - run: npm audit --omit=dev --audit-level=high
+
       # A tag can be pushed without CI having passed on the commit, so the
       # checks run again rather than being assumed.
       - run: npm run lint
