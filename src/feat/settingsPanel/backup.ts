@@ -122,7 +122,7 @@ export const setupBackup = (modal: SettingsModalState) => {
 		try {
 			const link = document.createElement("a")
 			link.href = URL.createObjectURL(await exportBackup(true))
-			link.download = `rebtroblox-backup-${new Date().$format("YYYY-MM-DD")}.json`
+			link.download = `rebtroblox-private-backup-${new Date().$format("YYYY-MM-DD")}.json`
 			link.click()
 			setTimeout(() => URL.revokeObjectURL(link.href), 60e3)
 			text.textContent = defaultText

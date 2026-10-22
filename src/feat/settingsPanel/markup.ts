@@ -347,7 +347,8 @@ export const settingsMarkup = () =>
 								<span class="btr-setting-label">Export</span>
 								<span class="btr-setting-desc btr-activity-export-text"
 									>Downloads everything recorded, and who you watch and track, as a JSON
-									file</span
+									file. It holds what you recorded about other people, so keep it to
+									yourself</span
 								>
 							</div>
 							<button type="button" class="btr-settings-button btr-activity-export">
@@ -703,7 +704,9 @@ export const settingsMarkup = () =>
 								<div class="btr-setting-text">
 									<span class="btr-setting-label">Back Up Everything</span>
 									<span class="btr-setting-desc btr-backup-export-text"
-										>Downloads your settings and all recorded activity as one file</span
+										>Downloads your settings and all recorded activity as one file. It
+										holds what you recorded about other people, so keep it to
+										yourself</span
 									>
 								</div>
 								<button type="button" class="btr-settings-button btr-backup-export">

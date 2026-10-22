@@ -137,11 +137,12 @@ export const DEFAULT_SETTINGS = {
 		lastSeen: { value: true },
 		liveTracking: { value: true },
 		friendLog: { value: true },
-		// JSON list of the user ids being watched, managed from the activity dialog
-		watchedUsers: { value: "", hidden: true },
+		// JSON list of the user ids being watched, managed from the activity dialog.
+		// Private ones never reach the page, where any script could read them.
+		watchedUsers: { value: "", hidden: true, private: true },
 		// JSON lists of the universe and community ids being tracked
-		trackedGames: { value: "", hidden: true },
-		trackedGroups: { value: "", hidden: true },
+		trackedGames: { value: "", hidden: true, private: true },
+		trackedGroups: { value: "", hidden: true, private: true },
 		activityLimit: { value: "250", validValues: ["100", "250", "500", "1000", "2000", "0"] },
 		mutualCommunities: { value: true },
 	},
@@ -367,6 +368,25 @@ export const SETTINGS: Record<string, any> = {
 		for (const group of Object.values(settings) as any[]) {
 			for (const [name, setting] of Object.entries(group) as [string, any][]) {
 				group[name] = setting.value
+			}
+		}
+
+		return settings
+	},
+
+	/**
+	 * What the page side gets: everything but the private settings. It shares
+	 * the page with Roblox's scripts and anything else running there, and keeps
+	 * a copy in the page's own storage, so it only gets what it uses.
+	 */
+	serializeForPage() {
+		const settings = this.serialize()
+
+		for (const [groupName, group] of Object.entries(DEFAULT_SETTINGS) as [string, any][]) {
+			for (const [name, setting] of Object.entries(group ?? {}) as [string, any][]) {
+				if (setting?.private) {
+					delete settings[groupName]?.[name]
+				}
 			}
 		}
 

@@ -2,6 +2,7 @@ import { deferredPromise } from "@/core/deferred"
 import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
 import { backgroundScript, injectScript } from "@/core/messaging"
+import { isId, isKey, isRecord, isText } from "@/core/pageInput"
 import { currentPage } from "@/core/page"
 import { assert, bufferToString, formatFileName, ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadFeature"
@@ -472,6 +473,11 @@ export const modifyAngularTemplate = (
 
 const initAngularTemplates = () => {
 	injectScript.listen("initTemplate", (key: string, html: string) => {
+		// Only templates asked for, and of a size a template could be.
+		if (!isKey(key) || !angularTemplateCache[key] || !isText(html, 2_000_000)) {
+			return
+		}
+
 		// self closing tag support
 		html = html.replace(/<([\w-:]+)([^>]*)\/>/gi, "<$1$2></$1>")
 
@@ -1365,18 +1371,30 @@ pageInit.www = () => {
 	)
 
 	injectScript.listen("ownFriendAction", (otherId: number, action: string) => {
-		if (SETTINGS.get("profile.friendLog")) {
+		const known = ["unfriend", "accept", "decline", "declineAll", "block", "unblock"]
+
+		if ((isId(otherId) || otherId === 0) && known.includes(action) && SETTINGS.get("profile.friendLog")) {
 			backgroundScript.send("ownFriendAction", otherId, action)
 		}
 	})
 
 	injectScript.listen("robloxPresenceLive", (presences: any[], starts: Record<number, number>) => {
-		if (SETTINGS.get("profile.lastSeen")) {
+		// Each presence is checked field by field where it is recorded.
+		if (
+			Array.isArray(presences) &&
+			presences.length <= 1000 &&
+			(starts === undefined || isRecord(starts)) &&
+			SETTINGS.get("profile.lastSeen")
+		) {
 			recordPresences(presences, starts)
 		}
 	})
 
 	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
+		if (!isKey(experiment) || !isKey(key)) {
+			return
+		}
+
 		robloxExperiments[experiment] ??= {}
 		robloxExperiments[experiment][key] = value
 		recordExperimentPage(experiment)

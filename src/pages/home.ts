@@ -1,4 +1,5 @@
 import { injectScript } from "@/core/messaging"
+import { isKey, isRecord, isText } from "@/core/pageInput"
 import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
 import { html } from "@/core/html"
@@ -77,7 +78,11 @@ pageInit.home = () => {
 		const known = btrLocalStorage.getItem<Record<string, any>>(HOME_ROWS_KEY) ?? {}
 		let changed = false
 
-		for (const row of rows ?? []) {
+		for (const row of Array.isArray(rows) ? rows.slice(0, 200) : []) {
+			if (!isRecord(row) || !isKey(row.id) || !isText(row.title) || !isText(row.subtitle ?? "")) {
+				continue
+			}
+
 			if (
 				row?.id &&
 				row.title &&

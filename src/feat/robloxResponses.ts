@@ -1,4 +1,5 @@
 import { injectScript } from "@/core/messaging"
+import { isRobloxUrl } from "@/core/pageInput"
 
 // Responses to requests Roblox makes anyway, passed on by the page hook so a
 // feature can read them instead of asking Roblox again. Every saved request
@@ -13,6 +14,10 @@ const received: Response[] = []
 const waiters = new Set<(response: Response) => void>()
 
 injectScript.listen("robloxResponse", (url: string, json: any) => {
+	if (!isRobloxUrl(url)) {
+		return
+	}
+
 	const response = { url, json }
 
 	received.push(response)

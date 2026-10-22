@@ -1,3 +1,4 @@
+import { isId } from "@/core/pageInput"
 import { IS_BACKGROUND_PAGE, STORAGE } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import {
@@ -256,12 +257,15 @@ export const recordPresences = (presences: any[], starts?: Record<number, number
 			seen,
 			// Website and Studio are all Roblox says when it has nothing more.
 			...(type >= 2 && !/^(Website|Studio)?$/.test(presence.lastLocation ?? "")
-				? { location: String(presence.lastLocation) }
+				? { location: String(presence.lastLocation).slice(0, 200) }
 				: {}),
-			...(type === 2 && (presence.rootPlaceId || presence.placeId)
+			...(type === 2 && isId(presence.rootPlaceId || presence.placeId)
 				? { placeId: presence.rootPlaceId || presence.placeId }
 				: {}),
-			...(type === 2 && typeof presence.gameId === "string" && presence.gameId
+			...(type === 2 &&
+			typeof presence.gameId === "string" &&
+			presence.gameId &&
+			presence.gameId.length <= 64
 				? { gameId: presence.gameId }
 				: {}),
 			// A start in the future or long gone is not one to trust.

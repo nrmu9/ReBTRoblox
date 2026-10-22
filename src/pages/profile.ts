@@ -1,5 +1,6 @@
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
+import { isRecord } from "@/core/pageInput"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
@@ -110,11 +111,16 @@ pageInit.profile = () => {
 	const componentWaiters: Array<() => void> = []
 
 	injectScript.listen("profileData", (json: any) => {
-		if (json?.profileId == null) {
+		// A user id, as Roblox sends it as a string or a number.
+		if (
+			!isRecord(json) ||
+			!/^\d{1,20}$/.test(String(json.profileId)) ||
+			!isRecord(json.components ?? {})
+		) {
 			return
 		}
 
-		profileData[json.profileId] = json
+		profileData[String(json.profileId)] = json
 
 		for (const check of componentWaiters.slice()) {
 			check()
