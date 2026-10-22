@@ -61,15 +61,18 @@ interface GameState {
 	updated: string
 }
 
-/** Every tracked game in one request per 50: counts as samples, and updates by Roblox's own time. */
+/** Every tracked game in two requests per 50: counts as samples, and updates by Roblox's own time. */
 const checkGames = async (universeIds: number[]) => {
 	const events: NewEvent[] = []
 	const now = Date.now()
 
 	for (let i = 0; i < universeIds.length; i += 50) {
-		const json = await getJson(
-			`https://games.roblox.com/v1/games?universeIds=${universeIds.slice(i, i + 50).join(",")}`,
-		)
+		const ids = universeIds.slice(i, i + 50).join(",")
+		const [json, votes] = await Promise.all([
+			getJson(`https://games.roblox.com/v1/games?universeIds=${ids}`),
+			getJson(`https://games.roblox.com/v1/games/votes?universeIds=${ids}`),
+		])
+		const votesOf = new Map<number, any>((votes?.data ?? []).map((entry: any) => [entry.id, entry]))
 
 		for (const game of json?.data ?? []) {
 			const userId = gameSubject(game.id)
@@ -79,6 +82,25 @@ const checkGames = async (universeIds: number[]) => {
 				{ userId, at: now, kind: "sample", field: "players", after: game.playing ?? 0 },
 				{ userId, at: now, kind: "sample", field: "visits", after: game.visits ?? 0 },
 			)
+
+			if (Number.isSafeInteger(game.favoritedCount)) {
+				events.push({
+					userId,
+					at: now,
+					kind: "sample",
+					field: "favorites",
+					after: game.favoritedCount,
+				})
+			}
+
+			const vote = votesOf.get(game.id)
+
+			if (Number.isSafeInteger(vote?.upVotes) && Number.isSafeInteger(vote?.downVotes)) {
+				events.push(
+					{ userId, at: now, kind: "sample", field: "likes", after: vote.upVotes },
+					{ userId, at: now, kind: "sample", field: "dislikes", after: vote.downVotes },
+				)
+			}
 
 			if (before && before.updated !== game.updated && Date.parse(game.updated)) {
 				events.push({

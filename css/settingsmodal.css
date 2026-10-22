@@ -2403,43 +2403,246 @@ div.btr-setting-text {
 	}
 }
 
-.btr-chart-table {
-	margin-top: 6px;
-	font-size: 13px;
+/* The chart title row: its name, then the zoom reset and view toggle */
+.btr-chart-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 8px;
 
-	summary {
-		width: fit-content;
+	.btr-chart-title {
+		margin-bottom: 0;
+	}
+}
+
+.btr-chart-tools {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.btr-chart-views {
+	display: flex;
+	padding: 2px;
+	border-radius: 14px;
+	background: var(--btr-standard);
+
+	button {
+		height: 24px;
+		padding: 0 10px;
+		background: none;
+		border: none;
+		border-radius: 12px;
 		color: var(--btr-content-muted);
+		font: inherit;
+		font-size: 12px;
+		font-weight: 600;
 		cursor: pointer;
+		transition:
+			background-color 150ms var(--btr-ease-out),
+			color 150ms var(--btr-ease-out);
 
-		&:hover {
-			color: var(--btr-content-emphasis);
+		&[aria-pressed="true"] {
+			background: var(--btr-contrast);
+			color: var(--btr-inverse);
 		}
+	}
+}
+
+.btr-chart-reset,
+.btr-chart-tool {
+	height: 24px;
+	padding: 0 10px;
+	background: var(--btr-standard);
+	border: none;
+	border-radius: 12px;
+	color: var(--btr-content-emphasis);
+	font: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+/* Dragging across a plot picks the stretch to zoom into */
+.btr-chart-plot svg {
+	touch-action: pan-y;
+	user-select: none;
+}
+
+.btr-chart-selection {
+	fill: var(--btr-chart);
+	opacity: 0.12;
+}
+
+.btr-chart-zero {
+	stroke: var(--btr-content-muted);
+}
+
+.btr-chart-bar {
+	fill: var(--btr-chart);
+}
+
+/* Updates and shouts: a hairline down the plot with a dot at the top */
+.btr-chart-marker {
+	stroke: var(--btr-content-muted);
+	stroke-width: 1;
+	opacity: 0.5;
+}
+
+.btr-chart-marker-dot {
+	fill: var(--btr-content-muted);
+	stroke: var(--btr-surface);
+	stroke-width: 2;
+}
+
+.btr-chart-tooltip .btr-chart-note {
+	color: var(--btr-content);
+}
+
+.btr-track-checked {
+	margin: 8px 0 0;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+}
+
+/* The week grid: one green, from near the surface to full strength */
+.btr-heat-cell,
+.btr-heat-swatch {
+	fill: var(--btr-stroke-muted);
+	background: var(--btr-stroke-muted);
+
+	&[data-step="1"] {
+		fill: color-mix(in srgb, var(--btr-chart) 20%, var(--btr-surface));
+		background: color-mix(in srgb, var(--btr-chart) 20%, var(--btr-surface));
+	}
+
+	&[data-step="2"] {
+		fill: color-mix(in srgb, var(--btr-chart) 40%, var(--btr-surface));
+		background: color-mix(in srgb, var(--btr-chart) 40%, var(--btr-surface));
+	}
+
+	&[data-step="3"] {
+		fill: color-mix(in srgb, var(--btr-chart) 60%, var(--btr-surface));
+		background: color-mix(in srgb, var(--btr-chart) 60%, var(--btr-surface));
+	}
+
+	&[data-step="4"] {
+		fill: color-mix(in srgb, var(--btr-chart) 80%, var(--btr-surface));
+		background: color-mix(in srgb, var(--btr-chart) 80%, var(--btr-surface));
+	}
+
+	&[data-step="5"] {
+		fill: var(--btr-chart);
+		background: var(--btr-chart);
+	}
+}
+
+.btr-heat-focus {
+	fill: none;
+	stroke: var(--btr-content-emphasis);
+	stroke-width: 2;
+}
+
+.btr-heat-legend {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--btr-content-muted);
+	font-size: 12px;
+}
+
+.btr-heat-swatches {
+	display: flex;
+	gap: 2px;
+}
+
+.btr-heat-swatch {
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+}
+
+.btr-chart-tool[aria-pressed="true"] {
+	background: var(--btr-contrast);
+	color: var(--btr-inverse);
+}
+
+/* The table, in place of the plot: a box about its height that scrolls under
+   a header that stays put */
+.btr-chart-tablebox {
+	max-height: 240px;
+	overflow: auto;
+	border: 1px solid var(--btr-stroke-muted);
+	border-radius: 8px;
+	font-size: 13px;
+	overscroll-behavior: contain;
+
+	&[hidden] {
+		display: none;
+	}
+
+	&:focus-visible {
+		outline: var(--btr-ring-width) solid var(--btr-ring);
+		outline-offset: 2px;
 	}
 
 	table {
 		width: 100%;
-		margin-top: 6px;
 		border-collapse: collapse;
 		font-variant-numeric: tabular-nums;
 	}
 
 	th,
 	td {
-		padding: 4px 8px;
-		border-bottom: 1px solid var(--btr-stroke-muted);
+		padding: 6px 12px;
+		text-align: right;
+		white-space: nowrap;
+	}
+
+	th:first-child,
+	td:first-child {
 		text-align: left;
 	}
 
 	th {
+		position: sticky;
+		top: 0;
+		background: var(--btr-surface-raised);
 		color: var(--btr-content-muted);
+		font-size: 12px;
 		font-weight: 600;
 	}
 
-	td + td,
-	th + th {
-		text-align: right;
+	td {
+		border-top: 1px solid var(--btr-stroke-muted);
+		color: var(--btr-content);
 	}
+
+	tbody tr:hover td {
+		background: var(--btr-hover);
+	}
+
+	[hidden] {
+		display: none;
+	}
+}
+
+/* Eight columns, so a little tighter */
+.btr-heat-table {
+	th,
+	td {
+		padding: 6px;
+	}
+}
+
+.btr-chart-change {
+	color: var(--btr-content-muted);
 }
 
 .btr-chart-empty {

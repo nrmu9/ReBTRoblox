@@ -3,6 +3,7 @@ import { clockFormat } from "@/feat/clock"
 import type { PresenceSegment } from "@/feat/activity/presence"
 import { DAY, segmentEnd, formatDuration, startOfDay, nextDay } from "@/feat/activity/shared"
 import { thumbnails } from "@/feat/activity/logs"
+import { barChart, weekHeatmap, type ChartBar } from "@/feat/activity/chart"
 
 // The Stats tab: time online, most played games and the longest sessions.
 
@@ -92,6 +93,67 @@ const statsSince = (segments: PresenceSegment[], online: boolean, since: number)
 	}
 }
 
+const HOUR = 60 * 60e3
+
+/** Calls back with each stretch online from `since`, cut at every hour, as start and end. */
+const eachOnlineHour = (
+	segments: PresenceSegment[],
+	online: boolean,
+	since: number,
+	fn: (from: number, to: number) => void,
+) => {
+	segments.forEach((segment, index) => {
+		if (segment.type === 0) {
+			return
+		}
+
+		const end = segmentEnd(segments, index, online)
+
+		for (let from = Math.max(segment.from, since); from < end;) {
+			const to = Math.min(end, new Date(from).setMinutes(0, 0, 0) + HOUR)
+			fn(from, to)
+			from = to
+		}
+	})
+}
+
+/** Hours online on each day from the first with any, days with none at zero. */
+const hoursPerDay = (segments: PresenceSegment[], online: boolean, since: number): ChartBar[] => {
+	const totals = new Map<number, number>()
+
+	eachOnlineHour(segments, online, since, (from, to) => {
+		const day = startOfDay(from)
+		totals.set(day, (totals.get(day) ?? 0) + to - from)
+	})
+
+	if (!totals.size) {
+		return []
+	}
+
+	const bars: ChartBar[] = []
+	const today = startOfDay(Date.now())
+
+	for (let day = Math.min(...totals.keys()); day <= today; day = nextDay(day)) {
+		bars.push({ at: day, value: (totals.get(day) ?? 0) / HOUR })
+	}
+
+	return bars
+}
+
+/** Minutes online in each hour of the week, Monday first. */
+const minutesByHour = (segments: PresenceSegment[], online: boolean, since: number) => {
+	const cells = [...Array(7)].map(() => Array<number>(24).fill(0))
+
+	eachOnlineHour(segments, online, since, (from, to) => {
+		const date = new Date(from)
+		cells[(date.getDay() + 6) % 7][date.getHours()] += (to - from) / 60e3
+	})
+
+	return cells
+}
+
+const hoursLabel = (hours: number, decimals = 1) => `${Number(hours.toFixed(decimals))}h`
+
 const STAT_PERIODS = [
 	["7", "7 days"],
 	["30", "30 days"],
@@ -118,6 +180,7 @@ const statsSection = (segments: PresenceSegment[], online: boolean, since: numbe
 
 	section.append(
 		html`<div class="btr-activity-summary btr-stats-cards"></div>`,
+		html`<div class="btr-track-charts"></div>`,
 		html`<h3 class="btr-stats-heading">Most played</h3>`,
 		html`<div class="btr-stats-games"></div>`,
 		html`<h3 class="btr-stats-heading">Longest sessions</h3>`,
@@ -136,6 +199,18 @@ const statsSection = (segments: PresenceSegment[], online: boolean, since: numbe
 				new Date(longest.from).$format("MMM D"),
 			),
 		)
+
+	section.$req(".btr-track-charts").append(
+		barChart("Time online per day", hoursPerDay(segments, online, since), {
+			format: (hours) => formatDuration(hours * HOUR),
+			axis: hoursLabel,
+		}),
+		weekHeatmap("When online", minutesByHour(segments, online, since), {
+			cell: (minutes) => formatDuration(minutes * 60e3),
+			format: (minutes) =>
+				minutes ? `${formatDuration(minutes * 60e3)} online in all` : "Not seen online",
+		}),
+	)
 
 	const gameList = section.$req(".btr-stats-games")
 	const top = stats.games[0]?.time ?? 1

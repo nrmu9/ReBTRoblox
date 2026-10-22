@@ -3,6 +3,7 @@ import { clockFormat } from "@/feat/clock"
 import { getActivityEvents } from "@/feat/activity/data"
 import type { ActivityEvent } from "@/feat/activity/store"
 import { startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
+import { lineChart, type ChartPoint } from "@/feat/activity/chart"
 
 // The Friends and Changes tabs: logs by day, filtered in place.
 
@@ -236,6 +237,47 @@ const friendEntry = (event: ActivityEvent, isOwn: boolean) => {
 	return row
 }
 
+/**
+ * A count over time from the changes logged to it, each holding until the
+ * next. Its value before the first change starts the line.
+ */
+const countPoints = (changes: ActivityEvent[]): ChartPoint[] => {
+	const oldest = changes.toReversed()
+	const first = oldest[0]
+
+	if (!first) {
+		return []
+	}
+
+	return [
+		{ at: first.at - 1, value: Number(first.before) },
+		...oldest.map((change) => ({ at: change.at, value: Number(change.after) })),
+	].filter((point) => Number.isFinite(point.value))
+}
+
+/** Followers and following over time, for people whose counts have changed while watched. */
+const countCharts = (changes: ActivityEvent[]) => {
+	const followers = countPoints(changes.filter((change) => change.field === "followers"))
+	const followings = countPoints(changes.filter((change) => change.field === "followings"))
+
+	if (!followers.length && !followings.length) {
+		return null
+	}
+
+	const charts = html`<div class="btr-track-charts btr-people-charts"></div>`
+	const now = Date.now()
+
+	if (followers.length) {
+		charts.append(lineChart("Followers", followers, { step: true, until: now, daily: "gain" }))
+	}
+
+	if (followings.length) {
+		charts.append(lineChart("Following", followings, { step: true, until: now, daily: "gain" }))
+	}
+
+	return charts
+}
+
 /** Friends made and lost, and followers and following gained and lost, newest first by day. */
 export const renderFriends = async (
 	panel: HTMLElement,
@@ -243,7 +285,13 @@ export const renderFriends = async (
 	isOwn: boolean,
 	state: { group: string },
 ) => {
-	const events = (await getActivityEvents(userId, PEOPLE_KINDS)) ?? []
+	const [events, counts] = await Promise.all([
+		getActivityEvents(userId, PEOPLE_KINDS).then((list) => list ?? []),
+		getActivityEvents(userId, ["profileChanged"]).then((list) =>
+			(list ?? []).filter((change) => change.field === "followers" || change.field === "followings"),
+		),
+	])
+	const charts = countCharts(counts)
 
 	if (!events.length) {
 		panel.replaceChildren(
@@ -254,6 +302,7 @@ export const renderFriends = async (
 						: "No changes to their friends recorded yet."
 				}
 			</p>`,
+			...(charts ? [charts] : []),
 		)
 		return
 	}
@@ -263,6 +312,7 @@ export const renderFriends = async (
 		events,
 		groups: PEOPLE_GROUPS,
 		hideEmpty: true,
+		...(charts ? { intro: charts } : {}),
 		groupOf: peopleGroup,
 		entry: (event) => friendEntry(event, isOwn),
 		state,

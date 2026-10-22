@@ -1,6 +1,6 @@
 import { html } from "@/core/html"
 import { getActivityEvents } from "@/feat/activity/data"
-import { compactNumber, lineChart, type ChartPoint } from "@/feat/activity/chart"
+import { lineChart, type ChartMarker, type ChartPoint } from "@/feat/activity/chart"
 import { buildLog, icon, swap } from "@/feat/activity/logs"
 import { onActivityChange } from "@/feat/activity/presence"
 import { DAY } from "@/feat/activity/shared"
@@ -45,6 +45,50 @@ const pointsOf = (samples: ActivityEvent[], field: string): ChartPoint[] =>
 		.map((sample) => ({ at: sample.at, value: Number(sample.after) }))
 		.toReversed()
 
+/** Likes as a share of all votes, from the samples taken together. */
+const ratingOf = (samples: ActivityEvent[]): ChartPoint[] => {
+	const dislikes = new Map<number, number>()
+
+	for (const sample of samples) {
+		if (sample.field === "dislikes") {
+			dislikes.set(sample.at, Number(sample.after))
+		}
+	}
+
+	return samples
+		.filter((sample) => sample.field === "likes" && dislikes.has(sample.at))
+		.map((sample) => {
+			const up = Number(sample.after)
+			const total = up + dislikes.get(sample.at)!
+			return { at: sample.at, value: total ? (up / total) * 100 : 0 }
+		})
+		.filter((point) => Number.isFinite(point.value))
+		.toReversed()
+}
+
+const percent = (value: number, decimals = 1) => `${Number(value.toFixed(decimals))}%`
+
+/** How long ago, as words: just now, 12 minutes ago, 3 hours ago. */
+export const checkedAgo = (at: number) => {
+	const minutes = Math.round((Date.now() - at) / 60e3)
+
+	if (minutes < 1) {
+		return "just now"
+	}
+
+	if (minutes < 60) {
+		return minutes === 1 ? "a minute ago" : `${minutes} minutes ago`
+	}
+
+	const hours = Math.round(minutes / 60)
+
+	if (hours < 48) {
+		return hours === 1 ? "an hour ago" : `${hours} hours ago`
+	}
+
+	return `on ${new Date(at).$format("MMM D")}`
+}
+
 const card = (label: string, value: string, detail = "") =>
 	html`<div class="btr-activity-stat">
 		<div class="btr-activity-stat-label">${label}</div>
@@ -65,7 +109,12 @@ const renderOverview = async (
 
 	// Refetching keeps what is drawn, faded, rather than blanking it.
 	panel.classList.add("btr-track-loading")
-	const samples = (await getActivityEvents(subject, ["sample"], since)) ?? []
+	const [samples, happenings] = await Promise.all([
+		getActivityEvents(subject, ["sample"], since).then((events) => events ?? []),
+		getActivityEvents(subject, kind === "game" ? ["gameUpdated"] : ["shoutChanged"], since).then(
+			(events) => events ?? [],
+		),
+	])
 	panel.classList.remove("btr-track-loading")
 
 	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Period"></div>`
@@ -87,14 +136,28 @@ const renderOverview = async (
 		toolbar.append(chip)
 	}
 
+	const checked = html`<p class="btr-track-checked"></p>`
+	const latest = samples[0]?.at
+	checked.textContent = latest
+		? `Last checked ${checkedAgo(latest)}, every ${kind === "game" ? "15 minutes" : "hour"}`
+		: "Not checked yet"
+
+	const markers: ChartMarker[] = happenings
+		.map((event) => ({ at: event.at, label: kind === "game" ? "Updated" : "Shout" }))
+		.toReversed()
+
 	const cards = html`<div class="btr-activity-summary btr-stats-cards"></div>`
 	const charts = html`<div class="btr-track-charts"></div>`
 
 	if (kind === "game") {
 		const players = pointsOf(samples, "players")
 		const visits = pointsOf(samples, "visits")
+		const favorites = pointsOf(samples, "favorites")
+		const rating = ratingOf(samples)
 		const values = players.map((point) => point.value)
 		const peak = players.find((point) => point.value === Math.max(...values))
+		const likes = samples.find((sample) => sample.field === "likes")?.after as number | undefined
+		const dislikes = samples.find((sample) => sample.field === "dislikes")?.after as number | undefined
 
 		cards.append(
 			card("Playing", players.length ? players.at(-1)!.value.toLocaleString("en-US") : "–"),
@@ -112,9 +175,28 @@ const renderOverview = async (
 					: "–",
 			),
 			card("Visits gained", visits.length > 1 ? signed(visits.at(-1)!.value - visits[0].value) : "–"),
+			card(
+				"Favorites",
+				favorites.length ? favorites.at(-1)!.value.toLocaleString("en-US") : "–",
+				favorites.length > 1
+					? `${signed(favorites.at(-1)!.value - favorites[0].value)} in this time`
+					: "",
+			),
+			card(
+				"Rating",
+				rating.length ? percent(rating.at(-1)!.value) : "–",
+				likes !== undefined && dislikes !== undefined
+					? `${likes.toLocaleString("en-US")} likes, ${dislikes.toLocaleString("en-US")} dislikes`
+					: "",
+			),
 		)
 
-		charts.append(lineChart("Players", players), lineChart("Visits", visits, compactNumber))
+		charts.append(
+			lineChart("Players", players, { markers, daily: "peak" }),
+			lineChart("Visits", visits, { markers, daily: "gain" }),
+			lineChart("Favorites", favorites, { markers, daily: "gain" }),
+			lineChart("Rating", rating, { markers, format: percent, axis: percent }),
+		)
 	} else {
 		const members = pointsOf(samples, "members")
 
@@ -123,10 +205,10 @@ const renderOverview = async (
 			card("Change", members.length > 1 ? signed(members.at(-1)!.value - members[0].value) : "–"),
 		)
 
-		charts.append(lineChart("Members", members))
+		charts.append(lineChart("Members", members, { markers, daily: "gain" }))
 	}
 
-	panel.replaceChildren(toolbar, cards, charts)
+	panel.replaceChildren(toolbar, checked, cards, charts)
 }
 
 const LOG_GROUPS = [
