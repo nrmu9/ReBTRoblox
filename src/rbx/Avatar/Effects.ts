@@ -10,7 +10,7 @@ type Sequence = Array<{ Time: number; Value: number; Envelope?: number }>
 type ColorSequence = Array<{ Time: number; Value: [number, number, number] }>
 type Range = [number, number]
 
-interface EmitterSource {
+export interface EmitterSource {
 	kind: "particles"
 	/** Where it sits in the Handle's space. */
 	local: THREE.Matrix4
@@ -430,7 +430,7 @@ export const collectEffects = (handle: any): EffectSource[] => {
 	return effects
 }
 
-const evaluate = (points: Sequence, t: number, envelope: number) => {
+export const evaluate = (points: Sequence, t: number, envelope: number) => {
 	for (let i = 1; i < points.length; i++) {
 		const next = points[i]
 
@@ -601,7 +601,7 @@ const tempQuat = new THREE.Quaternion()
  * has its axis along the emission direction. Partial narrows a cylinder at
  * that end, opens a hole in a disc and limits a sphere to a cap.
  */
-const shapePoint = (
+export const shapePoint = (
 	source: EmitterSource,
 	box: [number, number, number],
 	point: THREE.Vector3,
@@ -678,7 +678,7 @@ const shapePoint = (
 }
 
 /** Squash as width and height factors: above 0 narrower and taller, below 0 wider and shorter. */
-const squashed = (squash: number): [number, number] =>
+export const squashed = (squash: number): [number, number] =>
 	squash >= 0 ? [1 / (1 + squash), 1 + squash] : [1 - squash, 1 / (1 - squash)]
 
 class Emitter {

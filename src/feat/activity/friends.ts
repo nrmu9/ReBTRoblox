@@ -1,4 +1,5 @@
 import { delay } from "@/core/util"
+import { requestStep } from "@/feat/activity/requestStep"
 import { userNames } from "@/feat/activity/users"
 import {
 	announceChange,
@@ -341,11 +342,11 @@ const onRequestNow = async (ownUserId: number, otherId: number, type: string) =>
 		state.pending[otherId] = direction
 		await setState(REQUESTS_KEY, state)
 
-		// Roblox can send the same event twice: logged once, and put right if
-		// the first look had it the wrong way round.
-		if (!before) {
+		const step = requestStep(before, direction)
+
+		if (step === "log") {
 			await logRequests(ownUserId, [{ kind, otherId, at }])
-		} else if (before !== direction) {
+		} else if (step === "correct") {
 			await correctRequest(ownUserId, otherId, kind, at)
 		}
 	} else {

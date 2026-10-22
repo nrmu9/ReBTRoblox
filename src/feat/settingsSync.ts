@@ -55,6 +55,59 @@ const withoutOwn = (values: Record<string, unknown>) => {
 	return rest
 }
 
+/** Settings text cut into pieces that each fit sync's per-item limit. */
+export const toChunks = (text: string, size = CHUNK_CHARS): string[] =>
+	Array.from({ length: Math.max(1, Math.ceil(text.length / size)) }, (_, i) =>
+		text.slice(i * size, (i + 1) * size),
+	)
+
+/** The pieces put back together, or null if any is missing. */
+export const fromChunks = (data: Record<string, unknown>, count: number): string | null => {
+	let text = ""
+
+	for (let i = 0; i < count; i++) {
+		const chunk = data[CHUNK + i]
+
+		if (typeof chunk !== "string") {
+			return null
+		}
+
+		text += chunk
+	}
+
+	return text
+}
+
+/**
+ * Whether the synced settings replace this device's: always on a device's
+ * first sync, and after that when they were saved later, never across formats.
+ */
+export const takesSynced = (
+	local: { format: number; savedAt?: number } | null,
+	synced: { format: number; savedAt: number },
+	joined: boolean,
+): boolean => {
+	if (local && local.format !== synced.format) {
+		return false
+	}
+
+	return !local || !joined || (local.savedAt ?? 0) < synced.savedAt
+}
+
+/** The synced settings, with this device's own sync switch in place of any that came with them. */
+export const mergeSynced = (
+	synced: Record<string, unknown>,
+	local: Record<string, unknown> | undefined,
+): Record<string, unknown> => {
+	const values = withoutOwn(synced)
+
+	if (local?.[OWN] !== undefined) {
+		values[OWN] = local[OWN]
+	}
+
+	return values
+}
+
 /** What was last sent, so a change that came from sync is not sent back. */
 let lastSent: string | null = null
 let sentChunks = 0
@@ -75,20 +128,10 @@ const readSync = async () => {
 
 	sentChunks = Math.max(sentChunks, header.chunks)
 
+	const text = fromChunks(data, header.chunks)
+
 	try {
-		let text = ""
-
-		for (let i = 0; i < header.chunks; i++) {
-			const chunk = data[CHUNK + i]
-
-			if (typeof chunk !== "string") {
-				return null
-			}
-
-			text += chunk
-		}
-
-		return { header, values: JSON.parse(text) as Record<string, unknown>, text }
+		return text === null ? null : { header, values: JSON.parse(text) as Record<string, unknown>, text }
 	} catch {
 		return null
 	}
@@ -114,12 +157,9 @@ const push = async (joining = false) => {
 		return
 	}
 
-	const items: Record<string, unknown> = {}
-	const chunks = Math.max(1, Math.ceil(text.length / CHUNK_CHARS))
-
-	for (let i = 0; i < chunks; i++) {
-		items[CHUNK + i] = text.slice(i * CHUNK_CHARS, (i + 1) * CHUNK_CHARS)
-	}
+	const pieces = toChunks(text)
+	const chunks = pieces.length
+	const items: Record<string, unknown> = Object.fromEntries(pieces.map((piece, i) => [CHUNK + i, piece]))
 
 	items[HEADER] = {
 		format: payload.format,
@@ -164,19 +204,11 @@ const pull = async () => {
 
 	const local = await readLocal()
 
-	if (local && (await hasJoined()) && (local.savedAt ?? 0) >= synced.header.savedAt) {
+	if (!takesSynced(local, synced.header, await hasJoined())) {
 		return false
 	}
 
-	if (synced.header.format !== (local?.format ?? synced.header.format)) {
-		return false
-	}
-
-	const values: Record<string, unknown> = withoutOwn(synced.values)
-
-	if (local?.values?.[OWN] !== undefined) {
-		values[OWN] = local.values[OWN]
-	}
+	const values = mergeSynced(synced.values, local?.values)
 
 	lastSent = synced.text
 
