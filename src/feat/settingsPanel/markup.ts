@@ -103,6 +103,11 @@ export const settingsMarkup = () =>
 							desc="Shows times like 5:30 PM instead of 17:30"
 						></toggle>
 						<toggle
+							label="Quick Unfriend and Leave"
+							path="quickRemove"
+							desc="Adds a button to your friends and communities lists to unfriend or leave from there, after asking"
+						></toggle>
+						<toggle
 							label="Show What's New"
 							path="whatsNew"
 							desc="After an update, lists what changed. Click the version above to see it again"

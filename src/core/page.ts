@@ -57,6 +57,10 @@ export const PAGE_INFO: Record<string, any> = {
 		matches: ["^/transactions"],
 		css: [],
 	},
+	friends: {
+		matches: ["^/users/(\\d+)/friends", "^/users/friends"],
+		css: [],
+	},
 	profile: {
 		matches: ["^/users/(\\d+)/profile"],
 		css: ["profile.css"],

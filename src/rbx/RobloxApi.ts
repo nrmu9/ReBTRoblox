@@ -452,6 +452,14 @@ export const RobloxApi = {
 				credentials: "include",
 			}).then((res) => res.json()),
 		),
+
+		/** Ends a friendship, saying whether Roblox did. */
+		unfriend: (userId: UserId): Promise<boolean> =>
+			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/unfriend`, {
+				method: "POST",
+				credentials: "include",
+				xsrf: true,
+			}).then((res) => res.ok),
 	},
 	gamepasses: {
 		getGamepassProductInfo: cacheResult(
@@ -497,6 +505,14 @@ export const RobloxApi = {
 			xsrfFetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, {
 				credentials: "include",
 			}).then((res) => res.json()),
+
+		/** Takes `userId` out of a community, which for yourself is leaving it. */
+		leave: (groupId: number, userId: UserId): Promise<boolean> =>
+			xsrfFetch(`https://groups.roblox.com/v1/groups/${groupId}/users/${userId}`, {
+				method: "DELETE",
+				credentials: "include",
+				xsrf: true,
+			}).then((res) => res.ok),
 	},
 	inventory: {
 		getUserInventory: (userId: UserId, urlParams?: UrlParams) =>

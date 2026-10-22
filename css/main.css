@@ -1669,3 +1669,169 @@ html
 		}
 	}
 }
+
+/* Unfriend and leave, from your own lists. The button shows on hover or
+   focus, always on touch screens, and asking covers the card it is on. */
+
+.btr-quick-host {
+	position: relative;
+}
+
+.btr-quick-remove {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+
+	background: var(--color-surface-200, light-dark(#f2f4f5, #202227));
+	border: none;
+	border-radius: 50%;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+	color: var(--color-content-default, inherit);
+	cursor: pointer;
+	opacity: 0;
+	transition:
+		opacity 120ms ease-out,
+		color 120ms ease-out;
+
+	.btr-quick-host:hover > &,
+	.btr-quick-host:focus-within > &,
+	&:focus-visible {
+		opacity: 1;
+	}
+
+	&:hover {
+		color: var(--color-system-alert, #df281f);
+	}
+
+	@media (hover: none) {
+		opacity: 1;
+	}
+}
+
+/* In a community row it sits at the end, centred */
+.groups-list-item > .btr-quick-remove {
+	top: 50%;
+	right: 8px;
+	transform: translateY(-50%);
+}
+
+.btr-quick-confirm {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 8px;
+
+	background: var(--color-surface-100, light-dark(#fff, #191a1f));
+	border-radius: inherit;
+	color: var(--color-content-emphasis, inherit);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 16px;
+	text-align: center;
+	cursor: default;
+	animation: btr-quick-in 120ms ease-out;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+/* On a friend card it takes the card's own colour */
+.avatar-card-container > .btr-quick-confirm {
+	background: inherit;
+}
+
+/* A community row is wide and short, so the question and buttons share a line */
+.groups-list-item > .btr-quick-confirm {
+	flex-direction: row;
+	justify-content: space-between;
+	padding: 0 8px 0 16px;
+	border-radius: 8px;
+	text-align: left;
+}
+
+@keyframes btr-quick-in {
+	from {
+		opacity: 0;
+	}
+}
+
+.btr-quick-question {
+	overflow: hidden;
+	min-width: 0;
+	text-overflow: ellipsis;
+	overflow-wrap: anywhere;
+}
+
+.btr-quick-actions {
+	display: flex;
+	flex: none;
+	gap: 6px;
+
+	button {
+		height: 28px;
+		padding: 0 10px;
+		border: none;
+		border-radius: 8px;
+		font: inherit;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+
+		&:disabled {
+			cursor: default;
+			opacity: 0.7;
+		}
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.12);
+		}
+	}
+}
+
+.btr-quick-yes {
+	background: var(--color-system-alert, #df281f);
+	color: #fff;
+}
+
+.btr-quick-no {
+	background: var(--color-action-standard-background, rgb(128 128 128 / 0.2));
+	color: var(--color-content-emphasis, inherit);
+}
+
+/* Done: the card fades, with a note of what happened */
+.btr-quick-removed {
+	> :not(.btr-quick-done) {
+		opacity: 0.4;
+	}
+}
+
+.btr-quick-done {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	z-index: 2;
+	padding: 2px 8px;
+	background: var(--color-surface-200, #202227);
+	border-radius: 8px;
+	color: var(--color-content-muted, inherit);
+	font-size: 12px;
+	font-weight: 600;
+
+	.groups-list-item > & {
+		top: 50%;
+		right: 8px;
+		transform: translateY(-50%);
+	}
+}

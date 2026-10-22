@@ -6,6 +6,7 @@ import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import { keepTrackLabel } from "@/feat/activity/trackMenu"
 import { openTracked } from "@/feat/activity/trackDialog"
+import { addLeaveButtons } from "@/feat/quickRemove"
 import {
 	formatNumber,
 	keepText,
@@ -100,6 +101,10 @@ pageInit.groups = () => {
 		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
 			HoverPreview.register(".item-card", ".item-card-thumb-container")
 		})
+	}
+
+	if (SETTINGS.get("general.quickRemove")) {
+		void loggedInUserPromise.then((userId) => userId > 0 && addLeaveButtons(userId))
 	}
 
 	if (!SETTINGS.get("groups.enabled")) {
