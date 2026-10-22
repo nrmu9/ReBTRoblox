@@ -148,6 +148,18 @@ const startInject = () => {
 		callInjected(name, args)
 	})
 
+	// A notice's close buttons answer here as well. This world lasts through
+	// an extension reload or update, while the content script that drew the
+	// notice does not, and would leave it on the page with buttons that do
+	// nothing.
+	document.addEventListener("click", (ev) => {
+		const close = (ev.target as Element | null)?.closest?.(
+			".btr-whatsnew-close, .btr-whatsnew-done, .btr-activity-toast-dismiss",
+		)
+
+		close?.closest(".btr-whatsnew, .btr-activity-toast")?.remove()
+	})
+
 	// Dev builds: shows the What's new card from the page console.
 	if (__DEV__) {
 		;(window as any).btrWhatsNew = (since?: string) => contentScript.send("devWhatsNew", since ?? null)
