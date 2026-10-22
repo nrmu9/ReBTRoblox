@@ -653,6 +653,53 @@ export const settingsMarkup = () =>
 						</p>
 						<p class="btr-exp-note"></p>
 						<div id="btr-settings-experiments"></div>
+						<heading>Backup</heading>
+						<div class="btr-setting-card">
+							<div
+								class="btr-setting-row"
+								data-search="backup export everything settings activity json"
+							>
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">Back Up Everything</span>
+									<span class="btr-setting-desc btr-backup-export-text"
+										>Downloads your settings and all recorded activity as one file</span
+									>
+								</div>
+								<button type="button" class="btr-settings-button btr-backup-export">
+									Back up
+								</button>
+							</div>
+							<div
+								class="btr-setting-row"
+								data-search="restore import backup settings activity json"
+							>
+								<div class="btr-setting-text">
+									<span class="btr-setting-label">Restore</span>
+									<span class="btr-setting-desc btr-backup-import-text"
+										>Brings back settings and activity from a backup. Activity already
+										here is kept</span
+									>
+								</div>
+								<div class="btr-activity-clear-controls">
+									<button
+										type="button"
+										class="btr-settings-button btr-backup-import-cancel"
+										hidden
+									>
+										Cancel
+									</button>
+									<button type="button" class="btr-settings-button btr-backup-import">
+										Restore
+									</button>
+								</div>
+								<input
+									type="file"
+									class="btr-backup-import-file"
+									accept=".json,application/json"
+									hidden
+								/>
+							</div>
+						</div>
 						<heading>Reset</heading>
 						<div class="btr-setting-card">
 							<div class="btr-setting-row" data-search="reset default all">

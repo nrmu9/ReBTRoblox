@@ -5,6 +5,7 @@ import { setupRobuxToCash } from "@/feat/settingsPanel/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { setupStoredActivity } from "@/feat/settingsPanel/activity"
+import { setupBackup } from "@/feat/settingsPanel/backup"
 import type { ExperimentHint } from "@/feat/experimentHints"
 import {
 	getSavedExperiments,
@@ -251,6 +252,7 @@ export const SettingsModal: SettingsModalState = {
 		confirmClick(this.settingsDiv.$req("#btr-reset-settings"), () => SETTINGS.resetToDefault())
 
 		setupStoredActivity(this)
+		setupBackup(this)
 		addUnlistedSettings(this, rows)
 		bindResetButtons(this)
 		setupSearch(this)

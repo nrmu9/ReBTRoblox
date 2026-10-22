@@ -30,12 +30,19 @@ const listOf = (path: string): number[] => {
 	}
 }
 
-/** Everything recorded, and who is watched and tracked, as a JSON file built a page of records at a time. */
-export const exportActivity = async (): Promise<Blob> => {
+/**
+ * Everything recorded, and who is watched and tracked, as a JSON file built a
+ * page of records at a time. A full backup carries every setting as well.
+ */
+export const exportBackup = async (withSettings: boolean): Promise<Blob> => {
 	const lists = Object.fromEntries(Object.entries(LISTS).map(([key, path]) => [key, listOf(path)]))
 	const parts: string[] = [
 		`{"version":1,"exportedAt":${JSON.stringify(new Date().toISOString())},"lists":${JSON.stringify(lists)}`,
 	]
+
+	if (withSettings) {
+		parts.push(`,"settings":${JSON.stringify(SETTINGS.serialize())}`)
+	}
 
 	for (const store of ["presence", "events"] as const) {
 		parts.push(`,"${store}":[`)
@@ -85,10 +92,14 @@ export interface WatchChecks {
 /** When each of a watched person's checks last ran. */
 export const getWatchChecks = (userId: number) => ask<WatchChecks | null>("activityChecks", userId)
 
+export const exportActivity = () => exportBackup(false)
+
 export interface Backup {
 	presence: unknown[]
 	events: unknown[]
 	lists: Partial<Record<keyof typeof LISTS, number[]>>
+	/** Every setting by group and name, in a full backup. */
+	settings: Record<string, Record<string, unknown>> | null
 	exportedAt: string | null
 	/** The oldest and newest times in it. */
 	from: number | null
@@ -107,7 +118,7 @@ export const readBackup = async (file: File): Promise<Backup> => {
 	}
 
 	if (!json || !Array.isArray(json.presence) || !Array.isArray(json.events)) {
-		throw new Error("That file isn't an activity export")
+		throw new Error("That file isn't a ReBTRoblox export")
 	}
 
 	const times: number[] = []
@@ -132,10 +143,16 @@ export const readBackup = async (file: File): Promise<Backup> => {
 		}
 	}
 
+	const settings =
+		json.settings && typeof json.settings === "object" && !Array.isArray(json.settings)
+			? json.settings
+			: null
+
 	return {
 		presence: json.presence,
 		events: json.events,
 		lists,
+		settings,
 		exportedAt: typeof json.exportedAt === "string" ? json.exportedAt : null,
 		from: times.length ? times.reduce((a, b) => Math.min(a, b)) : null,
 		to: times.length ? times.reduce((a, b) => Math.max(a, b)) : null,
@@ -146,14 +163,60 @@ export const readBackup = async (file: File): Promise<Backup> => {
 const IMPORT_PAGE = 2000
 
 /**
+ * Sets every setting a backup has that this version knows and accepts. The
+ * watched and tracked lists are left to be merged, so none are lost.
+ */
+const restoreSettings = (settings: Record<string, Record<string, unknown>>) => {
+	const lists = new Set<string>(Object.values(LISTS))
+	let changed = 0
+	let ignored = 0
+
+	for (const [group, values] of Object.entries(settings)) {
+		for (const [name, value] of Object.entries(values ?? {})) {
+			const path = `${group}.${name}`
+
+			if (lists.has(path)) {
+				continue
+			}
+
+			if (!SETTINGS.hasSetting(path)) {
+				ignored++
+				continue
+			}
+
+			try {
+				if (SETTINGS.get(path) !== value) {
+					SETTINGS.set(path, value)
+					changed++
+				}
+			} catch {
+				ignored++
+			}
+		}
+	}
+
+	return { changed, ignored }
+}
+
+/**
  * Adds a backup to what is recorded, a page at a time, and its watched and
  * tracked lists to the current ones. Nothing here is replaced.
  */
-export const importBackup = async (backup: Backup, onProgress: (share: number) => void) => {
+export const importBackup = async (
+	backup: Backup,
+	onProgress: (share: number) => void,
+	options: { settings?: boolean } = {},
+) => {
 	const importId = `${Date.now()}-${Math.random()}`
 	const total = backup.presence.length + backup.events.length
-	const result = { added: 0, skipped: 0, invalid: 0 }
+	const result = { added: 0, skipped: 0, invalid: 0, settingsChanged: 0, settingsIgnored: 0 }
 	let sent = 0
+
+	if (options.settings && backup.settings) {
+		const restored = restoreSettings(backup.settings)
+		result.settingsChanged = restored.changed
+		result.settingsIgnored = restored.ignored
+	}
 
 	for (const store of ["presence", "events"] as const) {
 		const records = backup[store]
