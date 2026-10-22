@@ -306,7 +306,7 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 
 		// Previews put a message on one line, and the conversation shows it as
 		// written, so both are compared with their whitespace collapsed.
-		const flatten = (text: string) => text.replace(/s+/g, " ").trim()
+		const flatten = (text: string) => text.replace(/\s+/g, " ").trim()
 
 		/** Whether the open conversation shows a message of yours on its way out. */
 		const isSending = (shell: Element) =>
@@ -315,10 +315,55 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					propAbove(bubble, "message", (m) => typeof m === "object" && "isSending" in m)?.isSending,
 			)
 
+		const isMessages = (conversationId: string) => (query: any) =>
+			Array.isArray(query.queryKey) &&
+			query.queryKey.includes("conversationMessages") &&
+			query.queryKey.includes(conversationId)
+
+		// A message that lands before a conversation's history has loaded can
+		// become the whole history, which then counts as loaded: one message
+		// and nothing older to scroll to. A conversation found that short is
+		// asked for again, once for each set of messages it holds, so a chat
+		// that really is that short is not asked for over and over.
+		const refetched = new Map<string, string>()
+
+		const checkHistories = () => {
+			for (const shell of document.querySelectorAll(SHELL)) {
+				const conversation = conversationOf(shell)
+				const client = conversation && propAbove(shell, "client", (c) => !!c.invalidateQueries)
+
+				if (!client || client.isMutating?.() || isSending(shell)) {
+					continue
+				}
+
+				const query = client.getQueryCache?.().findAll({ predicate: isMessages(conversation.id) })?.[0]
+				const data = query?.state.data
+
+				if (!data || query.state.fetchStatus === "fetching" || !Array.isArray(data.messages)) {
+					continue
+				}
+
+				const { messages } = data
+				const state = `${messages.length}:${messages[0]?.id}:${messages.at(-1)?.id}`
+
+				if (messages.length >= 20 || data.next_cursor) {
+					// Whole again, so the same short state later is worth fixing too.
+					refetched.delete(conversation.id)
+				} else if (refetched.get(conversation.id) !== state) {
+					refetched.set(conversation.id, state)
+					client.invalidateQueries({ predicate: isMessages(conversation.id) }, { cancelRefetch: false })
+				}
+			}
+		}
+
 		const check = () => {
 			if (settings.general?.fixChatMessages === false) {
 				return
 			}
+
+			try {
+				checkHistories()
+			} catch {}
 
 			// Read from the list rows, not from the open conversation. The
 			// conversation is the component that is not re-rendering, so its
@@ -381,15 +426,7 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					// Only the messages themselves. Other entries under the same
 					// conversation, like its failed and moderated messages, live
 					// only in the page, and refetching them empties them.
-					client.invalidateQueries(
-						{
-							predicate: (query: any) =>
-								Array.isArray(query.queryKey) &&
-								query.queryKey.includes("conversationMessages") &&
-								query.queryKey.includes(conversation.id),
-						},
-						{ cancelRefetch: false },
-					)
+					client.invalidateQueries({ predicate: isMessages(conversation.id) }, { cancelRefetch: false })
 				} catch {}
 			}
 		}
