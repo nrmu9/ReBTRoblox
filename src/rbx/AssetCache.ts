@@ -273,7 +273,12 @@ export const AssetCache = (() => {
 				const plain =
 					Number.isSafeInteger(id) &&
 					Number.isSafeInteger(version) &&
-					[...urlParams.keys()].every((key) => key === "id" || key === "version") &&
+					// Read from the string: Firefox content scripts get a keys()
+					// iterator that cannot be spread.
+					urlParams
+						.toString()
+						.split("&")
+						.every((pair) => /^(id|version)=/.test(pair)) &&
 					!params?.format &&
 					!params?.browserAssetRequest
 
@@ -439,3 +444,8 @@ export const AssetCache = (() => {
 		},
 	}
 })()
+
+// Dev only handle, so lookups can be tried from the bridge.
+if (__DEV__) {
+	;(globalThis as any).__btrAssetCache = AssetCache
+}
