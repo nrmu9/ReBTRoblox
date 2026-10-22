@@ -88,13 +88,13 @@ pageInit.inventory = () => {
 							continue
 						}
 
-						const content = script.innerHTML
+						const content = script.textContent ?? ""
 
 						if (
 							content.includes("Roblox.DeveloperConsoleWarning.showWarning()") ||
 							content.match(/top.location\s*=\s*self.location/)
 						) {
-							script.innerHTML = ""
+							script.textContent = ""
 							script.remove()
 						}
 					}

@@ -1325,7 +1325,7 @@ const RBXXmlParser = {
 				default:
 					console.warn(
 						`[ParseRBXXml] Unknown dataType ${propNode.nodeName} for ${inst.ClassName}.${name}`,
-						propNode.innerHTML,
+						propNode.textContent,
 					)
 			}
 		}

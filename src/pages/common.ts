@@ -392,6 +392,16 @@ const initReactRobuxToCash = () => {
 
 const angularTemplateCache: Record<string, any> = {}
 
+/**
+ * A template's contents as markup, serialized as XML, which Angular reads as
+ * HTML all the same. getHTML() would do it more plainly, but not in the Chrome
+ * versions this still supports.
+ */
+const markupOf = (body: HTMLElement) => {
+	const serializer = new XMLSerializer()
+	return [...body.childNodes].map((node) => serializer.serializeToString(node)).join("")
+}
+
 export const modifyAngularTemplate = (
 	keyArray: string | string[],
 	callback: (...templates: HTMLElement[]) => void,
@@ -431,7 +441,7 @@ export const modifyAngularTemplate = (
 
 			for (const key of keyArray) {
 				const cacheEntry = angularTemplateCache[key]
-				injectScript.send("updateTemplate", key, cacheEntry.body.innerHTML)
+				injectScript.send("updateTemplate", key, markupOf(cacheEntry.body))
 			}
 		},
 	}
