@@ -1,6 +1,6 @@
 import { html } from "@/core/html"
 import { assert } from "@/core/util"
-import { addNavigationRows } from "@/feat/settingsPanel/navigation"
+import { addNavigationOrder, addNavigationRows } from "@/feat/settingsPanel/navigation"
 import { setupRobuxToCash } from "@/feat/settingsPanel/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
@@ -247,6 +247,7 @@ export const SettingsModal: SettingsModalState = {
 		followTabKeys(this, tabs)
 
 		addNavigationRows(this, rows)
+		addNavigationOrder(this)
 		addHomeRows(this, rows)
 		setupRobuxToCash(this)
 

@@ -48,6 +48,10 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 				text: "Everything recorded in one place, with what happened lately across everyone and everything. Turn on its sidebar link under Navigation, and check anyone now with Check now.",
 			},
 			{
+				title: "Rearrange the top bar and sidebar",
+				text: "Move their items up and down under Navigation, and reset them any time.",
+			},
+			{
 				title: "Back up everything",
 				text: "Save your settings and all recorded activity to one file, and restore it on another browser.",
 				page: "backup",

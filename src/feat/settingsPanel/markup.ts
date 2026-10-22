@@ -179,6 +179,12 @@ export const settingsMarkup = () =>
 						<div class="btr-settings-nav-list" data-kind="header"></div>
 						<heading>Sidebar</heading>
 						<div class="btr-settings-nav-list" data-kind="sidebar"></div>
+						<heading>Order</heading>
+						<p class="btr-exp-note">
+							Moves the items on this page's top bar and sidebar. Anything Roblox adds later
+							stays beside the item it comes after.
+						</p>
+						<div class="btr-settings-nav-order"></div>
 					</page>
 
 					<page name="home" label="Home" icon="house" path="home">

@@ -2746,3 +2746,14 @@ div.btr-setting-text {
 		margin-top: 4px;
 	}
 }
+
+/* Moving top bar and sidebar items */
+.btr-nav-order-move {
+	width: 32px;
+	height: 32px;
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.3;
+	}
+}

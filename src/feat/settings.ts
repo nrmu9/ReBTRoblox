@@ -81,6 +81,7 @@ export const DEFAULT_SETTINGS = {
 		enabled: { value: true },
 		noHamburger: { value: true },
 		elements: { value: "", hidden: true },
+		order: { value: "", hidden: true },
 	},
 	avatar: {
 		enabled: { value: true },

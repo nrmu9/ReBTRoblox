@@ -5,6 +5,7 @@ import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { query } from "@/core/query"
+import { initNavOrder } from "@/feat/navOrder"
 
 /** What a caller passes to Navigation.register to describe one nav item. */
 interface NavigationElementInfo {
@@ -660,6 +661,7 @@ export const Navigation = {
 
 		if (SETTINGS.get("navigation.enabled") && location.host !== "create.roblox.com") {
 			injectScript.call("navigation")
+			initNavOrder()
 		}
 	},
 }
