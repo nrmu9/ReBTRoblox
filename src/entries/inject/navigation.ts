@@ -1,6 +1,7 @@
 import { settings } from "@/entries/inject/state"
 import { onSet, hijackFunction } from "@/entries/inject/hooks"
 import { reactHook } from "@/entries/inject/react"
+import { contentScript } from "@/entries/inject/messaging"
 
 // Injected functions for the navbar, its search and robux badge, and the chat.
 
@@ -141,6 +142,129 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 			}
 		}).observe(document.documentElement, { childList: true, subtree: true })
 		mark()
+	},
+	// Brings a message into view in its chat window, for chat search. It has
+	// the chat load older messages the way its own scrolling does until the
+	// message is there, then centres it and flashes a ring round it.
+	chatJumpTo: (conversationId: string, messageId: string) => {
+		const done = (ok: boolean) => contentScript.send("chatJumpDone", conversationId, messageId, ok)
+		const shell = document.querySelector<HTMLElement>(
+			`.react-chat-dialog-shell[data-btr-conversation="${CSS.escape(conversationId)}"]`,
+		)
+		const scroll = shell?.querySelector<HTMLElement>(".react-chat-dialog-scroll")
+
+		if (!shell || !scroll) {
+			done(false)
+			return
+		}
+
+		const fiberOf = (node: any) => {
+			const key = Object.keys(node).find((k) => k.startsWith("__reactFiber$"))
+			return key ? node[key] : null
+		}
+
+		const find = () =>
+			[...shell.querySelectorAll<HTMLElement>(".react-chat-message-bubble")].find((bubble) => {
+				let fiber = fiberOf(bubble)
+
+				for (let depth = 0; fiber && depth < 10; depth++) {
+					const id = fiber.memoizedProps?.message?.id
+					if (id) {
+						return id === messageId
+					}
+					fiber = fiber.return
+				}
+
+				return false
+			})
+
+		const count = () => shell.querySelectorAll(".react-chat-message-bubble").length
+
+		// The message list's own props: what its scrolling calls to load older
+		// messages, and whether any are left. React keeps the list twice, as it
+		// is now and as it was, and the older copy's loader asks for the page
+		// already loaded. Each loader is used once, so the one not yet used is
+		// the current one.
+		const used = new Set<() => void>()
+
+		const list = () => {
+			// Looked up each time, as loading can draw the list anew.
+			let fiber = fiberOf(shell.querySelector(".react-chat-dialog-scroll") ?? scroll)
+
+			while (fiber && !fiber.memoizedProps?.onLoadMore) {
+				fiber = fiber.return
+			}
+
+			type ListProps = { onLoadMore: () => void; hasNextPage?: boolean }
+			const copies: ListProps[] = [fiber?.memoizedProps, fiber?.alternate?.memoizedProps].filter(
+				(props) => typeof props?.onLoadMore === "function",
+			)
+
+			return copies.find((props) => !used.has(props.onLoadMore))
+		}
+
+		// The task after this one. A timer would do, but hidden tabs hold timers
+		// back for up to a minute.
+		const nextTask = (fn: () => void) => {
+			const channel = new MessageChannel()
+			channel.port1.onmessage = () => fn()
+			channel.port2.postMessage(null)
+		}
+
+		// Each load adds 20 older messages; past this many it gives up.
+		let pagesLeft = 100
+
+		const step = () => {
+			const bubble = find()
+
+			if (bubble) {
+				// A hidden page draws no smooth scroll, so it goes straight there.
+				bubble.scrollIntoView({
+					block: "center",
+					behavior: document.visibilityState === "visible" ? "smooth" : "auto",
+				})
+				bubble.animate(
+					[
+						{ boxShadow: "0 0 0 2px var(--color-system-emphasis, #335fff)" },
+						{ boxShadow: "0 0 0 2px var(--color-system-emphasis, #335fff)", offset: 0.6 },
+						{ boxShadow: "0 0 0 2px transparent" },
+					],
+					{ duration: 1800, easing: "ease-out" },
+				)
+				done(true)
+				return
+			}
+
+			const props = list()
+
+			if (pagesLeft-- <= 0 || !shell.isConnected || !props?.onLoadMore || !props.hasNextPage) {
+				done(false)
+				return
+			}
+
+			const before = count()
+
+			// Waits for the older page, or gives up when none comes. The next is
+			// asked for in the task after, as the chat only takes a new request
+			// once it has finished with the last, just after showing it.
+			const observer = new MutationObserver(() => {
+				if (count() > before) {
+					observer.disconnect()
+					clearTimeout(timer)
+					nextTask(step)
+				}
+			})
+			const timer = setTimeout(() => {
+				observer.disconnect()
+				done(false)
+			}, 5000)
+
+			observer.observe(shell, { childList: true, subtree: true })
+			used.add(props.onLoadMore)
+			props.onLoadMore()
+		}
+
+		step()
 	},
 	// Roblox's chat renders an open conversation from a react-query cache
 	// that nothing invalidates when a message arrives. The conversation

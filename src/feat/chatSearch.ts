@@ -1,5 +1,6 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
+import { injectScript } from "@/core/messaging"
 
 // Search in a chat's history, from a button in its header. Roblox's chat has
 // none, so this pages back through the conversation the way its own scrolling
@@ -164,6 +165,27 @@ const messageRow = (message: ChatMessage, query: string, tag: "button" | "div") 
 	return row
 }
 
+const jumps = new Map<string, (ok: boolean) => void>()
+let listening = false
+
+/**
+ * Has the chat scroll to a message, loading older ones on the way, and says
+ * whether it got there.
+ */
+const jumpTo = (conversationId: string, messageId: string): Promise<boolean> =>
+	new Promise((resolve) => {
+		if (!listening) {
+			listening = true
+			injectScript.listen("chatJumpDone", (conversation: string, message: string, ok: boolean) => {
+				jumps.get(`${conversation}:${message}`)?.(!!ok)
+				jumps.delete(`${conversation}:${message}`)
+			})
+		}
+
+		jumps.set(`${conversationId}:${messageId}`, resolve)
+		injectScript.call("chatJumpTo", conversationId, messageId)
+	})
+
 /** The search panel of one chat window, opened from `button`. */
 const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 	const conversationId = () => shell.dataset.btrConversation ?? ""
@@ -191,7 +213,7 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 		setTimeout(remove, 250)
 	}
 
-	const open = () => {
+	const open = (shown?: { message: ChatMessage; query: string }) => {
 		const id = conversationId()
 		if (!id) {
 			return
@@ -292,7 +314,15 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 
 			const rows = found.slice(0, 200).map((message) => {
 				const row = messageRow(message, query, "button")
-				row.$on("click", () => showContext(message, query))
+				row.title = "Show in chat"
+				row.$on("click", () => {
+					close()
+					void jumpTo(id, message.id).then((ok) => {
+						if (!ok) {
+							open({ message, query })
+						}
+					})
+				})
 				return row
 			})
 
@@ -358,6 +388,13 @@ const attachSearch = (shell: HTMLElement, button: HTMLButtonElement) => {
 		button.setAttribute("aria-pressed", "true")
 		input.focus()
 		render()
+
+		// Back from a jump that could not reach the message: its context instead.
+		if (shown) {
+			input.value = shown.query
+			clear.hidden = false
+			showContext(shown.message, shown.query)
+		}
 
 		// The newest messages are read straight away, so a search starts with some.
 		void loadMore(id, 100, render).then(render)
