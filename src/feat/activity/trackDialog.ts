@@ -3,7 +3,7 @@ import { getActivityEvents } from "@/feat/activity/data"
 import { lineChart, type ChartMarker, type ChartPoint } from "@/feat/activity/chart"
 import { buildLog, icon, swap } from "@/feat/activity/logs"
 import { onActivityChange } from "@/feat/activity/presence"
-import { DAY } from "@/feat/activity/shared"
+import { checkedAgo, DAY } from "@/feat/activity/shared"
 import { openShell } from "@/feat/activity/shell"
 import { gameSubject, groupSubject, type ActivityEvent } from "@/feat/activity/store"
 import { clockFormat } from "@/feat/clock"
@@ -67,27 +67,6 @@ const ratingOf = (samples: ActivityEvent[]): ChartPoint[] => {
 }
 
 const percent = (value: number, decimals = 1) => `${Number(value.toFixed(decimals))}%`
-
-/** How long ago, as words: just now, 12 minutes ago, 3 hours ago. */
-export const checkedAgo = (at: number) => {
-	const minutes = Math.round((Date.now() - at) / 60e3)
-
-	if (minutes < 1) {
-		return "just now"
-	}
-
-	if (minutes < 60) {
-		return minutes === 1 ? "a minute ago" : `${minutes} minutes ago`
-	}
-
-	const hours = Math.round(minutes / 60)
-
-	if (hours < 48) {
-		return hours === 1 ? "an hour ago" : `${hours} hours ago`
-	}
-
-	return `on ${new Date(at).$format("MMM D")}`
-}
 
 const card = (label: string, value: string, detail = "") =>
 	html`<div class="btr-activity-stat">

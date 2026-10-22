@@ -57,6 +57,44 @@ export const onlineSince = (segments: PresenceSegment[], online: boolean, since:
 	return total
 }
 
+/** How long ago, as words: just now, 12 minutes ago, 3 hours ago. */
+export const checkedAgo = (at: number) => {
+	const minutes = Math.round((Date.now() - at) / 60e3)
+
+	if (minutes < 1) {
+		return "just now"
+	}
+
+	if (minutes < 60) {
+		return minutes === 1 ? "a minute ago" : `${minutes} minutes ago`
+	}
+
+	const hours = Math.round(minutes / 60)
+
+	if (hours < 48) {
+		return hours === 1 ? "an hour ago" : `${hours} hours ago`
+	}
+
+	return `on ${new Date(at).$format("MMM D")}`
+}
+
+/** "Friends checked 12 minutes ago, followers an hour ago", from what has run. */
+export const checkedLine = (parts: Array<[string, number | undefined]>): string | null => {
+	const ran = parts.filter((part): part is [string, number] => !!part[1])
+
+	if (!ran.length) {
+		return null
+	}
+
+	return ran
+		.map(([what, at], i) =>
+			i
+				? `${what} ${checkedAgo(at)}`
+				: `${what[0].toUpperCase()}${what.slice(1)} checked ${checkedAgo(at)}`,
+		)
+		.join(", ")
+}
+
 export const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0)
 
 // Through the date rather than adding 24 hours, which DST days are not.

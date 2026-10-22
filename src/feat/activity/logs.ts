@@ -1,8 +1,8 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import { getActivityEvents } from "@/feat/activity/data"
+import { getActivityEvents, getWatchChecks } from "@/feat/activity/data"
 import type { ActivityEvent } from "@/feat/activity/store"
-import { startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
+import { checkedLine, startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
 import { lineChart, type ChartPoint } from "@/feat/activity/chart"
 
 // The Friends and Changes tabs: logs by day, filtered in place.
@@ -285,13 +285,34 @@ export const renderFriends = async (
 	isOwn: boolean,
 	state: { group: string },
 ) => {
-	const [events, counts] = await Promise.all([
+	const [events, counts, checks] = await Promise.all([
 		getActivityEvents(userId, PEOPLE_KINDS).then((list) => list ?? []),
 		getActivityEvents(userId, ["profileChanged"]).then((list) =>
 			(list ?? []).filter((change) => change.field === "followers" || change.field === "followings"),
 		),
+		getWatchChecks(userId),
 	])
+
+	// Your own friends come live, so only your followers are checked.
+	const checked = checkedLine(
+		isOwn
+			? [["followers", checks?.follows]]
+			: [
+					["friends", checks?.friends],
+					["followers", checks?.follows],
+				],
+	)
+	const intro = html`<div class="btr-people-intro"></div>`
+
+	if (checked) {
+		intro.append(html`<p class="btr-track-checked">${checked}</p>`)
+	}
+
 	const charts = countCharts(counts)
+
+	if (charts) {
+		intro.append(charts)
+	}
 
 	if (!events.length) {
 		panel.replaceChildren(
@@ -302,7 +323,7 @@ export const renderFriends = async (
 						: "No changes to their friends recorded yet."
 				}
 			</p>`,
-			...(charts ? [charts] : []),
+			intro,
 		)
 		return
 	}
@@ -312,7 +333,7 @@ export const renderFriends = async (
 		events,
 		groups: PEOPLE_GROUPS,
 		hideEmpty: true,
-		...(charts ? { intro: charts } : {}),
+		intro,
 		groupOf: peopleGroup,
 		entry: (event) => friendEntry(event, isOwn),
 		state,
@@ -558,13 +579,22 @@ const changeEntry = (event: ActivityEvent) => {
 
 /** What changed on someone's profile, newest first by day, filtered by kind of change. */
 export const renderChanges = async (panel: HTMLElement, userId: number, state: { group: string }) => {
-	const events = (await getActivityEvents(userId, ["profileChanged"])) ?? []
+	const [events, checks] = await Promise.all([
+		getActivityEvents(userId, ["profileChanged"]).then((list) => list ?? []),
+		getWatchChecks(userId),
+	])
+	const checked = checkedLine([
+		["profile", checks?.profile],
+		["badges", checks?.badges],
+		["favorites", checks?.favorites],
+	])
 
 	if (!events.length) {
 		panel.replaceChildren(
 			html`<p class="btr-activity-empty">
 				No changes yet. Their names, bio, avatar, communities and badges are checked every few hours.
 			</p>`,
+			...(checked ? [html`<p class="btr-track-checked">${checked}</p>`] : []),
 		)
 		return
 	}
@@ -579,7 +609,7 @@ export const renderChanges = async (panel: HTMLElement, userId: number, state: {
 		hideEmpty: true,
 		intro: html`<p class="btr-change-note">
 			Profiles are checked every few hours, so most changes happened some time before the time shown.
-			Badges show when they were earned.
+			Badges show when they were earned.${checked ? ` ${checked}.` : ""}
 		</p>`,
 		onPage: async (entries) => {
 			for (const [kind, key] of [

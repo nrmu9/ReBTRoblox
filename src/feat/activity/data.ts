@@ -53,6 +53,18 @@ export const exportActivity = async (): Promise<Blob> => {
 	return new Blob(parts, { type: "application/json" })
 }
 
+export interface WatchChecks {
+	presence?: number
+	friends?: number
+	profile?: number
+	badges?: number
+	favorites?: number
+	follows?: number
+}
+
+/** When each of a watched person's checks last ran. */
+export const getWatchChecks = (userId: number) => ask<WatchChecks | null>("activityChecks", userId)
+
 export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][], since?: number) =>
 	ask<ActivityEvent[] | null>("activityEvents", { userId, kinds, ...(since ? { since } : {}) })
 

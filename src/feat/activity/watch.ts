@@ -10,6 +10,7 @@ import {
 import { compareFriendList, namesOf } from "@/feat/activity/friends"
 import { isLive, recordPresences } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
+import { contentScript } from "@/core/messaging"
 
 // People you chose to watch, checked from the background: where they are,
 // whose friends they add and lose, and what changes on their profile. Roblox
@@ -674,6 +675,14 @@ const tick = async () => {
 
 export const startWatching = (): void => {
 	setInterval(() => void tick(), 60e3)
+
+	/** When each of someone's checks last ran, for the dialogs to say. */
+	contentScript.listen("activityChecks", async (userId: number, respond: (value: unknown) => void) => {
+		const checks = (await getState<Record<number, Record<string, number>>>("watchChecks"))?.[userId] ?? {}
+		const watched = getWatchedUsers().includes(userId)
+
+		respond({ ...checks, ...(watched && lastPresence ? { presence: lastPresence } : {}) })
+	})
 
 	SETTINGS.load(() => {
 		void tick()
