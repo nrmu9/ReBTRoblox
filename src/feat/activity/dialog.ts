@@ -1,5 +1,5 @@
 import { SETTINGS } from "@/feat/settings"
-import { getActivityEvents } from "@/feat/activity/data"
+import { getActivityEvents, refreshWatched } from "@/feat/activity/data"
 import { getPresenceHistory, onActivityChange, type PresenceSegment } from "@/feat/activity/presence"
 import { openShell } from "@/feat/activity/shell"
 import { blocksByDay, joinSightings, loadTogether, render } from "@/feat/activity/timeline"
@@ -42,6 +42,9 @@ export const openActivity = async (
 	isOnline: () => boolean,
 	options: { tab?: Tab; isOwn?: boolean } = {},
 ): Promise<void> => {
+	// What is shown should be current, so their checks catch up first.
+	refreshWatched(userId)
+
 	const statsState = { period: "30" }
 	const friendFilter = { group: "all" }
 	const changeFilter = { group: "all" }

@@ -8,7 +8,7 @@ import {
 	type ActivityEvent,
 } from "@/feat/activity/store"
 import { compareFriendList, namesOf } from "@/feat/activity/friends"
-import { isLive, recordPresences } from "@/feat/activity/presence"
+import { isLive, latestPresence, recordPresences } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
 import { contentScript } from "@/core/messaging"
 
@@ -17,11 +17,34 @@ import { contentScript } from "@/core/messaging"
 // only pushes your friends' presence, so for anyone else it is asked for.
 
 const PRESENCE_EVERY = 2 * 60e3
-const FRIENDS_EVERY = 60 * 60e3
-const PROFILE_EVERY = 4 * 60 * 60e3
-const BADGES_EVERY = 60 * 60e3
-const FAVORITES_EVERY = 4 * 60 * 60e3
+// Names and avatars of everyone at once, in two requests.
+const QUICK_EVERY = 5 * 60e3
 const FOLLOWS_EVERY = 2 * 60 * 60e3
+// Opening someone's profile or activity runs any check older than this.
+const REFRESH_OLDER = 10 * 60e3
+const REFRESH_FAVORITES_OLDER = 60 * 60e3
+const CHECKS_PER_TICK = 3
+
+type CheckKind = "friends" | "profile" | "badges" | "favorites" | "follows"
+
+/**
+ * How often each check runs. Someone online is checked sooner: friends are
+ * added and badges earned while they play, and little changes while they are
+ * away.
+ */
+const intervalsFor = (userId: number): Record<CheckKind, number> => {
+	const type = latestPresence(userId)
+	const online = !!type
+	const playing = type === 2
+
+	return {
+		friends: (online ? 20 : 60) * 60e3,
+		profile: 4 * 60 * 60e3,
+		badges: (playing ? 10 : online ? 30 : 60) * 60e3,
+		favorites: (online ? 2 : 4) * 60 * 60e3,
+		follows: (online ? 1 : 2) * 60 * 60e3,
+	}
+}
 // Followers lists longer than this are only checked for new followers at the
 // top, as reading a large account's whole list every few hours is too much.
 const FULL_FOLLOW_LIST = 1000
@@ -229,6 +252,54 @@ const checkProfile = async (userId: number) => {
 	if (before) {
 		await compareProfile(userId, before, after)
 	}
+}
+
+/**
+ * Who of these has a new name, display name or avatar, from two requests for
+ * everyone, so their full profile is looked at within minutes rather than hours.
+ */
+const quickCheck = async (userIds: number[]): Promise<number[]> => {
+	const changed = new Set<number>()
+
+	for (let i = 0; i < userIds.length; i += 100) {
+		const ids = userIds.slice(i, i + 100)
+		const [users, avatars, snapshots] = await Promise.all([
+			fetch("https://users.roblox.com/v1/users", {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userIds: ids, excludeBannedUsers: false }),
+			})
+				.then((res) => (res.ok ? res.json() : null))
+				.catch(() => null),
+			getJson(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${ids.join(",")}&size=150x150&format=Png`),
+			Promise.all(ids.map((id) => getState<ProfileSnapshot>(`profile:${id}`))),
+		])
+
+		const before = new Map(ids.map((id, index) => [id, snapshots[index]]))
+
+		for (const user of users?.data ?? []) {
+			const snapshot = before.get(user.id)
+
+			if (snapshot && (snapshot.name !== user.name || snapshot.displayName !== user.displayName)) {
+				changed.add(user.id)
+			}
+		}
+
+		for (const thumb of avatars?.data ?? []) {
+			const snapshot = before.get(thumb.targetId)
+
+			if (
+				thumb.state === "Completed" &&
+				snapshot?.avatar &&
+				avatarHash(snapshot.avatar) !== avatarHash(thumb.imageUrl)
+			) {
+				changed.add(thumb.targetId)
+			}
+		}
+	}
+
+	return [...changed]
 }
 
 interface BadgeSnapshot {
@@ -565,22 +636,60 @@ const checkFriends = async (userId: number) => {
 	}
 }
 
-// One tick a minute does whatever is due, so a dozen watched people never
-// means a dozen requests at once.
+const CHECKS: Record<CheckKind, (userId: number) => Promise<void>> = {
+	friends: checkFriends,
+	profile: checkProfile,
+	badges: checkBadges,
+	favorites: checkFavorites,
+	follows: checkFollows,
+}
+
+type WatchChecks = Record<number, Partial<Record<CheckKind, number>>>
+
+// One tick a minute does the few checks most overdue, so a dozen watched
+// people never means a dozen requests at once.
 let lastPresence = 0
-let running = false
+let lastQuick = 0
 let ownUserId: number | null = null
+
+// Ticks and refreshes take turns, as both rewrite when each check last ran.
+let turns: Promise<void> = Promise.resolve()
+let busy = false
+
+const exclusive = (run: () => Promise<void>) =>
+	(turns = turns.then(async () => {
+		busy = true
+
+		try {
+			await run()
+		} catch (err) {
+			console.warn("[btr] watch check failed", err)
+		} finally {
+			busy = false
+		}
+	}))
+
+const askPresence = async (ids: number[]) => {
+	const res = await fetch("https://presence.roblox.com/v1/presence/users", {
+		method: "POST",
+		credentials: "include",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ userIds: ids }),
+	}).catch(() => null)
+
+	if (res?.ok) {
+		recordPresences((await res.json())?.userPresences ?? [])
+	}
+}
 
 const tick = async () => {
 	const watched = getWatchedUsers()
 
-	if (running || !SETTINGS.get("profile.lastSeen")) {
+	if (busy || !SETTINGS.get("profile.lastSeen")) {
 		return
 	}
 
-	running = true
-
-	try {
+	await exclusive(async () => {
 		ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
 
 		// You too, so your own playtime and recent servers are known.
@@ -597,65 +706,39 @@ const tick = async () => {
 			const ids = presenceOf.filter((id) => !friends.has(id))
 
 			if (ids.length) {
-				const res = await fetch("https://presence.roblox.com/v1/presence/users", {
-					method: "POST",
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ userIds: ids }),
-				}).catch(() => null)
+				await askPresence(ids)
+			}
+		}
 
-				if (res?.ok) {
-					recordPresences((await res.json())?.userPresences ?? [])
+		const due = (await getState<WatchChecks>("watchChecks")) ?? {}
+
+		if (watched.length && Date.now() - lastQuick >= QUICK_EVERY) {
+			lastQuick = Date.now()
+
+			for (const userId of await quickCheck(watched)) {
+				;(due[userId] ??= {}).profile = Date.now()
+				await checkProfile(userId)
+			}
+		}
+
+		const now = Date.now()
+		const overdue: Array<{ userId: number; kind: CheckKind; by: number }> = []
+
+		for (const userId of watched) {
+			const intervals = intervalsFor(userId)
+
+			for (const kind of Object.keys(CHECKS) as CheckKind[]) {
+				const by = (now - (due[userId]?.[kind] ?? 0)) / intervals[kind]
+
+				if (by >= 1) {
+					overdue.push({ userId, kind, by })
 				}
 			}
 		}
 
-		const due =
-			(await getState<
-				Record<
-					number,
-					{
-						friends?: number
-						profile?: number
-						badges?: number
-						favorites?: number
-						follows?: number
-					}
-				>
-			>("watchChecks")) ?? {}
-
-		for (const userId of watched) {
-			const checks = (due[userId] ??= {})
-
-			if (Date.now() - (checks.friends ?? 0) >= FRIENDS_EVERY) {
-				checks.friends = Date.now()
-				await checkFriends(userId)
-				break
-			}
-
-			if (Date.now() - (checks.profile ?? 0) >= PROFILE_EVERY) {
-				checks.profile = Date.now()
-				await checkProfile(userId)
-				break
-			}
-
-			if (Date.now() - (checks.badges ?? 0) >= BADGES_EVERY) {
-				checks.badges = Date.now()
-				await checkBadges(userId)
-				break
-			}
-
-			if (Date.now() - (checks.favorites ?? 0) >= FAVORITES_EVERY) {
-				checks.favorites = Date.now()
-				await checkFavorites(userId)
-				break
-			}
-
-			if (Date.now() - (checks.follows ?? 0) >= FOLLOWS_EVERY) {
-				checks.follows = Date.now()
-				await checkFollows(userId)
-				break
-			}
+		for (const { userId, kind } of overdue.toSorted((a, b) => b.by - a.by).slice(0, CHECKS_PER_TICK)) {
+			;(due[userId] ??= {})[kind] = Date.now()
+			await CHECKS[kind](userId)
 		}
 
 		// Your own followers too, with the friend log, so unfollows show up.
@@ -669,15 +752,46 @@ const tick = async () => {
 		}
 
 		await setState("watchChecks", due)
-	} catch (err) {
-		console.warn("[btr] watch check failed", err)
-	} finally {
-		running = false
+	})
+}
+
+const lastRefresh = new Map<number, number>()
+
+/** Brings someone's checks up to date, for when their profile or activity is open. */
+const refresh = async (userId: number) => {
+	if (!SETTINGS.get("profile.lastSeen") || !getWatchedUsers().includes(userId)) {
+		return
 	}
+
+	if (Date.now() - (lastRefresh.get(userId) ?? 0) < 3 * 60e3) {
+		return
+	}
+
+	lastRefresh.set(userId, Date.now())
+
+	await exclusive(async () => {
+		await askPresence([userId])
+
+		const due = (await getState<WatchChecks>("watchChecks")) ?? {}
+		const checks = (due[userId] ??= {})
+
+		for (const kind of Object.keys(CHECKS) as CheckKind[]) {
+			const older = kind === "favorites" ? REFRESH_FAVORITES_OLDER : REFRESH_OLDER
+
+			if (Date.now() - (checks[kind] ?? 0) >= older) {
+				checks[kind] = Date.now()
+				await CHECKS[kind](userId)
+			}
+		}
+
+		await setState("watchChecks", due)
+	})
 }
 
 export const startWatching = (): void => {
 	setInterval(() => void tick(), 60e3)
+
+	contentScript.listen("activityRefresh", (userId: number) => void refresh(userId))
 
 	/** When each of someone's checks last ran, for the dialogs to say. */
 	contentScript.listen("activityChecks", async (userId: number, respond: (value: unknown) => void) => {

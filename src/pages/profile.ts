@@ -4,6 +4,7 @@ import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
 import { openActivity } from "@/feat/activity/dialog"
+import { refreshWatched } from "@/feat/activity/data"
 import { lastSeenAt } from "@/feat/activity/shared"
 import { clockFormat } from "@/feat/clock"
 import { getPresenceHistory, onPresenceHistoryChange, type PresenceSegment } from "@/feat/activity/presence"
@@ -464,6 +465,8 @@ pageInit.profile = () => {
 
 				if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
 					const stat = newCont.$req(".btr-stats-lastseen-stat")
+					refreshWatched(userId)
+
 					let segments: PresenceSegment[] = []
 					let presenceOnline = false
 

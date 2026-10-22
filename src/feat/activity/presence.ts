@@ -44,6 +44,13 @@ export const setLiveSince = (since: number | null): void => {
 /** Whether friends' presence is arriving live right now. */
 export const isLive = (): boolean => liveSince !== null
 
+// The background's latest look at each person, from pages, polls and the live
+// connection alike, so checks can follow who is online.
+const latest = new Map<number, { type: number; seen: number }>()
+
+/** What someone was last seen doing: 0 offline, 1 online, 2 in a game, 3 in Studio. */
+export const latestPresence = (userId: number): number | null => latest.get(userId)?.type ?? null
+
 const sameState = (segment: PresenceSegment, observation: Observation) =>
 	segment.type === observation.type &&
 	segment.location === observation.location &&
@@ -130,6 +137,12 @@ if (IS_BACKGROUND_PAGE) {
 	}
 
 	record = (observations) => {
+		for (const observation of observations) {
+			if (observation.seen >= (latest.get(observation.userId)?.seen ?? 0)) {
+				latest.set(observation.userId, { type: observation.type, seen: observation.seen })
+			}
+		}
+
 		queue = queue.then(() => apply(observations)).catch((err) => console.error(err))
 	}
 

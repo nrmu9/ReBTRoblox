@@ -92,6 +92,9 @@ export interface WatchChecks {
 /** When each of a watched person's checks last ran. */
 export const getWatchChecks = (userId: number) => ask<WatchChecks | null>("activityChecks", userId)
 
+/** Asks for a watched person's checks to be brought up to date, as their page is open. */
+export const refreshWatched = (userId: number): void => backgroundScript.send("activityRefresh", userId)
+
 export const exportActivity = () => exportBackup(false)
 
 export interface Backup {
