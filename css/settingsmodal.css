@@ -2935,3 +2935,47 @@ div.btr-setting-text {
 	color: var(--btr-content-muted);
 	font-size: 13px;
 }
+
+/* Arriving on the page, the cards rise in one after another */
+.btr-nav-entering .btr-nav-card {
+	animation: btr-nav-in 280ms var(--btr-ease-out) backwards;
+
+	&:nth-child(2) {
+		animation-delay: 40ms;
+	}
+
+	&:nth-child(3) {
+		animation-delay: 80ms;
+	}
+
+	&:nth-child(n + 4) {
+		animation-delay: 120ms;
+	}
+}
+
+@keyframes btr-nav-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+.btr-nav-grip,
+.btr-nav-eye,
+.btr-nav-option,
+.btr-nav-reset {
+	transition:
+		background-color 150ms var(--btr-ease-out),
+		border-color 150ms var(--btr-ease-out),
+		color 150ms var(--btr-ease-out);
+}
+
+.btr-nav-name {
+	transition: color 150ms var(--btr-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-nav-entering .btr-nav-card {
+		animation: none;
+	}
+}

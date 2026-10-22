@@ -24,8 +24,9 @@ const ITEM_NAMES: Record<string, string> = {
 	"id:navbar-robux": "Robux",
 	"class:navbar-settings": "Settings",
 	"id:navbar-settings": "Settings",
-	"class:rbx-navbar-right-search": "Search",
-	"id:rbx-navbar-right-search": "Search",
+	// Roblox's magnifier, only there when the window is too narrow for the search box.
+	"class:rbx-navbar-right-search": "Search (narrow windows)",
+	"id:rbx-navbar-right-search": "Search (narrow windows)",
 	"class:btr-navbar-voice": "Voice status",
 	"id:btr-navbar-voice": "Voice status",
 }
@@ -37,6 +38,11 @@ const ITEM_NAMES: Record<string, string> = {
 const elementOf = (key: string, item?: HTMLElement) => {
 	if (key.startsWith("btr:")) {
 		return Navigation.elements[key.slice(4).replace(/#\d+$/, "")] ?? null
+	}
+
+	// Hidden by a rule on the page rather than a marker on the item.
+	if (key === "link:/plus?referrals") {
+		return Navigation.elements.sidebar_referral ?? null
 	}
 
 	const marker = item?.querySelector('[class*="btr-nav-node-"]')
@@ -142,6 +148,33 @@ const optionsOf = (element: any) => {
 	return wrap
 }
 
+const EASE = "cubic-bezier(0.2, 0, 0, 1)"
+
+const rowsIn = (root: HTMLElement) => [...root.querySelectorAll<HTMLElement>(".btr-nav-item[data-key]")]
+
+const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches
+
+/** Runs `change`, then slides each of `elements` from where it was to where it is now. */
+const glide = (elements: HTMLElement[], change: () => void) => {
+	const before = new Map(elements.map((element) => [element, element.getBoundingClientRect().top]))
+	change()
+
+	if (calm()) {
+		return
+	}
+
+	for (const [element, top] of before) {
+		const delta = top - element.getBoundingClientRect().top
+
+		if (delta) {
+			element.animate([{ transform: `translateY(${delta}px)` }, { transform: "none" }], {
+				duration: 200,
+				easing: EASE,
+			})
+		}
+	}
+}
+
 /**
  * Lets the list's items be dragged into a new order from their handles, which
  * also move them one place with the arrow keys. `save` gets the keys in the
@@ -191,7 +224,15 @@ const sortable = (list: HTMLElement, save: (keys: string[]) => void, focusAfter:
 		}
 
 		const box = over.getBoundingClientRect()
-		over[ev.clientY > box.top + box.height / 2 ? "after" : "before"](dragging)
+		const after = ev.clientY > box.top + box.height / 2
+		const moved = dragging
+
+		// Already there, as dragover fires all the time while it is held still.
+		if ((after ? over.nextElementSibling : over.previousElementSibling) === moved) {
+			return
+		}
+
+		glide([...list.children] as HTMLElement[], () => over[after ? "after" : "before"](moved))
 	})
 
 	list.addEventListener("drop", (ev) => ev.preventDefault())
@@ -221,7 +262,9 @@ const sortable = (list: HTMLElement, save: (keys: string[]) => void, focusAfter:
 		const sibling = ev.key === "ArrowUp" ? item.previousElementSibling : item.nextElementSibling
 
 		if (sibling) {
-			sibling[ev.key === "ArrowUp" ? "before" : "after"](item)
+			glide([...list.children] as HTMLElement[], () =>
+				sibling[ev.key === "ArrowUp" ? "before" : "after"](item),
+			)
 			focusAfter(item.dataset.key!)
 			save(keys())
 		}
@@ -291,14 +334,6 @@ export const addNavigationEditor = (modal: SettingsModalState) => {
 
 			row.$req(".btr-nav-name").textContent = name
 
-			// Hidden some other way: by Roblox on some pages and screen sizes, or by
-			// one of our switches that is about more than this item.
-			if (shownNow && getComputedStyle(item).display === "none") {
-				row.$req(".btr-nav-text").append(
-					html`<span class="btr-nav-note">Not visible on this page</span>`,
-				)
-			}
-
 			const options = optionsOf(element)
 
 			if (options) {
@@ -349,6 +384,7 @@ export const addNavigationEditor = (modal: SettingsModalState) => {
 				</li>`
 
 				row.$req(".btr-nav-name").textContent = name
+				row.dataset.key = `element:${element.name}`
 				row.classList.toggle("btr-nav-item-off", !element.enabled)
 
 				const options = optionsOf(element)
@@ -364,7 +400,42 @@ export const addNavigationEditor = (modal: SettingsModalState) => {
 			cards.push(card)
 		}
 
+		// Where each row was and whether it was shown, so the new ones can slide
+		// from there, and fade when they changed between shown and hidden.
+		const before = new Map(
+			(rowsIn(host) as HTMLElement[]).map((row) => [
+				row.dataset.key,
+				{ top: row.getBoundingClientRect().top, off: row.classList.contains("btr-nav-item-off") },
+			]),
+		)
+
 		host.replaceChildren(...cards)
+
+		if (!calm()) {
+			for (const row of rowsIn(host) as HTMLElement[]) {
+				const was = before.get(row.dataset.key)
+
+				if (!was) {
+					continue
+				}
+
+				const delta = was.top - row.getBoundingClientRect().top
+
+				if (delta) {
+					row.animate([{ transform: `translateY(${delta}px)` }, { transform: "none" }], {
+						duration: 200,
+						easing: EASE,
+					})
+				}
+
+				if (was.off !== row.classList.contains("btr-nav-item-off")) {
+					row.$find(".btr-nav-name")?.animate([{ opacity: 0.2 }, { opacity: 1 }], {
+						duration: 220,
+						easing: EASE,
+					})
+				}
+			}
+		}
 
 		if (focusKey) {
 			;(
@@ -381,14 +452,36 @@ export const addNavigationEditor = (modal: SettingsModalState) => {
 	SETTINGS.onChange("navigation.elements", render)
 	render()
 
-	// The panel can be built before Roblox draws its bars, so the lists are
-	// read again each time the page is shown.
+	// The panel can be built, or opened again after a reload, before Roblox
+	// draws its bars, so the lists are read again whenever the page is shown
+	// and whenever a bar turns up or changes while it is.
 	const page = host.closest(".btr-settings-page")
+	const selected = () => !!page?.classList.contains("selected")
+	let pending: ReturnType<typeof setTimeout> | undefined
+
+	const soon = () => {
+		clearTimeout(pending)
+		pending = setTimeout(() => {
+			// Not under a drag, which a redraw would cut short.
+			if (selected() && !host.querySelector(".btr-nav-dragging")) {
+				render()
+			}
+		}, 150)
+	}
+
+	for (const { selector } of NAV_LISTS) {
+		document.$watchAll(selector, (container: Element) => {
+			soon()
+			new MutationObserver(soon).observe(container, { childList: true })
+		})
+	}
 
 	if (page) {
 		new MutationObserver(() => {
-			if (page.classList.contains("selected")) {
+			if (selected()) {
+				host.classList.add("btr-nav-entering")
 				render()
+				setTimeout(() => host.classList.remove("btr-nav-entering"), 500)
 			}
 		}).observe(page, { attributeFilter: ["class"] })
 	}

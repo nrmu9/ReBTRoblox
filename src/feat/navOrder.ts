@@ -27,8 +27,10 @@ const linkKey = (href: string) => {
 		// The sidebar shows a different featured game from time to time, in the
 		// same place, so any game link is the one item.
 		const slot = path.startsWith("games/") ? "games" : path
+		// The Plus referral banner links to the same page as Roblox Plus itself.
+		const query = url.searchParams.has("referrals") ? "?referrals" : ""
 
-		return `${url.hostname === "www.roblox.com" ? "" : url.hostname}/${slot}`
+		return `${url.hostname === "www.roblox.com" ? "" : url.hostname}/${slot}${query}`
 	} catch {
 		return null
 	}

@@ -166,7 +166,8 @@
 	display: none !important;
 }
 
-#navbar-stream.btr-nav-reduce_margins {
+/* The bell's extra gap, always taken out: it only ever looked uneven */
+#navbar-stream.btr-nav-node-header_notifications {
 	margin-right: 0;
 }
 

@@ -214,7 +214,32 @@ export const Navigation = {
 		return element
 	},
 
+	/** Picks up switches changed in another tab, or in the settings, without a reload. */
+	followChanges() {
+		SETTINGS.onChange("navigation.elements", () => {
+			const states = Navigation.getElementStates()
+
+			for (const element of Object.values(Navigation.elements) as NavigationElement[]) {
+				let state = states[element.name]
+
+				if (typeof state === "boolean") {
+					state = { enabled: state }
+				}
+
+				const enabled = typeof state?.enabled === "boolean" ? state.enabled : element.enabledByDefault
+
+				if (enabled !== element.enabled) {
+					element.enabled = enabled
+					element.isDefault = enabled === element.enabledByDefault
+					element.updateAll()
+				}
+			}
+		})
+	},
+
 	init() {
+		this.followChanges()
+
 		// Always on (even when logged out)
 
 		Navigation.register("header_home", {
@@ -274,11 +299,6 @@ export const Navigation = {
 
 		Navigation.register("header_notifications", {
 			label: "Show Notifications",
-
-			settings: {
-				reduce_margins: { label: "Reduce Margin", enabled: true },
-			},
-
 			selector: "#navbar-stream",
 			enabled: true,
 
