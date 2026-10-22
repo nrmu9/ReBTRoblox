@@ -1,9 +1,9 @@
 import { html } from "@/core/html"
-import { getActivityEvents } from "@/feat/activity/data"
+import { getActivityEvents, isTrackedItem } from "@/feat/activity/data"
 import { lineChart, type ChartMarker, type ChartPoint } from "@/feat/activity/chart"
 import { buildLog, icon, swap } from "@/feat/activity/logs"
 import { onActivityChange } from "@/feat/activity/presence"
-import { checkedAgo, DAY } from "@/feat/activity/shared"
+import { checkedAgo, checkNowButton, DAY } from "@/feat/activity/shared"
 import { openShell } from "@/feat/activity/shell"
 import { gameSubject, groupSubject, type ActivityEvent } from "@/feat/activity/store"
 import { clockFormat } from "@/feat/clock"
@@ -120,6 +120,13 @@ const renderOverview = async (
 	checked.textContent = latest
 		? `Last checked ${checkedAgo(latest)}, every ${kind === "game" ? "15 minutes" : "hour"}`
 		: "Not checked yet"
+
+	// The subject is the id folded into the log's ids, which unfolds back.
+	const id = kind === "game" ? (-subject - 2) / 2 : (-subject - 1) / 2
+
+	if (isTrackedItem(kind, id)) {
+		checked.append(checkNowButton({ kind, id }, () => void renderOverview(panel, kind, subject, state)))
+	}
 
 	const markers: ChartMarker[] = happenings
 		.map((event) => ({ at: event.at, label: kind === "game" ? "Updated" : "Shout" }))

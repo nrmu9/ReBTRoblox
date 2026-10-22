@@ -257,6 +257,40 @@ export const getEvents = async (
 }
 
 /**
+ * The newest events from everyone and everything, before `before` (and,
+ * at that same time, before the id `beforeId`), leaving out count samples.
+ */
+export const getRecentEvents = async (before = Infinity, beforeId = Infinity, limit = 30) => {
+	const db = await openDb()
+	const index = db.transaction("events").objectStore("events").index("at")
+	const found: ActivityEvent[] = []
+
+	await new Promise<void>((resolve, reject) => {
+		const req = index.openCursor(IDBKeyRange.upperBound(before), "prev")
+
+		req.onerror = () => reject(req.error)
+		req.onsuccess = () => {
+			const cursor = req.result
+
+			if (!cursor || found.length >= limit) {
+				resolve()
+				return
+			}
+
+			const event = cursor.value as ActivityEvent & { id: number }
+
+			if (event.kind !== "sample" && !(event.at === before && event.id >= beforeId)) {
+				found.push(event)
+			}
+
+			cursor.continue()
+		}
+	})
+
+	return found
+}
+
+/**
  * A page of one store's records, those after the id `after`. Exports go a page
  * at a time, as one message holding all of it can pass what the browser lets
  * a message carry.
@@ -498,6 +532,15 @@ if (IS_BACKGROUND_PAGE) {
 			respond: (value: unknown) => void,
 		) {
 			answer(getEvents(userId, kinds, since), respond)
+		},
+		activityRecent(
+			{ before, beforeId, limit }: { before?: number; beforeId?: number; limit?: number },
+			respond: (value: unknown) => void,
+		) {
+			answer(
+				getRecentEvents(before ?? Infinity, beforeId ?? Infinity, Math.min(limit ?? 30, 100)),
+				respond,
+			)
 		},
 		activityExportPage(
 			{ store, after, limit }: { store: "presence" | "events"; after: number; limit: number },

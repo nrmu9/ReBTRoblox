@@ -2683,3 +2683,66 @@ div.btr-setting-text {
 	background: rgb(246 136 2 / 0.16);
 	color: #f68802;
 }
+
+.btr-track-check-now {
+	margin-left: 8px;
+	padding: 2px 10px;
+	background: var(--btr-standard);
+	border: none;
+	border-radius: 999px;
+	color: var(--btr-content-emphasis);
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 18px;
+	vertical-align: baseline;
+	cursor: pointer;
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.7;
+	}
+}
+
+/* The activity panel: lists of rows like the friend log, without its coloured labels */
+.btr-panel-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.btr-panel-row {
+	cursor: pointer;
+
+	.btr-friendlog-kind {
+		flex: 0 1 auto;
+		max-width: 50%;
+		overflow: hidden;
+		padding: 0;
+		background: none;
+		color: var(--btr-content-muted);
+		font-size: 13px;
+		font-weight: 500;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btr-focus, #335fff);
+		outline-offset: -2px;
+	}
+}
+
+.btr-panel-square {
+	border-radius: 8px;
+}
+
+.btr-panel-day {
+	margin: 16px 8px 4px;
+	color: var(--btr-content-muted);
+	font-size: 13px;
+	font-weight: 600;
+
+	&:first-child {
+		margin-top: 4px;
+	}
+}

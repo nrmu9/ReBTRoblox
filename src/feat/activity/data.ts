@@ -89,6 +89,28 @@ export interface WatchChecks {
 	follows?: number
 }
 
+/** Whether someone is on the watched list. */
+export const isWatchedUser = (userId: number): boolean => {
+	try {
+		const list = JSON.parse(SETTINGS.get("profile.watchedUsers") || "[]")
+		return Array.isArray(list) && list.includes(userId)
+	} catch {
+		return false
+	}
+}
+
+/** Whether a game or community is on its tracked list. */
+export const isTrackedItem = (kind: "game" | "group", id: number): boolean => {
+	try {
+		const list = JSON.parse(
+			SETTINGS.get(kind === "game" ? "profile.trackedGames" : "profile.trackedGroups") || "[]",
+		)
+		return Array.isArray(list) && list.includes(id)
+	} catch {
+		return false
+	}
+}
+
 /** When each of a watched person's checks last ran. */
 export const getWatchChecks = (userId: number) => ask<WatchChecks | null>("activityChecks", userId)
 
@@ -290,3 +312,20 @@ export const formatBytes = (bytes: number): string =>
 		: bytes >= 1024 ** 2
 			? `${oneDecimal(bytes / 1024 ** 2)} MB`
 			: `${Math.max(1, Math.round(bytes / 1024))} KB`
+
+export type ForceTarget = { kind: "user" | "game" | "group"; id: number } | { kind: "all" }
+
+export interface ForceResult {
+	ok: boolean
+	/** How long until it may be asked again, when it was asked too soon. */
+	wait?: number
+	started?: boolean
+	reason?: string
+}
+
+/** Runs checks now, within the background's limits on how often. */
+export const forceCheck = (target: ForceTarget) => ask<ForceResult | null>("activityForceCheck", target)
+
+/** The newest events across everything, a page at a time, older than the last one shown. */
+export const getRecentEvents = (before?: number, beforeId?: number, limit = 30) =>
+	ask<Array<ActivityEvent & { id: number }> | null>("activityRecent", { before, beforeId, limit })

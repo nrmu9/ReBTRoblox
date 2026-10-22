@@ -1,8 +1,8 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import { getActivityEvents, getWatchChecks } from "@/feat/activity/data"
+import { getActivityEvents, getWatchChecks, isWatchedUser } from "@/feat/activity/data"
 import type { ActivityEvent } from "@/feat/activity/store"
-import { checkedLine, startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
+import { checkedLine, checkNowButton, startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
 import { lineChart, type ChartPoint } from "@/feat/activity/chart"
 
 // The Friends and Changes tabs: logs by day, filtered in place.
@@ -194,7 +194,7 @@ const peopleGroup = (event: ActivityEvent) =>
 				: "following"
 
 /** What happened, read after the person's name. */
-const peopleLabel = ({ kind, field }: ActivityEvent, isOwn: boolean) =>
+export const peopleLabel = ({ kind, field }: ActivityEvent, isOwn: boolean) =>
 	({
 		requestReceived: "Sent you a request",
 		requestSent: "You sent a request",
@@ -323,7 +323,16 @@ export const renderFriends = async (
 	)
 	const intro = html`<div class="btr-people-intro"></div>`
 
-	if (checked) {
+	// Your own followers, or anyone watched, can be checked now.
+	if (isOwn || isWatchedUser(userId)) {
+		intro.append(html`<p class="btr-track-checked">${checked ?? "Not checked yet"}</p>`)
+		intro.lastElementChild!.append(
+			checkNowButton(
+				{ kind: "user", id: userId },
+				() => void renderFriends(panel, userId, isOwn, state),
+			),
+		)
+	} else if (checked) {
 		intro.append(html`<p class="btr-track-checked">${checked}</p>`)
 	}
 
@@ -608,15 +617,28 @@ export const renderChanges = async (panel: HTMLElement, userId: number, state: {
 		["favorites", checks?.favorites],
 	])
 
+	const rerender = () => void renderChanges(panel, userId, state)
+	const checkNow = () =>
+		isWatchedUser(userId) ? [checkNowButton({ kind: "user", id: userId }, rerender)] : []
+
 	if (!events.length) {
+		const line = html`<p class="btr-track-checked">${checked ?? "Not checked yet"}</p>`
+		line.append(...checkNow())
+
 		panel.replaceChildren(
 			html`<p class="btr-activity-empty">
 				No changes yet. Their names, bio, avatar, communities and badges are checked every few hours.
 			</p>`,
-			...(checked ? [html`<p class="btr-track-checked">${checked}</p>`] : []),
+			line,
 		)
 		return
 	}
+
+	const note = html`<p class="btr-change-note">
+		Profiles are checked every few hours, so most changes happened some time before the time shown. Badges
+		show when they were earned.${checked ? ` ${checked}.` : ""}
+	</p>`
+	note.append(...checkNow())
 
 	buildLog({
 		panel,
@@ -626,10 +648,7 @@ export const renderChanges = async (panel: HTMLElement, userId: number, state: {
 		entry: changeEntry,
 		state,
 		hideEmpty: true,
-		intro: html`<p class="btr-change-note">
-			Profiles are checked every few hours, so most changes happened some time before the time shown.
-			Badges show when they were earned.${checked ? ` ${checked}.` : ""}
-		</p>`,
+		intro: note,
 		onPage: async (entries) => {
 			for (const [kind, key] of [
 				["place", "place"],

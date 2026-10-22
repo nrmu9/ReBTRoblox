@@ -44,6 +44,10 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 				text: "Accessories show their particles, fire, sparkles and lights, and previews load faster and more reliably.",
 			},
 			{
+				title: "Activity panel",
+				text: "Everything recorded in one place, with what happened lately across everyone and everything. Turn on its sidebar link under Navigation, and check anyone now with Check now.",
+			},
+			{
 				title: "Back up everything",
 				text: "Save your settings and all recorded activity to one file, and restore it on another browser.",
 				page: "backup",

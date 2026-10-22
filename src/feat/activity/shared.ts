@@ -1,5 +1,6 @@
 import { html } from "@/core/html"
 import type { PresenceSegment } from "@/feat/activity/presence"
+import { forceCheck, type ForceTarget } from "@/feat/activity/data"
 
 // Time and layout helpers the activity dialog's tabs share.
 
@@ -133,3 +134,39 @@ export const showMore = (label: string, onClick: () => void) => {
 
 /** A day heading in a log, a quiet label with a rule after it. */
 export const dayHeading = (day: number) => html`<h3 class="btr-log-day">${dayLabel(day)}</h3>`
+
+/**
+ * A "Check now" button for a "checked ..." line. `onDone` redraws what it
+ * belongs to, as a check that finds nothing new announces no change.
+ */
+export const checkNowButton = (target: ForceTarget, onDone?: () => void): HTMLButtonElement => {
+	const button = html<HTMLButtonElement>`<button type="button" class="btr-track-check-now">
+		Check now
+	</button>`
+
+	const settle = (text: string) => {
+		button.textContent = text
+		setTimeout(() => {
+			button.disabled = false
+			button.textContent = "Check now"
+		}, 4000)
+	}
+
+	button.$on("click", async () => {
+		button.disabled = true
+		button.textContent = "Checking…"
+
+		const result = await forceCheck(target)
+
+		if (result?.ok) {
+			settle("Checked")
+			onDone?.()
+		} else if (result?.wait) {
+			settle(`Again in ${Math.ceil(result.wait / 1000)}s`)
+		} else {
+			settle("Could not check")
+		}
+	})
+
+	return button
+}

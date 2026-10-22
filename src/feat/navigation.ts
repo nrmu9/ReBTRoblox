@@ -536,6 +536,28 @@ export const Navigation = {
 		)
 		hideSidebarItem("sidebar_giftcards", "Show Gift Cards", sidebarLink("/giftcards"))
 
+		// A way into the activity panel, copied from the Inventory link, which
+		// carries no count. It opens the panel rather than going anywhere.
+		Navigation.register("sidebar_activity", {
+			label: "Show Activity",
+			enabled: false,
+
+			init() {
+				addSidebarItem(this, sidebarLink("/inventory"), (anchor) => {
+					const item = copySidebarLink(anchor, "#activity", "Activity", "btr-activity")
+
+					item.$req("a").$on("click", (ev: Event) => {
+						ev.preventDefault()
+						void import("@/feat/activity/panel").then(({ openActivityPanel }) =>
+							openActivityPanel(loggedInUser > 0 ? loggedInUser : null),
+						)
+					})
+
+					return item
+				})
+			},
+		})
+
 		Navigation.register("sidebar_messages", {
 			label: "Show Messages",
 

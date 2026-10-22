@@ -275,6 +275,44 @@ const tick = async () => {
 	}
 }
 
+/** Checks one tracked game or community now, after any round already running. */
+export const forceTrackedCheck = async (kind: "game" | "group", id: number): Promise<boolean> => {
+	const list = kind === "game" ? getTrackedGames() : getTrackedGroups()
+
+	if (!list.includes(id)) {
+		return false
+	}
+
+	const busy = () => running
+
+	while (busy()) {
+		await new Promise((resolve) => setTimeout(resolve, 500))
+	}
+
+	running = true
+
+	try {
+		const due = (await getState<Record<string, number>>("trackChecks")) ?? {}
+
+		if (kind === "game") {
+			await checkGames([id])
+		} else {
+			due[`group:${id}`] = Date.now()
+			await checkGroup(id)
+			due[`groupGames:${id}`] = Date.now()
+			await checkGroupGames(id)
+		}
+
+		await setState("trackChecks", due)
+		return true
+	} catch (err) {
+		console.warn("[btr] tracking check failed", err)
+		return false
+	} finally {
+		running = false
+	}
+}
+
 export const startTracking = (): void => {
 	setInterval(() => void tick(), 60e3)
 

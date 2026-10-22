@@ -2097,3 +2097,8 @@ html
 .btr-chat-search-button[aria-pressed="true"] {
 	background: var(--color-state-press, rgb(128 128 128 / 0.2));
 }
+
+/* The sidebar's Activity item, a clock Roblox's pages do not ship */
+.btr-nav-node-sidebar_activity .icon-regular-btr-activity {
+	--svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='black' stroke-width='2.5'/%3E%3Cpath d='M16 10v6.5l4 2.5' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}

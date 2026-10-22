@@ -10,6 +10,7 @@ import {
 import { compareFriendList, namesOf } from "@/feat/activity/friends"
 import { isLive, latestPresence, recordPresences } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
+import { forceTrackedCheck, getTrackedGames, getTrackedGroups } from "@/feat/activity/tracked"
 import { contentScript } from "@/core/messaging"
 
 // People you chose to watch, checked from the background: where they are,
@@ -272,7 +273,9 @@ const quickCheck = async (userIds: number[]): Promise<number[]> => {
 			})
 				.then((res) => (res.ok ? res.json() : null))
 				.catch(() => null),
-			getJson(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${ids.join(",")}&size=150x150&format=Png`),
+			getJson(
+				`https://thumbnails.roblox.com/v1/users/avatar?userIds=${ids.join(",")}&size=150x150&format=Png`,
+			),
 			Promise.all(ids.map((id) => getState<ProfileSnapshot>(`profile:${id}`))),
 		])
 
@@ -788,10 +791,115 @@ const refresh = async (userId: number) => {
 	})
 }
 
+// Checks asked for by hand: each person or thing once a minute at most, and
+// everything once every ten minutes, with a pause between checks so a long
+// list is spread out rather than sent at once.
+const FORCE_EACH = 60e3
+const FORCE_ALL = 10 * 60e3
+const FORCE_PAUSE = 1500
+const lastForced = new Map<string, number>()
+let forcingAll = false
+
+export type ForceTarget = { kind: "user" | "game" | "group"; id: number } | { kind: "all" }
+
+/** Where "check all" has got to, which the activity panel shows. */
+const PROGRESS_KEY = "activityForceProgress"
+
+const pause = () => new Promise((resolve) => setTimeout(resolve, FORCE_PAUSE))
+
+const saveProgress = (value: object) =>
+	new Promise<void>((resolve) => chrome.storage.local.set({ [PROGRESS_KEY]: value }, () => resolve()))
+
+/** Every check for one person, or just your followers for yourself. */
+const forceUser = (userId: number) =>
+	exclusive(async () => {
+		await askPresence([userId])
+
+		const due = (await getState<WatchChecks>("watchChecks")) ?? {}
+		const checks = (due[userId] ??= {})
+		const kinds = userId === ownUserId ? (["follows"] as const) : (Object.keys(CHECKS) as CheckKind[])
+
+		for (const kind of kinds) {
+			checks[kind] = Date.now()
+			await CHECKS[kind](userId)
+			await pause()
+		}
+
+		await setState("watchChecks", due)
+	})
+
+const forceAll = async () => {
+	const targets: ForceTarget[] = [
+		...getWatchedUsers().map((id) => ({ kind: "user" as const, id })),
+		...getTrackedGames().map((id) => ({ kind: "game" as const, id })),
+		...getTrackedGroups().map((id) => ({ kind: "group" as const, id })),
+	]
+
+	forcingAll = true
+
+	try {
+		for (let i = 0; i < targets.length; i++) {
+			await saveProgress({ done: i, total: targets.length, running: true })
+
+			const target = targets[i] as { kind: "user" | "game" | "group"; id: number }
+			lastForced.set(`${target.kind}:${target.id}`, Date.now())
+			await (target.kind === "user" ? forceUser(target.id) : forceTrackedCheck(target.kind, target.id))
+			await pause()
+		}
+	} finally {
+		forcingAll = false
+		await saveProgress({ done: targets.length, total: targets.length, running: false, at: Date.now() })
+	}
+}
+
+/**
+ * Runs checks now. One person or thing answers once it is checked; everything
+ * answers as soon as it starts, and reports how far it has got in storage.
+ */
+const forceCheck = async (target: ForceTarget) => {
+	if (!SETTINGS.get("profile.lastSeen")) {
+		return { ok: false, reason: "off" }
+	}
+
+	const key = target.kind === "all" ? "all" : `${target.kind}:${target.id}`
+	const wait = (target.kind === "all" ? FORCE_ALL : FORCE_EACH) - (Date.now() - (lastForced.get(key) ?? 0))
+
+	if (wait > 0 || (target.kind === "all" && forcingAll)) {
+		return { ok: false, wait: Math.max(wait, 0) }
+	}
+
+	lastForced.set(key, Date.now())
+
+	if (target.kind === "all") {
+		void forceAll()
+		return { ok: true, started: true }
+	}
+
+	if (target.kind === "user") {
+		ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
+
+		if (!getWatchedUsers().includes(target.id) && target.id !== ownUserId) {
+			return { ok: false, reason: "not watched" }
+		}
+
+		await forceUser(target.id)
+		return { ok: true }
+	}
+
+	return { ok: await forceTrackedCheck(target.kind, target.id) }
+}
+
 export const startWatching = (): void => {
 	setInterval(() => void tick(), 60e3)
 
 	contentScript.listen("activityRefresh", (userId: number) => void refresh(userId))
+
+	contentScript.listen(
+		"activityForceCheck",
+		async (target: ForceTarget, respond: (value: unknown) => void) => {
+			respond(await forceCheck(target).catch(() => ({ ok: false })))
+		},
+	)
 
 	/** When each of someone's checks last ran, for the dialogs to say. */
 	contentScript.listen("activityChecks", async (userId: number, respond: (value: unknown) => void) => {
