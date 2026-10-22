@@ -114,6 +114,8 @@ export const DEFAULT_SETTINGS = {
 		serverTools: { value: true },
 		compactBadgeStats: { value: true },
 		exactCounts: { value: true },
+		liveStats: { value: true },
+		yourPlaytime: { value: true },
 	},
 	groups: {
 		enabled: { value: true },

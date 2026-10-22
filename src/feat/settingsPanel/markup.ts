@@ -406,6 +406,17 @@ export const settingsMarkup = () =>
 							desc="Shows exact visits, likes and favorites"
 						></toggle>
 						<toggle
+							label="Live Stats"
+							path="liveStats"
+							desc="Keeps players, visits, favorites and likes up to date while the page is open"
+						></toggle>
+						<toggle
+							label="Your Playtime and Servers"
+							path="yourPlaytime"
+							require="profile.lastSeen"
+							desc="Shows how long you have played a game and the servers you were last in, from your activity history"
+						></toggle>
+						<toggle
 							label="Paged Server List"
 							path="addServerPager"
 							desc="Splits the server list into pages"

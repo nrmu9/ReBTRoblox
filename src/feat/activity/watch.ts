@@ -583,7 +583,10 @@ const tick = async () => {
 	try {
 		ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
 
-		if (watched.length && Date.now() - lastPresence >= PRESENCE_EVERY) {
+		// You too, so your own playtime and recent servers are known.
+		const presenceOf = [...new Set([...watched, ...(ownUserId ? [ownUserId] : [])])]
+
+		if (presenceOf.length && Date.now() - lastPresence >= PRESENCE_EVERY) {
 			lastPresence = Date.now()
 
 			// Friends' presence comes live while the connection is up, so only
@@ -591,7 +594,7 @@ const tick = async () => {
 			const friends = new Set(
 				(isLive() && ownUserId && (await getState<number[]>(`friends:${ownUserId}`))) || [],
 			)
-			const ids = watched.filter((id) => !friends.has(id))
+			const ids = presenceOf.filter((id) => !friends.has(id))
 
 			if (ids.length) {
 				const res = await fetch("https://presence.roblox.com/v1/presence/users", {

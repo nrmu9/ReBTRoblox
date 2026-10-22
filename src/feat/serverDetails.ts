@@ -2192,6 +2192,12 @@ const resolveServerDetails = (details: any) => {
 	}
 }
 
+/** A server's region, written the way the server cards write it: states for the US. */
+export const regionLabel = (location: any): string =>
+	location
+		? `${location.city}, ${location.country.name === "United States" ? location.region.code : location.country.code}`
+		: ""
+
 /** A server's location if it has been looked up already, without asking again. */
 export const getCachedServerLocation = (jobId: string): any => {
 	const cached = btrLocalStorage.getItem(`serverDetailsV2-${jobId}`)

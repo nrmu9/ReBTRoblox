@@ -25,7 +25,8 @@ import {
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
-import { getCachedServerLocation, getServerDetails } from "@/feat/serverDetails"
+import { getCachedServerLocation, getServerDetails, regionLabel } from "@/feat/serverDetails"
+import { addPlaytime, addRecentServers, liveCounts, startLiveStats } from "@/feat/gameStats"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { queryReq } from "@/core/query"
 
@@ -70,7 +71,7 @@ const showExactCounts = () => {
 
 				document.$watch(
 					"#game-visits-count",
-					(elem: HTMLElement) => keepText(elem, () => exactText(visits)),
+					(elem: HTMLElement) => keepText(elem, () => exactText(liveCounts.visits ?? visits)),
 					{ continuous: true },
 				)
 			})
@@ -116,12 +117,6 @@ const trackDislike = () => {
 		update()
 	})
 }
-
-/** A server's region, written the way the server cards write it: states for the US. */
-const regionLabel = (location: any): string =>
-	location
-		? `${location.city}, ${location.country.name === "United States" ? location.region.code : location.country.code}`
-		: ""
 
 const lookUpLocation = (placeId: number, jobId: string): Promise<any> =>
 	new Promise((resolve) =>
@@ -360,6 +355,21 @@ pageInit.gamedetails = () => {
 		const placeId = Number.parseInt(placeIdString, 10)
 
 		trackDislike()
+
+		if (SETTINGS.get("gamedetails.liveStats")) {
+			document.$watch("#game-detail-meta-data", (meta: HTMLElement) => {
+				const universeId = Number.parseInt(meta.dataset.universeId ?? "", 10)
+
+				if (Number.isSafeInteger(universeId)) {
+					startLiveStats(universeId, SETTINGS.get("gamedetails.exactCounts"))
+				}
+			})
+		}
+
+		if (SETTINGS.get("gamedetails.yourPlaytime") && SETTINGS.get("profile.lastSeen")) {
+			void addPlaytime(placeId)
+			void addRecentServers(placeId)
+		}
 
 		if (SETTINGS.get("gamedetails.serverTools")) {
 			addJoinSmallest(placeId)
