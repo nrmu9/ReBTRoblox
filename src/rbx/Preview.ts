@@ -478,6 +478,9 @@ export class ItemPreviewer extends AvatarPreviewer {
 		super()
 
 		window.scene = this.scene
+		// One item at a time here, so accessory lights may cast shadows, which
+		// hover previews leave off as they open on every card.
+		this.avatar.lightShadows = true
 		this.currentOutfit = "current"
 		this.isVisible = false
 		this.animMap = {} as Record<string, any>

@@ -1544,7 +1544,9 @@ export const RBXAvatar = (() => {
 				acc.obj.matrixWorldNeedsUpdate = true
 
 				if (acc.effects?.length) {
-					acc.effectsRuntime ??= new AccessoryEffects(acc.effects, this.root)
+					acc.effectsRuntime ??= new AccessoryEffects(acc.effects, this.root, {
+						shadows: !!this.lightShadows,
+					})
 					handleMatrix.copy(acc.obj.matrixNoScale)
 
 					if (acc.offset) {
