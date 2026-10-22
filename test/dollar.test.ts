@@ -10,7 +10,7 @@ const tick = () => new Promise((r) => setTimeout(r, 20))
 
 const frag = (html: string): HTMLElement => {
 	const box = document.createElement("div")
-	box.innerHTML = html
+	box.append(...new DOMParser().parseFromString(html, "text/html").body.childNodes)
 	document.body.append(box)
 	return box
 }

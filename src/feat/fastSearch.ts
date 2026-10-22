@@ -6,8 +6,9 @@ import { RobloxApi } from "@/rbx/RobloxApi"
 import { loggedInUserPromise } from "@/pages/common"
 import { queryAll } from "@/core/query"
 
+// Your friends for fast search to match against, kept between pages so the
+// list shows before Roblox has answered.
 const btrFriends = {
-	// TODO: Move this elsewhere
 	friendsPromise: null as Promise<Record<string, any>> | null,
 	friendsCached: null as Record<string, any> | null,
 	friendsLoaded: false,
