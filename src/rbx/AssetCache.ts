@@ -3,6 +3,7 @@ import { assert, bufferToString } from "@/core/util"
 import { RBXAnimationParser } from "@/rbx/Parser/AnimationParser"
 import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
 import { RBXModelParser } from "@/rbx/Parser/ModelParser"
+import { forgetAsset, lookUpAsset } from "@/rbx/AssetLookup"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 /** A resolved asset location, plus how it was asked for. */
@@ -46,6 +47,25 @@ interface AssetLoader<T> {
 		params: AssetLoadParams,
 		cb?: AssetLoaderCallback<T>,
 	): Promise<T | null>
+}
+
+/** A dropped connection, a rate limit or a server error is tried again, twice. */
+const fetchWithRetry = async (url: string) => {
+	for (let attempt = 0; ; attempt++) {
+		const res = await fetch(url).catch((err: unknown) => {
+			if (attempt >= 2) {
+				throw err
+			}
+
+			return null
+		})
+
+		if (res && (res.ok || attempt >= 2 || (res.status !== 429 && res.status < 500))) {
+			return res
+		}
+
+		await new Promise((resolve) => setTimeout(resolve, 400 * 3 ** attempt))
+	}
 }
 
 export const AssetCache = (() => {
@@ -158,14 +178,31 @@ export const AssetCache = (() => {
 			let methodPromise = methodCache[cacheKey]
 
 			if (!methodPromise) {
-				methodPromise = resolvePromise
-					.then((assetRequest: AssetRequest) => {
-						assert(assetRequest.location, "resolved asset has no location")
+				const load = (assetRequest: AssetRequest) => {
+					assert(assetRequest.location, "resolved asset has no location")
 
-						return AssetCache.loadDirect(assetRequest.location, params).then(
-							(buffer: ArrayBuffer) => constructor(buffer, assetRequest),
-						)
-					})
+					return AssetCache.loadDirect(assetRequest.location, params).then(
+						(buffer: ArrayBuffer) => constructor(buffer, assetRequest),
+					)
+				}
+
+				methodPromise = resolvePromise
+					.then((assetRequest: AssetRequest) =>
+						load(assetRequest).catch((err: unknown) => {
+							const lookedUp = assetRequest.lookedUp
+
+							if (!lookedUp) {
+								throw err
+							}
+
+							// A remembered link can stop working early, so the asset is
+							// looked up afresh once before giving up on it.
+							forgetAsset(lookedUp.id, lookedUp.version || undefined)
+							delete resolveCache[assetRequest.cacheKey]
+
+							return AssetCache.resolveAsset(strict, request, params).then(load)
+						}),
+					)
 					.catch((err: unknown) => {
 						console.error(err)
 
@@ -231,11 +268,27 @@ export const AssetCache = (() => {
 					urlParams: urlParams.toString(),
 				}
 
-				resolvePromise = RobloxApi.assetdelivery
-					.requestAssetV2(urlParams, {
-						format: params?.format,
-						browserAssetRequest: params?.browserAssetRequest,
-					})
+				const id = Number(urlParams.get("id"))
+				const version = Number(urlParams.get("version") ?? 0)
+				const plain =
+					Number.isSafeInteger(id) &&
+					Number.isSafeInteger(version) &&
+					[...urlParams.keys()].every((key) => key === "id" || key === "version") &&
+					!params?.format &&
+					!params?.browserAssetRequest
+
+				if (plain) {
+					assetRequest.lookedUp = { id, version }
+				}
+
+				const lookup = plain
+					? lookUpAsset(id, version || undefined)
+					: RobloxApi.assetdelivery.requestAssetV2(urlParams, {
+							format: params?.format,
+							browserAssetRequest: params?.browserAssetRequest,
+						})
+
+				resolvePromise = lookup
 					.then((json: any) => {
 						if (!json?.locations?.length) {
 							throw new Error(`Unable to download asset "${JSON.stringify(assetRequest)}"`)
@@ -273,7 +326,7 @@ export const AssetCache = (() => {
 			let cdnPromise = cdnCache[cdnUrl]
 
 			if (!cdnPromise) {
-				cdnPromise = fetch(cdnUrl).then((res) => {
+				cdnPromise = fetchWithRetry(cdnUrl).then((res) => {
 					if (!res.ok) {
 						throw new Error(`Failed to download asset '${cdnUrl}'`)
 					}
