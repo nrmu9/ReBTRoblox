@@ -36,6 +36,14 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 				text: "Tracked games now record favorites and likes. People's stats show time online per day and which hours they are usually on.",
 			},
 			{
+				title: "Game page stats",
+				text: "Game page stats update live, and each game shows how long you have played it and the servers you joined recently.",
+			},
+			{
+				title: "Livelier avatar previews",
+				text: "Accessories show their particles, fire, sparkles and lights, and previews load faster and more reliably.",
+			},
+			{
 				title: "Back up everything",
 				text: "Save your settings and all recorded activity to one file, and restore it on another browser.",
 				page: "backup",
