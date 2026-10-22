@@ -336,7 +336,9 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					continue
 				}
 
-				const query = client.getQueryCache?.().findAll({ predicate: isMessages(conversation.id) })?.[0]
+				const query = client
+					.getQueryCache?.()
+					.findAll({ predicate: isMessages(conversation.id) })?.[0]
 				const data = query?.state.data
 
 				if (!data || query.state.fetchStatus === "fetching" || !Array.isArray(data.messages)) {
@@ -351,7 +353,10 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					refetched.delete(conversation.id)
 				} else if (refetched.get(conversation.id) !== state) {
 					refetched.set(conversation.id, state)
-					client.invalidateQueries({ predicate: isMessages(conversation.id) }, { cancelRefetch: false })
+					client.invalidateQueries(
+						{ predicate: isMessages(conversation.id) },
+						{ cancelRefetch: false },
+					)
 				}
 			}
 		}
@@ -426,7 +431,10 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					// Only the messages themselves. Other entries under the same
 					// conversation, like its failed and moderated messages, live
 					// only in the page, and refetching them empties them.
-					client.invalidateQueries({ predicate: isMessages(conversation.id) }, { cancelRefetch: false })
+					client.invalidateQueries(
+						{ predicate: isMessages(conversation.id) },
+						{ cancelRefetch: false },
+					)
 				} catch {}
 			}
 		}
