@@ -1,3 +1,4 @@
+import { AccessoryEffects, collectEffects } from "@/rbx/Avatar/Effects"
 import { deferredPromise } from "@/core/deferred"
 import * as THREE from "three"
 
@@ -950,6 +951,10 @@ export const RBXAvatar = (() => {
 				baseColor: [...baseColor],
 				opacity: 1 - (hanInst.Transparency || 0),
 
+				// Particles and lights under the Handle, and Neon, which glows.
+				effects: collectEffects(hanInst),
+				neon: hanInst.Material === 288,
+
 				legacyHatCFrame: accInst.AttachmentPoint
 					? RBXAvatar.CFrameToMatrix4(...(accInst.AttachmentPoint as CFrameTuple)).invert()
 					: new THREE.Matrix4(),
@@ -1100,6 +1105,8 @@ export const RBXAvatar = (() => {
 	const invalidLayeredAssetIds: Record<string, any> = {}
 
 	const skinnedWorld = new THREE.Matrix4()
+	const handleMatrix = new THREE.Matrix4()
+	const offsetMatrix = new THREE.Matrix4()
 
 	const objCache: Record<string, any> = {}
 
@@ -1535,6 +1542,20 @@ export const RBXAvatar = (() => {
 
 				acc.obj.matrix.copy(acc.obj.matrixNoScale).scale(scale)
 				acc.obj.matrixWorldNeedsUpdate = true
+
+				if (acc.effects?.length) {
+					acc.effectsRuntime ??= new AccessoryEffects(acc.effects, this.root)
+					handleMatrix.copy(acc.obj.matrixNoScale)
+
+					if (acc.offset) {
+						handleMatrix.multiply(
+							offsetMatrix.makeTranslation(-acc.offset[0], -acc.offset[1], -acc.offset[2]),
+						)
+					}
+
+					const mod = acc.obj.rbxScaleMod
+					acc.effectsRuntime.update(handleMatrix, (mod.x + mod.y + mod.z) / 3, acc.obj.visible)
+				}
 			}
 
 			// Update bones
@@ -2201,6 +2222,8 @@ export const RBXAvatar = (() => {
 				if (accessories[acc.asset.id] !== acc) {
 					acc.attachment = null
 					acc.parent = null
+					acc.effectsRuntime?.dispose()
+					acc.effectsRuntime = null
 
 					if (acc.obj.parent) {
 						acc.obj.parent.remove(acc.obj)
@@ -2242,6 +2265,8 @@ export const RBXAvatar = (() => {
 				if (!parent) {
 					acc.attachment = null
 					acc.parent = null
+					acc.effectsRuntime?.dispose()
+					acc.effectsRuntime = null
 
 					if (acc.obj.parent) {
 						acc.obj.parent.remove(acc.obj)
@@ -2319,6 +2344,10 @@ export const RBXAvatar = (() => {
 							).toTexture(),
 						})
 
+						if (acc.neon) {
+							material.emissive.setRGB(...(<[number, number, number]>acc.baseColor))
+						}
+
 						if (acc.texId) {
 							AssetCache.loadImage(true, acc.texId, (img: HTMLImageElement | null) => {
 								if (!img) {
@@ -2326,6 +2355,12 @@ export const RBXAvatar = (() => {
 								}
 
 								material.map = new MergeTexture(256, 256, img)
+
+								if (acc.neon) {
+									material.emissive.setRGB(1, 1, 1)
+									material.emissiveMap = material.map
+								}
+
 								material.needsUpdate = true
 							})
 

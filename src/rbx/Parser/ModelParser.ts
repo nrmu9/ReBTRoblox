@@ -1093,13 +1093,29 @@ const RBXXmlParser = {
 				case "token":
 					inst.setProperty(name, +value, "Enum")
 					break
-				case "Color3":
+				case "Color3": {
+					// Older files write a colour as one number, packed as ARGB.
+					if (!children.R && /^\d+$/.test(value.trim())) {
+						const packed = Number(value.trim()) >>> 0
+						inst.setProperty(
+							name,
+							[
+								((packed >>> 16) & 255) / 255,
+								((packed >>> 8) & 255) / 255,
+								(packed & 255) / 255,
+							],
+							"Color3",
+						)
+						break
+					}
+
 					inst.setProperty(
 						name,
 						[+getValue(children.R, 0), +getValue(children.G, 0), +getValue(children.B, 0)],
 						"Color3",
 					)
 					break
+				}
 				case "Color3uint8":
 					inst.setProperty(
 						name,
@@ -1198,6 +1214,39 @@ const RBXXmlParser = {
 						"Rect2D",
 					)
 					break
+				// The sequences are written as numbers in a row: time, value and
+				// envelope for numbers; time, red, green, blue and an unused 0 for
+				// colours.
+				case "NumberSequence": {
+					const numbers = value.trim().split(/\s+/).map(Number)
+					const sequence: any[] = []
+
+					for (let i = 0; i + 2 < numbers.length; i += 3) {
+						sequence.push({ Time: numbers[i], Value: numbers[i + 1], Envelope: numbers[i + 2] })
+					}
+
+					inst.setProperty(name, sequence, "NumberSequence")
+					break
+				}
+				case "ColorSequence": {
+					const numbers = value.trim().split(/\s+/).map(Number)
+					const sequence: any[] = []
+
+					for (let i = 0; i + 3 < numbers.length; i += 5) {
+						sequence.push({
+							Time: numbers[i],
+							Value: [numbers[i + 1], numbers[i + 2], numbers[i + 3]],
+						})
+					}
+
+					inst.setProperty(name, sequence, "ColorSequence")
+					break
+				}
+				case "NumberRange": {
+					const [min = 0, max = min] = value.trim().split(/\s+/).map(Number)
+					inst.setProperty(name, [min, max], "NumberRange")
+					break
+				}
 				case "PhysicalProperties":
 					if (getValue(children.CustomPhysics) === "true") {
 						inst.setProperty(
