@@ -2,6 +2,7 @@ import { STORAGE } from "@/core/env"
 import { html } from "@/core/html"
 import { formatBytes } from "@/feat/activity/data"
 import { SETTINGS } from "@/feat/settings"
+import { toastArea } from "@/feat/toasts"
 
 // A notice on Roblox pages once the stored activity nears its limit, and
 // again when it reaches it and recording stops. Dismissing one hides it until
@@ -52,7 +53,7 @@ const show = (state: Level | undefined, dismissed: number) => {
 		STORAGE.set({ activityLevelDismissed: state.level })
 	})
 
-	document.body.append(toast)
+	toastArea().append(toast)
 }
 
 export const watchActivityWarning = (): void => {

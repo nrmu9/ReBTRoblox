@@ -166,8 +166,18 @@
 }
 
 .btr-settings-brand-version {
-	font-size: 12px;
+	padding: 0;
+	background: none;
+	border: none;
 	color: var(--btr-content-muted);
+	font: inherit;
+	font-size: 12px;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--btr-content-emphasis);
+		text-decoration: underline;
+	}
 }
 
 .btr-settings-search {

@@ -1457,12 +1457,27 @@ html
 
 /* The notice that stored activity is nearly full, or full */
 
-.btr-activity-toast {
+/* ReBTRoblox's notices, stacked in one corner. Above the settings, which
+   the What's new card can open. */
+.btr-toasts {
 	position: fixed;
 	left: 24px;
 	bottom: 24px;
-	z-index: 1060;
+	z-index: 10001;
 
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+	max-height: calc(100vh - 48px);
+	pointer-events: none;
+
+	> * {
+		pointer-events: auto;
+	}
+}
+
+.btr-activity-toast {
 	display: flex;
 	align-items: center;
 	gap: 16px;
@@ -1502,6 +1517,145 @@ html
 	button {
 		height: 32px;
 		padding: 0 12px;
+		background: var(--color-action-standard-background, rgb(128 128 128 / 0.2));
+		border: none;
+		border-radius: 8px;
+		color: var(--color-content-emphasis, inherit);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+
+		&:hover {
+			filter: brightness(1.15);
+		}
+	}
+}
+
+/* What's new after an update */
+
+.btr-whatsnew {
+	display: flex;
+	flex-direction: column;
+	width: min(400px, calc(100vw - 48px));
+	max-height: 480px;
+	min-height: 0;
+	padding: 16px;
+
+	background: var(--color-surface-100, light-dark(#fff, #191a1f));
+	border: 1px solid var(--color-stroke-muted, light-dark(#e3e3e3, #393b3d));
+	border-radius: 12px;
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+	color: var(--color-content-default, inherit);
+	font-size: 14px;
+	line-height: 20px;
+	animation: btr-whatsnew-in 200ms cubic-bezier(0.2, 0, 0, 1);
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes btr-whatsnew-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+.btr-whatsnew-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+
+	strong {
+		color: var(--color-content-emphasis, inherit);
+		font-size: 16px;
+		font-weight: 700;
+	}
+}
+
+.btr-whatsnew-close {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: 50%;
+	color: var(--color-content-muted, inherit);
+	cursor: pointer;
+
+	&:hover {
+		background: var(--color-state-hover, rgb(128 128 128 / 0.15));
+	}
+}
+
+.btr-whatsnew-body {
+	min-height: 0;
+	margin: 8px -4px 0;
+	padding: 0 4px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+.btr-whatsnew-version {
+	margin: 12px 0 4px;
+	color: var(--color-content-muted, inherit);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.btr-whatsnew-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	li {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	strong {
+		color: var(--color-content-emphasis, inherit);
+		font-weight: 700;
+	}
+
+	span {
+		color: var(--color-content-default, inherit);
+	}
+}
+
+.btr-whatsnew-open {
+	margin-top: 2px;
+	padding: 0;
+	background: none;
+	border: none;
+	color: var(--color-content-link, #335fff);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.btr-whatsnew-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 12px;
+
+	button {
+		height: 32px;
+		padding: 0 16px;
 		background: var(--color-action-standard-background, rgb(128 128 128 / 0.2));
 		border: none;
 		border-radius: 8px;

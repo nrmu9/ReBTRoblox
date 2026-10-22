@@ -20,6 +20,7 @@ export const setupReloadPrompt = (modal: SettingsModalState) => {
 		"messages.pageJump",
 		"general.hideChat",
 		"general.smallChatButton",
+		"general.whatsNew",
 		"general.voiceChatStatus",
 		"general.hoverPreviewMode",
 		"profile.liveTracking",

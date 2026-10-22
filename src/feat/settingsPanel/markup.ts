@@ -12,7 +12,9 @@ export const settingsMarkup = () =>
 			<aside class="btr-settings-sidebar">
 				<div class="btr-settings-brand">
 					<span class="btr-settings-brand-title">ReBTRoblox</span>
-					<span class="btr-settings-brand-version">v${chrome.runtime.getManifest().version}</span>
+					<button type="button" class="btr-settings-brand-version" title="What's new">
+						v${chrome.runtime.getManifest().version}
+					</button>
 					<a
 						class="btr-settings-brand-link"
 						href="https://www.roblox.com/users/864843843/profile"
@@ -99,6 +101,11 @@ export const settingsMarkup = () =>
 							label="12-Hour Clock"
 							path="twelveHourClock"
 							desc="Shows times like 5:30 PM instead of 17:30"
+						></toggle>
+						<toggle
+							label="Show What's New"
+							path="whatsNew"
+							desc="After an update, lists what changed. Click the version above to see it again"
 						></toggle>
 
 						<heading>Chat</heading>

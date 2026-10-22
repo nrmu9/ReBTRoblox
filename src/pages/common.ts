@@ -13,6 +13,7 @@ import { recordExperimentPage } from "@/feat/experimentHints"
 import { SETTINGS } from "@/feat/settings"
 import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { watchActivityWarning } from "@/feat/activity/warning"
+import { watchWhatsNew } from "@/feat/whatsNew"
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
@@ -1169,6 +1170,7 @@ pageInit.www = () => {
 	Navigation.init()
 	SettingsModal.enable()
 	watchActivityWarning()
+	watchWhatsNew()
 
 	initReactFriends()
 	initReactRobuxToCash()

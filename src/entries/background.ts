@@ -14,6 +14,7 @@ import "@/feat/activity/presence"
 import "@/feat/activity/live"
 import { startWatching } from "@/feat/activity/watch"
 import { startTracking } from "@/feat/activity/tracked"
+import { recordUpdate } from "@/feat/whatsNew"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 
@@ -22,7 +23,7 @@ startTracking()
 
 // Service workers need listeners registered synchronously at startup.
 chrome.runtime.onStartup.addListener(() => {})
-chrome.runtime.onInstalled.addListener(() => {})
+chrome.runtime.onInstalled.addListener((details) => recordUpdate(details))
 
 const getRequiredPermissions = (): any => {
 	const manifest = chrome.runtime.getManifest()

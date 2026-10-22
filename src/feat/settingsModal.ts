@@ -6,6 +6,7 @@ import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { setupStoredActivity } from "@/feat/settingsPanel/activity"
 import { setupBackup } from "@/feat/settingsPanel/backup"
+import { showCurrentNotes } from "@/feat/whatsNew"
 import type { ExperimentHint } from "@/feat/experimentHints"
 import {
 	getSavedExperiments,
@@ -253,6 +254,7 @@ export const SettingsModal: SettingsModalState = {
 
 		setupStoredActivity(this)
 		setupBackup(this)
+		this.settingsDiv.$req(".btr-settings-brand-version").$on("click", () => showCurrentNotes())
 		addUnlistedSettings(this, rows)
 		bindResetButtons(this)
 		setupSearch(this)
