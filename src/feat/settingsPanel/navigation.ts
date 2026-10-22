@@ -1,72 +1,22 @@
 import { html } from "@/core/html"
 import { Navigation } from "@/feat/navigation"
-import { currentItems, NAV_LISTS, readOrder, saveOrder } from "@/feat/navOrder"
+import {
+	currentItems,
+	NAV_LISTS,
+	readHidden,
+	readOrder,
+	saveOrder,
+	setHidden,
+	type NavListName,
+} from "@/feat/navOrder"
 import { SETTINGS } from "@/feat/settings"
-import { makeRow, makeSwitch, type Rows } from "@/feat/settingsPanel/rows"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
 
-// The switches on the Navigation page, one for each top bar and sidebar button.
-
-// Navigation buttons, which keep their state in navigation.elements
-// rather than in a setting each.
-export const addNavigationRows = (modal: SettingsModalState, { nextId }: Rows) => {
-	const lists: Record<string, HTMLElement> = {}
-	for (const list of modal.settingsDiv.$findAll(".btr-settings-nav-list")) {
-		const card = html`<div class="btr-setting-card"></div>`
-		list.replaceWith(card)
-		lists[list.dataset.kind] = card
-	}
-
-	const onUpdate: Array<() => void> = []
-
-	const addRow = (element: any, parent: HTMLElement, child: boolean) => {
-		const id = nextId()
-		const row = makeRow(element.label || element.name, null, id)
-		const { wrap, input } = makeSwitch(id)
-		const reset = html<HTMLButtonElement>`<button type="button" class="btr-setting-reset">Reset</button>`
-
-		row.classList.toggle("btr-setting-child", child)
-		row.append(reset, wrap)
-		parent.append(row)
-
-		input.$on("change", () => element.setEnabled(input.checked))
-		reset.$on("click", () => element.setEnabled(null))
-
-		onUpdate.push(() => {
-			input.checked = element.enabled
-			reset.classList.toggle("btr-setting-reset-shown", !element.isDefault)
-		})
-
-		return { row, input }
-	}
-
-	for (const element of Object.values(Navigation.elements) as any[]) {
-		if (element.parent) {
-			continue
-		}
-
-		const parent = element.name.startsWith("header") ? lists.header : lists.sidebar
-		addRow(element, parent, false)
-
-		for (const setting of Object.values(element.settings ?? {}) as any[]) {
-			const sub = addRow(setting, parent, true)
-
-			onUpdate.push(() => {
-				sub.row.classList.toggle("btr-setting-disabled", !element.enabled)
-				sub.input.disabled = !element.enabled
-			})
-		}
-	}
-
-	const update = () => {
-		for (const fn of onUpdate) {
-			fn()
-		}
-	}
-
-	SETTINGS.onChange("navigation.elements", update)
-	update()
-}
+// The Navigation page: one list per bar, as the bars are on the page settings
+// opened over. Items are dragged into place, or moved with the arrow keys on
+// their handle, and shown or hidden with their eye. Our own items keep their
+// switches in navigation.elements; anything else, Roblox's included, is hidden
+// through the order lists' own record.
 
 // Names for the items Roblox gives no text, by their key.
 const ITEM_NAMES: Record<string, string> = {
@@ -80,13 +30,27 @@ const ITEM_NAMES: Record<string, string> = {
 	"id:btr-navbar-voice": "Voice status",
 }
 
-const itemName = (key: string, item: HTMLElement) => {
+/**
+ * Our item behind a bar entry, marked on the entry or, for a sidebar link we
+ * only hide, on the link inside it.
+ */
+const elementOf = (key: string, item?: HTMLElement) => {
 	if (key.startsWith("btr:")) {
-		const label = Navigation.elements[key.slice(4).replace(/#\d+$/, "")]?.label
+		return Navigation.elements[key.slice(4).replace(/#\d+$/, "")] ?? null
+	}
 
-		if (label) {
-			return String(label).replace(/^Show /, "")
-		}
+	const marker = item?.querySelector('[class*="btr-nav-node-"]')
+	const name = marker && [...marker.classList].find((name) => name.startsWith("btr-nav-node-"))?.slice(13)
+	return name ? (Navigation.elements[name] ?? null) : null
+}
+
+const elementName = (element: any) => String(element.label ?? element.name).replace(/^Show /, "")
+
+const itemName = (key: string, item: HTMLElement) => {
+	const element = elementOf(key, item)
+
+	if (element?.label) {
+		return elementName(element)
 	}
 
 	const known = ITEM_NAMES[key.replace(/#\d+$/, "")]
@@ -96,7 +60,7 @@ const itemName = (key: string, item: HTMLElement) => {
 	}
 
 	// A slot Roblox fills with a different game each time.
-	if (key.startsWith("link:/games/")) {
+	if (key.startsWith("link:/games")) {
 		return "Featured experience"
 	}
 
@@ -116,103 +80,304 @@ const itemName = (key: string, item: HTMLElement) => {
 	)
 }
 
-const arrow = (direction: "up" | "down") =>
+const gripIcon = () =>
 	html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-		<path
-			d="${direction === "up" ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"}"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		/>
+		<g fill="currentColor">
+			<circle cx="9" cy="6" r="1.6" />
+			<circle cx="15" cy="6" r="1.6" />
+			<circle cx="9" cy="12" r="1.6" />
+			<circle cx="15" cy="12" r="1.6" />
+			<circle cx="9" cy="18" r="1.6" />
+			<circle cx="15" cy="18" r="1.6" />
+		</g>
 	</svg>`
 
-/** The Order section: each list's items as they are on this page, with buttons to move them. */
-export const addNavigationOrder = (modal: SettingsModalState) => {
-	const host = modal.settingsDiv.$find(".btr-settings-nav-order")
+const eyeIcon = () =>
+	html`<svg
+		viewBox="0 0 24 24"
+		width="20"
+		height="20"
+		aria-hidden="true"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+	>
+		<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+		<circle cx="12" cy="12" r="3" />
+		<path class="btr-nav-eye-slash" d="M4 4l16 16" />
+	</svg>`
+
+/** An eye that shows or hides something, pressed while it is shown. */
+const eyeButton = (name: string, shown: boolean, onToggle: () => void) => {
+	const button = html<HTMLButtonElement>`<button type="button" class="btr-nav-eye"></button>`
+	button.append(eyeIcon())
+	button.setAttribute("aria-pressed", String(shown))
+	button.setAttribute("aria-label", `${shown ? "Hide" : "Show"} ${name}`)
+	button.title = shown ? "Shown, click to hide" : "Hidden, click to show"
+	button.$on("click", onToggle)
+	return button
+}
+
+/** The small switches an item of ours has, such as showing its count. */
+const optionsOf = (element: any) => {
+	const options = Object.values(element?.settings ?? {}) as any[]
+
+	if (!options.length) {
+		return null
+	}
+
+	const wrap = html`<div class="btr-nav-options"></div>`
+
+	for (const option of options) {
+		const chip = html<HTMLButtonElement>`<button type="button" class="btr-nav-option"></button>`
+		chip.textContent = elementName(option)
+		chip.setAttribute("aria-pressed", String(!!option.enabled))
+		chip.disabled = !element.enabled
+		chip.$on("click", () => option.setEnabled(!option.enabled))
+		wrap.append(chip)
+	}
+
+	return wrap
+}
+
+/**
+ * Lets the list's items be dragged into a new order from their handles, which
+ * also move them one place with the arrow keys. `save` gets the keys in the
+ * new order.
+ */
+const sortable = (list: HTMLElement, save: (keys: string[]) => void, focusAfter: (key: string) => void) => {
+	let dragging: HTMLElement | null = null
+	const keys = () => [...list.children].map((item) => (item as HTMLElement).dataset.key!)
+
+	list.addEventListener("pointerdown", (ev) => {
+		const handle = (ev.target as Element).closest(".btr-nav-grip")
+		const item = handle?.closest<HTMLElement>(".btr-nav-item")
+
+		// Only the handle starts a drag, so the eye and options stay clickable.
+		if (item) {
+			item.draggable = true
+		}
+	})
+
+	list.addEventListener("dragstart", (ev) => {
+		dragging = (ev.target as Element).closest<HTMLElement>(".btr-nav-item")
+
+		if (!dragging) {
+			return
+		}
+
+		ev.dataTransfer?.setData("text/plain", dragging.dataset.key ?? "")
+
+		if (ev.dataTransfer) {
+			ev.dataTransfer.effectAllowed = "move"
+		}
+
+		dragging.classList.add("btr-nav-dragging")
+	})
+
+	list.addEventListener("dragover", (ev) => {
+		if (!dragging) {
+			return
+		}
+
+		ev.preventDefault()
+
+		const over = (ev.target as Element).closest<HTMLElement>(".btr-nav-item")
+
+		if (!over || over === dragging || over.parentElement !== list) {
+			return
+		}
+
+		const box = over.getBoundingClientRect()
+		over[ev.clientY > box.top + box.height / 2 ? "after" : "before"](dragging)
+	})
+
+	list.addEventListener("drop", (ev) => ev.preventDefault())
+
+	list.addEventListener("dragend", () => {
+		if (!dragging) {
+			return
+		}
+
+		dragging.classList.remove("btr-nav-dragging")
+		dragging.draggable = false
+		dragging = null
+		save(keys())
+	})
+
+	list.addEventListener("keydown", (ev) => {
+		const item = (ev.target as Element)
+			.closest<HTMLElement>(".btr-nav-grip")
+			?.closest<HTMLElement>(".btr-nav-item")
+
+		if (!item || (ev.key !== "ArrowUp" && ev.key !== "ArrowDown")) {
+			return
+		}
+
+		ev.preventDefault()
+
+		const sibling = ev.key === "ArrowUp" ? item.previousElementSibling : item.nextElementSibling
+
+		if (sibling) {
+			sibling[ev.key === "ArrowUp" ? "before" : "after"](item)
+			focusAfter(item.dataset.key!)
+			save(keys())
+		}
+	})
+}
+
+export const addNavigationEditor = (modal: SettingsModalState) => {
+	const host = modal.settingsDiv.$find(".btr-settings-nav-editor")
 
 	if (!host) {
 		return
 	}
 
-	const render = () => {
-		host.replaceChildren()
+	// Saving redraws the lists, so the moved item's handle gets the focus back.
+	let focusKey: string | null = null
 
-		for (const list of NAV_LISTS) {
-			const items = currentItems(list.name)
-			const card = html`<div class="btr-setting-card btr-nav-order"></div>`
-			const head = html`<div class="btr-setting-row">
-				<div class="btr-setting-text">
-					<span class="btr-setting-label">${list.label}</span>
+	const listCard = (list: (typeof NAV_LISTS)[number], shown: Set<string>) => {
+		const card = html`<section class="btr-nav-card">
+			<header class="btr-nav-card-head">
+				<h4 class="btr-nav-card-title"></h4>
+			</header>
+			<ol class="btr-nav-list"></ol>
+		</section>`
+
+		card.$req(".btr-nav-card-title").textContent = list.label
+		const listElem = card.$req(".btr-nav-list")
+		const items = currentItems(list.name)
+
+		if (readOrder()[list.name]) {
+			const reset = html<HTMLButtonElement>`<button type="button" class="btr-nav-reset">
+				Reset order
+			</button>`
+			reset.$on("click", () => saveOrder(list.name, null))
+			card.$req("header").append(reset)
+		}
+
+		if (!items?.length) {
+			listElem.append(html`<li class="btr-nav-empty">Not on this page</li>`)
+			return card
+		}
+
+		const hiddenHere = readHidden()[list.name] ?? []
+
+		for (const { key, item } of items) {
+			const element = elementOf(key, item)
+			const name = itemName(key, item)
+			const shownNow = element ? !!element.enabled : !hiddenHere.includes(key)
+
+			if (element) {
+				shown.add(element.name)
+			}
+
+			const row = html`<li class="btr-nav-item">
+				<button type="button" class="btr-nav-grip"></button>
+				<div class="btr-nav-text">
+					<span class="btr-nav-name"></span>
 				</div>
-			</div>`
+			</li>`
 
-			if (readOrder()[list.name]) {
-				const reset = html<HTMLButtonElement>`<button
-					type="button"
-					class="btr-setting-reset btr-setting-reset-shown"
-				>
-					Reset
-				</button>`
-				reset.$on("click", () => saveOrder(list.name, null))
-				head.append(reset)
-			}
+			row.dataset.key = key
+			row.classList.toggle("btr-nav-item-off", !shownNow)
 
-			card.append(head)
+			const grip = row.$req<HTMLButtonElement>(".btr-nav-grip")
+			grip.append(gripIcon())
+			grip.setAttribute("aria-label", `Move ${name}: drag, or use the up and down arrow keys`)
+			grip.title = "Drag to move"
 
-			if (!items?.length) {
-				card.append(
-					html`<div class="btr-setting-row btr-setting-child">
-						<span class="btr-setting-desc">Not on this page</span>
-					</div>`,
+			row.$req(".btr-nav-name").textContent = name
+
+			// Hidden some other way: by Roblox on some pages and screen sizes, or by
+			// one of our switches that is about more than this item.
+			if (shownNow && getComputedStyle(item).display === "none") {
+				row.$req(".btr-nav-text").append(
+					html`<span class="btr-nav-note">Not visible on this page</span>`,
 				)
-				host.append(card)
-				continue
 			}
 
-			const keys = items.map(({ key }) => key)
+			const options = optionsOf(element)
 
-			const move = (from: number, to: number) => {
-				const next = keys.slice()
-				next.splice(to, 0, ...next.splice(from, 1))
-				saveOrder(list.name, next)
+			if (options) {
+				row.$req(".btr-nav-text").append(options)
 			}
 
-			items.forEach(({ key, item }, i) => {
-				const hidden = getComputedStyle(item).display === "none"
-				const row = html`<div class="btr-setting-row btr-setting-child btr-nav-order-row">
-					<div class="btr-setting-text">
-						<span class="btr-setting-label">${itemName(key, item)}</span>
-						${hidden ? html`<span class="btr-setting-desc">Hidden</span>` : ""}
-					</div>
-				</div>`
+			row.append(
+				eyeButton(name, shownNow, () =>
+					element
+						? element.setEnabled(!element.enabled)
+						: setHidden(list.name as NavListName, key, shownNow),
+				),
+			)
 
-				for (const [direction, to] of [
-					["up", i - 1],
-					["down", i + 1],
-				] as const) {
-					const button = html<HTMLButtonElement>`<button
-						type="button"
-						class="btr-settings-icon-button btr-nav-order-move"
-						aria-label="Move ${direction}"
-						title="Move ${direction}"
-					></button>`
+			listElem.append(row)
+		}
 
-					button.append(arrow(direction))
-					button.disabled = to < 0 || to >= items.length
-					button.$on("click", () => move(i, to))
-					row.append(button)
+		sortable(
+			listElem,
+			(keys) => saveOrder(list.name, keys),
+			(key) => (focusKey = key),
+		)
+
+		return card
+	}
+
+	const render = () => {
+		const shown = new Set<string>()
+		const cards = NAV_LISTS.map((list) => listCard(list, shown))
+
+		// Our items that are not in a bar on this page, such as the Plus banner.
+		const others = (Object.values(Navigation.elements) as any[]).filter(
+			(element) => !element.parent && !shown.has(element.name),
+		)
+
+		if (others.length) {
+			const card = html`<section class="btr-nav-card">
+				<header class="btr-nav-card-head">
+					<h4 class="btr-nav-card-title">Not in a bar on this page</h4>
+				</header>
+				<ul class="btr-nav-list"></ul>
+			</section>`
+
+			for (const element of others) {
+				const name = elementName(element)
+				const row = html`<li class="btr-nav-item btr-nav-item-fixed">
+					<div class="btr-nav-text"><span class="btr-nav-name"></span></div>
+				</li>`
+
+				row.$req(".btr-nav-name").textContent = name
+				row.classList.toggle("btr-nav-item-off", !element.enabled)
+
+				const options = optionsOf(element)
+
+				if (options) {
+					row.$req(".btr-nav-text").append(options)
 				}
 
-				card.append(row)
-			})
+				row.append(eyeButton(name, !!element.enabled, () => element.setEnabled(!element.enabled)))
+				card.$req(".btr-nav-list").append(row)
+			}
 
-			host.append(card)
+			cards.push(card)
+		}
+
+		host.replaceChildren(...cards)
+
+		if (focusKey) {
+			;(
+				host.$find(
+					`.btr-nav-item[data-key="${CSS.escape(focusKey)}"] .btr-nav-grip`,
+				) as HTMLElement | null
+			)?.focus()
+			focusKey = null
 		}
 	}
 
 	SETTINGS.onChange("navigation.order", render)
+	SETTINGS.onChange("navigation.hiddenItems", render)
 	SETTINGS.onChange("navigation.elements", render)
 	render()
 

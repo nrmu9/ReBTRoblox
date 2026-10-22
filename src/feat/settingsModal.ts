@@ -1,6 +1,6 @@
 import { html } from "@/core/html"
 import { assert } from "@/core/util"
-import { addNavigationOrder, addNavigationRows } from "@/feat/settingsPanel/navigation"
+import { addNavigationEditor } from "@/feat/settingsPanel/navigation"
 import { setupRobuxToCash } from "@/feat/settingsPanel/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
@@ -15,7 +15,7 @@ import {
 	robloxExperimentsChanged,
 	setupExperimentToolbar,
 } from "@/feat/settingsPanel/experiments"
-import { addHomeRows } from "@/feat/settingsPanel/homeRows"
+import { addHomeRows, addHomeSections } from "@/feat/settingsPanel/homeRows"
 import { settingsMarkup } from "@/feat/settingsPanel/markup"
 import { bindResetButtons, confirmClick, createRows } from "@/feat/settingsPanel/rows"
 import { buildPages, followTabKeys } from "@/feat/settingsPanel/pages"
@@ -246,9 +246,9 @@ export const SettingsModal: SettingsModalState = {
 		const tabs = buildPages(this, rows)
 		followTabKeys(this, tabs)
 
-		addNavigationRows(this, rows)
-		addNavigationOrder(this)
+		addNavigationEditor(this)
 		addHomeRows(this, rows)
+		addHomeSections(this, rows)
 		setupRobuxToCash(this)
 
 		confirmClick(this.settingsDiv.$req("#btr-reset-settings"), () => SETTINGS.resetToDefault())

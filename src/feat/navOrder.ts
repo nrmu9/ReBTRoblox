@@ -24,7 +24,11 @@ const linkKey = (href: string) => {
 			.filter((part) => part && !/^\d+$/.test(part))
 			.join("/")
 
-		return `${url.hostname === "www.roblox.com" ? "" : url.hostname}/${path}`
+		// The sidebar shows a different featured game from time to time, in the
+		// same place, so any game link is the one item.
+		const slot = path.startsWith("games/") ? "games" : path
+
+		return `${url.hostname === "www.roblox.com" ? "" : url.hostname}/${slot}`
 	} catch {
 		return null
 	}
@@ -147,9 +151,42 @@ export const currentItems = (list: NavListName) => {
 	return order.map((key) => ({ key, item: items[keys.indexOf(key)] }))
 }
 
+/** Items you hid, by list. */
+export const readHidden = (): Partial<Record<NavListName, string[]>> => {
+	try {
+		const hidden = JSON.parse(SETTINGS.get("navigation.hiddenItems") || "{}")
+		return hidden instanceof Object && !Array.isArray(hidden) ? hidden : {}
+	} catch {
+		return {}
+	}
+}
+
+export const setHidden = (list: NavListName, key: string, hide: boolean) => {
+	const hidden = readHidden()
+	const keys = new Set(hidden[list] ?? [])
+
+	if (hide) {
+		keys.add(key)
+	} else {
+		keys.delete(key)
+	}
+
+	if (keys.size) {
+		hidden[list] = [...keys]
+	} else {
+		delete hidden[list]
+	}
+
+	SETTINGS.set("navigation.hiddenItems", Object.keys(hidden).length ? JSON.stringify(hidden) : "")
+}
+
 const apply = (list: NavListName, container: Element) => {
 	const items = [...container.children] as HTMLElement[]
 	const saved = readOrder()[list]
+	const hidden = readHidden()[list] ?? []
+	const keys = keysOf(items)
+
+	items.forEach((item, i) => item.classList.toggle("btr-nav-item-hidden", hidden.includes(keys[i])))
 
 	if (!saved?.length) {
 		// Back to how it was, including an order we had set before this did.
@@ -163,7 +200,6 @@ const apply = (list: NavListName, container: Element) => {
 		return
 	}
 
-	const keys = keysOf(items)
 	const order = merge(saved, naturalKeys(items, keys))
 
 	items.forEach((item, i) => {
@@ -205,4 +241,5 @@ export const initNavOrder = () => {
 	}
 
 	SETTINGS.onChange("navigation.order", applyAll)
+	SETTINGS.onChange("navigation.hiddenItems", applyAll)
 }

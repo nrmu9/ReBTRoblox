@@ -175,16 +175,12 @@ export const settingsMarkup = () =>
 							require="false"
 							desc="Keeps the sidebar open on wide screens"
 						></toggle>
-						<heading>Top Bar</heading>
-						<div class="btr-settings-nav-list" data-kind="header"></div>
-						<heading>Sidebar</heading>
-						<div class="btr-settings-nav-list" data-kind="sidebar"></div>
-						<heading>Order</heading>
 						<p class="btr-exp-note">
-							Moves the items on this page's top bar and sidebar. Anything Roblox adds later
-							stays beside the item it comes after.
+							The top bar and sidebar of the page you opened this on. Drag an item by its handle
+							to move it, and use its eye to hide it. Anything Roblox adds later stays beside
+							the item it comes after.
 						</p>
-						<div class="btr-settings-nav-order"></div>
+						<div class="btr-settings-nav-editor"></div>
 					</page>
 
 					<page name="home" label="Home" icon="house" path="home">
@@ -223,6 +219,8 @@ export const settingsMarkup = () =>
 							path="instantGameHoverAction"
 							desc="Shows game details as soon as you hover a game"
 						></toggle>
+						<heading>Sections</heading>
+						<div class="btr-settings-home-sections"></div>
 						<heading>Rows</heading>
 						<div class="btr-settings-home-rows"></div>
 					</page>

@@ -7,6 +7,71 @@ import { SETTINGS } from "@/feat/settings"
 /** The Home rows seen so far, by topic id, for the settings to list. */
 export const HOME_ROWS_KEY = "homeRows"
 
+/** Home's other sections seen so far, by kind, for the settings to list. */
+export const HOME_SECTIONS_KEY = "homeSections"
+
+// Home's sections beside the game rows: the friends strip, and the items
+// Roblox sends to show in its feed, such as event banners. Each kind is
+// remembered the first time it shows, so new kinds can be hidden too.
+const SECTIONS = ".friend-carousel-container, .sdui-feed-item-container"
+
+/** What kind a section is, the same on every visit: Friends, or a feed item by its type. */
+const sectionKey = (section: Element) => {
+	if (section.classList.contains("friend-carousel-container")) {
+		return "friends"
+	}
+
+	const type = section.querySelector("[data-testid]")?.getAttribute("data-testid")
+	return type ? `feed:${type}` : null
+}
+
+export const sectionLabel = (key: string) =>
+	key === "friends"
+		? "Friends"
+		: key === "feed:hero-unit"
+			? "Banners"
+			: `${key
+					.slice(5)
+					.replace(/-/g, " ")
+					.replace(/^\w/, (letter) => letter.toUpperCase())}`
+
+const hiddenSections = (): string[] => {
+	try {
+		const list = JSON.parse(SETTINGS.get("home.hiddenSections") || "[]")
+		return Array.isArray(list) ? list.map(String) : []
+	} catch {
+		return []
+	}
+}
+
+/**
+ * Hides or shows a section, and remembers its kind with an example of what it
+ * showed. False until both are known: a feed item fills in its title last.
+ */
+const placeSection = (section: HTMLElement) => {
+	const key = sectionKey(section)
+
+	if (!key) {
+		return false
+	}
+
+	section.classList.toggle("btr-home-section-hidden", hiddenSections().includes(key))
+
+	const known = btrLocalStorage.getItem<Record<string, { example?: string }>>(HOME_SECTIONS_KEY) ?? {}
+	// The friends strip is always the friends strip, so it needs no example.
+	const example =
+		key === "friends"
+			? undefined
+			: section.querySelector("[class*=heroUnitTitle], h2, h3")?.textContent?.trim().slice(0, 60)
+
+	if (!known[key] || (example && known[key].example !== example)) {
+		known[key] = example ? { example } : {}
+		btrLocalStorage.setItem(HOME_SECTIONS_KEY, known)
+	}
+
+	return key === "friends" || !!example
+}
+
 pageInit.home = () => {
 	injectScript.listen("homeRows", (rows: Array<{ id: string; title?: string; subtitle?: string }>) => {
 		const known = btrLocalStorage.getItem<Record<string, any>>(HOME_ROWS_KEY) ?? {}
@@ -25,6 +90,35 @@ pageInit.home = () => {
 
 		if (changed) {
 			btrLocalStorage.setItem(HOME_ROWS_KEY, known)
+		}
+	})
+
+	const sections = new Set<HTMLElement>()
+
+	document.$watchAll(SECTIONS, (section: HTMLElement) => {
+		sections.add(section)
+
+		// A feed item can arrive empty, and only says what it is once filled in.
+		// Until then it is placed again on every change, so hiding applies as
+		// soon as its kind shows.
+		if (!placeSection(section)) {
+			const observer = new MutationObserver(() => {
+				if (placeSection(section)) {
+					observer.disconnect()
+				}
+			})
+
+			observer.observe(section, { childList: true, subtree: true })
+		}
+	})
+
+	SETTINGS.onChange("home.hiddenSections", () => {
+		for (const section of sections) {
+			if (section.isConnected) {
+				placeSection(section)
+			} else {
+				sections.delete(section)
+			}
 		}
 	})
 
