@@ -13,7 +13,7 @@ const Months = [
 	"December",
 ]
 
-const Days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+const Days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 const Fixed = (num: number, len: number): string => {
 	const str = String(num)
