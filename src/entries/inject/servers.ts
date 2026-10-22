@@ -19,7 +19,26 @@ export const serversFunctions: Record<string, (...args: any[]) => any> = {
 		const cursors: any[] = []
 
 		const btrPagerState = reactHook.createGlobalState(btrPager)
-		const serverParams = { sortOrder: "Desc", excludeFullGames: false }
+		const serverParams = { sortOrder: "Desc", orderBy: "", excludeFullGames: false }
+
+		// Signed in, v2 lists servers in any of Roblox's sorts and carries what
+		// its cards show, ping, friends and language. Signed out it has no
+		// ping, and Roblox only offers the two v1 can do.
+		const isSignedIn = () => !!document.querySelector(`meta[name="user-data"]`)
+
+		const serversUrl = (placeId: number, cursor: string) => {
+			const common = `excludeFullGames=${serverParams.excludeFullGames}&limit=${largePageSize}&cursor=${cursor}`
+
+			if (isSignedIn()) {
+				const orderBy =
+					serverParams.orderBy ||
+					(serverParams.sortOrder === "Asc" ? "OccupancyAsc" : "OccupancyDesc")
+
+				return `https://games.roblox.com/v2/games/${placeId}/servers/Public?orderBy=${encodeURIComponent(orderBy)}&${common}`
+			}
+
+			return `https://games.roblox.com/v1/games/${placeId}/servers/Public?sortOrder=${serverParams.sortOrder}&${common}`
+		}
 
 		const loadLargePage = async (placeId: number, largePageIndex: number) => {
 			if (largePageIndex >= cursors.length + 2) {
@@ -28,7 +47,7 @@ export const serversFunctions: Record<string, (...args: any[]) => any> = {
 
 			const cursor = cursors[largePageIndex - 2] ?? ""
 
-			const url = `https://games.roblox.com/v1/games/${placeId}/servers/Public?sortOrder=${serverParams.sortOrder}&excludeFullGames=${serverParams.excludeFullGames}&limit=${largePageSize}&cursor=${cursor}`
+			const url = serversUrl(placeId, cursor)
 			let promise = promises[url]
 
 			if (!promise) {
@@ -179,17 +198,25 @@ export const serversFunctions: Record<string, (...args: any[]) => any> = {
 		const btrGetPublicGameInstances = (placeId: number, cursor: string, params: any) => {
 			if (!params?.btrRefresh) {
 				const sortOrder = params?.sortOrder === "Asc" ? "Asc" : "Desc"
+				const orderBy = typeof params?.orderBy === "string" ? params.orderBy : ""
 				const excludeFullGames = !!params?.excludeFullGames
 
 				if (
 					serverParams.sortOrder !== sortOrder ||
+					serverParams.orderBy !== orderBy ||
 					serverParams.excludeFullGames !== excludeFullGames
 				) {
 					getGameInstancesPromise = null
 
 					serverParams.sortOrder = sortOrder
+					serverParams.orderBy = orderBy
 					serverParams.excludeFullGames = excludeFullGames
 
+					// The cursors and page count belong to the old order.
+					cursors.length = 0
+					btrPager.maxPage = 1
+					btrPager.foundMaxPage = false
+					btrPager.hasMore = false
 					btrPager.targetPage = 1
 				}
 			}
