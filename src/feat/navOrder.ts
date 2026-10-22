@@ -14,7 +14,7 @@ export const NAV_LISTS = [
 
 export type NavListName = (typeof NAV_LISTS)[number]["name"]
 
-const linkKey = (href: string) => {
+export const linkKey = (href: string) => {
 	try {
 		const url = new URL(href, location.href)
 		// Ids in a path, like your own user id, differ between people and pages.
@@ -110,7 +110,7 @@ const naturalKeys = (items: HTMLElement[], keys: string[]) =>
  * The saved order with anything it does not know put back after the item it
  * follows on the page, or first if nothing does.
  */
-const merge = (saved: string[], keys: string[]) => {
+export const mergeOrder = (saved: string[], keys: string[]) => {
 	const result = saved.filter((key) => keys.includes(key))
 
 	keys.forEach((key, i) => {
@@ -148,7 +148,7 @@ export const currentItems = (list: NavListName) => {
 
 	const items = [...container.children] as HTMLElement[]
 	const keys = keysOf(items)
-	const order = merge(readOrder()[list] ?? [], naturalKeys(items, keys))
+	const order = mergeOrder(readOrder()[list] ?? [], naturalKeys(items, keys))
 
 	return order.map((key) => ({ key, item: items[keys.indexOf(key)] }))
 }
@@ -202,7 +202,7 @@ const apply = (list: NavListName, container: Element) => {
 		return
 	}
 
-	const order = merge(saved, naturalKeys(items, keys))
+	const order = mergeOrder(saved, naturalKeys(items, keys))
 
 	items.forEach((item, i) => {
 		if (!("btrOrigOrder" in item.dataset)) {

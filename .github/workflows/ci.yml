@@ -36,6 +36,8 @@ jobs:
 
       - run: npm run typecheck
 
+      - run: npm run test:unit
+
       # Packaging builds both targets, so this covers the manifest generation
       # for MV2 and MV3 as well as the bundles.
       - run: npm run package

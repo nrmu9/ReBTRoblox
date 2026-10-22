@@ -242,7 +242,7 @@ interface FileInfo {
 }
 
 /** The file's identity in a CDN link: its hash, and how it is encoded. Null for any other link. */
-const fileKey = (url: string) => {
+export const fileKey = (url: string) => {
 	try {
 		const parsed = new URL(url)
 		const hash = parsed.pathname.match(/\/([0-9a-f]{32})(?:\/|$)/i)?.[1]

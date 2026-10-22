@@ -14,6 +14,7 @@
 		"health": "node dev/health.js",
 		"typecheck": "tsc --noEmit",
 		"dev": "node dev/dev.js",
+		"test:unit": "node dev/unit.js",
 		"test:hook": "node test/serve.js",
 		"test:dollar": "node test/serve.js dollar",
 		"format": "prettier --write .",
