@@ -3,7 +3,7 @@ import { AssetCache } from "@/rbx/AssetCache"
 
 // An accessory's particles and lights. They are read from its Handle and the
 // attachments in it, and drawn on top of the avatar: particles simulated here
-// each frame and drawn as textured points, lights as three's own. Fire,
+// each frame and drawn as textured quads, lights as three's own. Fire,
 // Sparkles and Smoke, the older effects, become emitters shaped like them.
 
 type Sequence = Array<{ Time: number; Value: number; Envelope?: number }>
@@ -29,8 +29,14 @@ interface EmitterSource {
 	rotation: Range
 	rotSpeed: Range
 	texture: string | null
-	additive: boolean
+	/** LightEmission: 0 blends normally, 1 adds its colour. */
+	emission: number
+	/** Brightness as far as LightInfluence lets it count. */
 	brightness: number
+	/** ParticleOrientation: facing the camera, upright, along or across the motion. */
+	orientation: number
+	zOffset: number
+	squash: Sequence | null
 	locked: boolean
 	timeScale: number
 	/** Cells per side of a flipbook texture, 1 for none. */
@@ -61,6 +67,11 @@ const NORMALS = [
 	new THREE.Vector3(0, -1, 0),
 	new THREE.Vector3(0, 0, -1),
 ]
+
+const lit = (brightness: number, influence: number) => {
+	const k = Math.min(1, Math.max(0, influence))
+	return brightness * (1 - k) + k
+}
 
 const range = (value: any, fallback: Range): Range =>
 	Array.isArray(value) && value.length === 2 ? [+value[0], +value[1]] : fallback
@@ -119,8 +130,14 @@ const fromInstance = (inst: any, local: THREE.Matrix4, box: EmitterSource["box"]
 				rotation: range(inst.Rotation, [0, 0]),
 				rotSpeed: range(inst.RotSpeed, [0, 0]),
 				texture: textureUrl(inst.Texture),
-				additive: +(inst.LightEmission ?? 0) >= 0.5,
-				brightness: +(inst.Brightness ?? 1),
+				emission: Math.min(1, Math.max(0, +(inst.LightEmission ?? 0))),
+				// Brightness only counts as far as world lighting does not.
+				brightness: lit(+(inst.Brightness ?? 1), +(inst.LightInfluence ?? 0)),
+				orientation: +(inst.Orientation ?? 0),
+				zOffset: +(inst.ZOffset ?? 0),
+				squash: Array.isArray(inst.Squash) && inst.Squash.some((point: any) => point.Value || point.Envelope)
+					? inst.Squash
+					: null,
 				locked: !!inst.LockedToPart,
 				timeScale: +(inst.TimeScale ?? 1),
 				grid: [1, 2, 4, 8][inst.FlipbookLayout ?? 0] ?? 1,
@@ -158,8 +175,11 @@ const fromInstance = (inst: any, local: THREE.Matrix4, box: EmitterSource["box"]
 				rotation: [0, 360],
 				rotSpeed: [-90, 90],
 				texture: null,
-				additive: true,
+				emission: 1,
 				brightness: 1,
+				orientation: 0,
+				zOffset: 0,
+				squash: null,
 				locked: false,
 				timeScale: 1,
 				grid: 1,
@@ -192,8 +212,11 @@ const fromInstance = (inst: any, local: THREE.Matrix4, box: EmitterSource["box"]
 				rotation: [0, 360],
 				rotSpeed: [0, 0],
 				texture: null,
-				additive: false,
+				emission: 0,
 				brightness: 1.5,
+				orientation: 0,
+				zOffset: 0,
+				squash: null,
 				locked: false,
 				timeScale: 1,
 				grid: 1,
@@ -228,8 +251,11 @@ const fromInstance = (inst: any, local: THREE.Matrix4, box: EmitterSource["box"]
 				rotation: [0, 360],
 				rotSpeed: [-20, 20],
 				texture: null,
-				additive: false,
+				emission: 0,
 				brightness: 1,
+				orientation: 0,
+				zOffset: 0,
+				squash: null,
 				locked: false,
 				timeScale: 1,
 				grid: 1,
@@ -336,63 +362,108 @@ const defaultTexture = () => {
 		ctx.fillStyle = gradient
 		ctx.fillRect(0, 0, 64, 64)
 		softDot = new THREE.CanvasTexture(canvas)
+		softDot.premultiplyAlpha = true
 	}
 
 	return softDot
 }
 
+// Each particle is a quad, placed and turned on the GPU: facing the camera,
+// standing up, or lined up with where it is going, as Orientation says.
 const VERTEX = `
-	attribute float pSize;
-	attribute float pAlpha;
-	attribute vec3 pColor;
-	attribute float pRotation;
-	attribute float pFrame;
-	uniform float uScale;
+	attribute vec3 iCenter;
+	attribute vec3 iVelocity;
+	attribute vec2 iSize;
+	attribute float iAlpha;
+	attribute vec3 iColor;
+	attribute float iRotation;
+	attribute float iFrame;
+	uniform float uOrientation;
+	uniform float uZOffset;
+	varying vec2 vUv;
 	varying float vAlpha;
 	varying vec3 vColor;
-	varying float vRotation;
 	varying float vFrame;
 
 	void main() {
-		vec4 view = modelViewMatrix * vec4(position, 1.0);
-		gl_Position = projectionMatrix * view;
-		// A rotated square needs room for its corners, hence the root of two.
-		gl_PointSize = pSize * uScale * 1.4142 / max(0.001, -view.z);
-		vAlpha = pAlpha;
-		vColor = pColor;
-		vRotation = pRotation;
-		vFrame = pFrame;
+		vec3 center = (modelViewMatrix * vec4(iCenter, 1.0)).xyz;
+		vec3 toEye = normalize(-center);
+		vec3 right = vec3(1.0, 0.0, 0.0);
+		vec3 up = vec3(0.0, 1.0, 0.0);
+
+		if (uOrientation > 0.5) {
+			vec3 axis = uOrientation < 1.5
+				? (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz
+				: (modelViewMatrix * vec4(iVelocity, 0.0)).xyz;
+			float length_ = length(axis);
+
+			if (length_ > 1e-5) {
+				axis /= length_;
+
+				if (uOrientation < 2.5) {
+					// Upright along the axis, turned to the camera as far as that allows.
+					vec3 side = cross(axis, toEye);
+
+					if (length(side) > 1e-5) {
+						up = axis;
+						right = normalize(side);
+					}
+				} else {
+					// Flat across the direction of travel.
+					vec3 helper = abs(axis.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+					right = normalize(cross(helper, axis));
+					up = cross(axis, right);
+				}
+			}
+		}
+
+		vec2 corner = position.xy * iSize;
+		float c = cos(iRotation);
+		float s = sin(iRotation);
+		corner = vec2(c * corner.x - s * corner.y, s * corner.x + c * corner.y);
+
+		vec3 view = center + right * corner.x + up * corner.y;
+
+		// ZOffset moves it along the line of sight, scaled to cover the same pixels.
+		float depth = length(center);
+		view *= max(0.01, (depth - uZOffset) / max(depth, 1e-4));
+
+		gl_Position = projectionMatrix * vec4(view, 1.0);
+		vUv = position.xy + 0.5;
+		vAlpha = iAlpha;
+		vColor = iColor;
+		vFrame = iFrame;
 	}
 `
 
+// Textures are premultiplied, so filtering does not leave dark edges, and
+// LightEmission moves from blending normally towards adding the colour on top.
 const FRAGMENT = `
 	uniform sampler2D uMap;
 	uniform float uGrid;
+	uniform float uEmission;
+	varying vec2 vUv;
 	varying float vAlpha;
 	varying vec3 vColor;
-	varying float vRotation;
 	varying float vFrame;
 
 	void main() {
-		vec2 p = (vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y) - 0.5) * 1.4142;
-		float c = cos(vRotation);
-		float s = sin(vRotation);
-		p = vec2(c * p.x - s * p.y, s * p.x + c * p.y) + 0.5;
-
-		if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0) {
-			discard;
-		}
-
+		// Kept off the cell's border, so a flipbook does not show its neighbours.
+		vec2 p = clamp(vUv, 0.004, 0.996);
 		float cell = floor(vFrame);
 		vec2 uv = (vec2(mod(cell, uGrid), uGrid - 1.0 - floor(cell / uGrid)) + p) / uGrid;
-		vec4 texel = texture2D(uMap, uv);
-		float alpha = texel.a * vAlpha;
+		vec4 texel = texture2D(uMap, uv) * vAlpha;
 
-		if (alpha < 0.004) {
+		if (texel.a < 0.002 && max(texel.r, max(texel.g, texel.b)) < 0.002) {
 			discard;
 		}
 
-		gl_FragColor = vec4(texel.rgb * vColor, alpha);
+		vec3 rgb = texel.rgb * vColor;
+
+		// The canvas is see-through over the page, where light added to nothing
+		// would not show, so added light covers the canvas as far as it is bright.
+		float glow = min(1.0, max(rgb.r, max(rgb.g, rgb.b)));
+		gl_FragColor = vec4(rgb, mix(texel.a, glow, uEmission));
 	}
 `
 
@@ -400,10 +471,13 @@ const tempMatrix = new THREE.Matrix4()
 const tempVector = new THREE.Vector3()
 const tempColor = new THREE.Color()
 const tempQuat = new THREE.Quaternion()
-const drawingSize = new THREE.Vector2()
+
+/** Squash as width and height factors: above 0 narrower and taller, below 0 wider and shorter. */
+const squashed = (squash: number): [number, number] =>
+	squash >= 0 ? [1 / (1 + squash), 1 + squash] : [1 - squash, 1 / (1 - squash)]
 
 class Emitter {
-	readonly points: THREE.Points
+	readonly mesh: THREE.Mesh
 	private readonly source: EmitterSource
 	private readonly capacity: number
 	private count = 0
@@ -417,10 +491,18 @@ class Emitter {
 	private readonly turn: Float32Array
 	private readonly sizeEnvelope: Float32Array
 	private readonly fadeEnvelope: Float32Array
+	private readonly squashEnvelope: Float32Array
 	private readonly frameStart: Float32Array
 	private readonly frameRate: Float32Array
 
-	private readonly attributes: Record<string, THREE.BufferAttribute>
+	/** Back to front, for emitters that are not purely additive. */
+	private readonly order: Uint32Array
+	private readonly depth: Float32Array
+	/** The camera last drawn with, which sorting goes by. */
+	private camera: THREE.Camera | null = null
+
+	private readonly geometry: THREE.InstancedBufferGeometry
+	private readonly attributes: Record<string, THREE.InstancedBufferAttribute>
 
 	constructor(source: EmitterSource) {
 		this.source = source
@@ -435,25 +517,35 @@ class Emitter {
 		this.turn = new Float32Array(n)
 		this.sizeEnvelope = new Float32Array(n)
 		this.fadeEnvelope = new Float32Array(n)
+		this.squashEnvelope = new Float32Array(n)
 		this.frameStart = new Float32Array(n)
 		this.frameRate = new Float32Array(n)
+		this.order = new Uint32Array(n)
+		this.depth = new Float32Array(n)
 
-		const geometry = new THREE.BufferGeometry()
+		this.geometry = new THREE.InstancedBufferGeometry()
+		this.geometry.setAttribute(
+			"position",
+			new THREE.BufferAttribute(new Float32Array([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0]), 3),
+		)
+		this.geometry.setIndex([0, 1, 2, 0, 2, 3])
+
 		this.attributes = {
-			position: new THREE.BufferAttribute(new Float32Array(n * 3), 3),
-			pSize: new THREE.BufferAttribute(new Float32Array(n), 1),
-			pAlpha: new THREE.BufferAttribute(new Float32Array(n), 1),
-			pColor: new THREE.BufferAttribute(new Float32Array(n * 3), 3),
-			pRotation: new THREE.BufferAttribute(new Float32Array(n), 1),
-			pFrame: new THREE.BufferAttribute(new Float32Array(n), 1),
+			iCenter: new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3),
+			iVelocity: new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3),
+			iSize: new THREE.InstancedBufferAttribute(new Float32Array(n * 2), 2),
+			iAlpha: new THREE.InstancedBufferAttribute(new Float32Array(n), 1),
+			iColor: new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3),
+			iRotation: new THREE.InstancedBufferAttribute(new Float32Array(n), 1),
+			iFrame: new THREE.InstancedBufferAttribute(new Float32Array(n), 1),
 		}
 
 		for (const [name, attribute] of Object.entries(this.attributes)) {
 			attribute.setUsage(THREE.DynamicDrawUsage)
-			geometry.setAttribute(name, attribute)
+			this.geometry.setAttribute(name, attribute)
 		}
 
-		geometry.setDrawRange(0, 0)
+		this.geometry.instanceCount = 0
 
 		const material = new THREE.ShaderMaterial({
 			vertexShader: VERTEX,
@@ -461,22 +553,25 @@ class Emitter {
 			uniforms: {
 				uMap: { value: defaultTexture() },
 				uGrid: { value: 1 },
-				uScale: { value: 1 },
+				uEmission: { value: source.emission },
+				uOrientation: { value: source.orientation },
+				uZOffset: { value: source.zOffset },
 			},
 			transparent: true,
 			depthWrite: false,
-			blending: source.additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+			side: THREE.DoubleSide,
+			blending: THREE.CustomBlending,
+			blendSrc: THREE.OneFactor,
+			blendDst: THREE.OneMinusSrcAlphaFactor,
+			blendSrcAlpha: THREE.OneFactor,
+			blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
 		})
 
-		this.points = new THREE.Points(geometry, material)
-		this.points.frustumCulled = false
-		this.points.matrixAutoUpdate = false
-
-		// Point sizes are in pixels, so they follow the canvas and the field of view.
-		this.points.onBeforeRender = (renderer, _scene, camera) => {
-			renderer.getDrawingBufferSize(drawingSize)
-			const fov = (camera as THREE.PerspectiveCamera).fov ?? 60
-			material.uniforms.uScale.value = drawingSize.y / (2 * Math.tan(((fov / 2) * Math.PI) / 180))
+		this.mesh = new THREE.Mesh(this.geometry, material)
+		this.mesh.frustumCulled = false
+		this.mesh.matrixAutoUpdate = false
+		this.mesh.onBeforeRender = (_renderer, _scene, camera) => {
+			this.camera = camera
 		}
 
 		if (source.texture) {
@@ -486,6 +581,8 @@ class Emitter {
 				}
 
 				const texture = new THREE.Texture(img)
+				texture.premultiplyAlpha = true
+				texture.anisotropy = 4
 				texture.needsUpdate = true
 				material.uniforms.uMap.value = texture
 				material.uniforms.uGrid.value = source.grid
@@ -498,8 +595,8 @@ class Emitter {
 		const source = this.source
 		const step = dt * source.timeScale
 
-		// Age and move the living, dropping the expired by moving the last into their place.
-		const damp = Math.exp(-source.drag * step)
+		// Drag is how quickly speed halves.
+		const damp = 0.5 ** (source.drag * step)
 
 		for (let i = 0; i < this.count;) {
 			this.age[i] += step
@@ -549,18 +646,16 @@ class Emitter {
 			)
 		}
 
-		const origin = tempVector.multiplyScalar(scale).applyMatrix4(world)
-
 		if (source.locked) {
 			// Kept in the emitter's space, and placed in the avatar's each frame.
-			this.position[j] = source.box ? (Math.random() - 0.5) * source.box[0] * scale : 0
-			this.position[j + 1] = source.box ? (Math.random() - 0.5) * source.box[1] * scale : 0
-			this.position[j + 2] = source.box ? (Math.random() - 0.5) * source.box[2] * scale : 0
+			tempVector.multiplyScalar(scale)
 		} else {
-			this.position[j] = origin.x
-			this.position[j + 1] = origin.y
-			this.position[j + 2] = origin.z
+			tempVector.multiplyScalar(scale).applyMatrix4(world)
 		}
+
+		this.position[j] = tempVector.x
+		this.position[j + 1] = tempVector.y
+		this.position[j + 2] = tempVector.z
 
 		// The emission direction, turned by up to the spread angles around two axes.
 		const direction = source.direction.clone()
@@ -587,9 +682,8 @@ class Emitter {
 		this.turn[i] = (between(source.rotSpeed) / 180) * Math.PI
 		this.sizeEnvelope[i] = Math.random() * 2 - 1
 		this.fadeEnvelope[i] = Math.random() * 2 - 1
-		this.frameStart[i] = source.flipbookStartRandom
-			? Math.floor(Math.random() * source.grid * source.grid)
-			: 0
+		this.squashEnvelope[i] = Math.random() * 2 - 1
+		this.frameStart[i] = source.flipbookStartRandom ? Math.floor(Math.random() * source.grid * source.grid) : 0
 		this.frameRate[i] = between(source.flipbookFps)
 	}
 
@@ -613,6 +707,7 @@ class Emitter {
 			this.turn,
 			this.sizeEnvelope,
 			this.fadeEnvelope,
+			this.squashEnvelope,
 			this.frameStart,
 			this.frameRate,
 		]) {
@@ -620,18 +715,53 @@ class Emitter {
 		}
 	}
 
-	private write(world: THREE.Matrix4) {
-		const source = this.source
-		const position = this.attributes.position.array as Float32Array
-		const size = this.attributes.pSize.array as Float32Array
-		const alpha = this.attributes.pAlpha.array as Float32Array
-		const color = this.attributes.pColor.array as Float32Array
-		const rotation = this.attributes.pRotation.array as Float32Array
-		const frame = this.attributes.pFrame.array as Float32Array
-		const cells = source.grid * source.grid
+	/** Sorts back to front by the last camera, a frame behind, which does not show. */
+	private sort(world: THREE.Matrix4) {
+		const order = this.order
+
+		for (let i = 0; i < this.count; i++) {
+			order[i] = i
+		}
+
+		if (!this.camera || this.source.emission >= 1 || this.count < 2) {
+			return
+		}
+
+		tempMatrix.multiplyMatrices(this.camera.matrixWorldInverse, this.mesh.matrixWorld)
+
+		if (this.source.locked) {
+			tempMatrix.multiply(world)
+		}
+
+		const e = tempMatrix.elements
 
 		for (let i = 0; i < this.count; i++) {
 			const j = i * 3
+			this.depth[i] = e[2] * this.position[j] + e[6] * this.position[j + 1] + e[10] * this.position[j + 2]
+		}
+
+		order.subarray(0, this.count).sort((a, b) => this.depth[a] - this.depth[b])
+	}
+
+	private write(world: THREE.Matrix4) {
+		const source = this.source
+		const a = this.attributes
+		const center = a.iCenter.array as Float32Array
+		const velocity = a.iVelocity.array as Float32Array
+		const size = a.iSize.array as Float32Array
+		const alpha = a.iAlpha.array as Float32Array
+		const color = a.iColor.array as Float32Array
+		const rotation = a.iRotation.array as Float32Array
+		const frame = a.iFrame.array as Float32Array
+		const cells = source.grid * source.grid
+
+		tempQuat.setFromRotationMatrix(world)
+		this.sort(world)
+
+		for (let k = 0; k < this.count; k++) {
+			const i = this.order[k]
+			const j = i * 3
+			const o = k * 3
 			const t = this.age[i] / this.life[i]
 
 			tempVector.set(this.position[j], this.position[j + 1], this.position[j + 2])
@@ -640,34 +770,48 @@ class Emitter {
 				tempVector.applyMatrix4(world)
 			}
 
-			position[j] = tempVector.x
-			position[j + 1] = tempVector.y
-			position[j + 2] = tempVector.z
+			center[o] = tempVector.x
+			center[o + 1] = tempVector.y
+			center[o + 2] = tempVector.z
 
-			size[i] = Math.max(0, evaluate(source.size, t, this.sizeEnvelope[i]))
-			alpha[i] = 1 - Math.min(1, Math.max(0, evaluate(source.transparency, t, this.fadeEnvelope[i])))
+			tempVector.set(this.velocity[j], this.velocity[j + 1], this.velocity[j + 2])
+
+			if (source.locked) {
+				tempVector.applyQuaternion(tempQuat)
+			}
+
+			velocity[o] = tempVector.x
+			velocity[o + 1] = tempVector.y
+			velocity[o + 2] = tempVector.z
+
+			const s = Math.max(0, evaluate(source.size, t, this.sizeEnvelope[i]))
+			const [w, h] = source.squash ? squashed(evaluate(source.squash, t, this.squashEnvelope[i])) : [1, 1]
+			size[k * 2] = s * w
+			size[k * 2 + 1] = s * h
+
+			alpha[k] = 1 - Math.min(1, Math.max(0, evaluate(source.transparency, t, this.fadeEnvelope[i])))
 
 			evaluateColor(source.color, t, tempColor)
-			color[j] = tempColor.r * source.brightness
-			color[j + 1] = tempColor.g * source.brightness
-			color[j + 2] = tempColor.b * source.brightness
+			color[o] = tempColor.r * source.brightness
+			color[o + 1] = tempColor.g * source.brightness
+			color[o + 2] = tempColor.b * source.brightness
 
-			rotation[i] = this.spin[i]
-			frame[i] = cells > 1 ? (this.frameStart[i] + this.age[i] * this.frameRate[i]) % cells : 0
+			rotation[k] = this.spin[i]
+			frame[k] = cells > 1 ? (this.frameStart[i] + this.age[i] * this.frameRate[i]) % cells : 0
 		}
 
-		for (const attribute of Object.values(this.attributes)) {
+		for (const attribute of Object.values(a)) {
 			attribute.needsUpdate = true
 		}
 
-		this.points.geometry.setDrawRange(0, this.count)
+		this.geometry.instanceCount = this.count
 	}
 
 	dispose() {
-		this.points.removeFromParent()
-		this.points.geometry.dispose()
+		this.mesh.removeFromParent()
+		this.geometry.dispose()
 
-		const material = this.points.material as THREE.ShaderMaterial
+		const material = this.mesh.material as THREE.ShaderMaterial
 		const map = material.uniforms.uMap.value
 
 		if (map && map !== softDot) {
@@ -695,7 +839,7 @@ export class AccessoryEffects {
 		for (const source of sources) {
 			if (source.kind === "particles") {
 				const emitter = new Emitter(source)
-				parent.add(emitter.points)
+				parent.add(emitter.mesh)
 				this.emitters.push({ emitter, source })
 			} else {
 				const light =
@@ -733,7 +877,7 @@ export class AccessoryEffects {
 		this.last = now
 
 		for (const { emitter, source } of this.emitters) {
-			emitter.points.visible = visible
+			emitter.mesh.visible = visible
 			tempMatrix.copy(source.local)
 			tempMatrix.elements[12] *= scale
 			tempMatrix.elements[13] *= scale
