@@ -24,8 +24,8 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 				text: "A search button in each chat looks back through its history and shows each match with the messages around it.",
 			},
 			{
-				title: "Unfriend and leave from your lists",
-				text: "Hover a friend on your friends page, or a community in your communities list, to remove them from there. It asks first.",
+				title: "Unfriend, unfollow and leave from your lists",
+				text: "Hover a friend, someone you follow, or a community in your list for a ... menu to remove them from there. It asks first.",
 			},
 			{
 				title: "Better charts",

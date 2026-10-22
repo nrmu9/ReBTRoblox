@@ -460,6 +460,14 @@ export const RobloxApi = {
 				credentials: "include",
 				xsrf: true,
 			}).then((res) => res.ok),
+
+		/** Stops following someone, saying whether Roblox did. */
+		unfollow: (userId: UserId): Promise<boolean> =>
+			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/unfollow`, {
+				method: "POST",
+				credentials: "include",
+				xsrf: true,
+			}).then((res) => res.ok),
 	},
 	gamepasses: {
 		getGamepassProductInfo: cacheResult(

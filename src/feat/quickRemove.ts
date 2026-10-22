@@ -2,83 +2,93 @@ import { html } from "@/core/html"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 
-// A button on your own friends and communities to unfriend or leave from the
-// list, asking first in place. It shows on hover or focus.
+// A ... menu on your own friends, following and communities to unfriend,
+// unfollow or leave from the list, asking first in place. The button and menu
+// are built from Roblox's own Foundation classes, the way its top bar menu is.
 
-const ICONS = {
-	unfriend: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M16 11h6",
-	leave: "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 8l-4 4 4 4M5 12h11",
-}
-
-const icon = (path: string) =>
-	html`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-		<path
-			d="${path}"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		/>
-	</svg>`
+const ICON_BUTTON =
+	"relative clip group/interactable focus-visible:outline-focus cursor-pointer flex items-center justify-center padding-none stroke-none select-none size-800 radius-circle bg-none"
+const STATE_LAYER =
+	"absolute inset-[0] transition-colors group-hover/interactable:bg-[var(--color-state-hover)] group-active/interactable:bg-[var(--color-state-press)]"
+const MENU =
+	"foundation-web-menu bg-surface-100 stroke-standard stroke-default shadow-transient-high radius-large"
+const MENU_ITEM =
+	"relative clip group/interactable focus-visible:outline-focus foundation-web-menu-item flex items-center text-truncate-split cursor-pointer stroke-none bg-none text-align-x-left width-full text-body-large padding-x-large padding-y-medium gap-x-large radius-medium"
 
 interface Removal {
-	/** Unfriend, Leave: the action's name, on its buttons. */
+	/** Unfriend, Unfollow, Leave community: the menu item. */
+	item: string
+	/** Unfriend, Unfollow, Leave: the action's name, on its buttons. */
 	verb: string
-	/** Unfriended, Left: what the card says once done. */
+	/** Unfriended, Unfollowed, Left: what the card says once done. */
 	done: string
 	/** Read when asked, as the card can show a placeholder until names load. */
 	name: () => string
-	icon: string
 	run: () => Promise<boolean>
 }
 
+/** Keeps clicks inside `element` from reaching the card, which can be a link. */
+const contain = (element: HTMLElement) =>
+	element.$on("click", (event: MouseEvent) => {
+		event.preventDefault()
+		event.stopPropagation()
+	})
+
 /**
- * Adds the button to `host`, which holds the card. Asking covers the card
- * with the question and two buttons; Escape or a click elsewhere backs out.
+ * Adds the ... button to `host`, which holds the card. Its menu has the one
+ * action; picking it covers the card with the question and two buttons.
+ * Escape or a click elsewhere backs out of either.
  */
 const addButton = (host: HTMLElement, removal: Removal) => {
 	host.classList.add("btr-quick-host")
 
 	const button = html<HTMLButtonElement>`<button
 		type="button"
-		class="btr-quick-remove"
-		aria-label="${removal.verb}"
-		title="${removal.verb}"
-	></button>`
-	button.append(icon(removal.icon))
+		class="${ICON_BUTTON} btr-quick-remove"
+		aria-label="More"
+		aria-haspopup="menu"
+		aria-expanded="false"
+	>
+		<div aria-hidden="true" class="${STATE_LAYER}"></div>
+		<span
+			class="icon icon-regular-three-dots-horizontal size-500 content-emphasis"
+			aria-hidden="true"
+		></span>
+	</button>`
 
-	const label = () => button.setAttribute("aria-label", `${removal.verb} ${removal.name()}`)
-	button.addEventListener("focus", label)
-	button.addEventListener("pointerenter", label)
+	let open: HTMLElement | null = null
 
-	let confirm: HTMLElement | null = null
-
-	const close = () => {
-		confirm?.remove()
-		confirm = null
+	const dismiss = () => {
+		open?.remove()
+		open = null
+		button.setAttribute("aria-expanded", "false")
 		document.removeEventListener("pointerdown", outside, true)
 		document.removeEventListener("keydown", escape, true)
 	}
 
 	const outside = (ev: Event) => {
-		if (confirm && !confirm.contains(ev.target as Node)) {
-			close()
+		if (open && !open.contains(ev.target as Node) && !button.contains(ev.target as Node)) {
+			dismiss()
 		}
 	}
 
 	const escape = (ev: KeyboardEvent) => {
 		if (ev.key === "Escape") {
-			close()
+			dismiss()
 			button.focus()
 		}
 	}
 
-	button.$on("click", (ev: MouseEvent) => {
-		ev.preventDefault()
-		ev.stopPropagation()
+	const show = (element: HTMLElement) => {
+		dismiss()
+		open = element
+		host.append(element)
+		document.addEventListener("pointerdown", outside, true)
+		document.addEventListener("keydown", escape, true)
+	}
 
-		confirm = html`<div class="btr-quick-confirm" role="group">
+	const ask = () => {
+		const confirm = html`<div class="btr-quick-confirm" role="group">
 			<span class="btr-quick-question"></span>
 			<div class="btr-quick-actions">
 				<button type="button" class="btr-quick-yes">${removal.verb}</button>
@@ -86,11 +96,7 @@ const addButton = (host: HTMLElement, removal: Removal) => {
 			</div>
 		</div>`
 
-		// In a community row the card is a link, which clicks here must not follow.
-		confirm.$on("click", (event: MouseEvent) => {
-			event.preventDefault()
-			event.stopPropagation()
-		})
+		contain(confirm)
 
 		confirm.$req(".btr-quick-question").textContent = `${removal.verb} ${removal.name()}?`
 		confirm.setAttribute("aria-label", `${removal.verb} ${removal.name()}?`)
@@ -98,69 +104,91 @@ const addButton = (host: HTMLElement, removal: Removal) => {
 		const yes = confirm.$req<HTMLButtonElement>(".btr-quick-yes")
 		const no = confirm.$req<HTMLButtonElement>(".btr-quick-no")
 
-		no.$on("click", (event: MouseEvent) => {
-			event.preventDefault()
-			close()
+		no.$on("click", () => {
+			dismiss()
 			button.focus()
 		})
 
-		yes.$on("click", async (event: MouseEvent) => {
-			event.preventDefault()
+		yes.$on("click", async () => {
 			yes.disabled = no.disabled = true
 			yes.textContent = "..."
 
 			const ok = await removal.run().catch(() => false)
 
 			if (ok) {
-				close()
+				dismiss()
 				button.remove()
 				host.classList.add("btr-quick-removed")
 				host.append(html`<span class="btr-quick-done">${removal.done}</span>`)
 			} else {
-				confirm!.$req(".btr-quick-question").textContent = `Couldn't ${removal.verb.toLowerCase()}`
+				confirm.$req(".btr-quick-question").textContent = `Couldn't ${removal.verb.toLowerCase()}`
 				yes.textContent = "Retry"
 				yes.disabled = no.disabled = false
 			}
 		})
 
-		host.append(confirm)
+		show(confirm)
 		yes.focus()
-		document.addEventListener("pointerdown", outside, true)
-		document.addEventListener("keydown", escape, true)
+	}
+
+	button.$on("click", (ev: MouseEvent) => {
+		ev.preventDefault()
+		ev.stopPropagation()
+
+		if (open) {
+			dismiss()
+			return
+		}
+
+		const menu = html`<div role="menu" class="${MENU} btr-quick-menu">
+			<div role="group" class="padding-small">
+				<button type="button" role="menuitem" class="${MENU_ITEM}">
+					<div aria-hidden="true" class="${STATE_LAYER}"></div>
+					<span class="foundation-web-menu-item-title text-no-wrap content-system-alert"></span>
+				</button>
+			</div>
+		</div>`
+
+		contain(menu)
+
+		const item = menu.$req<HTMLButtonElement>("[role=menuitem]")
+		item.$req(".foundation-web-menu-item-title").textContent = removal.item
+		item.$on("click", ask)
+
+		show(menu)
+		button.setAttribute("aria-expanded", "true")
+		item.focus()
 	})
 
 	host.append(button)
 }
 
-/** Unfriend buttons on your own friends list, on its Friends tab only. */
-export const addUnfriendButtons = (ownUserId: number): void => {
-	// Your list is /users/friends, or your own id in the address.
-	const onFriendsTab = () => {
+/**
+ * Buttons on your own friends list: unfriend on its Friends tab, unfollow on
+ * Following. Other tabs and other people's lists get none.
+ */
+export const addFriendListButtons = (ownUserId: number): void => {
+	const tab = (): "friends" | "following" | null => {
+		// Your list is /users/friends, or your own id in the address.
 		const listOf = location.pathname.match(/^\/users\/(\d+)\/friends/)?.[1]
 
-		return (
-			(!listOf || Number(listOf) === ownUserId) &&
-			(!location.hash || /^#!\/friends(\/|$)/.test(location.hash))
-		)
-	}
-
-	// The tabs share their cards, so the buttons go when another tab or list opens.
-	const tidy = () => {
-		if (!onFriendsTab()) {
-			for (const button of document.querySelectorAll(".avatar-card .btr-quick-remove")) {
-				button.remove()
-			}
+		if (listOf && Number(listOf) !== ownUserId) {
+			return null
 		}
+
+		if (!location.hash || /^#!\/friends(\/|$)/.test(location.hash)) {
+			return "friends"
+		}
+
+		return /^#!\/following(\/|$)/.test(location.hash) ? "following" : null
 	}
 
-	window.addEventListener("hashchange", tidy)
-	window.addEventListener("popstate", tidy)
-
-	document.$watchAll(".avatar-cards > li.avatar-card", (card: HTMLElement) => {
+	const addTo = (card: HTMLElement) => {
 		const userId = Number(card.id)
 		const box = card.$find<HTMLElement>(".avatar-card-container")
+		const current = tab()
 
-		if (!onFriendsTab() || !Number.isSafeInteger(userId) || userId <= 0 || !box) {
+		if (!current || !Number.isSafeInteger(userId) || userId <= 0 || !box) {
 			return
 		}
 
@@ -168,14 +196,47 @@ export const addUnfriendButtons = (ownUserId: number): void => {
 			return
 		}
 
-		addButton(box, {
-			verb: "Unfriend",
-			done: "Unfriended",
-			name: () => card.$find(".avatar-name")?.textContent?.trim() || "them",
-			icon: ICONS.unfriend,
-			run: () => RobloxApi.friends.unfriend(userId),
-		})
-	})
+		const name = () => card.$find(".avatar-name")?.textContent?.trim() || "them"
+
+		addButton(
+			box,
+			current === "friends"
+				? {
+						item: "Unfriend",
+						verb: "Unfriend",
+						done: "Unfriended",
+						name,
+						run: () => RobloxApi.friends.unfriend(userId),
+					}
+				: {
+						item: "Unfollow",
+						verb: "Unfollow",
+						done: "Unfollowed",
+						name,
+						run: () => RobloxApi.friends.unfollow(userId),
+					},
+		)
+	}
+
+	const cards = ".avatar-cards > li.avatar-card"
+
+	// The tabs share their cards, so a tab change takes the buttons off and
+	// gives the cards the new tab's.
+	const retab = () => {
+		for (const element of document.querySelectorAll(
+			".avatar-card .btr-quick-remove, .avatar-card .btr-quick-menu, .avatar-card .btr-quick-confirm",
+		)) {
+			element.remove()
+		}
+
+		for (const card of document.querySelectorAll<HTMLElement>(cards)) {
+			addTo(card)
+		}
+	}
+
+	window.addEventListener("hashchange", retab)
+	window.addEventListener("popstate", retab)
+	document.$watchAll(cards, addTo)
 }
 
 /** Leave buttons on the communities list, for ones you are in and do not own. */
@@ -213,10 +274,10 @@ export const addLeaveButtons = (userId: number): void => {
 		}
 
 		addButton(item, {
+			item: "Leave community",
 			verb: "Leave",
 			done: "Left",
 			name: () => item.$find(".text-title-medium")?.textContent?.trim() || "this community",
-			icon: ICONS.leave,
 			run: () => RobloxApi.groups.leave(groupId, userId),
 		})
 	})
