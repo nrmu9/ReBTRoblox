@@ -1539,19 +1539,16 @@ html
 	width: min(400px, calc(100vw - 48px));
 	max-height: 480px;
 	min-height: 0;
-	padding: 20px 16px 16px;
+	padding: 16px;
 
-	/* An update is worth noticing: a strip of Roblox's emphasis blue along
-	   the top, and a glow of it under the usual shadow. */
-	background:
-		linear-gradient(var(--color-action-emphasis-background, #335fff) 0 4px, transparent 4px),
-		var(--color-surface-100, light-dark(#fff, #191a1f));
-	border: 1px solid var(--color-stroke-muted, light-dark(#e3e3e3, #393b3d));
+	/* An update is worth noticing: one border tinted Roblox's emphasis blue,
+	   and a soft glow of it under the usual shadow. */
+	background: var(--color-surface-100, light-dark(#fff, #191a1f));
+	border: 1px solid color-mix(in srgb, var(--color-action-emphasis-background, #335fff) 60%, transparent);
 	border-radius: 12px;
 	box-shadow:
 		0 8px 24px rgb(0 0 0 / 0.3),
-		0 0 0 1px color-mix(in srgb, var(--color-action-emphasis-background, #335fff) 35%, transparent),
-		0 0 32px color-mix(in srgb, var(--color-action-emphasis-background, #335fff) 22%, transparent);
+		0 0 28px color-mix(in srgb, var(--color-action-emphasis-background, #335fff) 20%, transparent);
 	color: var(--color-content-default, inherit);
 	font-size: 14px;
 	line-height: 20px;
