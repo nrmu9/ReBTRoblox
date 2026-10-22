@@ -19,6 +19,14 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 		version: "4.5.0",
 		notes: [
 			{
+				title: "Search your chats",
+				text: "A search button in each chat looks back through its history and shows each match with the messages around it.",
+			},
+			{
+				title: "Unfriend and leave from your lists",
+				text: "Hover a friend on your friends page, or a community in your communities list, to remove them from there. It asks first.",
+			},
+			{
 				title: "Better charts",
 				text: "Activity charts can show each day, zoom in by dragging, mark game updates and shouts, and show a table or save a CSV.",
 			},

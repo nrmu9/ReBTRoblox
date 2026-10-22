@@ -131,6 +131,12 @@ export const settingsMarkup = () =>
 							require="!hideChat"
 							desc="Fixes chats that open without their newest messages"
 						></toggle>
+						<toggle
+							label="Search Messages"
+							path="chatSearch"
+							require="!hideChat"
+							desc="Adds a search button to each chat, which looks back through its history"
+						></toggle>
 
 						<heading>Robux to Cash</heading>
 						<div

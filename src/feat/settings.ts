@@ -37,6 +37,7 @@ export const DEFAULT_SETTINGS = {
 		whatsNew: { value: true },
 		quickRemove: { value: true },
 		fixChatMessages: { value: true },
+		chatSearch: { value: true },
 		fastSearch: { value: true },
 		voiceChatStatus: { value: true },
 

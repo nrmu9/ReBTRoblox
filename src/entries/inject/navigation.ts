@@ -95,6 +95,53 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 			}
 		})
 	},
+	// Chat search needs to know which conversation each open chat window is,
+	// which only react knows, so each window is marked with its id.
+	chatConversationIds: () => {
+		const fiberOf = (node: any) => {
+			const key = Object.keys(node).find((k) => k.startsWith("__reactFiber$"))
+			return key ? node[key] : null
+		}
+
+		const conversationOf = (node: any): string | null => {
+			let fiber = fiberOf(node)
+
+			for (let depth = 0; fiber && depth < 40; depth++) {
+				const id = fiber.memoizedProps?.conversation?.id
+				if (typeof id === "string") {
+					return id
+				}
+				fiber = fiber.return
+			}
+
+			return null
+		}
+
+		// Each conversation gets a window of its own, so only new ones are read,
+		// once per batch of changes.
+		let pending = false
+
+		const mark = () => {
+			pending = false
+
+			for (const shell of document.querySelectorAll<HTMLElement>(
+				".react-chat-dialog-shell:not([data-btr-conversation])",
+			)) {
+				const id = conversationOf(shell)
+				if (id) {
+					shell.dataset.btrConversation = id
+				}
+			}
+		}
+
+		new MutationObserver(() => {
+			if (!pending) {
+				pending = true
+				queueMicrotask(mark)
+			}
+		}).observe(document.documentElement, { childList: true, subtree: true })
+		mark()
+	},
 	// Roblox's chat renders an open conversation from a react-query cache
 	// that nothing invalidates when a message arrives. The conversation
 	// object gets a fresh preview, so the list updates and the unread

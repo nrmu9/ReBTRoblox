@@ -14,6 +14,7 @@ import { SETTINGS } from "@/feat/settings"
 import { SettingsModal, watchSettingsMenu } from "@/feat/settingsModal"
 import { watchActivityWarning } from "@/feat/activity/warning"
 import { watchWhatsNew } from "@/feat/whatsNew"
+import { startChatSearch } from "@/feat/chatSearch"
 import { AssetCache } from "@/rbx/AssetCache"
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
@@ -1318,6 +1319,11 @@ pageInit.www = () => {
 	// and eager hooks run at document_start when there is nothing there yet.
 	if (SETTINGS.get("general.fixChatMessages")) {
 		injectScript.call("fixChatMessages")
+	}
+
+	if (SETTINGS.get("general.chatSearch") && !SETTINGS.get("general.hideChat")) {
+		injectScript.call("chatConversationIds")
+		startChatSearch()
 	}
 
 	bodyWatcher.$watch("#chat-container", applyChatSettings)
