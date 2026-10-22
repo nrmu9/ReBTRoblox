@@ -651,3 +651,28 @@ html .btr-profile .btr-profile-favorites {
 		outline-offset: 2px;
 	}
 }
+
+/* Who blocked whom, beside the Add Friend button that blocking greys out. Drawn
+   from CSS so it outlives the header's re-renders. */
+body[data-btr-blocked] .user-profile-header .button-container::before {
+	align-self: center;
+	flex: none;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 16px;
+	white-space: nowrap;
+}
+
+body[data-btr-blocked="you"] .user-profile-header .button-container::before {
+	content: "Blocked you";
+	color: var(--color-system-alert, #df281f);
+	background: color-mix(in srgb, var(--color-system-alert, #df281f) 14%, transparent);
+}
+
+body[data-btr-blocked="them"] .user-profile-header .button-container::before {
+	content: "You blocked them";
+	color: var(--color-content-default, inherit);
+	background: color-mix(in srgb, currentColor 10%, transparent);
+}

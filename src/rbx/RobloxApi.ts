@@ -697,6 +697,20 @@ export const RobloxApi = {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ userIds, fields }),
 			}).then((res) => res.json()),
+
+		/** The profile page's own data, by component. Some are left out for viewers someone blocked. */
+		getComponents: (userId: UserId | string, components: string[]) =>
+			xsrfFetch(`https://apis.roblox.com/profile-platform-api/v1/profiles/get`, {
+				method: "POST",
+				credentials: "include",
+				xsrf: true,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					profileId: String(userId),
+					profileType: "User",
+					components: components.map((component) => ({ component })),
+				}),
+			}).then((res) => (res.ok ? res.json() : null)),
 	},
 	voice: {
 		getSettings: (): Promise<VoiceSettingsResponse> =>

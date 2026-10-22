@@ -60,7 +60,7 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 			},
 			{
 				title: "Fixes",
-				text: "Chat messages no longer get stuck sending, server sorts like Best latency work with the pager, and weekday names are right again.",
+				text: "Chat messages no longer get stuck sending or show only the newest one, server sorts like Best latency work with the pager, weekday names are right again, and profiles of people who blocked you load and say so.",
 			},
 		],
 	},

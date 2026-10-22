@@ -159,6 +159,9 @@ pageInit.profile = () => {
 
 	onPageReset(() => {
 		document.body?.classList.remove("btr-profile")
+		if (document.body) {
+			delete document.body.dataset.btrBlocked
+		}
 
 		for (const key of Object.keys(profileData)) {
 			delete profileData[key]
@@ -277,7 +280,15 @@ pageInit.profile = () => {
 				</div>
 			</div>`
 
-			const aboutPromise = waitForComponent(userIdString, "About")
+			// A profile that blocked you leaves About and Friends out of everything
+			// it sends, so waiting for them never ended. Without About a few seconds
+			// in, it is asked for directly, and whatever that returns is final.
+			const aboutPromise: Promise<any> = Promise.race([
+				waitForComponent(userIdString, "About"),
+				new Promise((resolve) => setTimeout(resolve, 4000)).then(() =>
+					RobloxApi.userProfiles.getComponents(userId, ["About", "Actions"]).catch(() => null),
+				),
+			])
 
 			// The answers may already have come and gone before this listened.
 			injectScript.send("requestProfileData", userIdString)
@@ -417,8 +428,23 @@ pageInit.profile = () => {
 					return
 				}
 
-				const descText = json?.components?.About?.description
+				const about = json?.components?.About
+				const descText = about?.description
 				const desc = newCont.$req(".btr-profile-description-content")
+
+				// Blocking leaves About out. Which way round shows in the menu
+				// Roblox offers: Unblock when you did it, only Block when they did.
+				const actions = json?.components?.Actions ?? profileData[userIdString]?.components?.Actions
+				const canUnblock = actions?.contextual?.includes?.("Unblock")
+				const cannotAdd = actions?.buttons?.some?.(
+					(button: any) => button?.type === "CannotAddFriend",
+				)
+
+				if (canUnblock) {
+					document.body.dataset.btrBlocked = "them"
+				} else if (json && !about && cannotAdd) {
+					document.body.dataset.btrBlocked = "you"
+				}
 
 				if (descText) {
 					desc.textContent = descText
@@ -441,7 +467,9 @@ pageInit.profile = () => {
 					}
 				} else {
 					desc.replaceChildren(
-						html`<div class="section-content-off btr-section-content-off">No bio yet</div>`,
+						html`<div class="section-content-off btr-section-content-off">
+							${about ? "No bio yet" : json ? "Hidden from you" : "Could not load the bio"}
+						</div>`,
 					)
 				}
 
