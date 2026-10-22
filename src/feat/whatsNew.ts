@@ -1,5 +1,6 @@
 import { STORAGE } from "@/core/env"
 import { html } from "@/core/html"
+import { injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 import { toastArea } from "@/feat/toasts"
 
@@ -212,4 +213,12 @@ export const watchWhatsNew = (): void => {
 
 	SETTINGS.onChange("general.whatsNew", read)
 	document.$watch("body", read)
+
+	// Dev builds: btrWhatsNew() in the page console shows the newest notes,
+	// btrWhatsNew("4.3.0") everything since that version. Nothing is stored.
+	if (__DEV__) {
+		injectScript.listen("devWhatsNew", (from: unknown) => {
+			showReleases(typeof from === "string" ? notesBetween(from, NOTES[0].version) : NOTES.slice(0, 1))
+		})
+	}
 }

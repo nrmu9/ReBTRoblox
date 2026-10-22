@@ -148,6 +148,11 @@ const startInject = () => {
 		callInjected(name, args)
 	})
 
+	// Dev builds: shows the What's new card from the page console.
+	if (__DEV__) {
+		;(window as any).btrWhatsNew = (since?: string) => contentScript.send("devWhatsNew", since ?? null)
+	}
+
 	for (const [name, ...gates] of EAGER_HOOKS) {
 		if (gates.every(isSettingOn)) {
 			callInjected(name)
