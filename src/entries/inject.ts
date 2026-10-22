@@ -140,6 +140,9 @@ const startInject = () => {
 			}
 
 			console.error("[btr] injected function " + name + " failed", ex)
+
+			// For the error log, which this side cannot reach itself.
+			contentScript.send("injectError", name, String((ex as Error)?.stack || ex).slice(0, 2000))
 		} finally {
 			setHealthOwner("")
 		}

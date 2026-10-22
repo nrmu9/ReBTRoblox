@@ -655,6 +655,27 @@ export const settingsMarkup = () =>
 					</page>
 
 					<page name="advanced" label="Experiments" icon="flag">
+						<heading>Recent Errors</heading>
+						<div class="btr-setting-card btr-error-log">
+							<div class="btr-setting-row" data-search="errors bug report copy log">
+								<div class="btr-setting-text">
+									<span class="btr-setting-label btr-error-log-summary">No errors</span>
+									<span class="btr-setting-desc"
+										>What went wrong lately, kept on this device. Copy it into a bug
+										report so it can be fixed</span
+									>
+								</div>
+								<div class="btr-activity-clear-controls">
+									<button type="button" class="btr-settings-button btr-error-log-clear">
+										Clear
+									</button>
+									<button type="button" class="btr-settings-button btr-error-log-copy">
+										Copy report
+									</button>
+								</div>
+							</div>
+							<ol class="btr-error-log-list"></ol>
+						</div>
 						<heading>Unlisted Settings</heading>
 						<div id="btr-settings-wip" class="btr-setting-card"></div>
 						<heading>Roblox Experiments</heading>

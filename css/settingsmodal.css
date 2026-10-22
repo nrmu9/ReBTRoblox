@@ -2979,3 +2979,39 @@ div.btr-setting-text {
 		animation: none;
 	}
 }
+
+/* Recent errors on the Experiments page */
+.btr-error-log-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0 0 12px;
+	padding: 0;
+	list-style: none;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.btr-error-log-entry {
+	padding: 8px 12px;
+	background: var(--btr-surface);
+	border-radius: 8px;
+}
+
+.btr-error-log-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	color: var(--btr-content-muted);
+	font-size: 12px;
+}
+
+.btr-error-log-message {
+	margin-top: 2px;
+	overflow-wrap: anywhere;
+	color: var(--btr-content-emphasis);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+}

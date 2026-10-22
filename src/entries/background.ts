@@ -16,9 +16,11 @@ import { startWatching } from "@/feat/activity/watch"
 import { startSettingsSync } from "@/feat/settingsSync"
 import { startTracking } from "@/feat/activity/tracked"
 import { recordUpdate } from "@/feat/whatsNew"
+import { startErrorLog } from "@/feat/errorLog"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 
+startErrorLog("background")
 startWatching()
 startSettingsSync()
 startTracking()

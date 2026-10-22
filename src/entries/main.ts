@@ -7,6 +7,7 @@
 // page modules register themselves into pageInit/pageReset on import.
 
 import { installExtensions } from "@/core/extend"
+import { startErrorLog } from "@/feat/errorLog"
 import { IS_CHROME, IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
 import { backgroundScript, injectScript } from "@/core/messaging"
@@ -43,6 +44,7 @@ import "@/pages/profile"
 import { pageLoad } from "@/pages/common"
 
 installExtensions()
+startErrorLog("content")
 
 // The background page reaches these through chrome.scripting.executeScript,
 // which cannot see module scope.
