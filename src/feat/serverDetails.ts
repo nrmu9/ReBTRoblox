@@ -2224,6 +2224,11 @@ export const getServerDetails = (placeId: number, jobId: string, callback: (...a
 			const timeout = setTimeout(() => finish({ success: false, status: null }), 20e3)
 
 			backgroundScript.send("getServerAddress", { placeId: placeId, jobId: jobId }, (details: any) => {
+				if (!details) {
+					finish({ success: false, status: null })
+					return
+				}
+
 				btrLocalStorage.setItem(`serverDetailsV2-${jobId}`, details, {
 					expires: Date.now() + (details.success ? 60 * 60e3 : 15e3),
 				})

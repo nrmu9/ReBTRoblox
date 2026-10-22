@@ -147,8 +147,9 @@ SETTINGS.load(() => {
 
 SHARED_DATA.init()
 
-backgroundScript.send("checkPermissions", (hasPermissions: boolean) => {
-	if (!hasPermissions) {
+backgroundScript.send("checkPermissions", (hasPermissions?: boolean) => {
+	// No answer says nothing about permissions, so only a no shows the banner.
+	if (hasPermissions === false) {
 		const oldBanner = query("#btr-permission-banner")
 		if (oldBanner) {
 			oldBanner.remove()

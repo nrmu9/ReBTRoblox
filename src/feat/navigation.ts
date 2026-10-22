@@ -627,7 +627,7 @@ export const Navigation = {
 						}
 					}
 
-					backgroundScript.send("requestBlogFeed", (data: any[]) => updateBlogFeed(data))
+					backgroundScript.send("requestBlogFeed", (data?: any[]) => data && updateBlogFeed(data))
 
 					if (SHARED_DATA.get("blogfeed")) {
 						updateBlogFeed(SHARED_DATA.get("blogfeed"))

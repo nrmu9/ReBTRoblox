@@ -181,10 +181,10 @@ const backgroundCall = (callback: (...args: any[]) => any) => {
 
 		return new Promise((resolve, reject) => {
 			backgroundScript.send(messageId, { args: wrapped, xsrf: cachedXsrfToken }, (result: any) => {
-				if (result.success) {
+				if (result?.success) {
 					Promise.resolve(unwrapArgs(result.result)).then(resolve, reject)
 				} else {
-					reject(result.result)
+					reject(result ? result.result : new Error("No answer from the background"))
 				}
 			})
 		})

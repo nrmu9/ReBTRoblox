@@ -23,12 +23,16 @@ export const exportActivity = async (): Promise<Blob> => {
 		let first = true
 
 		for (;;) {
-			const page =
-				(await ask<Array<{ id: number }> | null>("activityExportPage", {
-					store,
-					after,
-					limit: 5000,
-				})) ?? []
+			const page = await ask<Array<{ id: number }> | null>("activityExportPage", {
+				store,
+				after,
+				limit: 5000,
+			})
+
+			// A missing page would otherwise end the file early and look complete.
+			if (!page) {
+				throw new Error("Activity data could not be read")
+			}
 
 			for (const record of page) {
 				parts.push((first ? "" : ",") + JSON.stringify(record))

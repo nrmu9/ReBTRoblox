@@ -20,8 +20,15 @@ interface PortResponse {
 	cancel?: boolean
 }
 
+interface PendingRequest {
+	request: PortRequest
+	callback: MessageCallback
+	answered: boolean
+	resent: boolean
+}
+
 export const backgroundScript: any = {
-	callbacks: {},
+	pending: {} as Record<number, PendingRequest>,
 	responseCounter: 0,
 
 	resetTimeout() {
@@ -30,7 +37,7 @@ export const backgroundScript: any = {
 			this.portTimeout = null
 		}
 
-		if (this.port && Object.keys(this.callbacks).length === 0) {
+		if (this.port && Object.keys(this.pending).length === 0) {
 			this.portTimeout = setTimeout(() => this.disconnectPort(), 10e3)
 		}
 	},
@@ -49,7 +56,11 @@ export const backgroundScript: any = {
 		port.onMessage.addListener((msg) => this.onPortMessage(port, msg))
 		port.onDisconnect.addListener(() => {
 			void chrome.runtime.lastError // reading it is what clears it
-			this.disconnectPort()
+
+			if (this.port === port) {
+				this.port = null
+				this.onPortLost()
+			}
 		})
 
 		this.resetTimeout()
@@ -62,18 +73,53 @@ export const backgroundScript: any = {
 		this.port.disconnect()
 		this.port = null
 
-		this.callbacks = {}
+		this.onPortLost()
+	},
+
+	/**
+	 * The background stops when idle and takes its port along, with whatever it
+	 * had not answered yet. Those are asked once more on a new port; the rest,
+	 * and any whose reply had begun, end with no value rather than waiting for
+	 * good.
+	 */
+	onPortLost() {
+		const lost = Object.entries(this.pending as Record<number, PendingRequest>)
+		this.pending = {}
+
+		for (const [id, entry] of lost) {
+			if (!entry.answered && !entry.resent) {
+				entry.resent = true
+				this.pending[Number(id)] = entry
+			}
+		}
+
+		if (Object.keys(this.pending).length > 0) {
+			this.initPort()
+		}
+
+		for (const [id, entry] of lost) {
+			if (this.port && this.pending[Number(id)] === entry) {
+				this.port.postMessage(entry.request)
+				continue
+			}
+
+			delete this.pending[Number(id)]
+			entry.callback(undefined)
+		}
+
 		this.resetTimeout()
 	},
 
 	onPortMessage(port: chrome.runtime.Port, msg: PortResponse) {
-		const fn = this.callbacks[msg.id]
-		if (!fn) {
+		const entry = this.pending[msg.id]
+		if (!entry) {
 			return
 		}
 
+		entry.answered = true
+
 		if (msg.final) {
-			delete this.callbacks[msg.id]
+			delete this.pending[msg.id]
 			this.resetTimeout()
 
 			if (msg.cancel) {
@@ -81,7 +127,7 @@ export const backgroundScript: any = {
 			}
 		}
 
-		fn(msg.data)
+		entry.callback(msg.data)
 	},
 
 	send(name: string, data?: any, callback?: MessageCallback) {
@@ -90,16 +136,25 @@ export const backgroundScript: any = {
 			data = null
 		}
 
-		const info: { name: string; data: any; id?: number } = { name, data }
-
-		if (typeof callback === "function") {
-			const id = (info.id = this.responseCounter++)
-			this.callbacks[id] = callback
-		}
+		const info: PortRequest = { name, data }
 
 		if (!this.port) {
 			this.initPort()
 		}
+
+		if (typeof callback === "function") {
+			// No port means the extension was reloaded under this page, and no
+			// answer will ever come.
+			if (!this.port) {
+				const done = callback
+				queueMicrotask(() => done(undefined))
+				return
+			}
+
+			const id = (info.id = this.responseCounter++)
+			this.pending[id] = { request: info, callback, answered: false, resent: false }
+		}
+
 		if (this.port) {
 			this.port.postMessage(info)
 			this.resetTimeout()
@@ -221,7 +276,21 @@ export const contentScript: any = {
 			}
 		}
 
-		listener(msg.data, respond, port)
+		// A handler that fails would otherwise leave the caller waiting for good.
+		const fail = (err: unknown) => {
+			console.error(err)
+			respond(undefined)
+		}
+
+		try {
+			const result: any = listener(msg.data, respond, port)
+
+			if (typeof result?.then === "function") {
+				result.then(undefined, fail)
+			}
+		} catch (err) {
+			fail(err)
+		}
 	},
 
 	listen(name: string, callback: MessageCallback) {

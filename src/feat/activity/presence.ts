@@ -262,7 +262,9 @@ export const recordPresences = (presences: any[], starts?: Record<number, number
 }
 
 export const getPresenceHistory = (userId: number): Promise<PresenceSegment[]> =>
-	new Promise((resolve) => backgroundScript.send("getPresenceHistory", userId, resolve))
+	new Promise((resolve) =>
+		backgroundScript.send("getPresenceHistory", userId, (value: any) => resolve(value ?? [])),
+	)
 
 export type PlayedTogether = Record<number, Array<{ userId: number; from: number; to: number }>>
 
