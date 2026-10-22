@@ -1,5 +1,11 @@
 import { STORAGE } from "@/core/env"
-import { compareFriendList, compareRequests, onFriendshipChanged } from "@/feat/activity/friends"
+import { contentScript } from "@/core/messaging"
+import {
+	compareFriendList,
+	compareRequests,
+	noteOwnAction,
+	onFriendshipChanged,
+} from "@/feat/activity/friends"
 import { recordPresences, setLiveSince } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
 
@@ -239,6 +245,9 @@ chrome.alarms?.onAlarm.addListener((alarm) => {
 		SETTINGS.load(connect)
 	}
 })
+
+// Friend actions taken in any tab, so the log can tell yours from theirs.
+contentScript.listen("ownFriendAction", (otherId: number, action: string) => noteOwnAction(otherId, action))
 
 SETTINGS.load(() => {
 	connect()

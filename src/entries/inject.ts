@@ -77,6 +77,7 @@ const startInject = () => {
 		["hideFriendActivity", "home.hideFriendActivity"],
 		["homeRows"],
 		["robloxResponses"],
+		["friendActions", "profile.friendLog"],
 		["filterGames"],
 		["ignoreR6Warning"],
 		["hijackAuth"],

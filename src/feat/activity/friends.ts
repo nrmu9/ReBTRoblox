@@ -7,6 +7,7 @@ import {
 	setState,
 	type ActivityEvent,
 } from "@/feat/activity/store"
+import { RobloxApi } from "@/rbx/RobloxApi"
 
 // Friends added and removed, for your own list and for people you watch.
 // Live changes come from Roblox's realtime connection; anything that happened
@@ -46,7 +47,14 @@ export const namesOf = async (userIds: number[]) => {
 	return names
 }
 
-const log = async (userId: number, added: number[], removed: number[], exact: boolean) => {
+/** `field` says who did it, when that is known. */
+const log = async (
+	userId: number,
+	added: number[],
+	removed: number[],
+	exact: boolean,
+	field?: string | null,
+) => {
 	if (!added.length && !removed.length) {
 		return
 	}
@@ -71,6 +79,7 @@ const log = async (userId: number, added: number[], removed: number[], exact: bo
 				kind,
 				otherId,
 				...(exact ? { exact } : {}),
+				...(field ? { field } : {}),
 				...names.get(otherId),
 			}
 
@@ -212,7 +221,74 @@ const compareRequestsNow = async (ownUserId: number) => {
 	}
 }
 
-/** A request sent or declined, which way read from the requests waiting for you and those seen before. */
+// Who ended something. Roblox's events only say that a request or friendship
+// ended, and blocking ends both, so what you do in this browser is noted as it
+// happens, and anything else is checked against whether either of you blocked
+// the other. What is still unknown after that is logged as unknown.
+
+/** Friend actions you took here lately, by the other person. */
+const ownActions = new Map<number, { action: string; at: number }>()
+let declinedAllAt = 0
+const OWN_WINDOW = 2 * 60e3
+
+export const noteOwnAction = (otherId: number, action: string): void => {
+	if (action === "declineAll") {
+		declinedAllAt = Date.now()
+	} else if (Number.isSafeInteger(otherId)) {
+		ownActions.set(otherId, { action, at: Date.now() })
+	}
+}
+
+const recentOwn = (otherId: number) => {
+	const own = ownActions.get(otherId)
+	return own && Date.now() - own.at < OWN_WINDOW ? own.action : null
+}
+
+/**
+ * Whether either of you blocked the other, from what their profile offers:
+ * Unblock when you did it, and no About and no way to add them when they did.
+ */
+const blockBetween = async (otherId: number): Promise<"blockedYou" | "blockedByYou" | null> => {
+	// The profile can lag the event that a block caused.
+	await new Promise((resolve) => setTimeout(resolve, 1500))
+
+	const json = await RobloxApi.userProfiles.getComponents(otherId, ["About", "Actions"]).catch(() => null)
+	const actions = json?.components?.Actions
+
+	if (!actions) {
+		return null
+	}
+
+	if (actions.contextual?.includes?.("Unblock")) {
+		return "blockedByYou"
+	}
+
+	if (
+		!json.components.About &&
+		actions.buttons?.some?.((button: any) => button?.type === "CannotAddFriend")
+	) {
+		return "blockedYou"
+	}
+
+	return null
+}
+
+/** How something between you and `otherId` ended: by you here, by a block, or not known. */
+const endedBy = async (otherId: number, yours: string) => {
+	const own = recentOwn(otherId)
+
+	if (own === yours) {
+		return "you"
+	}
+
+	if (own === "block") {
+		return "blockedByYou"
+	}
+
+	return blockBetween(otherId)
+}
+
+/** A request sent or ended, which way read from the requests waiting for you and those seen before. */
 const onRequestNow = async (ownUserId: number, otherId: number, type: string) => {
 	const state = (await getState<Requests>(REQUESTS_KEY)) ?? { pending: {} }
 
@@ -233,14 +309,17 @@ const onRequestNow = async (ownUserId: number, otherId: number, type: string) =>
 		const direction = state.pending[otherId]
 		delete state.pending[otherId]
 		await setState(REQUESTS_KEY, state)
-		await logRequests(ownUserId, [
-			{
-				kind: "requestDeclined",
-				otherId,
-				at: Date.now(),
-				...(direction ? { field: direction === "received" ? "byYou" : "byThem" } : {}),
-			},
-		])
+
+		const at = Date.now()
+		const declinedAll = direction === "received" && at - declinedAllAt < OWN_WINDOW
+		// A request you sent that ended without a block was declined. One you
+		// received that you did not decline here ended some other way, such as
+		// in the app, so it is not put down to you.
+		const field =
+			(declinedAll ? "you" : await endedBy(otherId, "decline")) ??
+			(direction === "sent" ? "them" : direction === "received" ? "ended" : null)
+
+		await logRequests(ownUserId, [{ kind: "requestDeclined", otherId, at, ...(field ? { field } : {}) }])
 	}
 }
 
@@ -263,11 +342,16 @@ const onFriendshipNow = async (ownUserId: number, notification: any): Promise<vo
 		return
 	}
 
-	// A request that became a friendship is no longer waiting.
+	// A request that became a friendship is no longer waiting, and which way
+	// it went says who accepted.
+	let field: string | null = null
+
 	if (added) {
 		const state = await getState<Requests>(REQUESTS_KEY)
+		const direction = state?.pending[otherId]
 
-		if (state?.pending[otherId]) {
+		if (state && direction) {
+			field = direction === "received" ? "you" : "them"
 			delete state.pending[otherId]
 			await setState(REQUESTS_KEY, state)
 		}
@@ -287,7 +371,12 @@ const onFriendshipNow = async (ownUserId: number, notification: any): Promise<vo
 	}
 
 	await setState(listKey(ownUserId), [...list])
-	await log(ownUserId, added ? [otherId] : [], removed ? [otherId] : [], true)
+
+	if (removed) {
+		field = await endedBy(otherId, "unfriend")
+	}
+
+	await log(ownUserId, added ? [otherId] : [], removed ? [otherId] : [], true, field)
 }
 
 export const compareFriendList = (userId: number, friendIds: number[]): Promise<void> =>

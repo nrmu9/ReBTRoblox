@@ -1,3 +1,4 @@
+import { backgroundScript } from "@/core/messaging"
 import { html } from "@/core/html"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
@@ -206,7 +207,10 @@ export const addFriendListButtons = (ownUserId: number): void => {
 						verb: "Unfriend",
 						done: "Unfriended",
 						name,
-						run: () => RobloxApi.friends.unfriend(userId),
+						run: () => {
+							backgroundScript.send("ownFriendAction", userId, "unfriend")
+							return RobloxApi.friends.unfriend(userId)
+						},
 					}
 				: {
 						item: "Unfollow",

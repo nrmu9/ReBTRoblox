@@ -244,6 +244,36 @@ export const commonFunctions: Record<string, (...args: any[]) => any> = {
 	// Passes on responses to requests Roblox makes anyway, so features read
 	// them instead of asking again. The last few are kept, as the content
 	// script can start listening after the first ones have come and gone.
+	// Accepting, declining, unfriending and blocking with Roblox's own buttons,
+	// so the friend log can say it was you. Roblox's events only say it ended.
+	friendActions: () => {
+		const ACTIONS: Array<[RegExp, string]> = [
+			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/unfriend$/i, "unfriend"],
+			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/accept-friend-request$/i, "accept"],
+			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/decline-friend-request$/i, "decline"],
+			[/^https:\/\/friends\.roblox\.com\/v\d+\/user\/friend-requests\/decline-all$/i, "declineAll"],
+			[/^https:\/\/apis\.roblox\.com\/user-blocking-api\/v\d+\/users\/(\d+)\/block-user$/i, "block"],
+			[
+				/^https:\/\/apis\.roblox\.com\/user-blocking-api\/v\d+\/users\/(\d+)\/unblock-user$/i,
+				"unblock",
+			],
+		]
+
+		hijackXHR((request: any) => {
+			if (String(request.method).toUpperCase() !== "POST") {
+				return
+			}
+
+			for (const [pattern, action] of ACTIONS) {
+				const match = String(request.url).match(pattern)
+
+				if (match) {
+					contentScript.send("ownFriendAction", Number(match[1] ?? 0), action)
+					return
+				}
+			}
+		})
+	},
 	robloxResponses: () => {
 		const PATTERNS = [
 			/^https:\/\/presence\.roblox\.com\/v1\/presence\/users$/i,

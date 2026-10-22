@@ -1,7 +1,7 @@
 import { deferredPromise } from "@/core/deferred"
 import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
-import { injectScript } from "@/core/messaging"
+import { backgroundScript, injectScript } from "@/core/messaging"
 import { currentPage } from "@/core/page"
 import { assert, bufferToString, formatFileName, ready } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadFeature"
@@ -1353,6 +1353,12 @@ pageInit.www = () => {
 			}
 		},
 	)
+
+	injectScript.listen("ownFriendAction", (otherId: number, action: string) => {
+		if (SETTINGS.get("profile.friendLog")) {
+			backgroundScript.send("ownFriendAction", otherId, action)
+		}
+	})
 
 	injectScript.listen("robloxPresenceLive", (presences: any[], starts: Record<number, number>) => {
 		if (SETTINGS.get("profile.lastSeen")) {
