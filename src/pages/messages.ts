@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 import { html } from "@/core/html"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
@@ -98,7 +99,7 @@ class MarkAllAsReadAction {
 				await this.markAsRead(this.unreadMessageIds.splice(0, this.messagesPerReadRequest))
 			}
 
-			await new Promise((resolve) => setTimeout(resolve, 500))
+			await delay(500)
 		}
 	}
 

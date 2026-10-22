@@ -1,3 +1,4 @@
+import { onList, setOnList } from "@/feat/activity/lists"
 import { SETTINGS } from "@/feat/settings"
 import { getActivityEvents, refreshWatched } from "@/feat/activity/data"
 import { getPresenceHistory, onActivityChange, type PresenceSegment } from "@/feat/activity/presence"
@@ -12,21 +13,7 @@ import { renderStats } from "@/feat/activity/stats"
 
 // Watching
 
-const watchedList = (): number[] => {
-	try {
-		const list = JSON.parse(SETTINGS.get("profile.watchedUsers") || "[]")
-		return Array.isArray(list) ? list : []
-	} catch {
-		return []
-	}
-}
-
-const isWatched = (userId: number): boolean => watchedList().includes(userId)
-
-export const setWatched = (userId: number, watched: boolean): void => {
-	const list = watchedList().filter((id) => id !== userId)
-	SETTINGS.set("profile.watchedUsers", JSON.stringify(watched ? [...list, userId] : list))
-}
+const isWatched = (userId: number): boolean => onList("watched", userId)
 
 // The dialog
 
@@ -120,7 +107,7 @@ export const openActivity = async (
 		}
 
 		action.hidden = false
-		action.$on("click", () => setWatched(userId, !isWatched(userId)))
+		action.$on("click", () => setOnList("watched", userId, !isWatched(userId)))
 		shell.onClose(
 			SETTINGS.onChange("profile.watchedUsers", () => {
 				updateWatch()

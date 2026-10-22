@@ -1,6 +1,7 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import { getActivityEvents, getWatchChecks, isWatchedUser } from "@/feat/activity/data"
+import { getActivityEvents, getWatchChecks } from "@/feat/activity/data"
+import { onList } from "@/feat/activity/lists"
 import type { ActivityEvent } from "@/feat/activity/store"
 import { checkedLine, checkNowButton, startOfDay, PAGE_ROWS, dayHeading } from "@/feat/activity/shared"
 import { lineChart, type ChartPoint } from "@/feat/activity/chart"
@@ -324,7 +325,7 @@ export const renderFriends = async (
 	const intro = html`<div class="btr-people-intro"></div>`
 
 	// Your own followers, or anyone watched, can be checked now.
-	if (isOwn || isWatchedUser(userId)) {
+	if (isOwn || onList("watched", userId)) {
 		intro.append(html`<p class="btr-track-checked">${checked ?? "Not checked yet"}</p>`)
 		intro.lastElementChild!.append(
 			checkNowButton(
@@ -619,7 +620,7 @@ export const renderChanges = async (panel: HTMLElement, userId: number, state: {
 
 	const rerender = () => void renderChanges(panel, userId, state)
 	const checkNow = () =>
-		isWatchedUser(userId) ? [checkNowButton({ kind: "user", id: userId }, rerender)] : []
+		onList("watched", userId) ? [checkNowButton({ kind: "user", id: userId }, rerender)] : []
 
 	if (!events.length) {
 		const line = html`<p class="btr-track-checked">${checked ?? "Not checked yet"}</p>`

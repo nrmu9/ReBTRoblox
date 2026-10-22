@@ -96,3 +96,12 @@ export const onceFn = <T extends (...args: any[]) => any>(fn: T): T => {
 		return result
 	} as T
 }
+
+/** Waits this many milliseconds. */
+export const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** A GET with your cookies, read as JSON, or null when it fails in any way. */
+export const getJson = <T = any>(url: string): Promise<T | null> =>
+	fetch(url, { credentials: "include" })
+		.then((res) => (res.ok ? res.json() : null))
+		.catch(() => null)

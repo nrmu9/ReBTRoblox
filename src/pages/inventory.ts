@@ -254,7 +254,8 @@ pageInit.inventory = () => {
 					} else {
 						RobloxApi.economy.getAssetDetails(item.assetId).then((data: any) => {
 							if (validAssetTypes.indexOf(data.AssetTypeId) === -1) {
-								return console.log("Bad assetType", data)
+								// Not a type the inventory tools handle.
+								return
 							}
 
 							RobloxApi.www.deleteAssetFromInventory(item.assetId).then(done)

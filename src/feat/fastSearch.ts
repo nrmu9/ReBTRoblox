@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
@@ -144,7 +145,7 @@ export const btrFastSearch = {
 						return null
 					}
 
-					return new Promise((resolve) => setTimeout(resolve, 500)).then(() =>
+					return delay(500).then(() =>
 						RobloxApi.thumbnails.getAvatarHeadshots.batch(userId).then(checkForThumb),
 					)
 				}

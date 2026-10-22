@@ -1,3 +1,4 @@
+import { idsAt } from "@/feat/activity/lists"
 import { backgroundScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 import type { ActivityEvent, ActivityUsage } from "@/feat/activity/store"
@@ -21,21 +22,12 @@ const LISTS = {
 	trackedGroups: "profile.trackedGroups",
 } as const
 
-const listOf = (path: string): number[] => {
-	try {
-		const list = JSON.parse(SETTINGS.get(path) || "[]")
-		return Array.isArray(list) ? list.filter((id) => Number.isSafeInteger(id)) : []
-	} catch {
-		return []
-	}
-}
-
 /**
  * Everything recorded, and who is watched and tracked, as a JSON file built a
  * page of records at a time. A full backup carries every setting as well.
  */
 export const exportBackup = async (withSettings: boolean): Promise<Blob> => {
-	const lists = Object.fromEntries(Object.entries(LISTS).map(([key, path]) => [key, listOf(path)]))
+	const lists = Object.fromEntries(Object.entries(LISTS).map(([key, path]) => [key, idsAt(path)]))
 	const parts: string[] = [
 		`{"version":1,"exportedAt":${JSON.stringify(new Date().toISOString())},"lists":${JSON.stringify(lists)}`,
 	]
@@ -87,28 +79,6 @@ export interface WatchChecks {
 	badges?: number
 	favorites?: number
 	follows?: number
-}
-
-/** Whether someone is on the watched list. */
-export const isWatchedUser = (userId: number): boolean => {
-	try {
-		const list = JSON.parse(SETTINGS.get("profile.watchedUsers") || "[]")
-		return Array.isArray(list) && list.includes(userId)
-	} catch {
-		return false
-	}
-}
-
-/** Whether a game or community is on its tracked list. */
-export const isTrackedItem = (kind: "game" | "group", id: number): boolean => {
-	try {
-		const list = JSON.parse(
-			SETTINGS.get(kind === "game" ? "profile.trackedGames" : "profile.trackedGroups") || "[]",
-		)
-		return Array.isArray(list) && list.includes(id)
-	} catch {
-		return false
-	}
 }
 
 /** When each of a watched person's checks last ran. */
@@ -267,7 +237,7 @@ export const importBackup = async (
 
 	for (const [key, path] of Object.entries(LISTS) as Array<[keyof typeof LISTS, string]>) {
 		const incoming = backup.lists[key] ?? []
-		const current = listOf(path)
+		const current = idsAt(path)
 		const merged = [...new Set([...current, ...incoming])]
 
 		if (merged.length !== current.length) {
@@ -283,28 +253,6 @@ export const getActivityEvents = (userId: number, kinds?: ActivityEvent["kind"][
 
 // One decimal, dropped when it is a zero: 250 MB, 12.4 MB.
 const oneDecimal = (value: number) => String(Number(value.toFixed(1)))
-
-/** Current names for user ids, asked for 100 at a time. */
-export const getUserNames = async (userIds: number[]) => {
-	const names = new Map<number, { name: string; displayName: string }>()
-
-	for (let i = 0; i < userIds.length; i += 100) {
-		const json = await fetch("https://users.roblox.com/v1/users", {
-			method: "POST",
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ userIds: userIds.slice(i, i + 100), excludeBannedUsers: false }),
-		})
-			.then((res) => res.json())
-			.catch(() => null)
-
-		for (const user of json?.data ?? []) {
-			names.set(user.id, { name: user.name, displayName: user.displayName })
-		}
-	}
-
-	return names
-}
 
 export const formatBytes = (bytes: number): string =>
 	bytes >= 1024 ** 3

@@ -1,15 +1,11 @@
+import { userNames } from "@/feat/activity/users"
 import { html } from "@/core/html"
 import { SETTINGS } from "@/feat/settings"
 import { loggedInUser } from "@/pages/common"
-import { openActivity, setWatched } from "@/feat/activity/dialog"
-import { openTracked, setTracked, type TrackedKind } from "@/feat/activity/trackDialog"
-import {
-	clearActivityBefore,
-	exportActivity,
-	formatBytes,
-	getActivityUsage,
-	getUserNames,
-} from "@/feat/activity/data"
+import { openActivity } from "@/feat/activity/dialog"
+import { setOnList } from "@/feat/activity/lists"
+import { openTracked, type TrackedKind } from "@/feat/activity/trackDialog"
+import { clearActivityBefore, exportActivity, formatBytes, getActivityUsage } from "@/feat/activity/data"
 import { setupImport } from "@/feat/settingsPanel/backup"
 import { confirmClick } from "@/feat/settingsPanel/rows"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
@@ -69,7 +65,7 @@ export const setupStoredActivity = (modal: SettingsModalState) => {
 			return
 		}
 
-		const names = await getUserNames(ids)
+		const names = await userNames(ids)
 
 		watchedCard.replaceChildren(
 			...ids.map((id) => {
@@ -88,7 +84,7 @@ export const setupStoredActivity = (modal: SettingsModalState) => {
 				row.$req(".btr-activity-view").$on("click", () => {
 					void openActivity(id, user ? `@${user.name}` : `User ${id}`, () => false)
 				})
-				row.$req("button:last-child").$on("click", () => setWatched(id, false))
+				row.$req("button:last-child").$on("click", () => setOnList("watched", id, false))
 				return row
 			}),
 		)
@@ -160,7 +156,7 @@ export const setupStoredActivity = (modal: SettingsModalState) => {
 			</div>`
 
 			element.$req(".btr-activity-view").$on("click", () => openTracked(kind, id, name))
-			element.$req("button:last-child").$on("click", () => setTracked(kind, id, false))
+			element.$req("button:last-child").$on("click", () => setOnList(kind, id, false))
 			return element
 		}
 

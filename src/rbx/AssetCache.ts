@@ -1,5 +1,5 @@
 import { loadOptionalFeature } from "@/feat/loadFeature"
-import { assert, bufferToString } from "@/core/util"
+import { assert, bufferToString, delay } from "@/core/util"
 import { RBXAnimationParser } from "@/rbx/Parser/AnimationParser"
 import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
 import { RBXModelParser } from "@/rbx/Parser/ModelParser"
@@ -64,7 +64,7 @@ const fetchWithRetry = async (url: string) => {
 			return res
 		}
 
-		await new Promise((resolve) => setTimeout(resolve, 400 * 3 ** attempt))
+		await delay(400 * 3 ** attempt)
 	}
 }
 

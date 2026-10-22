@@ -1,5 +1,6 @@
 import { html } from "@/core/html"
-import { getActivityEvents, isTrackedItem } from "@/feat/activity/data"
+import { getActivityEvents } from "@/feat/activity/data"
+import { LIST_SETTINGS, onList, setOnList } from "@/feat/activity/lists"
 import { lineChart, type ChartMarker, type ChartPoint } from "@/feat/activity/chart"
 import { buildLog, icon, swap } from "@/feat/activity/logs"
 import { onActivityChange } from "@/feat/activity/presence"
@@ -14,23 +15,7 @@ import { SETTINGS } from "@/feat/settings"
 
 export type TrackedKind = "game" | "group"
 
-const settingOf = (kind: TrackedKind) => (kind === "game" ? "profile.trackedGames" : "profile.trackedGroups")
-
-const trackedList = (kind: TrackedKind): number[] => {
-	try {
-		const list = JSON.parse(SETTINGS.get(settingOf(kind)) || "[]")
-		return Array.isArray(list) ? list : []
-	} catch {
-		return []
-	}
-}
-
-export const isTracked = (kind: TrackedKind, id: number): boolean => trackedList(kind).includes(id)
-
-export const setTracked = (kind: TrackedKind, id: number, tracked: boolean): void => {
-	const list = trackedList(kind).filter((other) => other !== id)
-	SETTINGS.set(settingOf(kind), JSON.stringify(tracked ? [...list, id] : list))
-}
+export const isTracked = (kind: TrackedKind, id: number): boolean => onList(kind, id)
 
 const PERIODS = [
 	["1", "24 hours"],
@@ -124,7 +109,7 @@ const renderOverview = async (
 	// The subject is the id folded into the log's ids, which unfolds back.
 	const id = kind === "game" ? (-subject - 2) / 2 : (-subject - 1) / 2
 
-	if (isTrackedItem(kind, id)) {
+	if (isTracked(kind, id)) {
 		checked.append(checkNowButton({ kind, id }, () => void renderOverview(panel, kind, subject, state)))
 	}
 
@@ -348,8 +333,8 @@ export const openTracked = (kind: TrackedKind, id: number, name: string): void =
 	}
 
 	action.hidden = false
-	action.$on("click", () => setTracked(kind, id, !isTracked(kind, id)))
-	shell.onClose(SETTINGS.onChange(settingOf(kind), updateAction))
+	action.$on("click", () => setOnList(kind, id, !isTracked(kind, id)))
+	shell.onClose(SETTINGS.onChange(LIST_SETTINGS[kind], updateAction))
 	updateAction()
 
 	shell.selectTab("overview")

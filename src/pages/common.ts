@@ -760,7 +760,6 @@ export const initPreview = async (assetId: number, assetTypeId: number | null, i
 			}
 
 			if (!gotAnything && !currentOutfitId && !playedAnimation) {
-				console.log("We've got nothing, let's just remove previewer")
 				preview.setEnabled(false)
 				preview.setVisible(false)
 			}
@@ -1371,7 +1370,7 @@ pageInit.www = () => {
 	)
 
 	injectScript.listen("ownFriendAction", (otherId: number, action: string) => {
-		const known = ["unfriend", "accept", "decline", "declineAll", "block", "unblock"]
+		const known = ["unfriend", "request", "accept", "decline", "declineAll", "block", "unblock"]
 
 		if ((isId(otherId) || otherId === 0) && known.includes(action) && SETTINGS.get("profile.friendLog")) {
 			backgroundScript.send("ownFriendAction", otherId, action)

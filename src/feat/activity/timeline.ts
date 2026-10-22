@@ -1,6 +1,6 @@
+import { userNames } from "@/feat/activity/users"
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import { getUserNames } from "@/feat/activity/data"
 import { getPlayedTogether, type PresenceSegment } from "@/feat/activity/presence"
 import {
 	JOIN_GAP,
@@ -63,7 +63,7 @@ type Together = Map<number, Array<{ userId: number; name: string }>>
 export const loadTogether = async (userId: number): Promise<Together> => {
 	const together = await getPlayedTogether(userId)
 	const ids = [...new Set(Object.values(together).flatMap((others) => others.map((other) => other.userId)))]
-	const names = ids.length ? await getUserNames(ids) : new Map()
+	const names = ids.length ? await userNames(ids) : new Map()
 	const result: Together = new Map()
 
 	for (const [from, others] of Object.entries(together)) {

@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 import { setImmediate } from "@/core/dom"
 import { STORAGE } from "@/core/env"
 import { injectScript } from "@/core/messaging"
@@ -203,7 +204,7 @@ const OwnerAssetCache = {
 										break
 									} catch (ex) {
 										console.error(ex)
-										await new Promise((resolve) => setTimeout(resolve, 2e3))
+										await delay(2e3)
 									}
 								}
 

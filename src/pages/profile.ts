@@ -2,7 +2,7 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { isRecord } from "@/core/pageInput"
 import { pageInit } from "@/core/page"
-import { ready } from "@/core/util"
+import { delay, ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
 import { openActivity } from "@/feat/activity/dialog"
 import { refreshWatched } from "@/feat/activity/data"
@@ -291,7 +291,7 @@ pageInit.profile = () => {
 			// in, it is asked for directly, and whatever that returns is final.
 			const aboutPromise: Promise<any> = Promise.race([
 				waitForComponent(userIdString, "About"),
-				new Promise((resolve) => setTimeout(resolve, 4000)).then(() =>
+				delay(4000).then(() =>
 					RobloxApi.userProfiles.getComponents(userId, ["About", "Actions"]).catch(() => null),
 				),
 			])

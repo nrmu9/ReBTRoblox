@@ -79,8 +79,7 @@ const wrapArgs = async (args: unknown[]) => {
 			return value
 		}
 
-		console.log(value)
-		throw new TypeError("Invalid value passed to wrapArgs")
+		throw new TypeError(`wrapArgs cannot pass a ${Object.prototype.toString.call(value)}`)
 	}
 
 	return await wrapValue(args)

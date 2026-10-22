@@ -10,7 +10,7 @@ import * as THREE from "three"
 THREE.ColorManagement.enabled = false
 import { IS_DEV_MODE } from "@/core/env"
 import { btrLocalStorage } from "@/core/storage"
-import { assert, hashString } from "@/core/util"
+import { assert, delay, hashString } from "@/core/util"
 import { SETTINGS } from "@/feat/settings"
 import { AssetCache } from "@/rbx/AssetCache"
 import { RBXAnimator } from "@/rbx/Avatar/Animator"
@@ -2701,7 +2701,7 @@ export const RBXAvatar = (() => {
 				// sort assets in case roblox's cache cares about the order
 				body.avatarDefinition.assets.sort((a, b) => b.id - a.id)
 
-				await new Promise((resolve) => setTimeout(resolve, 200))
+				await delay(200)
 				if (this.layeredCurrentRequest !== request) {
 					return
 				}
@@ -2732,7 +2732,7 @@ export const RBXAvatar = (() => {
 					}
 
 					if (json.state === "Pending") {
-						await new Promise((resolve) => setTimeout(resolve, 1e3))
+						await delay(1e3)
 						if (request !== this.layeredCurrentRequest) {
 							return
 						}
@@ -2839,7 +2839,11 @@ export const RBXAvatar = (() => {
 					hashString(JSON.stringify([x.faces, x.uvs])) === "4734F03A",
 			)
 			if (!anchor) {
-				return console.log("Found no anchor")
+				if (IS_DEV_MODE) {
+					console.log("Found no anchor")
+				}
+
+				return
 			}
 
 			groups.splice(groups.indexOf(anchor), 1)
@@ -2992,9 +2996,8 @@ export const RBXAvatar = (() => {
 					if (numEmptyPartsAccepted > 0) {
 						numEmptyPartsAccepted -= 1
 					} else {
-						console.log("Failed to find match for bodypart")
-
 						if (IS_DEV_MODE) {
+							console.log("Failed to find match for bodypart")
 							console.log(part.name, part.rbxMesh)
 							console.log(groups)
 							console.log(request)
@@ -3140,9 +3143,8 @@ export const RBXAvatar = (() => {
 					if (numEmptyAccessoriesAccepted > 0) {
 						numEmptyAccessoriesAccepted -= 1
 					} else {
-						console.log("Could not resolve asset in render")
-
 						if (IS_DEV_MODE) {
+							console.log("Could not resolve asset in render")
 							console.log(acc.asset.id, mesh)
 							console.log(groups)
 							console.log(request)

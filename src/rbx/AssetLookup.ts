@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 // Asset lookups: the step that turns an asset id into a link on Roblox's CDN.
 // An avatar needs dozens, so they go out together in batches, a refused one
 // is tried again, and each link is remembered until shortly before it
@@ -110,8 +111,6 @@ const expiryOf = (location: string) => {
 	return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : Date.now() + DEFAULT_LIFE
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
 interface Pending {
 	key: string
 	body: { requestId: string; assetId: number; version?: number }
@@ -140,7 +139,7 @@ const send = async (batch: Pending[]) => {
 
 	for (let attempt = 0; attempt < RETRIES && !results; attempt++) {
 		if (attempt) {
-			await sleep(400 * 3 ** (attempt - 1))
+			await delay(400 * 3 ** (attempt - 1))
 		}
 
 		const res = await fetch(BATCH_URL, {
@@ -180,7 +179,7 @@ const send = async (batch: Pending[]) => {
 	}
 
 	if (again.length) {
-		await sleep(600)
+		await delay(600)
 		queue.push(...again)
 		schedule()
 	}

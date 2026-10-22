@@ -962,8 +962,7 @@ export const DracoBitstream = {
 				}
 
 				if (cum_prob !== expected_cum_prob) {
-					console.log(cum_prob, expected_cum_prob)
-					throw "something went wrong in symbols :("
+					throw `draco symbol probabilities add up to ${cum_prob}, not ${expected_cum_prob}`
 				}
 
 				this.probabilityTable = probabilityTable

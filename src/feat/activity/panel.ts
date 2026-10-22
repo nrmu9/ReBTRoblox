@@ -1,14 +1,9 @@
+import { getJson } from "@/core/util"
+import { userNames } from "@/feat/activity/users"
+import { listIds, onList } from "@/feat/activity/lists"
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
-import {
-	getRecentEvents,
-	getUserNames,
-	getWatchChecks,
-	isTrackedItem,
-	isWatchedUser,
-	forceCheck,
-	type ForceTarget,
-} from "@/feat/activity/data"
+import { getRecentEvents, getWatchChecks, forceCheck, type ForceTarget } from "@/feat/activity/data"
 import { openActivity } from "@/feat/activity/dialog"
 import { peopleLabel, thumbnails } from "@/feat/activity/logs"
 import { checkedAgo, checkNowButton, dayLabel, startOfDay } from "@/feat/activity/shared"
@@ -16,26 +11,10 @@ import { openShell } from "@/feat/activity/shell"
 import type { ActivityEvent } from "@/feat/activity/store"
 import { openTracked } from "@/feat/activity/trackDialog"
 
-import { SETTINGS } from "@/feat/settings"
-
 // Everything recorded, in one place: what happened lately across everyone and
 // everything, and the lists of who and what is watched, each a page at a time.
 
 const PAGE = 20
-
-const listOf = (path: string): number[] => {
-	try {
-		const list = JSON.parse(SETTINGS.get(path) || "[]")
-		return Array.isArray(list) ? list.filter((id) => Number.isSafeInteger(id) && id > 0) : []
-	} catch {
-		return []
-	}
-}
-
-const getJson = (url: string) =>
-	fetch(url, { credentials: "include" })
-		.then((res) => (res.ok ? res.json() : null))
-		.catch(() => null)
 
 /** Names and icons for tracked games, by universe. */
 const gameInfo = async (ids: number[]) => {
@@ -230,7 +209,7 @@ const renderRecent = async (panel: HTMLElement, ownUserId: number | null) => {
 		const groupIds = owners.filter((owner) => owner.kind === "group").map((owner) => owner.id)
 
 		const [names, faces, games, groups] = await Promise.all([
-			getUserNames([...new Set(userIds)]),
+			userNames([...new Set(userIds)]),
 			thumbnails("headshot", userIds),
 			gameInfo([...new Set(gameIds)]),
 			groupInfo([...new Set(groupIds)]),
@@ -291,7 +270,7 @@ const lastChecked = async (userId: number) => {
 }
 
 const renderPeople = async (panel: HTMLElement, ownUserId: number | null) => {
-	const ids = listOf("profile.watchedUsers")
+	const ids = listIds("watched")
 
 	if (!ids.length) {
 		panel.replaceChildren(
@@ -311,7 +290,7 @@ const renderPeople = async (panel: HTMLElement, ownUserId: number | null) => {
 		shown += page.length
 
 		const [names, faces, checked] = await Promise.all([
-			getUserNames(page),
+			userNames(page),
 			thumbnails("headshot", page),
 			Promise.all(page.map(lastChecked)),
 		])
@@ -329,7 +308,7 @@ const renderPeople = async (panel: HTMLElement, ownUserId: number | null) => {
 					}),
 			})
 
-			if (isWatchedUser(id)) {
+			if (onList("watched", id)) {
 				item.append(
 					checkNowButton({ kind: "user", id }, async () => {
 						const at = await lastChecked(id)
@@ -352,7 +331,7 @@ const renderPeople = async (panel: HTMLElement, ownUserId: number | null) => {
 }
 
 const renderTracked = async (panel: HTMLElement, kind: "game" | "group") => {
-	const ids = listOf(kind === "game" ? "profile.trackedGames" : "profile.trackedGroups")
+	const ids = listIds(kind)
 
 	if (!ids.length) {
 		panel.replaceChildren(
@@ -382,7 +361,7 @@ const renderTracked = async (panel: HTMLElement, kind: "game" | "group") => {
 				onOpen: () => openTracked(kind, id, name),
 			})
 
-			if (isTrackedItem(kind, id)) {
+			if (onList(kind, id)) {
 				item.append(checkNowButton({ kind, id }))
 			}
 

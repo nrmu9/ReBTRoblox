@@ -1,6 +1,9 @@
+import { delay } from "@/core/util"
+import { userNames } from "@/feat/activity/users"
 import {
 	announceChange,
 	committed,
+	done,
 	getState,
 	isFull,
 	openDb,
@@ -27,26 +30,6 @@ const inOrder = <T>(task: () => Promise<T>): Promise<T> => {
 	return run
 }
 
-/** Names as they are now, kept with each change so a later rename or deletion still reads. */
-export const namesOf = async (userIds: number[]) => {
-	const names = new Map<number, { name: string; displayName: string }>()
-
-	for (let i = 0; i < userIds.length; i += 100) {
-		const res = await fetch("https://users.roblox.com/v1/users", {
-			method: "POST",
-			credentials: "include",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ userIds: userIds.slice(i, i + 100), excludeBannedUsers: false }),
-		}).catch(() => null)
-
-		for (const user of res?.ok ? ((await res.json())?.data ?? []) : []) {
-			names.set(user.id, { name: user.name, displayName: user.displayName })
-		}
-	}
-
-	return names
-}
-
 /** `field` says who did it, when that is known. */
 const log = async (
 	userId: number,
@@ -63,7 +46,7 @@ const log = async (
 		return
 	}
 
-	const names = await namesOf([...added, ...removed])
+	const names = await userNames([...added, ...removed])
 	const at = Date.now()
 	const db = await openDb()
 	const tx = db.transaction("events", "readwrite")
@@ -175,7 +158,7 @@ const logRequests = async (
 		return
 	}
 
-	const names = await namesOf(entries.map((entry) => entry.otherId))
+	const names = await userNames(entries.map((entry) => entry.otherId))
 	const db = await openDb()
 	const tx = db.transaction("events", "readwrite")
 
@@ -185,6 +168,37 @@ const logRequests = async (
 
 	await committed(tx)
 	announceChange([userId])
+}
+
+/** Puts right the newest request with someone in the last day, when it was logged the wrong way round. */
+const correctRequest = async (
+	ownUserId: number,
+	otherId: number,
+	kind: "requestReceived" | "requestSent",
+	at: number,
+) => {
+	const db = await openDb()
+	const tx = db.transaction("events", "readwrite")
+	const events = tx.objectStore("events")
+	const recent: ActivityEvent[] = await done(
+		events
+			.index("user")
+			.getAll(IDBKeyRange.bound([ownUserId, Date.now() - 24 * 60 * 60e3], [ownUserId, Infinity])),
+	)
+	const logged = recent
+		.toReversed()
+		.find(
+			(event) =>
+				event.otherId === otherId &&
+				(event.kind === "requestReceived" || event.kind === "requestSent"),
+		)
+
+	if (logged && logged.kind !== kind) {
+		events.put({ ...logged, kind, at })
+	}
+
+	await committed(tx)
+	announceChange([ownUserId])
 }
 
 /**
@@ -201,12 +215,18 @@ const compareRequestsNow = async (ownUserId: number) => {
 	const state = (await getState<Requests>(REQUESTS_KEY)) ?? { pending: {} }
 	const first = !(await getState<Requests>(REQUESTS_KEY))
 	const fresh = incoming.filter((request) => !state.pending[request.senderId])
+	// Logged as yours, though it is waiting for you: a live event got there first.
+	const mistaken = incoming.filter((request) => state.pending[request.senderId] === "sent")
 
 	for (const request of incoming) {
 		state.pending[request.senderId] = "received"
 	}
 
 	await setState(REQUESTS_KEY, state)
+
+	for (const request of mistaken) {
+		await correctRequest(ownUserId, request.senderId, "requestReceived", request.sentAt)
+	}
 
 	// Those already waiting when this starts are not news.
 	if (!first) {
@@ -250,7 +270,7 @@ const recentOwn = (otherId: number) => {
  */
 const blockBetween = async (otherId: number): Promise<"blockedYou" | "blockedByYou" | null> => {
 	// The profile can lag the event that a block caused.
-	await new Promise((resolve) => setTimeout(resolve, 1500))
+	await delay(1500)
 
 	const json = await RobloxApi.userProfiles.getComponents(otherId, ["About", "Actions"]).catch(() => null)
 	const actions = json?.components?.Actions
@@ -293,18 +313,41 @@ const onRequestNow = async (ownUserId: number, otherId: number, type: string) =>
 	const state = (await getState<Requests>(REQUESTS_KEY)) ?? { pending: {} }
 
 	if (type === "FriendshipRequested") {
-		const incoming = await incomingRequests()
-		const received = incoming?.find((request) => request.senderId === otherId)
+		const findIncoming = async () =>
+			(await incomingRequests())?.find((request) => request.senderId === otherId) ?? null
 
-		state.pending[otherId] = received ? "received" : "sent"
+		// Their request waiting for you says it was theirs, even when you just
+		// pressed Add Friend, which accepts it through the same request. Roblox's
+		// list can lag its own event, so it is asked again before the request is
+		// put down as yours, unless you sent it from here.
+		let received = await findIncoming()
+
+		if (recentOwn(otherId) !== "request") {
+			for (const wait of [2000, 5000]) {
+				if (received) {
+					break
+				}
+
+				await delay(wait)
+				received = await findIncoming()
+			}
+		}
+
+		const direction = received ? "received" : "sent"
+		const kind = received ? "requestReceived" : "requestSent"
+		const at = received?.sentAt ?? Date.now()
+		const before = state.pending[otherId]
+
+		state.pending[otherId] = direction
 		await setState(REQUESTS_KEY, state)
-		await logRequests(ownUserId, [
-			{
-				kind: received ? "requestReceived" : "requestSent",
-				otherId,
-				at: received?.sentAt ?? Date.now(),
-			},
-		])
+
+		// Roblox can send the same event twice: logged once, and put right if
+		// the first look had it the wrong way round.
+		if (!before) {
+			await logRequests(ownUserId, [{ kind, otherId, at }])
+		} else if (before !== direction) {
+			await correctRequest(ownUserId, otherId, kind, at)
+		}
 	} else {
 		const direction = state.pending[otherId]
 		delete state.pending[otherId]

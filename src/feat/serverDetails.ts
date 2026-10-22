@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { backgroundScript, contentScript } from "@/core/messaging"
 import { btrLocalStorage } from "@/core/storage"
@@ -2097,7 +2098,7 @@ if (IS_BACKGROUND_PAGE) {
 				let res = await request()
 
 				if (res.status === 429) {
-					await new Promise((resolve) => setTimeout(resolve, 1000))
+					await delay(1000)
 					res = await request()
 				}
 
@@ -2170,12 +2171,16 @@ const resolveServerDetails = (details: any) => {
 
 		if (awsRegionName) {
 			location = serverRegions[`AWS_${awsRegionName}`]
-			if (!location) console.log("Couldn't find region for AWS", awsRegionName)
+			if (!location && __DEV__) {
+				console.warn("[btr] no location for AWS region", awsRegionName)
+			}
 		}
 	}
 
 	if (!location) {
-		console.log("Unknown", address)
+		if (__DEV__) {
+			console.warn("[btr] no region for server address", address)
+		}
 
 		return {
 			success: false,

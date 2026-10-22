@@ -12,7 +12,7 @@ export const commonFunctions: Record<string, (...args: any[]) => any> = {
 		const to = document.querySelector(toSelector)
 
 		if (!from || !to) {
-			console.log("redirectEvents fail", fromSelector, toSelector, from, to)
+			console.warn("[btr] could not redirect events", fromSelector, toSelector)
 			return
 		}
 
@@ -249,6 +249,7 @@ export const commonFunctions: Record<string, (...args: any[]) => any> = {
 	friendActions: () => {
 		const ACTIONS: Array<[RegExp, string]> = [
 			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/unfriend$/i, "unfriend"],
+			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/request-friendship$/i, "request"],
 			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/accept-friend-request$/i, "accept"],
 			[/^https:\/\/friends\.roblox\.com\/v\d+\/users\/(\d+)\/decline-friend-request$/i, "decline"],
 			[/^https:\/\/friends\.roblox\.com\/v\d+\/user\/friend-requests\/decline-all$/i, "declineAll"],

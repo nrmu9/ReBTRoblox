@@ -1,3 +1,5 @@
+import { delay, getJson } from "@/core/util"
+import { listIds } from "@/feat/activity/lists"
 import {
 	announceChange,
 	committed,
@@ -19,23 +21,6 @@ import { SETTINGS } from "@/feat/settings"
 const GAMES_EVERY = 15 * 60e3
 const GROUPS_EVERY = 60 * 60e3
 const GROUP_GAMES_EVERY = 4 * 60 * 60e3
-
-const listOf = (path: string): number[] => {
-	try {
-		const list = JSON.parse(SETTINGS.get(path) || "[]")
-		return Array.isArray(list) ? list.filter((id) => Number.isSafeInteger(id) && id > 0) : []
-	} catch {
-		return []
-	}
-}
-
-export const getTrackedGames = (): number[] => listOf("profile.trackedGames")
-export const getTrackedGroups = (): number[] => listOf("profile.trackedGroups")
-
-const getJson = (url: string) =>
-	fetch(url, { credentials: "include" })
-		.then((res) => (res.ok ? res.json() : null))
-		.catch(() => null)
 
 type NewEvent = Omit<ActivityEvent, "id">
 
@@ -237,8 +222,8 @@ const checkGroupGames = async (groupId: number) => {
 let running = false
 
 const tick = async () => {
-	const games = getTrackedGames()
-	const groups = getTrackedGroups()
+	const games = listIds("game")
+	const groups = listIds("group")
 
 	if (running || (!games.length && !groups.length)) {
 		return
@@ -277,7 +262,7 @@ const tick = async () => {
 
 /** Checks one tracked game or community now, after any round already running. */
 export const forceTrackedCheck = async (kind: "game" | "group", id: number): Promise<boolean> => {
-	const list = kind === "game" ? getTrackedGames() : getTrackedGroups()
+	const list = kind === "game" ? listIds("game") : listIds("group")
 
 	if (!list.includes(id)) {
 		return false
@@ -286,7 +271,7 @@ export const forceTrackedCheck = async (kind: "game" | "group", id: number): Pro
 	const busy = () => running
 
 	while (busy()) {
-		await new Promise((resolve) => setTimeout(resolve, 500))
+		await delay(500)
 	}
 
 	running = true
@@ -326,7 +311,7 @@ export const startTracking = (): void => {
 				if (key === "games") {
 					due.games = 0
 				} else {
-					for (const groupId of getTrackedGroups()) {
+					for (const groupId of listIds("group")) {
 						due[`group:${groupId}`] ??= 0
 						due[`groupGames:${groupId}`] ??= 0
 					}

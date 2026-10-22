@@ -1,3 +1,4 @@
+import { delay, getJson } from "@/core/util"
 import {
 	announceChange,
 	committed,
@@ -7,10 +8,12 @@ import {
 	setState,
 	type ActivityEvent,
 } from "@/feat/activity/store"
-import { compareFriendList, namesOf } from "@/feat/activity/friends"
+import { compareFriendList } from "@/feat/activity/friends"
+import { userNames } from "@/feat/activity/users"
 import { isLive, latestPresence, recordPresences } from "@/feat/activity/presence"
 import { SETTINGS } from "@/feat/settings"
-import { forceTrackedCheck, getTrackedGames, getTrackedGroups } from "@/feat/activity/tracked"
+import { forceTrackedCheck } from "@/feat/activity/tracked"
+import { listIds } from "@/feat/activity/lists"
 import { contentScript } from "@/core/messaging"
 
 // People you chose to watch, checked from the background: where they are,
@@ -49,20 +52,6 @@ const intervalsFor = (userId: number): Record<CheckKind, number> => {
 // Followers lists longer than this are only checked for new followers at the
 // top, as reading a large account's whole list every few hours is too much.
 const FULL_FOLLOW_LIST = 1000
-
-export const getWatchedUsers = (): number[] => {
-	try {
-		const list = JSON.parse(SETTINGS.get("profile.watchedUsers") || "[]")
-		return Array.isArray(list) ? list.filter((id) => Number.isSafeInteger(id) && id > 0) : []
-	} catch {
-		return []
-	}
-}
-
-const getJson = (url: string) =>
-	fetch(url, { credentials: "include" })
-		.then((res) => (res.ok ? res.json() : null))
-		.catch(() => null)
 
 /** All of someone's friends, or null if any page failed, which would read as removals. */
 const friendsOf = async (userId: number): Promise<number[] | null> => {
@@ -618,7 +607,7 @@ const checkFollows = async (userId: number) => {
 		return
 	}
 
-	const names = await namesOf(people.map(([, id]) => id))
+	const names = await userNames(people.map(([, id]) => id))
 	const at = Date.now()
 	const db = await openDb()
 	const tx = db.transaction("events", "readwrite")
@@ -686,7 +675,7 @@ const askPresence = async (ids: number[]) => {
 }
 
 const tick = async () => {
-	const watched = getWatchedUsers()
+	const watched = listIds("watched")
 
 	if (busy || !SETTINGS.get("profile.lastSeen")) {
 		return
@@ -762,7 +751,7 @@ const lastRefresh = new Map<number, number>()
 
 /** Brings someone's checks up to date, for when their profile or activity is open. */
 const refresh = async (userId: number) => {
-	if (!SETTINGS.get("profile.lastSeen") || !getWatchedUsers().includes(userId)) {
+	if (!SETTINGS.get("profile.lastSeen") || !listIds("watched").includes(userId)) {
 		return
 	}
 
@@ -805,7 +794,7 @@ export type ForceTarget = { kind: "user" | "game" | "group"; id: number } | { ki
 /** Where "check all" has got to, which the activity panel shows. */
 const PROGRESS_KEY = "activityForceProgress"
 
-const pause = () => new Promise((resolve) => setTimeout(resolve, FORCE_PAUSE))
+const pause = () => delay(FORCE_PAUSE)
 
 const saveProgress = (value: object) =>
 	new Promise<void>((resolve) => chrome.storage.local.set({ [PROGRESS_KEY]: value }, () => resolve()))
@@ -830,9 +819,9 @@ const forceUser = (userId: number) =>
 
 const forceAll = async () => {
 	const targets: ForceTarget[] = [
-		...getWatchedUsers().map((id) => ({ kind: "user" as const, id })),
-		...getTrackedGames().map((id) => ({ kind: "game" as const, id })),
-		...getTrackedGroups().map((id) => ({ kind: "group" as const, id })),
+		...listIds("watched").map((id) => ({ kind: "user" as const, id })),
+		...listIds("game").map((id) => ({ kind: "game" as const, id })),
+		...listIds("group").map((id) => ({ kind: "group" as const, id })),
 	]
 
 	forcingAll = true
@@ -878,7 +867,7 @@ const forceCheck = async (target: ForceTarget) => {
 	if (target.kind === "user") {
 		ownUserId ??= (await getJson("https://users.roblox.com/v1/users/authenticated"))?.id ?? null
 
-		if (!getWatchedUsers().includes(target.id) && target.id !== ownUserId) {
+		if (!listIds("watched").includes(target.id) && target.id !== ownUserId) {
 			return { ok: false, reason: "not watched" }
 		}
 
@@ -904,7 +893,7 @@ export const startWatching = (): void => {
 	/** When each of someone's checks last ran, for the dialogs to say. */
 	contentScript.listen("activityChecks", async (userId: number, respond: (value: unknown) => void) => {
 		const checks = (await getState<Record<number, Record<string, number>>>("watchChecks"))?.[userId] ?? {}
-		const watched = getWatchedUsers().includes(userId)
+		const watched = listIds("watched").includes(userId)
 
 		respond({ ...checks, ...(watched && lastPresence ? { presence: lastPresence } : {}) })
 	})

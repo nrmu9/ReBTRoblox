@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
 import { injectScript } from "@/core/messaging"
@@ -61,7 +62,7 @@ const loadMore = (conversationId: string, upTo: number, onPage: () => void): Pro
 
 			// Roblox's own requests share the limit, so a refusal waits a little.
 			if (res?.status === 429) {
-				await new Promise((resolve) => setTimeout(resolve, 2000))
+				await delay(2000)
 				res = await fetch(url, { credentials: "include" }).catch(() => null)
 			}
 

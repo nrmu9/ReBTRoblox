@@ -1,3 +1,4 @@
+import { delay } from "@/core/util"
 import { settings } from "@/entries/inject/state"
 import { contentScript } from "@/entries/inject/messaging"
 import { reactHook } from "@/entries/inject/react"
@@ -56,7 +57,7 @@ export const serversFunctions: Record<string, (...args: any[]) => any> = {
 				const tryRetry = async (res: any) => {
 					if (res.status === 429 && numRetries < 2) {
 						numRetries += 1
-						await new Promise((resolve) => setTimeout(resolve, 3e3))
+						await delay(3e3)
 						return fetch(url, { credentials: "include" })
 					}
 

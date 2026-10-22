@@ -1,6 +1,7 @@
+import { IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
 import { btrLocalStorage } from "@/core/storage"
-import { stringToBuffer } from "@/core/util"
+import { delay, stringToBuffer } from "@/core/util"
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { SourceViewer } from "@/feat/sourceViewer"
 import { ApiDump } from "@/rbx/ApiDump"
@@ -226,7 +227,7 @@ export const Explorer = (() => {
 		async openSourceViewer(inst: any, propName: string) {
 			if (!this.sourceViewerLoadPromise) {
 				this.sourceViewerLoadPromise = loadOptionalFeature("sourceViewer").then(async () => {
-					await new Promise((resolve) => setTimeout(resolve, 16)) // wait for styles to load in
+					await delay(16) // wait for styles to load in
 				})
 			}
 
@@ -938,7 +939,10 @@ export const Explorer = (() => {
 								.join(" | ")
 							break
 						default:
-							console.log("Unknown property type", type, name, prop)
+							if (IS_DEV_MODE) {
+								console.log("Unknown property type", type, name, prop)
+							}
+
 							valueItem.textContent = String(value)
 					}
 
