@@ -3,7 +3,7 @@ import { assert, bufferToString } from "@/core/util"
 import { RBXAnimationParser } from "@/rbx/Parser/AnimationParser"
 import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
 import { RBXModelParser } from "@/rbx/Parser/ModelParser"
-import { forgetAsset, lookUpAsset } from "@/rbx/AssetLookup"
+import { dropFile, forgetAsset, lookUpAsset, readFile, storeFile } from "@/rbx/AssetLookup"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 /** A resolved asset location, plus how it was asked for. */
@@ -181,8 +181,8 @@ export const AssetCache = (() => {
 				const load = (assetRequest: AssetRequest) => {
 					assert(assetRequest.location, "resolved asset has no location")
 
-					return AssetCache.loadDirect(assetRequest.location, params).then(
-						(buffer: ArrayBuffer) => constructor(buffer, assetRequest),
+					return AssetCache.loadDirect(assetRequest.location, params).then((buffer: ArrayBuffer) =>
+						constructor(buffer, assetRequest),
 					)
 				}
 
@@ -190,6 +190,12 @@ export const AssetCache = (() => {
 					.then((assetRequest: AssetRequest) =>
 						load(assetRequest).catch((err: unknown) => {
 							const lookedUp = assetRequest.lookedUp
+
+							// A kept file that does not load is not kept, so a fresh
+							// download gets its chance.
+							if (assetRequest.location) {
+								void dropFile(assetRequest.location)
+							}
 
 							if (!lookedUp) {
 								throw err
@@ -293,17 +299,16 @@ export const AssetCache = (() => {
 							browserAssetRequest: params?.browserAssetRequest,
 						})
 
-				resolvePromise = lookup
-					.then((json: any) => {
-						if (!json?.locations?.length) {
-							throw new Error(`Unable to download asset "${JSON.stringify(assetRequest)}"`)
-						}
+				resolvePromise = lookup.then((json: any) => {
+					if (!json?.locations?.length) {
+						throw new Error(`Unable to download asset "${JSON.stringify(assetRequest)}"`)
+					}
 
-						assetRequest.location = json.locations[0].location
-						assetRequest.assetTypeId = json.assetTypeId
+					assetRequest.location = json.locations[0].location
+					assetRequest.assetTypeId = json.assetTypeId
 
-						return assetRequest
-					})
+					return assetRequest
+				})
 
 				resolvePromise.assetRequest = assetRequest
 
@@ -331,13 +336,23 @@ export const AssetCache = (() => {
 			let cdnPromise = cdnCache[cdnUrl]
 
 			if (!cdnPromise) {
-				cdnPromise = fetchWithRetry(cdnUrl).then((res) => {
-					if (!res.ok) {
-						throw new Error(`Failed to download asset '${cdnUrl}'`)
-					}
+				// Kept from an earlier download of the same content, or fetched and kept.
+				cdnPromise = readFile(cdnUrl).then(
+					(kept) =>
+						kept ??
+						fetchWithRetry(cdnUrl)
+							.then((res) => {
+								if (!res.ok) {
+									throw new Error(`Failed to download asset '${cdnUrl}'`)
+								}
 
-					return res.arrayBuffer()
-				})
+								return res.arrayBuffer()
+							})
+							.then((buffer) => {
+								void storeFile(cdnUrl, buffer)
+								return buffer
+							}),
+				)
 
 				if (params?.cache !== false) {
 					cdnCache[cdnUrl] = cdnPromise

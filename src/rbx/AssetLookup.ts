@@ -1,8 +1,8 @@
 // Asset lookups: the step that turns an asset id into a link on Roblox's CDN.
 // An avatar needs dozens, so they go out together in batches, a refused one
 // is tried again, and each link is remembered until shortly before it
-// expires. Remembered links also let the browser's cache serve the files,
-// as a fresh lookup hands out a different link to the same file each time.
+// expires. The files themselves are kept too, by their content, so anything
+// seen before loads without downloading it again.
 
 export interface AssetLocation {
 	locations: Array<{ location: string }>
@@ -25,18 +25,50 @@ const DEFAULT_LIFE = 60 * 60e3
 
 const remembered = new Map<string, Remembered>()
 
-// Links are kept in the page's own database, so they last across pages.
+// Links and files are kept in the page's own database, so they last across pages.
 let dbPromise: Promise<IDBDatabase | null> | null = null
 
 const openDb = () =>
 	(dbPromise ??= new Promise((resolve) => {
+		// Loading never waits long on it: without it, everything is fetched.
+		const giveUp = setTimeout(() => resolve(null), 2000)
+		const done = (db: IDBDatabase | null) => {
+			clearTimeout(giveUp)
+			resolve(db)
+		}
+
 		try {
-			const request = indexedDB.open("rebtroblox-assets", 1)
-			request.onupgradeneeded = () => request.result.createObjectStore("locations")
-			request.onsuccess = () => resolve(request.result)
-			request.onerror = () => resolve(null)
+			const request = indexedDB.open("rebtroblox-assets", 2)
+
+			request.onupgradeneeded = () => {
+				const db = request.result
+
+				for (const name of ["locations", "files"]) {
+					if (!db.objectStoreNames.contains(name)) {
+						db.createObjectStore(name)
+					}
+				}
+
+				if (!db.objectStoreNames.contains("fileInfo")) {
+					db.createObjectStore("fileInfo").createIndex("used", "used")
+				}
+			}
+
+			request.onsuccess = () => {
+				const db = request.result
+
+				// A newer version in another tab waits on this one, so it steps aside.
+				db.onversionchange = () => {
+					db.close()
+					dbPromise = null
+				}
+
+				done(db)
+			}
+
+			request.onerror = () => done(null)
 		} catch {
-			resolve(null)
+			done(null)
 		}
 	}))
 
@@ -123,14 +155,18 @@ const send = async (batch: Pending[]) => {
 		}
 	}
 
-	const byId = new Map<string, any>((Array.isArray(results) ? results : []).map((entry) => [entry?.requestId, entry]))
+	const byId = new Map<string, any>(
+		(Array.isArray(results) ? results : []).map((entry) => [entry?.requestId, entry]),
+	)
 	const again: Pending[] = []
 
 	for (const pending of batch) {
 		const entry = byId.get(pending.body.requestId)
 		const found = remember(pending.key, entry)
 		// A missing or moderated asset says so with a 4xx and stays that way.
-		const final = entry?.errors?.some((error: any) => error?.code >= 400 && error.code < 500 && error.code !== 429)
+		const final = entry?.errors?.some(
+			(error: any) => error?.code >= 400 && error.code < 500 && error.code !== 429,
+		)
 
 		if (found) {
 			pending.resolve(found)
@@ -192,4 +228,153 @@ export const forgetAsset = (assetId: number, version?: number) => {
 	const key = version ? `${assetId}@${version}` : String(assetId)
 	remembered.delete(key)
 	void writeStored(key, null)
+}
+
+// Files, kept by the content hash in their link, so a changed asset, which
+// gets a new hash, is never served from here. The oldest used go first past
+// the cap, and their sizes are kept apart so trimming never reads a file.
+const FILE_CAP = 200 * 1024 * 1024
+// How stale a file's last use may get before a hit writes it down again.
+const USED_SLACK = 24 * 60 * 60e3
+
+interface FileInfo {
+	size: number
+	used: number
+}
+
+/** The file's identity in a CDN link: its hash, and how it is encoded. Null for any other link. */
+const fileKey = (url: string) => {
+	try {
+		const parsed = new URL(url)
+		const hash = parsed.pathname.match(/\/([0-9a-f]{32})(?:\/|$)/i)?.[1]
+
+		if (!hash || !parsed.hostname.endsWith(".rbxcdn.com")) {
+			return null
+		}
+
+		return `${hash.toLowerCase()}:${parsed.searchParams.get("encoding") ?? ""}`
+	} catch {
+		return null
+	}
+}
+
+const request = <T>(req: IDBRequest<T>) =>
+	new Promise<T | null>((resolve) => {
+		req.onsuccess = () => resolve(req.result)
+		req.onerror = () => resolve(null)
+	})
+
+/** A file downloaded before from this link's content, or null. */
+export const readFile = async (url: string): Promise<ArrayBuffer | null> => {
+	const key = fileKey(url)
+	const db = key ? await openDb() : null
+
+	if (!key || !db) {
+		return null
+	}
+
+	try {
+		const tx = db.transaction(["files", "fileInfo"])
+		const [data, info] = await Promise.all([
+			request<ArrayBuffer | undefined>(tx.objectStore("files").get(key)),
+			request<FileInfo | undefined>(tx.objectStore("fileInfo").get(key)),
+		])
+
+		// Not instanceof: in a Firefox content script it comes from the page's side.
+		if (typeof data?.byteLength !== "number") {
+			return null
+		}
+
+		if (info && Date.now() - info.used > USED_SLACK) {
+			db.transaction("fileInfo", "readwrite")
+				.objectStore("fileInfo")
+				.put({ size: info.size, used: Date.now() }, key)
+		}
+
+		// A copy of our own: in a Firefox content script the stored one belongs to
+		// the page, which typed arrays and instanceof checks refuse. slice() would
+		// still be the page's, structuredClone is not.
+		return structuredClone(data)
+	} catch {
+		return null
+	}
+}
+
+let trimming = false
+
+/** Drops the files used longest ago until what is kept fits the cap. */
+const trim = async (db: IDBDatabase) => {
+	if (trimming) {
+		return
+	}
+
+	trimming = true
+
+	try {
+		// Oldest used first, sizes and keys read together so they line up.
+		const index = db.transaction("fileInfo").objectStore("fileInfo").index("used")
+		const [infos, keys] = await Promise.all([request(index.getAll()), request(index.getAllKeys())])
+
+		if (!infos || !keys) {
+			return
+		}
+
+		let total = infos.reduce((sum: number, info: FileInfo) => sum + info.size, 0)
+
+		if (total <= FILE_CAP) {
+			return
+		}
+
+		const tx = db.transaction(["files", "fileInfo"], "readwrite")
+
+		for (let i = 0; i < keys.length && total > FILE_CAP * 0.9; i++) {
+			tx.objectStore("files").delete(keys[i])
+			tx.objectStore("fileInfo").delete(keys[i])
+			total -= infos[i].size
+		}
+	} catch {
+	} finally {
+		trimming = false
+	}
+}
+
+let stored = 0
+
+/** Keeps a downloaded file for next time. */
+export const storeFile = async (url: string, data: ArrayBuffer) => {
+	const key = fileKey(url)
+	const db = key ? await openDb() : null
+
+	if (!key || !db || data.byteLength > FILE_CAP / 10) {
+		return
+	}
+
+	try {
+		const tx = db.transaction(["files", "fileInfo"], "readwrite")
+		tx.objectStore("files").put(data, key)
+		tx.objectStore("fileInfo").put({ size: data.byteLength, used: Date.now() }, key)
+	} catch {
+		return
+	}
+
+	// Checked now and then rather than on every file.
+	if (stored++ % 25 === 0) {
+		void trim(db)
+	}
+}
+
+/** Forgets a kept file, for one that did not load. */
+export const dropFile = async (url: string) => {
+	const key = fileKey(url)
+	const db = key ? await openDb() : null
+
+	if (!key || !db) {
+		return
+	}
+
+	try {
+		const tx = db.transaction(["files", "fileInfo"], "readwrite")
+		tx.objectStore("files").delete(key)
+		tx.objectStore("fileInfo").delete(key)
+	} catch {}
 }
