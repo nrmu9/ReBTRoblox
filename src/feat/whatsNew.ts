@@ -193,7 +193,9 @@ const showReleases = (releases: typeof NOTES, onDismiss?: () => void): void => {
 /** The newest notes up to this version, for the settings to show again. */
 export const showCurrentNotes = (): void => {
 	const version = chrome.runtime.getManifest().version
-	const current = NOTES.find((release) => compare(release.version, version) <= 0)
+	// A build made before its version is bumped has no notes of its own yet,
+	// so it shows the newest there are rather than nothing.
+	const current = NOTES.find((release) => compare(release.version, version) <= 0) ?? NOTES[0]
 
 	if (current) {
 		showReleases([current])
