@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { cleanStack, errorReport, type ErrorEntry } from "@/feat/errorLog"
+import { browserName, bugReportUrl, cleanStack, errorReport, type ErrorEntry } from "@/feat/errorLog"
 
 test("stacks lose the extension's id, which is unique to each install", () => {
 	const stack = [
@@ -45,4 +45,34 @@ test("a report lists the newest first, with where, how often and the stack", () 
 	assert.ok(report.includes("[background] ×3"))
 	assert.ok(report.includes("[content] /home"))
 	assert.ok(report.includes("ext/js/background.js:1:1"))
+})
+
+test("a bug report names the browser and its major version", () => {
+	assert.equal(
+		browserName("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:150.0) Gecko/20100101 Firefox/150.0"),
+		"Firefox 150",
+	)
+	assert.equal(
+		browserName(
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0",
+		),
+		"Edge 147",
+	)
+	assert.equal(
+		browserName(
+			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+		),
+		"Chrome 147",
+	)
+	assert.equal(browserName("curl/8.0"), "")
+})
+
+test("the bug report link fills in the version and browser, and nothing from the log", () => {
+	const url = new URL(bugReportUrl("4.5.0", "Gecko/20100101 Firefox/150.0"))
+
+	assert.equal(url.origin + url.pathname, "https://github.com/nrmu9/ReBTRoblox/issues/new")
+	assert.equal(url.searchParams.get("template"), "bug_report.yml")
+	assert.equal(url.searchParams.get("version"), "4.5.0")
+	assert.equal(url.searchParams.get("browser"), "Firefox 150")
+	assert.deepEqual([...url.searchParams.keys()].toSorted(), ["browser", "template", "version"])
 })

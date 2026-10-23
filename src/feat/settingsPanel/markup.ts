@@ -657,12 +657,15 @@ export const settingsMarkup = () =>
 					<page name="advanced" label="Experiments" icon="flag">
 						<heading>Recent Errors</heading>
 						<div class="btr-setting-card btr-error-log">
-							<div class="btr-setting-row" data-search="errors bug report copy log">
+							<div
+								class="btr-setting-row"
+								data-search="errors bug report copy log github issue"
+							>
 								<div class="btr-setting-text">
 									<span class="btr-setting-label btr-error-log-summary">No errors</span>
 									<span class="btr-setting-desc"
-										>What went wrong lately, kept on this device. Copy it into a bug
-										report so it can be fixed</span
+										>What went wrong lately, kept on this device. Reporting copies it and
+										opens a bug report to paste it into</span
 									>
 								</div>
 								<div class="btr-activity-clear-controls">
@@ -671,6 +674,9 @@ export const settingsMarkup = () =>
 									</button>
 									<button type="button" class="btr-settings-button btr-error-log-copy">
 										Copy report
+									</button>
+									<button type="button" class="btr-settings-button btr-error-log-report">
+										Report on GitHub
 									</button>
 								</div>
 							</div>

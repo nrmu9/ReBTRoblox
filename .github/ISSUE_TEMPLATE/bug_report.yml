@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in ReBTRoblox is broken or looks wrong.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead. Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen
+      description: The page it happened on and what you did there.
+      placeholder: |
+        1. Open a game page
+        2. Click ...
+  - type: input
+    id: version
+    attributes:
+      label: ReBTRoblox version
+      description: In the settings, next to the ReBTRoblox name at the top.
+      placeholder: "4.5.0"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Firefox 150, Chrome 147, ...
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Recent errors
+      description: >-
+        In the settings, open Experiments and press Report on GitHub or Copy
+        report under Recent Errors, then paste it here. It lists the pages where
+        errors happened, so look it over first.
+      render: text

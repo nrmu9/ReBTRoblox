@@ -205,3 +205,30 @@ export const errorReport = (log: ErrorEntry[]) =>
 					.join("\n"),
 			),
 	].join("\n\n")
+
+/** The browser and its major version, as a bug report asks for it. */
+export const browserName = (userAgent: string) => {
+	for (const [name, pattern] of [
+		["Firefox", /Firefox\/(\d+)/],
+		["Edge", /Edg\/(\d+)/],
+		["Opera", /OPR\/(\d+)/],
+		["Chrome", /Chrome\/(\d+)/],
+	] as const) {
+		const match = userAgent.match(pattern)
+
+		if (match) {
+			return `${name} ${match[1]}`
+		}
+	}
+
+	return ""
+}
+
+// Only the version and browser go in the address. The report itself is
+// pasted, so nothing about the pages visited ends up in a link.
+export const bugReportUrl = (version: string, userAgent: string) =>
+	`https://github.com/nrmu9/ReBTRoblox/issues/new?${new URLSearchParams({
+		template: "bug_report.yml",
+		version,
+		browser: browserName(userAgent),
+	})}`

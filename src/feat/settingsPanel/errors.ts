@@ -1,5 +1,5 @@
 import { html } from "@/core/html"
-import { clearErrorLog, errorReport, readErrorLog, type ErrorEntry } from "@/feat/errorLog"
+import { bugReportUrl, clearErrorLog, errorReport, readErrorLog, type ErrorEntry } from "@/feat/errorLog"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
 
 // The Recent Errors card on the Experiments page: what went wrong lately, newest
@@ -35,6 +35,7 @@ export const setupErrorLog = (modal: SettingsModalState) => {
 	const list = card.$req(".btr-error-log-list")
 	const copy = card.$req<HTMLButtonElement>(".btr-error-log-copy")
 	const clear = card.$req<HTMLButtonElement>(".btr-error-log-clear")
+	const report = card.$req<HTMLButtonElement>(".btr-error-log-report")
 	let log: ErrorEntry[] = []
 
 	const render = async () => {
@@ -57,6 +58,19 @@ export const setupErrorLog = (modal: SettingsModalState) => {
 		}
 
 		setTimeout(() => (copy.textContent = "Copy report"), 2000)
+	})
+
+	report.$on("click", async () => {
+		// Copied before the new tab takes focus, which the clipboard needs.
+		if (log.length) {
+			await navigator.clipboard.writeText(errorReport(log)).catch(() => {})
+		}
+
+		window.open(
+			bugReportUrl(chrome.runtime.getManifest().version, navigator.userAgent),
+			"_blank",
+			"noopener",
+		)
 	})
 
 	clear.$on("click", () => clearErrorLog())
