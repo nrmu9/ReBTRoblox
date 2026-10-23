@@ -181,10 +181,17 @@ jobs:
           sha256sum * > SHA256SUMS
           cat SHA256SUMS
 
+      # The commits since the last release by kind, then GitHub's own part,
+      # which credits pull requests and new contributors.
+      - name: Write the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node dev/releaseNotes.js "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+
       - uses: softprops/action-gh-release@v3
         with:
           files: artifacts/*
-          generate_release_notes: true
+          body_path: ${{ runner.temp }}/notes.md
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
 
