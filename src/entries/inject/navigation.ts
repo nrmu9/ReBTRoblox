@@ -327,6 +327,31 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 		// that really is that short is not asked for over and over.
 		const refetched = new Map<string, string>()
 
+		// A history Roblox turned away, usually with a 429 for asking too
+		// often, is never asked for again, as its query does not retry. The
+		// chat then shows only what arrives live. It is asked for again after
+		// a pause that grows each time, and given up on after the last.
+		const RETRY_AFTER = [3e3, 10e3, 30e3, 60e3]
+		const retries = new Map<string, { tries: number; waiting: boolean }>()
+
+		const retryLater = (conversationId: string, client: any) => {
+			const entry = retries.get(conversationId) ?? { tries: 0, waiting: false }
+			retries.set(conversationId, entry)
+
+			if (entry.waiting || entry.tries >= RETRY_AFTER.length) {
+				return
+			}
+
+			entry.waiting = true
+			setTimeout(() => {
+				entry.waiting = false
+				entry.tries++
+				client.invalidateQueries({ predicate: isMessages(conversationId) }, { cancelRefetch: false })
+				// A chat stuck like this may draw nothing new to set off a check.
+				setTimeout(check, 5e3)
+			}, RETRY_AFTER[entry.tries])
+		}
+
 		const checkHistories = () => {
 			for (const shell of document.querySelectorAll(SHELL)) {
 				const conversation = conversationOf(shell)
@@ -341,9 +366,16 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					.findAll({ predicate: isMessages(conversation.id) })?.[0]
 				const data = query?.state.data
 
+				if (!data && query?.state.status === "error" && query.state.fetchStatus === "idle") {
+					retryLater(conversation.id, client)
+					continue
+				}
+
 				if (!data || query.state.fetchStatus === "fetching" || !Array.isArray(data.messages)) {
 					continue
 				}
+
+				retries.delete(conversation.id)
 
 				const { messages } = data
 				const state = `${messages.length}:${messages[0]?.id}:${messages.at(-1)?.id}`
