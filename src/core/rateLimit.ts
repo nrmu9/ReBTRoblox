@@ -88,6 +88,16 @@ const hold = (host: string, until: number) => {
 	STORAGE.set({ [RATE_LIMITS_KEY]: next })
 }
 
+/**
+ * Dev builds: holds a made-up Roblox host, so the notice shows everywhere
+ * while no real request waits.
+ */
+export const devHold = (seconds: number): void => {
+	if (__DEV__) {
+		hold("dev-test.roblox.com", Date.now() + seconds * 1000)
+	}
+}
+
 const urlOf = (input: RequestInfo | URL): URL | null => {
 	try {
 		return new URL(input instanceof Request ? input.url : String(input), globalThis.location?.href)

@@ -1,5 +1,6 @@
 import { html } from "@/core/html"
-import { onRateLimits } from "@/core/rateLimit"
+import { injectScript } from "@/core/messaging"
+import { devHold, onRateLimits } from "@/core/rateLimit"
 import { SETTINGS } from "@/feat/settings"
 
 // A small note in the corner while Roblox has asked ReBTRoblox to wait, so a
@@ -51,4 +52,13 @@ export const startRateLimitNotice = (): void => {
 	})
 
 	SETTINGS.onChange("general.rateLimitNotice", render)
+
+	// Dev builds: btrRateLimit(seconds) in the page console.
+	if (__DEV__) {
+		injectScript.listen("devRateLimit", (seconds: unknown) => {
+			if (typeof seconds === "number" && seconds > 0) {
+				devHold(Math.min(seconds, 300))
+			}
+		})
+	}
 }

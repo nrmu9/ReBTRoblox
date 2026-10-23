@@ -215,6 +215,8 @@ const DEV_ONLY = [
 	"__btrScene",
 	"btrWhatsNew",
 	"devWhatsNew",
+	"btrRateLimit",
+	"dev-test.roblox.com",
 ]
 
 const checkNoDevCode = () => {
