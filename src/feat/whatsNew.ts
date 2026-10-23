@@ -20,55 +20,41 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 		version: "4.5.0",
 		notes: [
 			{
+				title: "Activity in one place",
+				text: "A new activity panel shows what changed lately for everyone you watch and everything you track. Watch someone from the ... menu on their profile, check anyone right away with Check now, and turn on its sidebar link under Navigation.",
+			},
+			{
+				title: "Better charts, more to track",
+				text: "Charts can zoom in, show each day, mark game updates and shouts, and save a CSV. Tracked games also record favorites and likes, and people show their time online per day and the hours they are usually on.",
+			},
+			{
+				title: "Live game pages",
+				text: "Players, visits and likes update live while the page is open, with visits counting up as they come in. Each game also shows how long you have played it and the servers you joined recently.",
+			},
+			{
 				title: "Search your chats",
-				text: "A search button in each chat looks back through its history and shows each match with the messages around it.",
+				text: "A search button in each chat finds older messages and jumps to them.",
 			},
 			{
-				title: "Unfriend, unfollow and leave from your lists",
-				text: "Hover a friend, someone you follow, or a community in your list for a ... menu to remove them from there. It asks first.",
+				title: "Arrange the top bar, sidebar and Home",
+				text: "Drag top bar and sidebar items into any order and hide the ones you never use, under Navigation. Home can hide its banners and friends strip.",
 			},
 			{
-				title: "Better charts",
-				text: "Activity charts can show each day, zoom in by dragging, mark game updates and shouts, and show a table or save a CSV.",
-			},
-			{
-				title: "More to track",
-				text: "Tracked games now record favorites and likes. People's stats show time online per day and which hours they are usually on.",
-			},
-			{
-				title: "Game page stats",
-				text: "Game page stats update live, and each game shows how long you have played it and the servers you joined recently.",
+				title: "Remove from your lists",
+				text: "Hover a friend, someone you follow, or a community in your lists for a ... menu to unfriend, unfollow or leave. It asks first.",
 			},
 			{
 				title: "Livelier avatar previews",
 				text: "Accessories show their particles, fire, sparkles and lights, and previews load faster and more reliably.",
 			},
 			{
-				title: "Activity panel",
-				text: "Everything recorded in one place, with what happened lately across everyone and everything. Turn on its sidebar link under Navigation, check anyone now with Check now, and watch someone from the ... menu on their profile.",
-			},
-			{
-				title: "Arrange the top bar, sidebar and Home",
-				text: "Drag top bar and sidebar items into the order you like and hide any of them, Roblox's featured game included, under Navigation. Home can hide its banners and friends strip.",
-			},
-			{
-				title: "Back up everything",
-				text: "Save your settings and all recorded activity to one file, and restore it on another browser.",
+				title: "Sync and back up",
+				text: "Your settings follow your Firefox or Chrome account to your other computers. Settings and all recorded activity can also be saved to one file and restored on another browser.",
 				page: "backup",
-			},
-			{
-				title: "Settings sync",
-				text: "Your settings follow your Firefox or Chrome account to your other computers, and come back after a reinstall.",
-				page: "backup",
-			},
-			{
-				title: "Import activity",
-				text: "Add activity from an export without losing what is already recorded.",
-				page: "activity",
 			},
 			{
 				title: "Fixes",
-				text: "Chat messages no longer get stuck sending or show only the newest one, server sorts like Best latency work with the pager, weekday names are right again, and profiles of people who blocked you load and say so.",
+				text: "Chats no longer get stuck sending or show only the newest message, the friend log says who ended a request or friendship, server sorts work with the pager, weekday names are right again, and profiles of people who blocked you load and say so. When Roblox asks ReBTRoblox to slow down, it now waits.",
 			},
 		],
 	},

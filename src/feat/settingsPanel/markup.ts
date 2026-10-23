@@ -105,7 +105,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Quick Unfriend, Unfollow and Leave"
 							path="quickRemove"
-							desc="Adds a menu to your friends, following and communities lists to remove them from there, after asking"
+							desc="Adds a menu to your friends, following and communities lists to remove someone right there. It asks first"
 						></toggle>
 						<toggle
 							label="Show What's New"
@@ -134,7 +134,7 @@ export const settingsMarkup = () =>
 							label="Fix Missing Messages"
 							path="fixChatMessages"
 							require="!hideChat"
-							desc="Fixes chats that open without their newest messages"
+							desc="Fixes chats that miss their newest messages, or show only the newest one"
 						></toggle>
 						<toggle
 							label="Search Messages"
@@ -212,7 +212,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Move Favorites to Top"
 							path="favoritesAtTop"
-							desc="Moves your favorites to the top"
+							desc="Moves your Favorites row up on Home, right after Continue"
 						></toggle>
 						<toggle
 							label="Show Player Counts"
@@ -615,7 +615,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Jump to Page"
 							path="pageJump"
-							desc="Lets you jump straight to a page"
+							desc="Lets you type a page number in the pager to go straight to it"
 						></toggle>
 					</page>
 
