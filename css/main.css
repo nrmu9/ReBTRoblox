@@ -2109,3 +2109,42 @@ html
 .btr-nav-item-hidden {
 	display: none !important;
 }
+
+/* Shown while Roblox has asked ReBTRoblox to wait. Out of the way of the chat
+   in the other corner, and quiet enough to ignore. */
+.btr-rate-limit-note {
+	position: fixed;
+	left: 12px;
+	bottom: 12px;
+	z-index: 1001;
+	padding: 4px 10px;
+	border: none;
+	border-radius: 999px;
+	background: rgba(24, 25, 28, 0.86);
+	color: #e8e8ea;
+	font:
+		500 12px/18px "Builder Sans",
+		system-ui,
+		sans-serif;
+	cursor: pointer;
+	opacity: 0.85;
+	transition: opacity 0.2s;
+	animation: btr-rate-limit-in 0.25s ease-out;
+}
+
+.btr-rate-limit-note:hover {
+	opacity: 1;
+}
+
+@keyframes btr-rate-limit-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btr-rate-limit-note {
+		animation: none;
+	}
+}

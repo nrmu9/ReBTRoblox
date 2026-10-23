@@ -35,6 +35,7 @@ export const DEFAULT_SETTINGS = {
 		hideChat: { value: false },
 		smallChatButton: { value: true },
 		whatsNew: { value: true },
+		rateLimitNotice: { value: true },
 		syncSettings: { value: true },
 		quickRemove: { value: true },
 		fixChatMessages: { value: true },

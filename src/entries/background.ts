@@ -17,9 +17,11 @@ import { startSettingsSync } from "@/feat/settingsSync"
 import { startTracking } from "@/feat/activity/tracked"
 import { recordUpdate } from "@/feat/whatsNew"
 import { startErrorLog } from "@/feat/errorLog"
+import { installRateLimit } from "@/core/rateLimit"
 import "@/rbx/Constants"
 import "@/rbx/RobloxApi"
 
+installRateLimit()
 startErrorLog("background")
 startWatching()
 startSettingsSync()

@@ -8,6 +8,7 @@
 // on that page, and registers itself into pageInit when it arrives.
 
 import { installExtensions } from "@/core/extend"
+import { installRateLimit } from "@/core/rateLimit"
 import { startErrorLog } from "@/feat/errorLog"
 import { IS_CHROME, IS_DEV_MODE } from "@/core/env"
 import { html } from "@/core/html"
@@ -19,6 +20,7 @@ import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { SettingsModal } from "@/feat/settingsModal"
+import { startRateLimitNotice } from "@/feat/rateLimitNotice"
 
 import "@/feat/fastSearch"
 import "@/feat/navigation"
@@ -61,6 +63,7 @@ const loadPageModule = (name: string | undefined): Promise<void> =>
 void loadPageModule(getCurrentPage()?.name)
 
 installExtensions()
+installRateLimit()
 startErrorLog("content")
 
 // The background page reaches these through chrome.scripting.executeScript,
@@ -75,6 +78,8 @@ if (IS_DEV_MODE) {
 document.documentElement.setAttribute("btr-loaded", "true")
 
 SETTINGS.load(() => {
+	startRateLimitNotice()
+
 	injectScript.init(SETTINGS.serializeForPage(), IS_DEV_MODE, RobuxToCash.getSelectedOption())
 
 	// Keep the page world in step. Hooks there read their settings per call, so
