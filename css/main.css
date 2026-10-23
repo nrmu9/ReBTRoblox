@@ -2148,3 +2148,28 @@ html
 		animation: none;
 	}
 }
+
+/* Closing panels, cards and menus fade and sink a little on their way out. */
+.btr-leaving {
+	animation: btr-leave 160ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+	pointer-events: none;
+}
+
+@keyframes btr-leave {
+	to {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+/* A menu opens in place, so it only fades. */
+.btr-quick-menu.btr-leaving,
+.btr-quick-confirm.btr-leaving {
+	animation-name: btr-leave-fade !important;
+}
+
+@keyframes btr-leave-fade {
+	to {
+		opacity: 0;
+	}
+}

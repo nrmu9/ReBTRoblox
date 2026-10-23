@@ -2,6 +2,7 @@ import { backgroundScript } from "@/core/messaging"
 import { html } from "@/core/html"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
+import { leave } from "@/core/leave"
 
 // A ... menu on your own friends, following and communities to unfriend,
 // unfollow or leave from the list, asking first in place. The button and menu
@@ -60,7 +61,7 @@ const addButton = (host: HTMLElement, removal: Removal) => {
 	let open: HTMLElement | null = null
 
 	const dismiss = () => {
-		open?.remove()
+		leave(open)
 		open = null
 		button.setAttribute("aria-expanded", "false")
 		document.removeEventListener("pointerdown", outside, true)

@@ -3,6 +3,7 @@ import { html } from "@/core/html"
 import { formatBytes } from "@/feat/activity/data"
 import { SETTINGS } from "@/feat/settings"
 import { toastArea } from "@/feat/toasts"
+import { leave } from "@/core/leave"
 
 // A notice on Roblox pages once the stored activity nears its limit, and
 // again when it reaches it and recording stops. Dismissing one hides it until
@@ -17,12 +18,16 @@ interface Level {
 let toast: HTMLElement | null = null
 
 const show = (state: Level | undefined, dismissed: number) => {
-	toast?.remove()
+	const previous = toast
 	toast = null
 
+	// Dismissed or no longer needed, it fades out. Changed, it is simply redrawn.
 	if (!state || state.level <= dismissed || !SETTINGS.get("profile.lastSeen")) {
+		leave(previous)
 		return
 	}
+
+	previous?.remove()
 
 	const usage = `${formatBytes(state.bytes)} of ${formatBytes(state.limitBytes)}`
 

@@ -3,6 +3,7 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 import { toastArea } from "@/feat/toasts"
+import { leave } from "@/core/leave"
 
 // A card on Roblox pages after an update, listing what is new since the
 // version updated from. Notes are written per release, newest first; a
@@ -178,7 +179,7 @@ const showReleases = (releases: typeof NOTES, onDismiss?: () => void): void => {
 	}
 
 	const close = () => {
-		card?.remove()
+		leave(card)
 		card = null
 		onDismiss?.()
 	}
@@ -206,7 +207,7 @@ export const watchWhatsNew = (): void => {
 			const pending = data.whatsNew as Pending | undefined
 
 			if (!pending || !SETTINGS.get("general.whatsNew")) {
-				card?.remove()
+				leave(card)
 				card = null
 				return
 			}

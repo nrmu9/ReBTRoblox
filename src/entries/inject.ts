@@ -21,6 +21,7 @@ import { serversFunctions } from "@/entries/inject/servers"
 import { gameDetailsFunctions } from "@/entries/inject/gameDetails"
 import { groupsFunctions } from "@/entries/inject/groups"
 import { profileFunctions } from "@/entries/inject/profile"
+import { leave } from "@/core/leave"
 
 // MAIN world script. Self-contained: it shares no module scope with the
 // content scripts and talks to them only over btroblox/* CustomEvents.
@@ -161,7 +162,7 @@ const startInject = () => {
 			".btr-whatsnew-close, .btr-whatsnew-done, .btr-activity-toast-dismiss",
 		)
 
-		close?.closest(".btr-whatsnew, .btr-activity-toast")?.remove()
+		leave(close?.closest(".btr-whatsnew, .btr-activity-toast"))
 	})
 
 	// Dev builds: shows the What's new card, or the slow-down notice for a

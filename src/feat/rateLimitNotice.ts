@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { leave } from "@/core/leave"
 import { injectScript } from "@/core/messaging"
 import { devHold, onRateLimits } from "@/core/rateLimit"
 import { SETTINGS } from "@/feat/settings"
@@ -20,7 +21,7 @@ export const startRateLimitNotice = (): void => {
 		const left = Math.ceil((until - Date.now()) / 1000)
 
 		if (left <= 0 || until <= dismissed || !SETTINGS.get("general.rateLimitNotice")) {
-			note?.remove()
+			leave(note)
 			note = null
 			clearInterval(timer)
 			timer = undefined
