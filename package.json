@@ -26,6 +26,7 @@
 		"package:chrome": "node dev/package.js --target=chrome",
 		"dev:chrome": "node dev/build.js --dev --watch --target=chrome --out=dist-chrome",
 		"test:draco": "node dev/draco.js",
+		"test:chrome": "node dev/chrome.js",
 		"test:webstore": "node dev/webstore.test.js",
 		"publish:chrome": "node dev/webstore.js",
 		"publish:chrome:draft": "node dev/webstore.js --no-publish",
@@ -38,6 +39,7 @@
 		"esbuild": "^0.28.2",
 		"oxlint": "^1.83.0",
 		"prettier": "^3.9.8",
+		"puppeteer-core": "25.12.0",
 		"typescript": "^7.0.2"
 	},
 	"dependencies": {
