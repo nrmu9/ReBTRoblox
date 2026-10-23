@@ -21,41 +21,41 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 		version: "4.5.0",
 		notes: [
 			{
-				title: "Activity in one place",
-				text: "A new activity panel shows what changed lately for everyone you watch and everything you track. Watch someone from the ... menu on their profile, check anyone right away with Check now, and turn on its sidebar link under Navigation.",
+				title: "Activity panel",
+				text: "There's a new panel with everything ReBTRoblox has recorded in one place: what changed lately, the people you watch, and the games and communities you track. Anything in it can be checked right away with Check now. You can add a link to it in the sidebar under Navigation, and start watching someone from the ... menu on their profile.",
 			},
 			{
-				title: "Better charts, more to track",
-				text: "Charts can zoom in, show each day, mark game updates and shouts, and save a CSV. Tracked games also record favorites and likes, and people show their time online per day and the hours they are usually on.",
+				title: "Charts",
+				text: "Activity charts can be zoomed by dragging across them, switched to a per-day view, and saved as a CSV. They also mark game updates and community shouts. Tracked games now keep favorites and likes too, and a person's stats show how long they're online each day and when they're usually on.",
 			},
 			{
 				title: "Live game pages",
-				text: "Players, visits and likes update live while the page is open, with visits counting up as they come in. Each game also shows how long you have played it and the servers you joined recently.",
+				text: "The player count, visits and likes on a game page update while you're looking at it. The page also shows how long you've played the game and which servers you were in recently.",
 			},
 			{
-				title: "Search your chats",
-				text: "A search button in each chat finds older messages and jumps to them.",
+				title: "Chat search",
+				text: "Chats have a search button. It goes through the whole conversation, and clicking a result scrolls back to that message.",
 			},
 			{
-				title: "Arrange the top bar, sidebar and Home",
-				text: "Drag top bar and sidebar items into any order and hide the ones you never use, under Navigation. Home can hide its banners and friends strip.",
+				title: "Your own layout",
+				text: "Drag top bar and sidebar items to reorder them, and hide the ones you don't use, Roblox's featured game included. Home can hide its banner and the friends row. It's all under Navigation and Home in the settings.",
 			},
 			{
-				title: "Remove from your lists",
-				text: "Hover a friend, someone you follow, or a community in your lists for a ... menu to unfriend, unfollow or leave. It asks first.",
+				title: "Unfriend and unfollow from your lists",
+				text: "Every entry in your friends, following and communities lists has a ... button to unfriend, unfollow or leave without opening the page. It asks before doing anything.",
 			},
 			{
-				title: "Livelier avatar previews",
-				text: "Accessories show their particles, fire, sparkles and lights, and previews load faster and more reliably.",
+				title: "Avatar previews",
+				text: "Item previews show particles, fire, sparkles and lights, and they load faster.",
 			},
 			{
-				title: "Sync and back up",
-				text: "Your settings follow your Firefox or Chrome account to your other computers. Settings and all recorded activity can also be saved to one file and restored on another browser.",
+				title: "Settings sync",
+				text: "Your settings sync through your Firefox or Chrome account, so they carry over to your other computers and come back after a reinstall. There's also a backup that saves your settings and recorded activity to a file.",
 				page: "backup",
 			},
 			{
 				title: "Fixes",
-				text: "Chats no longer get stuck sending or show only the newest message, the friend log says who ended a request or friendship, server sorts work with the pager, weekday names are right again, profiles of people who blocked you load and say so, and item previews and community pages work properly in Chrome. When Roblox asks ReBTRoblox to slow down, it now waits.",
+				text: "Chats that only showed the latest message, or got stuck sending, load properly. The friend log says who ended a friend request or friendship. Server sorts like Best latency work with the paged server list, weekday names are fixed, and profiles of people who blocked you load and tell you so. When Roblox says it's getting too many requests, ReBTRoblox waits instead of asking again. Item previews and community pages work properly on Chrome.",
 			},
 		],
 	},
