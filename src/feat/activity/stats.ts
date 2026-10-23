@@ -29,7 +29,7 @@ const SESSION_BREAK = 10 * 60e3
  * Totals from `since` on: time online and in experiences, the days with any,
  * time per game, and sessions, each running until a break from playing.
  */
-const statsSince = (segments: PresenceSegment[], online: boolean, since: number) => {
+export const statsSince = (segments: PresenceSegment[], online: boolean, since: number) => {
 	let onlineTime = 0
 	let gameTime = 0
 	const days = new Set<number>()
@@ -160,7 +160,7 @@ const STAT_PERIODS = [
 	["all", "All time"],
 ] as const
 
-const statCard = (label: string, value: string, detail = "") =>
+export const statCard = (label: string, value: string, detail = "") =>
 	html`<div class="btr-activity-stat">
 		<div class="btr-activity-stat-label">${label}</div>
 		<div class="btr-activity-stat-value">${value}</div>
@@ -213,29 +213,7 @@ const statsSection = (segments: PresenceSegment[], online: boolean, since: numbe
 	)
 
 	const gameList = section.$req(".btr-stats-games")
-	const top = stats.games[0]?.time ?? 1
-
-	for (const game of stats.games.slice(0, 10)) {
-		const row = html`<div class="btr-stats-game">
-			<span class="btr-stats-game-icon" data-place="${game.placeId ?? ""}"></span>
-			<div class="btr-stats-game-text">
-				<div class="btr-stats-game-line">
-					<span class="btr-stats-game-name"></span>
-					<span class="btr-stats-game-time">${formatDuration(game.time)}</span>
-				</div>
-				<div class="btr-stats-bar"><span></span></div>
-				<div class="btr-stats-game-sessions">
-					${game.sessions === 1 ? "1 session" : `${game.sessions} sessions`}
-				</div>
-			</div>
-		</div>`
-
-		row.$req(".btr-stats-game-name").append(
-			game.placeId ? html`<a href="/games/${game.placeId}">${game.name}</a>` : game.name,
-		)
-		row.$req<HTMLElement>(".btr-stats-bar > span").style.width = `${(game.time / top) * 100}%`
-		gameList.append(row)
-	}
+	gameList.append(...gameRows(stats.games, 10))
 
 	if (!stats.games.length) {
 		gameList.append(html`<p class="btr-stats-none">No time in experiences.</p>`)
@@ -258,6 +236,47 @@ const statsSection = (segments: PresenceSegment[], online: boolean, since: numbe
 	}
 
 	return section
+}
+
+/** The most played of `games`, each with a bar against the first. */
+export const gameRows = (games: ReturnType<typeof statsSince>["games"], limit: number): HTMLElement[] => {
+	const top = games[0]?.time ?? 1
+
+	return games.slice(0, limit).map((game) => {
+		const row = html`<div class="btr-stats-game">
+			<span class="btr-stats-game-icon" data-place="${game.placeId ?? ""}"></span>
+			<div class="btr-stats-game-text">
+				<div class="btr-stats-game-line">
+					<span class="btr-stats-game-name"></span>
+					<span class="btr-stats-game-time">${formatDuration(game.time)}</span>
+				</div>
+				<div class="btr-stats-bar"><span></span></div>
+				<div class="btr-stats-game-sessions">
+					${game.sessions === 1 ? "1 session" : `${game.sessions} sessions`}
+				</div>
+			</div>
+		</div>`
+
+		row.$req(".btr-stats-game-name").append(
+			game.placeId ? html`<a href="/games/${game.placeId}">${game.name}</a>` : game.name,
+		)
+		row.$req<HTMLElement>(".btr-stats-bar > span").style.width = `${(game.time / top) * 100}%`
+		return row
+	})
+}
+
+/** Puts each game's icon in once they are known. */
+export const fillGameIcons = async (root: HTMLElement): Promise<void> => {
+	const icons = [...root.$findAll<HTMLElement>(".btr-stats-game-icon")]
+	const urlOf = await thumbnails("place", icons.map((icon) => Number(icon.dataset.place)).filter(Boolean))
+
+	for (const icon of icons) {
+		const url = urlOf(Number(icon.dataset.place))
+
+		if (url) {
+			icon.append(html`<img alt="" src="${url}" />`)
+		}
+	}
 }
 
 /** Stats for each period, all built at once so switching between them is instant. */
@@ -300,15 +319,5 @@ export const renderStats = async (
 
 	show()
 	panel.replaceChildren(toolbar, ...sections.values())
-
-	const icons = [...panel.$findAll<HTMLElement>(".btr-stats-game-icon")]
-	const urlOf = await thumbnails("place", icons.map((icon) => Number(icon.dataset.place)).filter(Boolean))
-
-	for (const icon of icons) {
-		const url = urlOf(Number(icon.dataset.place))
-
-		if (url) {
-			icon.append(html`<img alt="" src="${url}" />`)
-		}
-	}
+	await fillGameIcons(panel)
 }

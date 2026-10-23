@@ -3015,3 +3015,14 @@ div.btr-setting-text {
 	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	font-size: 12px;
 }
+
+/* The activity panel's You tab: two ways into your full activity under the numbers. */
+.btr-panel-you-actions {
+	display: flex;
+	gap: 8px;
+	margin: 4px 0 16px;
+}
+
+.btr-panel-you-people .btr-people-intro {
+	margin-top: 0;
+}

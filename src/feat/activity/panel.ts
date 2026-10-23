@@ -11,9 +11,11 @@ import { checkedAgo, checkNowButton, dayLabel, startOfDay } from "@/feat/activit
 import { openShell } from "@/feat/activity/shell"
 import type { ActivityEvent } from "@/feat/activity/store"
 import { openTracked } from "@/feat/activity/trackDialog"
+import { renderYou } from "@/feat/activity/you"
 
 // Everything recorded, in one place: what happened lately across everyone and
-// everything, and the lists of who and what is watched, each a page at a time.
+// everything, your own side of it, and the lists of who and what is watched,
+// each a page at a time.
 
 const PAGE = 20
 
@@ -438,6 +440,7 @@ export const openActivityPanel = (ownUserId: number | null): void => {
 		subtitle: "Everyone and everything you keep an eye on",
 		tabs: [
 			["recent", "Recent"],
+			["you", "You"],
 			["people", "People"],
 			["games", "Games"],
 			["groups", "Communities"],
@@ -449,6 +452,8 @@ export const openActivityPanel = (ownUserId: number | null): void => {
 
 			if (tab === "recent") {
 				void renderRecent(panel, ownUserId)
+			} else if (tab === "you") {
+				void renderYou(panel, ownUserId)
 			} else if (tab === "people") {
 				void renderPeople(panel, ownUserId)
 			} else {
