@@ -1,4 +1,5 @@
 import { delay } from "@/core/util"
+import { friendDiff } from "@/feat/activity/diff"
 import { requestStep } from "@/feat/activity/requestStep"
 import { userNames } from "@/feat/activity/users"
 import {
@@ -89,15 +90,8 @@ const compareNow = async (userId: number, allIds: number[]): Promise<void> => {
 		return
 	}
 
-	const before = new Set(previous)
-	const now = new Set(friendIds)
-
-	await log(
-		userId,
-		friendIds.filter((id) => !before.has(id)),
-		previous.filter((id) => id > 0 && !now.has(id)),
-		false,
-	)
+	const { added, removed } = friendDiff(previous, friendIds)
+	await log(userId, added, removed, false)
 }
 
 /** A friendship Roblox's realtime connection says was made or ended, as it happened. */

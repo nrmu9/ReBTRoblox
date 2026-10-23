@@ -15,6 +15,16 @@ import { SETTINGS } from "@/feat/settings"
 import { forceTrackedCheck } from "@/feat/activity/tracked"
 import { listIds } from "@/feat/activity/lists"
 import { contentScript } from "@/core/messaging"
+import {
+	avatarHash,
+	earnedSince,
+	listDiff,
+	newAtTop,
+	profileChanges,
+	wearingDiff,
+	type ProfileSnapshot,
+} from "@/feat/activity/diff"
+import { CHECK_KINDS, mostOverdue, type CheckKind, type WatchChecks } from "@/feat/activity/schedule"
 
 // People you chose to watch, checked from the background: where they are,
 // whose friends they add and lose, and what changes on their profile. Roblox
@@ -29,26 +39,6 @@ const REFRESH_OLDER = 10 * 60e3
 const REFRESH_FAVORITES_OLDER = 60 * 60e3
 const CHECKS_PER_TICK = 3
 
-type CheckKind = "friends" | "profile" | "badges" | "favorites" | "follows"
-
-/**
- * How often each check runs. Someone online is checked sooner: friends are
- * added and badges earned while they play, and little changes while they are
- * away.
- */
-const intervalsFor = (userId: number): Record<CheckKind, number> => {
-	const type = latestPresence(userId)
-	const online = !!type
-	const playing = type === 2
-
-	return {
-		friends: (online ? 20 : 60) * 60e3,
-		profile: 4 * 60 * 60e3,
-		badges: (playing ? 10 : online ? 30 : 60) * 60e3,
-		favorites: (online ? 2 : 4) * 60 * 60e3,
-		follows: (online ? 1 : 2) * 60 * 60e3,
-	}
-}
 // Followers lists longer than this are only checked for new followers at the
 // top, as reading a large account's whole list every few hours is too much.
 const FULL_FOLLOW_LIST = 1000
@@ -73,27 +63,6 @@ const friendsOf = async (userId: number): Promise<number[] | null> => {
 
 	return ids
 }
-
-interface ProfileSnapshot {
-	name: string
-	displayName: string
-	description: string
-	isBanned: boolean
-	/** The avatar image's address, whose hash changes with the avatar. */
-	avatar: string | null
-	/** Older snapshots kept only the name. */
-	groups: Record<string, GroupEntry | string>
-	/** Asset ids worn, read when the avatar changes. */
-	wearing?: number[]
-}
-
-interface GroupEntry {
-	name: string
-	role: string
-	rank: number
-}
-
-const groupName = (entry: GroupEntry | string) => (typeof entry === "string" ? entry : entry.name)
 
 const wearingOf = (userId: number): Promise<number[] | null> =>
 	getJson(`https://avatar.roblox.com/v1/users/${userId}/currently-wearing`).then((json) =>
@@ -131,8 +100,6 @@ const itemNames = async (assetIds: number[]): Promise<Map<number, string>> => {
 	return names
 }
 
-const avatarHash = (url: string | null) => url?.match(/-([0-9A-F]{32})-/i)?.[1] ?? url
-
 const profileOf = async (userId: number): Promise<ProfileSnapshot | null> => {
 	const [user, avatar, groups] = await Promise.all([
 		getJson(`https://users.roblox.com/v1/users/${userId}`),
@@ -161,59 +128,10 @@ const profileOf = async (userId: number): Promise<ProfileSnapshot | null> => {
 
 /** Logs what differs between two looks at a profile, one event per change. */
 const compareProfile = async (userId: number, before: ProfileSnapshot, after: ProfileSnapshot) => {
-	const changes: Array<Pick<ActivityEvent, "field" | "before" | "after" | "items">> = []
+	const worn = wearingDiff(before, after)
+	const names = worn ? await itemNames([...worn.added, ...worn.removed]) : undefined
 
-	for (const field of ["name", "displayName", "description", "isBanned"] as const) {
-		if (before[field] !== after[field]) {
-			changes.push({ field, before: before[field], after: after[field] })
-		}
-	}
-
-	// A render that failed says nothing about the avatar.
-	if (before.avatar && after.avatar && avatarHash(before.avatar) !== avatarHash(after.avatar)) {
-		const change: Pick<ActivityEvent, "field" | "before" | "after" | "items"> = {
-			field: "avatar",
-			before: before.avatar,
-			after: after.avatar,
-		}
-
-		// What was put on and taken off, when both looks are known.
-		if (before.wearing && after.wearing) {
-			const was = new Set(before.wearing)
-			const now = new Set(after.wearing)
-			const added = after.wearing.filter((id) => !was.has(id))
-			const removed = before.wearing.filter((id) => !now.has(id))
-			const names = await itemNames([...added, ...removed])
-			const named = (ids: number[]) => ids.map((id) => ({ id, name: names.get(id) ?? `Item ${id}` }))
-
-			change.items = { added: named(added), removed: named(removed) }
-		}
-
-		changes.push(change)
-	}
-
-	for (const [id, entry] of Object.entries(after.groups)) {
-		const old = before.groups[id]
-
-		if (!old) {
-			changes.push({ field: "groupJoined", after: { id: Number(id), name: groupName(entry) } })
-		} else if (typeof old !== "string" && typeof entry !== "string" && old.rank !== entry.rank) {
-			// A role from an older snapshot that kept only names is not known.
-			changes.push({
-				field: "groupRole",
-				before: { id: Number(id), ...old },
-				after: { id: Number(id), ...entry },
-			})
-		}
-	}
-
-	for (const [id, entry] of Object.entries(before.groups)) {
-		if (!(id in after.groups)) {
-			changes.push({ field: "groupLeft", before: { id: Number(id), name: groupName(entry) } })
-		}
-	}
-
-	await logChanges(userId, changes)
+	await logChanges(userId, profileChanges(before, after, names))
 }
 
 const checkProfile = async (userId: number) => {
@@ -320,21 +238,23 @@ const checkBadges = async (userId: number) => {
 		return
 	}
 
-	const known = new Set(before.ids)
-	const fresh = list.data.filter((badge: any) => !known.has(badge.id))
+	const fresh = listDiff(
+		before.ids,
+		list.data.map((badge: any) => badge.id),
+	).added
 
 	if (!fresh.length || (await isFull())) {
 		return
 	}
 
 	const dates = await getJson(
-		`https://badges.roblox.com/v1/users/${userId}/badges/awarded-dates?badgeIds=${fresh.map((badge: any) => badge.id).join(",")}`,
+		`https://badges.roblox.com/v1/users/${userId}/badges/awarded-dates?badgeIds=${fresh.join(",")}`,
 	)
 	const awardedAt = new Map<number, number>(
 		(dates?.data ?? []).map((entry: any) => [entry.badgeId, Date.parse(entry.awardedDate)]),
 	)
 
-	const earned = fresh.filter((badge: any) => (awardedAt.get(badge.id) ?? 0) > before.checkedAt)
+	const earned = earnedSince<any>(list.data, before.ids, awardedAt, before.checkedAt)
 
 	if (!earned.length) {
 		return
@@ -571,31 +491,19 @@ const checkFollows = async (userId: number) => {
 		added: ActivityEvent["kind"],
 		removed: ActivityEvent["kind"],
 	) => {
-		const wasSet = new Set(was)
-		const nowSet = new Set(now)
-		people.push(
-			...now
-				.filter((id) => !wasSet.has(id))
-				.map((id) => [added, id] as [ActivityEvent["kind"], number]),
-		)
-		people.push(
-			...was
-				.filter((id) => !nowSet.has(id))
-				.map((id) => [removed, id] as [ActivityEvent["kind"], number]),
-		)
+		const change = listDiff(was, now)
+		people.push(...change.added.map((id) => [added, id] as [ActivityEvent["kind"], number]))
+		people.push(...change.removed.map((id) => [removed, id] as [ActivityEvent["kind"], number]))
 	}
 
 	if (followers && before.followers && after.followers) {
 		diff(before.followers, after.followers, "followerAdded", "followerRemoved")
 	} else if (followers && before.recentFollowers.length) {
-		// Only the top of a long list is read: whoever is above the newest
-		// follower seen last time is new. Leaving cannot be seen this way.
-		const known = new Set(before.recentFollowers)
-		const firstKnown = followers.findIndex((id) => known.has(id))
+		// Only the top of a long list is read. Leaving cannot be seen this way.
 		people.push(
-			...followers
-				.slice(0, firstKnown === -1 ? 0 : firstKnown)
-				.map((id) => ["followerAdded", id] as [ActivityEvent["kind"], number]),
+			...newAtTop(before.recentFollowers, followers).map(
+				(id) => ["followerAdded", id] as [ActivityEvent["kind"], number],
+			),
 		)
 	}
 
@@ -635,8 +543,6 @@ const CHECKS: Record<CheckKind, (userId: number) => Promise<void>> = {
 	favorites: checkFavorites,
 	follows: checkFollows,
 }
-
-type WatchChecks = Record<number, Partial<Record<CheckKind, number>>>
 
 // One tick a minute does the few checks most overdue, so a dozen watched
 // people never means a dozen requests at once.
@@ -713,22 +619,13 @@ const tick = async () => {
 			}
 		}
 
-		const now = Date.now()
-		const overdue: Array<{ userId: number; kind: CheckKind; by: number }> = []
-
-		for (const userId of watched) {
-			const intervals = intervalsFor(userId)
-
-			for (const kind of Object.keys(CHECKS) as CheckKind[]) {
-				const by = (now - (due[userId]?.[kind] ?? 0)) / intervals[kind]
-
-				if (by >= 1) {
-					overdue.push({ userId, kind, by })
-				}
-			}
-		}
-
-		for (const { userId, kind } of overdue.toSorted((a, b) => b.by - a.by).slice(0, CHECKS_PER_TICK)) {
+		for (const { userId, kind } of mostOverdue(
+			watched,
+			due,
+			latestPresence,
+			Date.now(),
+			CHECKS_PER_TICK,
+		)) {
 			;(due[userId] ??= {})[kind] = Date.now()
 			await CHECKS[kind](userId)
 		}
@@ -767,7 +664,7 @@ const refresh = async (userId: number) => {
 		const due = (await getState<WatchChecks>("watchChecks")) ?? {}
 		const checks = (due[userId] ??= {})
 
-		for (const kind of Object.keys(CHECKS) as CheckKind[]) {
+		for (const kind of CHECK_KINDS) {
 			const older = kind === "favorites" ? REFRESH_FAVORITES_OLDER : REFRESH_OLDER
 
 			if (Date.now() - (checks[kind] ?? 0) >= older) {
@@ -806,7 +703,7 @@ const forceUser = (userId: number) =>
 
 		const due = (await getState<WatchChecks>("watchChecks")) ?? {}
 		const checks = (due[userId] ??= {})
-		const kinds = userId === ownUserId ? (["follows"] as const) : (Object.keys(CHECKS) as CheckKind[])
+		const kinds = userId === ownUserId ? (["follows"] as const) : CHECK_KINDS
 
 		for (const kind of kinds) {
 			checks[kind] = Date.now()
