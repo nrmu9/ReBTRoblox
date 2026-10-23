@@ -82,6 +82,7 @@ export const DEFAULT_SETTINGS = {
 	navigation: {
 		enabled: { value: true },
 		noHamburger: { value: true },
+		activityMenu: { value: true },
 		elements: { value: "", hidden: true },
 		order: { value: "", hidden: true },
 		hiddenItems: { value: "", hidden: true },

@@ -1,3 +1,4 @@
+import { SETTINGS } from "@/feat/settings"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
 
 // What opens the settings panel. The panel is a lot of code that only matters
@@ -75,7 +76,7 @@ export const SettingsModal = {
  * menu is found by the link rather than by its label, which is translated.
  * The item is a copy of the link so it keeps Roblox's look.
  */
-export const watchSettingsMenu = (settingsLink: string): void => {
+export const watchSettingsMenu = (settingsLink: string, openActivity?: () => void): void => {
 	document.$watchAll(`.foundation-web-menu:has(${settingsLink})`, (menu: HTMLElement) => {
 		const link = menu.$find(settingsLink)
 
@@ -83,28 +84,40 @@ export const watchSettingsMenu = (settingsLink: string): void => {
 			return
 		}
 
-		const item = link.cloneNode(true) as HTMLElement
-		item.removeAttribute("href")
-		item.classList.add("btr-settings-toggle")
-
-		const title =
-			item.$find(".foundation-web-menu-item-title") ??
-			[...item.querySelectorAll("span, div")].findLast(
-				(node) => !node.children.length && node.textContent?.trim(),
-			)
-
-		if (title) {
-			title.textContent = "BTR Settings"
-		}
-
 		// The menu stays open otherwise, over the settings panel. Closed a tick
 		// later, as a detached item would no longer reach the toggle handler.
-		item.$on("click", () => {
+		const closeMenu = () =>
 			setTimeout(() => {
 				menu.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
 			})
-		})
 
+		const copyOfLink = (text: string, className: string) => {
+			const item = link.cloneNode(true) as HTMLElement
+			item.removeAttribute("href")
+			item.classList.add(className)
+
+			const title =
+				item.$find(".foundation-web-menu-item-title") ??
+				[...item.querySelectorAll("span, div")].findLast(
+					(node) => !node.children.length && node.textContent?.trim(),
+				)
+
+			if (title) {
+				title.textContent = text
+			}
+
+			item.$on("click", closeMenu)
+			return item
+		}
+
+		const item = copyOfLink("BTR Settings", "btr-settings-toggle")
 		link.after(item)
+
+		// The activity panel too, for Roblox's own pages, unless turned off.
+		if (openActivity && SETTINGS.get("navigation.activityMenu")) {
+			const activity = copyOfLink("Activity", "btr-activity-menu-item")
+			activity.$on("click", openActivity)
+			item.after(activity)
+		}
 	})
 }

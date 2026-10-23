@@ -180,6 +180,11 @@ export const settingsMarkup = () =>
 							require="false"
 							desc="Keeps the sidebar open on wide screens"
 						></toggle>
+						<toggle
+							label="Activity in Account Menu"
+							path="activityMenu"
+							desc="Adds Activity under BTR Settings in the menu at the top right, to open the activity panel"
+						></toggle>
 						<p class="btr-exp-note">
 							The top bar and sidebar of the page you opened this on. Drag an item by its handle
 							to move it, and use its eye to hide it. Anything Roblox adds later stays beside

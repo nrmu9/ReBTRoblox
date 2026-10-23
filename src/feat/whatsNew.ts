@@ -22,7 +22,7 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 		notes: [
 			{
 				title: "Activity panel",
-				text: "There's a new panel with everything ReBTRoblox has recorded in one place: what changed lately, the people you watch, the games and communities you track, and a You tab with your own friends, followers, requests and playtime. Anything in it can be checked right away with Check now. You can add a link to it in the sidebar under Navigation, and start watching someone from the ... menu on their profile.",
+				text: "There's a new panel with everything ReBTRoblox has recorded in one place: what changed lately, the people you watch, the games and communities you track, and a You tab with your own friends, followers, requests and playtime. Anything in it can be checked right away with Check now. Open it from the menu at the top right, or add a sidebar link under Navigation, and start watching someone from the ... menu on their profile.",
 			},
 			{
 				title: "Charts",

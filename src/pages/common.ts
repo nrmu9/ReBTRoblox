@@ -1223,7 +1223,11 @@ pageInit.www = () => {
 
 	ready(() => loggedInUserPromise.$resolve(-1))
 
-	watchSettingsMenu(`a[role=menuitem][href*="/my/account"]`)
+	watchSettingsMenu(`a[role=menuitem][href*="/my/account"]`, () => {
+		void import("@/feat/activity/panel").then(({ openActivityPanel }) =>
+			openActivityPanel(loggedInUser > 0 ? loggedInUser : null),
+		)
+	})
 
 	bodyWatcher
 		.$watch("#navbar-robux")
