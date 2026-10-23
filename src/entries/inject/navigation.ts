@@ -323,9 +323,27 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 		// A message that lands before a conversation's history has loaded can
 		// become the whole history, which then counts as loaded: one message
 		// and nothing older to scroll to. A conversation found that short is
-		// asked for again, once for each set of messages it holds, so a chat
-		// that really is that short is not asked for over and over.
-		const refetched = new Map<string, string>()
+		// asked for again once. What comes back is Roblox's own answer, so a
+		// chat that really is that short is not asked for with every message.
+		const refetched = new Set<string>()
+
+		// Every ask of ours comes on top of the page's own, and Roblox turns
+		// away a chat that is asked for too often. One chat is asked for at
+		// most this often, however many messages arrive.
+		const ASK_EVERY = 10e3
+		const askedAt = new Map<string, number>()
+
+		const askAgain = (conversationId: string, client: any) => {
+			const wait = (askedAt.get(conversationId) ?? 0) + ASK_EVERY - Date.now()
+
+			if (wait > 0) {
+				return false
+			}
+
+			askedAt.set(conversationId, Date.now())
+			client.invalidateQueries({ predicate: isMessages(conversationId) }, { cancelRefetch: false })
+			return true
+		}
 
 		// A history Roblox turned away, usually with a 429 for asking too
 		// often, is never asked for again, as its query does not retry. The
@@ -334,7 +352,15 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 		const RETRY_AFTER = [3e3, 10e3, 30e3, 60e3]
 		const retries = new Map<string, { tries: number; waiting: boolean }>()
 
-		const retryLater = (conversationId: string, client: any) => {
+		/** How long a turned away answer says to wait, from its Retry-After. */
+		const askedToWait = (error: any) => {
+			const header = error?.headers?.["retry-after"] ?? error?.response?.headers?.["retry-after"]
+			const seconds = Number(header)
+			const at = Number.isFinite(seconds) ? Date.now() + seconds * 1000 : Date.parse(header)
+			return Number.isFinite(at) ? Math.min(5 * 60e3, Math.max(0, at - Date.now())) : 0
+		}
+
+		const retryLater = (conversationId: string, client: any, error: any) => {
 			const entry = retries.get(conversationId) ?? { tries: 0, waiting: false }
 			retries.set(conversationId, entry)
 
@@ -343,13 +369,20 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 			}
 
 			entry.waiting = true
-			setTimeout(() => {
-				entry.waiting = false
-				entry.tries++
-				client.invalidateQueries({ predicate: isMessages(conversationId) }, { cancelRefetch: false })
-				// A chat stuck like this may draw nothing new to set off a check.
-				setTimeout(check, 5e3)
-			}, RETRY_AFTER[entry.tries])
+			setTimeout(
+				() => {
+					entry.waiting = false
+					entry.tries++
+					askedAt.set(conversationId, Date.now())
+					client.invalidateQueries(
+						{ predicate: isMessages(conversationId) },
+						{ cancelRefetch: false },
+					)
+					// A chat stuck like this may draw nothing new to set off a check.
+					setTimeout(check, 5e3)
+				},
+				Math.max(RETRY_AFTER[entry.tries], askedToWait(error)),
+			)
 		}
 
 		const checkHistories = () => {
@@ -367,7 +400,7 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 				const data = query?.state.data
 
 				if (!data && query?.state.status === "error" && query.state.fetchStatus === "idle") {
-					retryLater(conversation.id, client)
+					retryLater(conversation.id, client, query.state.error)
 					continue
 				}
 
@@ -378,17 +411,12 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 				retries.delete(conversation.id)
 
 				const { messages } = data
-				const state = `${messages.length}:${messages[0]?.id}:${messages.at(-1)?.id}`
 
 				if (messages.length >= 20 || data.next_cursor) {
-					// Whole again, so the same short state later is worth fixing too.
+					// Whole again, so a short history later is worth fixing too.
 					refetched.delete(conversation.id)
-				} else if (refetched.get(conversation.id) !== state) {
-					refetched.set(conversation.id, state)
-					client.invalidateQueries(
-						{ predicate: isMessages(conversation.id) },
-						{ cancelRefetch: false },
-					)
+				} else if (!refetched.has(conversation.id) && askAgain(conversation.id, client)) {
+					refetched.add(conversation.id)
 				}
 			}
 		}
@@ -444,8 +472,10 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 					// not behind. Invalidating then would cancel its first fetch
 					// and race the thing it is meant to help.
 					const rendered = shell.querySelectorAll("li").length
+					// A long message's preview is cut short with an ellipsis.
+					const shown = preview.replace(/(\.\.\.|…)$/, "").trim()
 
-					if (!rendered || flatten(shell.textContent ?? "").includes(preview)) {
+					if (!rendered || flatten(shell.textContent ?? "").includes(shown)) {
 						continue
 					}
 
@@ -456,17 +486,16 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 						continue
 					}
 
-					// Recorded before invalidating, so the refetch this causes
-					// cannot come back around and invalidate again.
-					seen.set(conversation.id, preview)
-
+					// Asked for too recently, it is left unrecorded and looked at
+					// again on the next change.
 					// Only the messages themselves. Other entries under the same
 					// conversation, like its failed and moderated messages, live
 					// only in the page, and refetching them empties them.
-					client.invalidateQueries(
-						{ predicate: isMessages(conversation.id) },
-						{ cancelRefetch: false },
-					)
+					if (askAgain(conversation.id, client)) {
+						// Recorded with the ask, so the refetch this causes cannot
+						// come back around and ask again.
+						seen.set(conversation.id, preview)
+					}
 				} catch {}
 			}
 		}
