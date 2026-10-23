@@ -7,6 +7,7 @@ import { delay, ready } from "@/core/util"
 import { btrLocalStorage } from "@/core/storage"
 import { openActivity } from "@/feat/activity/open"
 import { refreshWatched } from "@/feat/activity/data"
+import { addWatchMenuItem } from "@/feat/activity/watchMenu"
 import { lastSeenAt } from "@/feat/activity/shared"
 import { clockFormat } from "@/feat/clock"
 import { getPresenceHistory, onPresenceHistoryChange, type PresenceSegment } from "@/feat/activity/presence"
@@ -185,6 +186,14 @@ pageInit.profile = () => {
 		const userId = Number.parseInt(userIdString, 10)
 
 		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-profile"))
+
+		if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
+			void loggedInUserPromise.then((own) => {
+				if (own !== userId) {
+					addWatchMenuItem(userId)
+				}
+			})
+		}
 
 		document.$watch(".profile-platform-container", async (profileContainer: HTMLElement) => {
 			await profileContainer.$watch(">*").$promise()

@@ -44,6 +44,7 @@ const PAGES = [
 // their key. They are listed apart so the real misses stand out.
 const EXPECTED = [
 	["#buy-robux-popover", "after opening the robux menu"],
+	['/inventory"])', "while a profile's menu is open"],
 	[".foundation-web-menu:has(", "while the account menu is open"],
 	["#configure-item", "on items you own"],
 	["VisitButtonEditGLI", "on games you can edit"],

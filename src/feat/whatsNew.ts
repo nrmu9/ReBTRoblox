@@ -45,7 +45,7 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 			},
 			{
 				title: "Activity panel",
-				text: "Everything recorded in one place, with what happened lately across everyone and everything. Turn on its sidebar link under Navigation, and check anyone now with Check now.",
+				text: "Everything recorded in one place, with what happened lately across everyone and everything. Turn on its sidebar link under Navigation, check anyone now with Check now, and watch someone from the ... menu on their profile.",
 			},
 			{
 				title: "Arrange the top bar, sidebar and Home",
