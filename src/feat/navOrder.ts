@@ -1,3 +1,4 @@
+import { expectFound } from "@/core/health"
 import { SETTINGS } from "@/feat/settings"
 
 // The order of the top bar and sidebar items, as you set it. Roblox renders
@@ -44,7 +45,7 @@ const keyOf = (item: Element): string => {
 		return `btr:${marker.slice(13)}`
 	}
 
-	const href = item.querySelector("a[href]")?.getAttribute("href")
+	const href = expectFound("a bar item's link", item.querySelector("a[href]"))?.getAttribute("href")
 	const link = href && !href.startsWith("#") ? linkKey(href) : null
 
 	if (link) {

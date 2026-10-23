@@ -1,5 +1,6 @@
 import { dateSince } from "@/core/date"
 import { html } from "@/core/html"
+import { expectFound } from "@/core/health"
 import { backgroundScript, injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
 import { SHARED_DATA } from "@/feat/sharedData"
@@ -533,7 +534,10 @@ export const Navigation = {
 			link.href = href
 			// Roblox marks the page you are on with this; the copy is a page of its own.
 			link.classList.toggle("bg-shift-200", location.pathname.toLowerCase().startsWith(href))
-			link.$find(".text-truncate-end")!.textContent = text
+			const label = expectFound("a sidebar link's label", link.$find(".text-truncate-end"))
+			if (label) {
+				label.textContent = text
+			}
 
 			const iconNode = link.$find("[data-testid=foundation-web-icon]")
 			if (iconNode) {

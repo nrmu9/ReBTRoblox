@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { expectFound } from "@/core/health"
 import { injectScript } from "@/core/messaging"
 import { isRecord } from "@/core/pageInput"
 import { pageInit } from "@/core/page"
@@ -155,7 +156,13 @@ pageInit.profile = () => {
 					waitForComponent(userIdString, "UserProfileHeader").then(
 						(json: any) => json?.components?.UserProfileHeader?.counts,
 					),
-					new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+					delay(5000).then(() => {
+						expectFound(
+							"the profile header sent by the page",
+							profileData[userIdString]?.components?.UserProfileHeader,
+						)
+						return null
+					}),
 				])
 
 				showExactCounts(userId, () => counts)
@@ -291,9 +298,16 @@ pageInit.profile = () => {
 			// in, it is asked for directly, and whatever that returns is final.
 			const aboutPromise: Promise<any> = Promise.race([
 				waitForComponent(userIdString, "About"),
-				delay(4000).then(() =>
-					RobloxApi.userProfiles.getComponents(userId, ["About", "Actions"]).catch(() => null),
-				),
+				delay(4000).then(() => {
+					// Settled already when the page sent it, so it is not asked for again.
+					const sent = expectFound(
+						"About sent by the page",
+						profileData[userIdString]?.components?.About,
+					)
+					return sent
+						? profileData[userIdString]
+						: RobloxApi.userProfiles.getComponents(userId, ["About", "Actions"]).catch(() => null)
+				}),
 			])
 
 			// The answers may already have come and gone before this listened.

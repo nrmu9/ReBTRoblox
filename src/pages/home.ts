@@ -3,6 +3,7 @@ import { isKey, isRecord, isText } from "@/core/pageInput"
 import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
 import { html } from "@/core/html"
+import { expectFound } from "@/core/health"
 import { SETTINGS } from "@/feat/settings"
 
 /** The Home rows seen so far, by topic id, for the settings to list. */
@@ -22,7 +23,9 @@ const sectionKey = (section: Element) => {
 		return "friends"
 	}
 
-	const type = section.querySelector("[data-testid]")?.getAttribute("data-testid")
+	const type = expectFound("a Home feed item's kind", section.querySelector("[data-testid]"))?.getAttribute(
+		"data-testid",
+	)
 	return type ? `feed:${type}` : null
 }
 
@@ -63,7 +66,9 @@ const placeSection = (section: HTMLElement) => {
 	const example =
 		key === "friends"
 			? undefined
-			: section.querySelector("[class*=heroUnitTitle], h2, h3")?.textContent?.trim().slice(0, 60)
+			: expectFound("a Home feed item's title", section.querySelector("[class*=heroUnitTitle], h2, h3"))
+					?.textContent?.trim()
+					.slice(0, 60)
 
 	if (!known[key] || (example && known[key].example !== example)) {
 		known[key] = example ? { example } : {}
