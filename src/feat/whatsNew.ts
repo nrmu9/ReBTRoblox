@@ -54,7 +54,7 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 			},
 			{
 				title: "Fixes",
-				text: "Chats no longer get stuck sending or show only the newest message, the friend log says who ended a request or friendship, server sorts work with the pager, weekday names are right again, and profiles of people who blocked you load and say so. When Roblox asks ReBTRoblox to slow down, it now waits.",
+				text: "Chats no longer get stuck sending or show only the newest message, the friend log says who ended a request or friendship, server sorts work with the pager, weekday names are right again, profiles of people who blocked you load and say so, and item previews and community pages work properly in Chrome. When Roblox asks ReBTRoblox to slow down, it now waits.",
 			},
 		],
 	},
