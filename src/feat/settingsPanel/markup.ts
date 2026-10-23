@@ -113,9 +113,9 @@ export const settingsMarkup = () =>
 							desc="After an update, lists what changed. Click the version above to see it again"
 						></toggle>
 						<toggle
-							label="Slow-Down Notice"
+							label="Rate Limit Notice"
 							path="rateLimitNotice"
-							desc="Shows a small note in the corner while Roblox has asked ReBTRoblox to wait before asking again"
+							desc="Shows a small notice in the corner while Roblox is rate limiting ReBTRoblox"
 						></toggle>
 
 						<heading>Chat</heading>

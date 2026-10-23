@@ -4,7 +4,7 @@ import { injectScript } from "@/core/messaging"
 import { devHold, onRateLimits } from "@/core/rateLimit"
 import { SETTINGS } from "@/feat/settings"
 
-// A small note in the corner while Roblox has asked ReBTRoblox to wait, so a
+// A small notice in the corner while Roblox is rate limiting us, so a
 // check that seems slow, or numbers that stop moving, show why.
 
 const remaining = (seconds: number) =>
@@ -30,8 +30,7 @@ export const startRateLimitNotice = (): void => {
 
 		if (!note) {
 			note = html`<button type="button" class="btr-rate-limit-note" role="status"></button>`
-			note.title =
-				"Roblox answered too many requests at once, so ReBTRoblox waits as long as it asked before asking again. Click to hide"
+			note.title = "ReBTRoblox waits out the rate limit before sending more requests. Click to hide"
 			note.$on("click", () => {
 				dismissed = until
 				render()
@@ -39,7 +38,7 @@ export const startRateLimitNotice = (): void => {
 			;(document.body ?? document.documentElement).append(note)
 		}
 
-		note.textContent = `Roblox asked ReBTRoblox to wait · ${remaining(left)}`
+		note.textContent = `Rate limited by Roblox · ${remaining(left)}`
 	}
 
 	onRateLimits((limits) => {

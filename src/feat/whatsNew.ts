@@ -55,7 +55,7 @@ const NOTES: Array<{ version: string; notes: Note[] }> = [
 			},
 			{
 				title: "Fixes",
-				text: "Chats that only showed the latest message, or got stuck sending, load properly. The friend log says who ended a friend request or friendship. Server sorts like Best latency work with the paged server list, weekday names are fixed, and profiles of people who blocked you load and tell you so. When Roblox says it's getting too many requests, ReBTRoblox waits instead of asking again. Item previews and community pages work properly on Chrome.",
+				text: "Chats that only showed the latest message, or got stuck sending, load properly. The friend log says who ended a friend request or friendship. Server sorts like Best latency work with the paged server list, weekday names are fixed, and profiles of people who blocked you load and tell you so. When Roblox rate limits ReBTRoblox, it waits the limit out instead of retrying right away. Item previews and community pages work properly on Chrome.",
 			},
 		],
 	},
