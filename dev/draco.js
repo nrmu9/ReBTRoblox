@@ -10,10 +10,10 @@
 //
 // draco3d is a devDependency and is not shipped.
 
-const { execFileSync } = require("node:child_process")
 const fs = require("node:fs")
 const os = require("node:os")
 const path = require("node:path")
+const esbuild = require("esbuild")
 
 const ROOT = path.join(__dirname, "..")
 const OUT = path.join(ROOT, "artifacts", ".draco")
@@ -164,20 +164,17 @@ const buildDecoder = (draco) => {
 			`export { ByteReader } from "@/rbx/Parser/ByteReader"\n`,
 	)
 
-	execFileSync(
-		process.execPath,
-		[
-			path.join(ROOT, "node_modules/esbuild/bin/esbuild"),
-			entry,
-			"--bundle",
-			"--format=cjs",
-			"--platform=node",
-			`--alias:@=${path.join(ROOT, "src")}`,
-			`--outfile=${bundle}`,
-			"--log-level=error",
-		],
-		{ cwd: ROOT },
-	)
+	// The api rather than the bin, which is a js shim on windows but the native
+	// binary on linux, so running it through node only works on one of them.
+	esbuild.buildSync({
+		entryPoints: [entry],
+		bundle: true,
+		format: "cjs",
+		platform: "node",
+		alias: { "@": path.join(ROOT, "src") },
+		outfile: bundle,
+		logLevel: "error",
+	})
 
 	const stub = `
 const __noop = new Proxy(function () {}, { get: () => __noop, apply: () => __noop, construct: () => __noop })
