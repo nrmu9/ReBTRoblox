@@ -7,7 +7,7 @@ import { ContextMenu } from "@/feat/contextMenu"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { clockFormat } from "@/feat/clock"
 import { keepTrackLabel } from "@/feat/activity/trackMenu"
-import { openTracked } from "@/feat/activity/trackDialog"
+import { openTracked } from "@/feat/activity/open"
 import { SETTINGS } from "@/feat/settings"
 import {
 	formatNumber,

@@ -5,7 +5,7 @@ import { btrLocalStorage } from "@/core/storage"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
 import { keepTrackLabel } from "@/feat/activity/trackMenu"
-import { openTracked } from "@/feat/activity/trackDialog"
+import { openTracked } from "@/feat/activity/open"
 import { addLeaveButtons } from "@/feat/quickRemove"
 import {
 	formatNumber,

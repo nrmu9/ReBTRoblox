@@ -1,8 +1,5 @@
 import { loadOptionalFeature } from "@/feat/loadFeature"
 import { assert, bufferToString, delay } from "@/core/util"
-import { RBXAnimationParser } from "@/rbx/Parser/AnimationParser"
-import { RBXMeshParser } from "@/rbx/Parser/MeshParser"
-import { RBXModelParser } from "@/rbx/Parser/ModelParser"
 import { dropFile, forgetAsset, lookUpAsset, readFile, storeFile } from "@/rbx/AssetLookup"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
@@ -370,7 +367,7 @@ export const AssetCache = (() => {
 		},
 
 		loadAnimation: createMethod(async (buffer: ArrayBuffer, assetRequest: AssetRequest) => {
-			await loadOptionalFeature("parser")
+			const { RBXAnimationParser, RBXModelParser } = await loadOptionalFeature("parser")
 
 			const findSequence = (array: any[]): any => {
 				for (const inst of array) {
@@ -397,7 +394,7 @@ export const AssetCache = (() => {
 			return RBXAnimationParser.parse(findSequence(RBXModelParser.parse(buffer).result))
 		}),
 		loadModel: createMethod(async (buffer: ArrayBuffer, assetRequest: AssetRequest) => {
-			await loadOptionalFeature("parser")
+			const { RBXModelParser } = await loadOptionalFeature("parser")
 
 			if (assetRequest.params?.async) {
 				return RBXModelParser.parse(buffer, {
@@ -409,7 +406,7 @@ export const AssetCache = (() => {
 			return RBXModelParser.parse(buffer).result
 		}),
 		loadMesh: createMethod(async (buffer: ArrayBuffer, _assetRequest: AssetRequest) => {
-			await loadOptionalFeature("parser")
+			const { RBXMeshParser } = await loadOptionalFeature("parser")
 			return RBXMeshParser.parse(buffer)
 		}),
 

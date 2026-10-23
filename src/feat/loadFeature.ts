@@ -11,7 +11,7 @@ const loaders = {
 	previewer: () => import("@/rbx/Preview"),
 	explorer: () => import("@/rbx/Explorer"),
 	sourceViewer: () => import("@/feat/sourceViewer"),
-	parser: () => import("@/rbx/Parser/ModelParser"),
+	parser: () => import("@/rbx/Parser"),
 }
 
 type FeatureName = keyof typeof loaders
