@@ -416,7 +416,9 @@ export const modifyAngularTemplate = (
 
 		update() {
 			for (const key of keyArray) {
-				if (!angularTemplateCache[key].body) {
+				// Chrome can answer the first key while the rest are still being
+				// asked for, before they have an entry at all.
+				if (!angularTemplateCache[key]?.body) {
 					return
 				}
 			}

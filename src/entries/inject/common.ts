@@ -522,5 +522,5 @@ export const commonFunctions: Record<string, (...args: any[]) => any> = {
 	setupGamePopovers: (selector: string) => {
 		Roblox?.BootstrapWidgets?.SetupPopover(null, null, selector)
 	},
-	linkify: (target: any) => $(target).linkify(),
+	linkify: (selector: string) => $(document.querySelectorAll(selector)).linkify(),
 }

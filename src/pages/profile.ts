@@ -1349,7 +1349,9 @@ pageInit.profile = () => {
 						const desc = item.$req(".btr-game-desc-content")
 						desc.textContent = placeDetails.description || "This game has no description"
 
-						injectScript.call("linkify", desc)
+						// By selector, as chrome cannot hand an element to the page.
+						desc.dataset.btrLinkify = String(placeId)
+						injectScript.call("linkify", `[data-btr-linkify="${placeId}"]`)
 
 						if (desc.scrollHeight > desc.offsetHeight) {
 							const descToggle = html`<span class="btr-toggle-description">Show More</span>`

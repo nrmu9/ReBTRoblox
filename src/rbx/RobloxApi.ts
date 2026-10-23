@@ -14,7 +14,7 @@ import type {
 	VoiceSettingsResponse,
 } from "@/rbx/types"
 import { backgroundScript, contentScript } from "@/core/messaging"
-import { IS_BACKGROUND_PAGE } from "@/core/env"
+import { IS_BACKGROUND_PAGE, IS_CHROME } from "@/core/env"
 import { recordPresences } from "@/feat/activity/presence"
 
 const invalidXsrfTokens: Record<string, boolean> = {}
@@ -305,7 +305,10 @@ const toSearchParams = (params?: UrlParams): URLSearchParams => {
 export const RobloxApi = {
 	assetdelivery: {
 		requestAssetV2: (urlParams: UrlParams, params?: any) => {
-			if (!IS_BACKGROUND_PAGE && params?.browserAssetRequest) {
+			// Chrome holds a content script's requests to the page's CORS rules,
+			// and assetdelivery does not allow either header from www.roblox.com,
+			// so those go through the background, which is not held to them.
+			if (!IS_BACKGROUND_PAGE && (params?.browserAssetRequest || (IS_CHROME && params?.format))) {
 				return RobloxApi.assetdelivery.requestAssetV2_bg(urlParams, params)
 			}
 
