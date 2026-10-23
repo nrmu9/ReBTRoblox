@@ -10,10 +10,17 @@ import { SETTINGS } from "@/feat/settings"
 // The You tab of the activity panel: your own numbers at a glance, your week,
 // and everything the friend log recorded about you.
 
-const count = (url: string) =>
-	getJson<{ count?: number }>(url).then((json) =>
-		Number.isSafeInteger(json?.count) ? json!.count!.toLocaleString() : "?",
-	)
+/** A count from Roblox, with a + when it is at the most Roblox will say. */
+const count = (url: string, cap?: number) =>
+	getJson<{ count?: number }>(url).then((json) => {
+		const value = json?.count
+
+		if (!Number.isSafeInteger(value)) {
+			return "?"
+		}
+
+		return `${value!.toLocaleString()}${cap !== undefined && value! >= cap ? "+" : ""}`
+	})
 
 export const renderYou = async (panel: HTMLElement, ownUserId: number | null): Promise<void> => {
 	if (!ownUserId) {
@@ -51,7 +58,8 @@ export const renderYou = async (panel: HTMLElement, ownUserId: number | null): P
 		count(`${base}/friends/count`),
 		count(`${base}/followers/count`),
 		count(`${base}/followings/count`),
-		count("https://friends.roblox.com/v1/user/friend-requests/count"),
+		// Roblox stops counting requests at 500.
+		count("https://friends.roblox.com/v1/user/friend-requests/count", 500),
 		SETTINGS.get("profile.lastSeen") ? getPresenceHistory(ownUserId) : Promise.resolve([]),
 	])
 
