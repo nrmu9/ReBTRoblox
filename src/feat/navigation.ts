@@ -553,7 +553,13 @@ export const Navigation = {
 
 		hideSidebarItem("sidebar_home", "Show Home", sidebarLink("roblox.com/home"), false)
 		hideSidebarItem("sidebar_trade", "Show Trade", sidebarLink("/trades"))
-		hideSidebarItem("sidebar_plus", "Show Roblox Plus", `${SIDEBAR_ITEM} > a[href$="/plus"]`)
+		// The link itself, not the Subscribe card shown below the list to those
+		// without Plus, which links to the same page but has no label of its own.
+		hideSidebarItem(
+			"sidebar_plus",
+			"Show Roblox Plus",
+			`${SIDEBAR_ITEM} > a[href$="/plus"]:has(> .text-truncate-end)`,
+		)
 		hideSidebarItem(
 			"sidebar_shop",
 			"Show Official Store",

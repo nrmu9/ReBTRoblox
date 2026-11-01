@@ -45,8 +45,15 @@ const keyOf = (item: Element): string => {
 		return `btr:${marker.slice(13)}`
 	}
 
-	const href = expectFound("a bar item's link", item.querySelector("a[href]"))?.getAttribute("href")
+	const anchor = expectFound("a bar item's link", item.querySelector("a[href]"))
+	const href = anchor?.getAttribute("href")
 	const link = href && !href.startsWith("#") ? linkKey(href) : null
+
+	// The Subscribe card shown to those without Plus links to the same page
+	// as Roblox Plus itself, but is an item of its own, without a label.
+	if (link === "/plus" && !anchor!.querySelector(":scope > .text-truncate-end")) {
+		return "link:/plus?card"
+	}
 
 	if (link) {
 		return `link:${link}`

@@ -29,6 +29,7 @@ const ITEM_NAMES: Record<string, string> = {
 	"id:rbx-navbar-right-search": "Search (narrow windows)",
 	"class:btr-navbar-voice": "Voice status",
 	"id:btr-navbar-voice": "Voice status",
+	"link:/plus?card": "Roblox Plus banner",
 }
 
 /**
