@@ -13,8 +13,14 @@ import { SETTINGS } from "@/feat/settings"
 // open, so friends' presence is recorded the moment it changes whether or not
 // a Roblox tab is open. It is SignalR over a websocket, signed in with the
 // Roblox cookies like any other request to roblox.com.
+//
+// Chrome sends those cookies with a websocket only from a Roblox tab itself,
+// never from an extension, so Roblox turns this one away every time. There it
+// is not opened, and the open Roblox tabs pass on what their own connection
+// pushes instead.
 
 const ENDPOINT = "wss://realtime-signalr.roblox.com/userhub"
+const USE_SOCKET = !__MV3__
 
 // Pushes that only tell pages something changed, by the time it did. Roblox's
 // website reads neither, so what they carry is left alone and any message
@@ -60,14 +66,17 @@ const presenceOf = async (userIds: number[]) => {
 	return presences
 }
 
+const signedInAs = (): Promise<{ id?: number } | null> =>
+	fetch("https://users.roblox.com/v1/users/authenticated", { credentials: "include" })
+		.then((res) => (res.ok ? res.json() : null))
+		.catch(() => null)
+
 /**
  * Where everyone stands when the connection opens, as it only pushes changes:
  * friends who were already online, or changed while nothing was listening.
  */
 const recordFriends = async () => {
-	const me = await fetch("https://users.roblox.com/v1/users/authenticated", {
-		credentials: "include",
-	}).then((res) => (res.ok ? res.json() : null))
+	const me = await signedInAs()
 
 	if (!me?.id) {
 		return
@@ -181,12 +190,29 @@ const scheduleReconnect = () => {
 	reconnectTimer = setTimeout(connect, delay)
 }
 
-const connect = () => {
-	if (socket || !enabled()) {
+let connecting = false
+
+const connect = async () => {
+	if (!USE_SOCKET || socket || connecting || !enabled()) {
 		return
 	}
 
 	clearTimeout(reconnectTimer)
+
+	// Signed out, Roblox refuses the socket, and each refusal is an error in
+	// the console. So it waits until there is someone to sign in as.
+	connecting = true
+	const me = await signedInAs()
+	connecting = false
+
+	if (!me?.id) {
+		scheduleReconnect()
+		return
+	}
+
+	if (socket || !enabled()) {
+		return
+	}
 
 	const ws = new WebSocket(ENDPOINT)
 	socket = ws
@@ -243,6 +269,22 @@ chrome.alarms?.create("btr-presence-live", { periodInMinutes: 1 })
 chrome.alarms?.onAlarm.addListener((alarm) => {
 	if (alarm.name === "btr-presence-live") {
 		SETTINGS.load(connect)
+	}
+})
+
+// Friendship changes a Roblox tab's own connection pushed, for when this
+// background has none of its own. With one, it already heard them.
+contentScript.listen("friendshipLive", async (notifications: any[]) => {
+	if ((USE_SOCKET && socket) || !SETTINGS.get("profile.friendLog")) {
+		return
+	}
+
+	ownUserId ??= (await signedInAs())?.id ?? null
+
+	if (ownUserId) {
+		for (const notification of notifications) {
+			void onFriendshipChanged(ownUserId, notification)
+		}
 	}
 })
 

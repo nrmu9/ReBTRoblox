@@ -346,6 +346,22 @@ export const commonFunctions: Record<string, (...args: any[]) => any> = {
 					contentScript.send("robloxPresenceLive", presences, starts)
 				}
 			})
+
+			// Friends made, lost and asked for, for the friend log where the
+			// background cannot open this connection itself.
+			client.Subscribe("FriendshipNotifications", (notifications: any) => {
+				const list = (Array.isArray(notifications) ? notifications : [notifications]).map(
+					(notification: any) => ({
+						Type: notification?.Type,
+						EventArgs: {
+							UserId1: notification?.EventArgs?.UserId1,
+							UserId2: notification?.EventArgs?.UserId2,
+						},
+					}),
+				)
+
+				contentScript.send("robloxFriendshipLive", list)
+			})
 		}
 
 		subscribe()

@@ -1395,6 +1395,45 @@ pageInit.www = () => {
 		}
 	})
 
+	injectScript.listen("robloxFriendshipLive", (notifications: unknown) => {
+		const TYPES = [
+			"FriendshipCreated",
+			"FriendshipDestroyed",
+			"FriendshipRequested",
+			"FriendshipDeclined",
+		]
+
+		if (
+			!Array.isArray(notifications) ||
+			notifications.length > 50 ||
+			!SETTINGS.get("profile.friendLog")
+		) {
+			return
+		}
+
+		// Only what the friend log reads, each checked.
+		const valid = notifications
+			.filter(
+				(notification) =>
+					isRecord(notification) &&
+					TYPES.includes(notification.Type as string) &&
+					isRecord(notification.EventArgs) &&
+					isId(notification.EventArgs.UserId1) &&
+					isId(notification.EventArgs.UserId2),
+			)
+			.map((notification: any) => ({
+				Type: notification.Type,
+				EventArgs: {
+					UserId1: notification.EventArgs.UserId1,
+					UserId2: notification.EventArgs.UserId2,
+				},
+			}))
+
+		if (valid.length) {
+			backgroundScript.send("friendshipLive", valid)
+		}
+	})
+
 	injectScript.listen("populateExperiment", (experiment: string, key: string, value: any) => {
 		if (!isKey(experiment) || !isKey(key)) {
 			return
