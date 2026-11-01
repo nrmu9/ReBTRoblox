@@ -3,7 +3,6 @@ import { assert } from "@/core/util"
 import { addNavigationEditor } from "@/feat/settingsPanel/navigation"
 import { setupRobuxToCash } from "@/feat/settingsPanel/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
-import { SHARED_DATA } from "@/feat/sharedData"
 import { setupStoredActivity } from "@/feat/settingsPanel/activity"
 import { setupBackup } from "@/feat/settingsPanel/backup"
 import { setupErrorLog } from "@/feat/settingsPanel/errors"
@@ -169,13 +168,10 @@ export const SettingsPanel: SettingsModalState = {
 
 		const body: HTMLElement = this.settingsDiv.$req(".btr-settings-body")
 
-		for (const [text, failed] of [
-			["Settings failed to load, so changes may not save.", SETTINGS.loadError],
-			[SHARED_DATA.syncLoadError, SHARED_DATA.syncLoadError],
-		]) {
-			if (failed) {
-				body.prepend(html`<div class="btr-settings-alert">${text}</div>`)
-			}
+		if (SETTINGS.loadError) {
+			body.prepend(
+				html`<div class="btr-settings-alert">Settings failed to load, so changes may not save.</div>`,
+			)
 		}
 
 		// Closing

@@ -15,7 +15,6 @@ interface FirefoxBrowser {
 export const SHARED_DATA = {
 	payloadIndex: undefined as number | undefined,
 	payloadScript: undefined as { unregister: () => void } | null | undefined,
-	syncLoadError: undefined as string | undefined,
 	payloadPromise: undefined as DeferredPromise | undefined,
 	_loadPromise: deferredPromise(),
 	_loaded: false,
@@ -127,12 +126,9 @@ export const SHARED_DATA = {
 			if (dataPayload instanceof Object) {
 				sessionStorage.removeItem("syncLoadError")
 			} else {
+				// Some browsers, Brave among them, block the request above. The
+				// background has the same data, so nothing is lost but a moment.
 				sessionStorage.setItem("syncLoadError", String(syncLoadErrorCounter + 1))
-
-				this.syncLoadError =
-					typeof (navigator as any).brave === "undefined"
-						? `ReBTRoblox failed to initialize properly for an unknown reason.\nSome features may not work properly for the time being.`
-						: `ReBTRoblox is currently experiencing issues on the Brave browser.\nSome features may not work properly for the time being.`
 
 				dataPayload = await new Promise((resolve) =>
 					backgroundScript.send("getSharedData", (data: any) => resolve(data)),
