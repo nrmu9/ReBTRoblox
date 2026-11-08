@@ -186,6 +186,14 @@ if (IS_BACKGROUND_PAGE) {
 	// When a record's state ended: when the next one began if that was seen
 	// live, now if it is still going under the live connection, otherwise the
 	// last time it was seen.
+	const endGiven = (record: PresenceRecord, next: PresenceRecord | undefined) => {
+		if (next) {
+			return next.exact ? next.from : record.to
+		}
+
+		return liveSince !== null && record.to >= liveSince ? Date.now() : record.to
+	}
+
 	const endOf = async (presence: IDBObjectStore, record: PresenceRecord) => {
 		const next = await done(
 			presence
@@ -193,31 +201,46 @@ if (IS_BACKGROUND_PAGE) {
 				.openCursor(IDBKeyRange.bound([record.userId, record.from], [record.userId, Infinity], true)),
 		)
 
-		if (next) {
-			return next.value.exact ? next.value.from : record.to
-		}
-
-		return liveSince !== null && record.to >= liveSince ? Date.now() : record.to
+		return endGiven(record, next?.value)
 	}
 
 	/** Everyone who shared a server with the user while they were both in it, by the user's session start. */
 	contentScript.listen("getPlayedTogether", async (userId: number, respond: (value: any) => void) => {
 		const db = await openDb()
 		const presence = db.transaction("presence").objectStore("presence")
-		const sessions = (await done(presence.index("user").getAll(userRange(userId)))).filter(
-			(record) => record.gameId,
-		)
+		const records = await done(presence.index("user").getAll(userRange(userId)))
 		const together: Record<number, Array<{ userId: number; from: number; to: number }>> = {}
+		// Everyone else in a server, asked for once however many sessions were in it.
+		const servers = new Map<string, Array<{ other: PresenceRecord; end: number }>>()
 
-		for (const session of sessions) {
-			const end = await endOf(presence, session)
-			const others = (await done(presence.index("game").getAll(session.gameId))).filter(
-				(other) => other.userId !== userId,
-			)
+		for (const [index, session] of records.entries()) {
+			if (!session.gameId) {
+				continue
+			}
 
-			for (const other of others) {
-				const otherEnd = await endOf(presence, other)
+			// In order of start already, so the next one is at hand.
+			let next = index + 1
 
+			while (records[next]?.from === session.from) {
+				next++
+			}
+
+			const end = endGiven(session, records[next])
+			let others = servers.get(session.gameId)
+
+			if (!others) {
+				others = []
+
+				for (const other of await done(presence.index("game").getAll(session.gameId))) {
+					if (other.userId !== userId) {
+						others.push({ other, end: await endOf(presence, other) })
+					}
+				}
+
+				servers.set(session.gameId, others)
+			}
+
+			for (const { other, end: otherEnd } of others) {
 				if (other.from < end && otherEnd > session.from) {
 					;(together[session.from] ??= []).push({
 						userId: other.userId,

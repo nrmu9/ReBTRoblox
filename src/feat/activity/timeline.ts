@@ -221,10 +221,35 @@ const dayRow = (
 
 	const toggle = row.$req(".btr-activity-day-row")
 	const details = row.$req(".btr-activity-details")
+	const list = row.$req(".btr-activity-day-list")
+
+	// Filled the first time the day opens, as a long history has thousands of
+	// entries in days nobody unfolds.
+	const fillList = () => {
+		if (list.childElementCount) {
+			return
+		}
+
+		const inBlocks = new Set(blocks.map((block) => block.index))
+
+		for (let i = segments.length; i--;) {
+			const segment = segments[i]
+			const inDay =
+				segment.type === 0 ? segment.from >= day && segment.from < day + length : inBlocks.has(i)
+
+			if (inDay) {
+				list.append(entry(segments, i, online, together))
+			}
+		}
+	}
 
 	// Details stay in the page and fold away, so opening can animate, but
 	// nothing in a folded day is reachable.
 	const setOpen = (open: boolean) => {
+		if (open) {
+			fillList()
+		}
+
 		row.classList.toggle("btr-activity-day-open", open)
 		toggle.setAttribute("aria-expanded", String(open))
 		details.inert = !open
@@ -249,7 +274,9 @@ const dayRow = (
 
 	for (const block of blocks) {
 		const segment = segments[block.index]
-		const piece = html`<span class="btr-activity-block" data-type="${segment.type}"></span>`
+		const piece = document.createElement("span")
+		piece.className = "btr-activity-block"
+		piece.dataset.type = String(segment.type)
 		const range = `${new Date(block.start).$format(clockFormat())} – ${new Date(block.end).$format(clockFormat())}`
 
 		piece.style.left = `${((block.start - day) / length) * 100}%`
@@ -263,20 +290,6 @@ ${range} · ${formatDuration(block.end - block.start)}`
 		const now = html`<span class="btr-activity-now"></span>`
 		now.style.left = `${((Date.now() - day) / length) * 100}%`
 		bar.append(now)
-	}
-
-	const list = row.$req(".btr-activity-day-list")
-
-	for (let i = segments.length; i--;) {
-		const segment = segments[i]
-		const inDay =
-			segment.type === 0
-				? segment.from >= day && segment.from < day + length
-				: blocks.some((block) => block.index === i)
-
-		if (inDay) {
-			list.append(entry(segments, i, online, together))
-		}
 	}
 
 	return row
