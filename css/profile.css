@@ -238,6 +238,10 @@ html .dark-theme.btr-profile .btr-section-content-off {
 /* Classic layout: the avatar in About, no banner */
 
 .btr-profile-classic {
+	.content {
+		padding-top: 40px;
+	}
+
 	.currently-wearing-avatar-with-background {
 		display: none;
 	}
