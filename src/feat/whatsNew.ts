@@ -18,6 +18,20 @@ interface Note {
 
 const NOTES: Array<{ version: string; notes: Note[] }> = [
 	{
+		version: "4.6.0",
+		notes: [
+			{
+				title: "Old profile layout",
+				text: "The avatar is back inside About like on the old profile, instead of the big banner across the top. It's on by default. If you like the banner better, turn off Classic Layout in the Profile settings.",
+				page: "profile",
+			},
+			{
+				title: "Fixes",
+				text: "Games someone added to their profile, like ones from a community, were missing. They show first now, followed by the rest of that person's public games. Some games came up as a blank row, which is fixed too. If Roblox can't load someone's 3D avatar, you get their normal picture instead of an empty box. Roblox Plus no longer shows up twice in the navigation settings on accounts without Plus. The WebSocket errors in Chrome's console are gone, and so is the Brave warning.",
+			},
+		],
+	},
+	{
 		version: "4.5.0",
 		notes: [
 			{
