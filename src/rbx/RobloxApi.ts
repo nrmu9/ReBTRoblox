@@ -229,6 +229,9 @@ const xsrfFetch = (url: string, init: XsrfInit = {}) => {
 	})
 }
 
+/** One of Roblox's oldest games, there to keep another from being asked for alone. */
+const GAME_DETAILS_COMPANION = 1818 as UniverseId
+
 const batchable = (limit: number, callback: any) => {
 	const batches: any[] = []
 
@@ -491,11 +494,22 @@ export const RobloxApi = {
 			).then((res) => res.json()),
 		),
 
-		getGameDetails: batchable(50, (universeIds: UniverseId[]) =>
-			xsrfFetch(`https://games.roblox.com/v1/games?universeIds=${universeIds.join("&universeIds=")}`, {
+		// Asked for alone, a game can come back as a blank record with id 0 and
+		// "[TITLE UNAVAILABLE]". Asked for next to any other, it comes back whole,
+		// so one is never asked for alone. The extra one is left out of the answer.
+		getGameDetails: batchable(50, (universeIds: UniverseId[]) => {
+			const asked = new Set(universeIds.map(String))
+			const ids = universeIds.length === 1 ? [...universeIds, GAME_DETAILS_COMPANION] : universeIds
+
+			return xsrfFetch(`https://games.roblox.com/v1/games?universeIds=${ids.join("&universeIds=")}`, {
 				credentials: "include",
-			}).then((res) => res.json()),
-		),
+			})
+				.then((res) => res.json())
+				.then((json) => ({
+					...json,
+					data: json?.data?.filter((game: any) => asked.has(String(game.id))),
+				}))
+		}),
 
 		getFavorites: (userId: UserId, limit = 10, cursor = "") =>
 			xsrfFetch(

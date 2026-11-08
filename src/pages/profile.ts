@@ -1108,23 +1108,60 @@ pageInit.profile = () => {
 			}
 
 			const initGames = async () => {
-				// Roblox does not reliably send the Experiences component, even for a
-				// user with games, so waiting on it left the section spinning. The
-				// games list fetched for the visit count is what this is built from.
-				// The component is used only if it has already arrived, since it
-				// carries Roblox's own ordering.
-				const games = await gamesPromise.catch(() => null)
+				// The Experiences component has the games added to the profile, whoever
+				// made them, so those go first, then the rest of their public games.
+				// Roblox does not always send it, so a few seconds in it is asked for
+				// directly.
+				const listed: any = await Promise.race([
+					waitForComponent(userIdString, "Experiences"),
+					delay(4000).then(() =>
+						profileData[userIdString]?.components?.Experiences
+							? profileData[userIdString]
+							: RobloxApi.userProfiles.getComponents(userId, ["Experiences"]).catch(() => null),
+					),
+				])
 
-				const experiences: { universeId: number }[] =
-					profileData[userIdString]?.components?.Experiences?.experiences ??
-					(games?.data ?? []).map((game: any) => ({ universeId: game.id }))
+				const publicGames = (await gamesPromise.catch(() => null))?.data ?? []
+
+				const listedExperiences: { universeId: number }[] = [
+					...new Set<number>([
+						...(listed?.components?.Experiences?.experiences ?? []).map(
+							(experience: any) => experience.universeId,
+						),
+						...publicGames.map((game: any) => game.id),
+					]),
+				].map((universeId) => ({ universeId }))
 
 				const content = newCont.$req(".btr-profile-games > .btr-games-content")
+
+				// Asked for first, as Roblox can leave any of them out of its answer.
+				const details = new Map<number, any>()
+
+				await Promise.all(
+					listedExperiences.map(({ universeId }) =>
+						RobloxApi.games.getGameDetails
+							.batch(universeId)
+							.then((json: any) => {
+								const game = json?.data?.find((x: any) => x.id === universeId)
+
+								if (game) {
+									details.set(universeId, game)
+								}
+							})
+							.catch(() => {}),
+					),
+				)
+
+				const experiences = listedExperiences.filter(({ universeId }) => details.has(universeId))
 
 				if (!experiences.length) {
 					content.replaceChildren(
 						html`<div class="section-content-off btr-section-content-off">
-							This user has no experiences
+							${
+								listedExperiences.length
+									? "Could not load their experiences"
+									: "This user has no experiences"
+							}
 						</div>`,
 					)
 					return
@@ -1271,12 +1308,16 @@ pageInit.profile = () => {
 					item.classList.add("visible")
 
 					RobloxApi.thumbnails.getGameThumbnails.batch(universeId, "768x432").then((json: any) => {
-						const thumb = json.data.find((x: any) => x.universeId === universeId)
-						item.$req<HTMLImageElement>(".btr-game-thumb").src = thumb.thumbnails?.[0]?.imageUrl
+						const url = json?.data?.find((x: any) => x.universeId === universeId)?.thumbnails?.[0]
+							?.imageUrl
+
+						if (url) {
+							item.$req<HTMLImageElement>(".btr-game-thumb").src = url
+						}
 					})
 
-					RobloxApi.games.getGameDetails.batch(universeId).then(async (_gameDetails: any) => {
-						const gameDetails = _gameDetails.data.find((x: any) => x.id === universeId)
+					void (async () => {
+						const gameDetails = details.get(universeId)
 						const placeId = gameDetails.rootPlaceId
 
 						item.$req<HTMLAnchorElement>(".btr-game-thumb-container").href =
@@ -1339,15 +1380,24 @@ pageInit.profile = () => {
 						item.$req(".slide-item-visits").textContent = formatNumber(gameDetails.visits)
 
 						RobloxApi.thumbnails.getPlaceIcons.batch(placeId, "150x150").then((json: any) => {
-							const thumb = json.data.find((x: any) => x.targetId === placeId)
-							item.$req<HTMLImageElement>(".btr-game-icon").src = thumb.imageUrl
+							const url = json?.data?.find((x: any) => x.targetId === placeId)?.imageUrl
+
+							if (url) {
+								item.$req<HTMLImageElement>(".btr-game-icon").src = url
+							}
 						})
 
 						const _placeDetails = await RobloxApi.games.getPlaceDetails.batch(placeId)
-						const placeDetails = _placeDetails.find((x: any) => x.placeId === placeId)
+						// Signed out, this answers with an error instead of a list.
+						const placeDetails = Array.isArray(_placeDetails)
+							? _placeDetails.find((x: any) => x.placeId === placeId)
+							: null
 
 						const desc = item.$req(".btr-game-desc-content")
-						desc.textContent = placeDetails.description || "This game has no description"
+						desc.textContent =
+							placeDetails?.description ||
+							gameDetails.description ||
+							"This game has no description"
 
 						// By selector, as chrome cannot hand an element to the page.
 						desc.dataset.btrLinkify = String(placeId)
@@ -1370,7 +1420,7 @@ pageInit.profile = () => {
 							})
 						}
 
-						if (placeDetails.isPlayable) {
+						if (placeDetails?.isPlayable ?? true) {
 							item.$req(".btr-game-playbutton-container").replaceChildren(
 								html`<div class="btr-game-playbutton btn-primary-lg" data-placeid=${placeId}>
 									Play
@@ -1399,7 +1449,7 @@ pageInit.profile = () => {
 								</div>
 							`)
 						}
-					})
+					})()
 
 					content.append(item)
 
