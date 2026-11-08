@@ -53,7 +53,7 @@ export const openActivity = async (
 			}
 
 			if (tab === "stats") {
-				void renderStats(panel, shown, isOnline(), statsState)
+				renderStats(panel, shown, isOnline(), statsState)
 			} else if (tab === "friends") {
 				void renderFriends(panel, userId, !!options.isOwn, friendFilter)
 			} else if (tab === "changes") {
@@ -128,7 +128,7 @@ export const openActivity = async (
 			shown = joined.segments
 
 			if (panels.stats.childElementCount) {
-				void renderStats(panels.stats, shown, isOnline(), statsState)
+				renderStats(panels.stats, shown, isOnline(), statsState)
 			}
 
 			if (panels.friends.childElementCount) {

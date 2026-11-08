@@ -98,6 +98,16 @@ export const checkedLine = (parts: Array<[string, number | undefined]>): string 
 
 export const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0)
 
+/**
+ * When the next hour on the clock starts, always after `time`. Counted from
+ * the minutes showing, as setting them to zero picks the first of the two
+ * 2 o'clocks on the night the clocks go back, which can be no later than `time`.
+ */
+export const nextHour = (time: number) => {
+	const date = new Date(time)
+	return time + 60 * 60e3 - (date.getMinutes() * 60e3 + date.getSeconds() * 1e3 + date.getMilliseconds())
+}
+
 // Through the date rather than adding 24 hours, which DST days are not.
 export const nextDay = (day: number) => {
 	const date = new Date(day)

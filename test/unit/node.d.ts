@@ -1,6 +1,8 @@
 // The parts of Node's test modules the unit tests use, declared here so the
 // typecheck needs no Node type definitions for the extension's own code.
 
+declare const process: { env: Record<string, string | undefined> }
+
 declare module "node:test" {
 	export const test: (name: string, fn: () => unknown) => void
 }

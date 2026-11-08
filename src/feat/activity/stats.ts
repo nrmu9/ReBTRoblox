@@ -1,7 +1,7 @@
 import { html } from "@/core/html"
 import { clockFormat } from "@/feat/clock"
 import type { PresenceSegment } from "@/feat/activity/presence"
-import { DAY, segmentEnd, formatDuration, startOfDay, nextDay } from "@/feat/activity/shared"
+import { DAY, segmentEnd, formatDuration, startOfDay, nextDay, nextHour } from "@/feat/activity/shared"
 import { thumbnails } from "@/feat/activity/logs"
 import { barChart, weekHeatmap, type ChartBar } from "@/feat/activity/chart"
 
@@ -110,7 +110,7 @@ const eachOnlineHour = (
 		const end = segmentEnd(segments, index, online)
 
 		for (let from = Math.max(segment.from, since); from < end;) {
-			const to = Math.min(end, new Date(from).setMinutes(0, 0, 0) + HOUR)
+			const to = Math.min(end, nextHour(from))
 			fn(from, to)
 			from = to
 		}
@@ -279,8 +279,8 @@ export const fillGameIcons = async (root: HTMLElement): Promise<void> => {
 	}
 }
 
-/** Stats for each period, all built at once so switching between them is instant. */
-export const renderStats = async (
+/** Stats for the period picked. Each is built the first time it is shown, as a long history takes a while. */
+export const renderStats = (
 	panel: HTMLElement,
 	segments: PresenceSegment[],
 	online: boolean,
@@ -289,12 +289,27 @@ export const renderStats = async (
 	const toolbar = html`<div class="btr-friendlog-filters" role="group" aria-label="Period"></div>`
 	const sections = new Map<string, HTMLElement>()
 
-	for (const [period, label] of STAT_PERIODS) {
-		const since = period === "all" ? 0 : Date.now() - Number(period) * DAY
-		const section = statsSection(segments, online, since)
-		section.dataset.period = period
-		sections.set(period, section)
+	const show = () => {
+		if (!sections.has(state.period)) {
+			const since = state.period === "all" ? 0 : Date.now() - Number(state.period) * DAY
+			const section = statsSection(segments, online, since)
 
+			section.dataset.period = state.period
+			sections.set(state.period, section)
+			panel.append(section)
+			void fillGameIcons(section)
+		}
+
+		for (const [period, section] of sections) {
+			section.hidden = period !== state.period
+		}
+
+		for (const chip of toolbar.$findAll<HTMLElement>("[data-period]")) {
+			chip.setAttribute("aria-pressed", String(chip.dataset.period === state.period))
+		}
+	}
+
+	for (const [period, label] of STAT_PERIODS) {
 		const chip = html`<button type="button" class="btr-friendlog-filter" data-period="${period}">
 			${label}
 		</button>`
@@ -307,17 +322,6 @@ export const renderStats = async (
 		toolbar.append(chip)
 	}
 
-	const show = () => {
-		for (const [period, section] of sections) {
-			section.hidden = period !== state.period
-		}
-
-		for (const chip of toolbar.$findAll<HTMLElement>("[data-period]")) {
-			chip.setAttribute("aria-pressed", String(chip.dataset.period === state.period))
-		}
-	}
-
+	panel.replaceChildren(toolbar)
 	show()
-	panel.replaceChildren(toolbar, ...sections.values())
-	await fillGameIcons(panel)
 }
