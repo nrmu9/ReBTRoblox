@@ -7,7 +7,9 @@ import { reactHook } from "@/entries/inject/react"
 // on the responses Roblox fetches anyway.
 
 export const commonFunctions: Record<string, (...args: any[]) => any> = {
-	redirectEvents: (fromSelector: string, toSelector: string) => {
+	// With bubbles, a copy goes on up to react's listener on the root, which is
+	// what onClick handlers need.
+	redirectEvents: (fromSelector: string, toSelector: string, bubbles = false) => {
 		const from = document.querySelector(fromSelector)
 		const to = document.querySelector(toSelector)
 
@@ -120,7 +122,7 @@ export const commonFunctions: Record<string, (...args: any[]) => any> = {
 				new Proxy(event, {
 					get(target, prop) {
 						return prop === "bubbles"
-							? false
+							? bubbles && target.bubbles
 							: (target as unknown as Record<string | symbol, any>)[prop]
 					},
 				}),

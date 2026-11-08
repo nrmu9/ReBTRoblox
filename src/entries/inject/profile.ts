@@ -7,6 +7,23 @@ import { reactHook } from "@/entries/inject/react"
 
 export const profileFunctions: Record<string, (...args: any[]) => any> = {
 	profile: () => {
+		// The classic layout moves the avatar into About, so it gets the same two
+		// wrappers as the sections below. Always, as this runs before the settings
+		// are known; the page code decides whether anything moves.
+		reactHook.inject(".currently-wearing-avatar-with-background", (avatar: any) => {
+			const children = avatar[0].props.children
+
+			if (!children?.props?.className?.startsWith("btr-wrapper-")) {
+				avatar[0].props.children = reactHook.createElement("div", {
+					className: "btr-wrapper-container-Avatar",
+					children: reactHook.createElement("div", {
+						className: "btr-wrapper-Avatar",
+						children,
+					}),
+				})
+			}
+		})
+
 		// Roblox dropped the tabs for one long page, .profile-content.
 		reactHook.inject(">.profile-tab-content,>.profile-content", (tabContent: any) => {
 			if (!Array.isArray(tabContent[0].props.children)) {

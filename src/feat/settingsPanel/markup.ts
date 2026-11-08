@@ -245,6 +245,11 @@ export const settingsMarkup = () =>
 						desc="Uses the ReBTRoblox profile layout"
 					>
 						<toggle
+							label="Classic Layout"
+							path="classicLayout"
+							desc="Shows the avatar inside About, like the old profile, instead of as a banner across the top"
+						></toggle>
+						<toggle
 							label="Embed Inventory"
 							path="embedInventoryEnabled"
 							desc="Shows the inventory on the profile"

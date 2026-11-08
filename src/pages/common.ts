@@ -365,7 +365,7 @@ export function createPager(noSelect?: boolean, hideWhenEmpty?: boolean): Pager 
 }
 
 let redirectIndexCounter = 0
-export const redirectEvents = (from: HTMLElement, to: HTMLElement) => {
+export const redirectEvents = (from: HTMLElement, to: HTMLElement, bubbles = false) => {
 	const redirectIndex = redirectIndexCounter
 	redirectIndexCounter += 2
 
@@ -376,6 +376,7 @@ export const redirectEvents = (from: HTMLElement, to: HTMLElement) => {
 		"redirectEvents",
 		`[data-redirect-events="${redirectIndex}"]`,
 		`[data-redirect-events="${redirectIndex + 1}"]`,
+		bubbles,
 	)
 }
 

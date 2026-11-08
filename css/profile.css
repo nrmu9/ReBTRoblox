@@ -235,6 +235,35 @@ html .dark-theme.btr-profile .btr-section-content-off {
 	}
 }
 
+/* Classic layout: the avatar in About, no banner */
+
+.btr-profile-classic {
+	.currently-wearing-avatar-with-background {
+		display: none;
+	}
+
+	.profile-header-overlay {
+		margin-top: 0;
+		padding-top: 0;
+	}
+
+	.btr-wrapper-Avatar {
+		position: relative;
+		height: 352px;
+		margin-bottom: 6px;
+	}
+
+	.btr-wrapper-Avatar .profile-avatar-left {
+		width: 100%;
+		height: 100%;
+		background: none !important;
+	}
+
+	.btr-toggle-items {
+		bottom: 12px;
+	}
+}
+
 /* Where Roblox could not build a 3D avatar. */
 .btr-avatar-picture {
 	position: absolute;

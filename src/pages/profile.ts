@@ -126,6 +126,8 @@ pageInit.profile = () => {
 		return
 	}
 
+	const classicLayout = !!SETTINGS.get("profile.classicLayout")
+
 	injectScript.call("profile")
 
 	// Roblox asks for a profile in several requests, a few components each, in no
@@ -200,7 +202,7 @@ pageInit.profile = () => {
 	}
 
 	onPageReset(() => {
-		document.body?.classList.remove("btr-profile")
+		document.body?.classList.remove("btr-profile", "btr-profile-classic")
 		if (document.body) {
 			delete document.body.dataset.btrBlocked
 		}
@@ -213,7 +215,10 @@ pageInit.profile = () => {
 	onPageLoad((userIdString) => {
 		const userId = Number.parseInt(userIdString, 10)
 
-		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-profile"))
+		document.$watch("body", (body: HTMLElement) => {
+			body.classList.add("btr-profile")
+			body.classList.toggle("btr-profile-classic", classicLayout)
+		})
 
 		if (Number.isSafeInteger(userId)) {
 			showPictureIf3dFails(userId)
@@ -238,6 +243,7 @@ pageInit.profile = () => {
 							<div class="btr-profile-social-links"></div>
 						</div>
 						<div class="section-content">
+							<div class="placeholder-avatar"></div>
 							<div class="btr-profile-description">
 								<div class="btr-profile-description-content">
 									<span class="spinner spinner-default"></span>
@@ -351,6 +357,10 @@ pageInit.profile = () => {
 				}),
 			])
 
+			if (!classicLayout) {
+				newCont.$find(".placeholder-avatar")?.remove()
+			}
+
 			// The answers may already have come and gone before this listened.
 			injectScript.send("requestProfileData", userIdString)
 
@@ -365,6 +375,17 @@ pageInit.profile = () => {
 
 					newCont.$find(".placeholder-friends")?.replaceWith(friends)
 					redirectEvents(friends, container)
+				})
+				.$watch(".btr-wrapper-Avatar", (avatar: HTMLElement) => {
+					if (!classicLayout) {
+						return
+					}
+
+					const container = avatar.parentElement!
+
+					newCont.$find(".placeholder-avatar")?.replaceWith(avatar)
+					// Its 3D button is a react onClick, so the events have to bubble.
+					redirectEvents(avatar, container, true)
 				})
 				.$watch(".user-profile-header", (header: HTMLElement) => {
 					const target = header.$find("> .flex-nowrap > a.radius-circle")
@@ -432,13 +453,16 @@ pageInit.profile = () => {
 						update()
 					})
 				})
-				// Moved into the header, which is still inside the react root, so its
-				// events reach react without being redirected.
+				// Moved next to the avatar. In the banner that is still inside the react
+				// root, so its events reach react on their own. In About the avatar's
+				// redirect carries them along with its own.
 				.$watch(".btr-wrapper-CurrentlyWearing", (wearing: HTMLElement) => {
 					const toggleItems = html`<span class="btr-toggle-items btn-control btn-control-sm"
 						>Show Items</span
 					>`
-					profileContainer.$req(".profile-avatar-left").parentElement!.append(toggleItems)
+					const avatar =
+						newCont.$find(".profile-avatar-left") ?? profileContainer.$req(".profile-avatar-left")
+					avatar.parentElement!.append(toggleItems)
 
 					wearing.classList.add(
 						"btr-currently-wearing",
