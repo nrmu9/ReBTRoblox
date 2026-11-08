@@ -93,6 +93,34 @@ const getOwnCommunities = async (me: number): Promise<Set<number>> => {
 	}
 }
 
+// Roblox gives up on a 3D avatar it cannot build and leaves the space empty,
+// which for some accounts is every time. Their picture still exists, so it
+// shows there instead, leaving the choice of 2D or 3D as it was.
+const CANVAS_WAIT = 4000
+
+const showPictureIf3dFails = (userId: number) => {
+	document.$watch(
+		".profile-avatar-left .thumbnail-3d-container",
+		async (container: HTMLElement) => {
+			await delay(CANVAS_WAIT)
+
+			if (!container.isConnected || container.$find("canvas")) {
+				return
+			}
+
+			const json = await RobloxApi.thumbnails.getAvatarThumbnails.batch(userId, "720x720")
+			const url = json?.data?.find((thumb: any) => thumb.targetId === userId)?.imageUrl
+
+			if (url && !container.$find("canvas")) {
+				const picture = html<HTMLImageElement>`<img class="btr-avatar-picture" src="${url}" alt="" />`
+				container.append(picture)
+				container.$watch("canvas", () => picture.remove())
+			}
+		},
+		{ continuous: true },
+	)
+}
+
 pageInit.profile = () => {
 	if (!SETTINGS.get("profile.enabled")) {
 		return
@@ -186,6 +214,10 @@ pageInit.profile = () => {
 		const userId = Number.parseInt(userIdString, 10)
 
 		document.$watch("body", (body: HTMLElement) => body.classList.add("btr-profile"))
+
+		if (Number.isSafeInteger(userId)) {
+			showPictureIf3dFails(userId)
+		}
 
 		if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
 			void loggedInUserPromise.then((own) => {

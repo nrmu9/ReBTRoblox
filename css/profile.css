@@ -235,6 +235,16 @@ html .dark-theme.btr-profile .btr-section-content-off {
 	}
 }
 
+/* Where Roblox could not build a 3D avatar. */
+.btr-avatar-picture {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	pointer-events: none;
+}
+
 /* Lists */
 
 .btr-card-list {
