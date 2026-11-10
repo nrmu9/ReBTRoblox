@@ -473,6 +473,12 @@ pageInit.profile = () => {
 					toggleItems.after(wearing)
 
 					const onClick = (ev: Event) => {
+						// In About, every click on the avatar is also sent on to where
+						// Roblox put it, and that copy looks like a click outside.
+						if (!ev.isTrusted) {
+							return
+						}
+
 						if (!ev.composedPath().includes(wearing) && ev.target !== toggleItems) {
 							toggle()
 						}

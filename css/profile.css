@@ -266,6 +266,61 @@ html .dark-theme.btr-profile .btr-section-content-off {
 	.btr-toggle-items {
 		bottom: 12px;
 	}
+
+	/* Roblox sizes these cards only inside its own profile container, which
+	   About is outside of. */
+	.btr-currently-wearing .profile-carousel .item-card {
+		width: 100%;
+		height: 100%;
+		padding: 0;
+
+		.item-card-container {
+			width: 100%;
+			max-width: 100%;
+			padding: 0;
+		}
+
+		.item-card-thumb-container {
+			width: 100%;
+			max-width: 100%;
+			height: 100%;
+			max-height: 100%;
+		}
+
+		.thumbnail-2d-container {
+			aspect-ratio: 1;
+			width: 100%;
+		}
+
+		.item-card-caption {
+			padding-top: var(--padding-medium);
+		}
+
+		.item-card-name {
+			font: var(--typography-title-medium-font);
+			letter-spacing: var(--typography-title-medium-letter-spacing);
+		}
+
+		.icon-robux-16x16 {
+			margin-left: -2.5px;
+		}
+
+		.text-robux-tile {
+			font: var(--typography-body-medium-font);
+			letter-spacing: var(--typography-body-medium-letter-spacing);
+			padding-left: var(--padding-xxsmall);
+		}
+	}
+}
+
+/* As wide as the whole profile, like in the banner, rather than only About.
+   The avatar sits 15px into About, which is half the profile less 6px. */
+@media (min-width: 992px) {
+	.btr-profile-classic .btr-currently-wearing {
+		right: auto;
+		left: -5px;
+		width: calc(200% + 52px);
+	}
 }
 
 /* Where Roblox could not build a 3D avatar. */
