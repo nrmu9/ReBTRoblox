@@ -322,7 +322,8 @@ export const Navigation = {
 
 		const FRIENDS_LINK = `nav a[href*="/users/friends"]`
 		const MESSAGES_LINK = `nav a[href*="/my/messages"]`
-		const NOTIF_BADGE = ".foundation-web-badge"
+		// Roblox's badge before and after it turned into the smaller blue one.
+		const NOTIF_BADGE = ".foundation-web-status-indicator, .foundation-web-badge"
 
 		/** Mirror href and unread count from a left menu entry onto our own item. */
 		const mirrorNavItem = (node: HTMLElement, linkSelector: string): void => {

@@ -44,24 +44,26 @@
 	filter: invert(76%);
 }
 
-/* Coloured like the badges in Roblox's sidebar, from the same variables, so it
-   follows the theme. The border is the header's own colour, which keeps the
-   badge clear of the icon it overlaps. */
+/* Like the badges in Roblox's sidebar, from the same variables, so it follows
+   the theme. The border is the header's own colour, which keeps the badge clear
+   of the icon it overlaps. */
 #header .btr-nav-notif {
-	box-sizing: content-box;
+	box-sizing: border-box;
 	position: absolute;
 	display: block;
+	/* The header is only as tall as its buttons, so the ring is what goes past
+	   its top edge, never the blue. */
 	top: -2px;
-	right: -2px;
+	right: -4px;
 
-	background: var(--color-system-contrast, #f7f7f8);
+	background: var(--color-system-emphasis, #335fff);
 	padding: 0 4px;
-	height: 16px;
-	min-width: 8px;
+	height: 20px;
+	min-width: 20px;
 	text-align: center;
 
-	color: var(--color-surface-200, #202227);
-	font-size: 10px;
+	color: var(--dark-mode-content-emphasis, #f7f7f8);
+	font-size: 12px;
 	font-weight: 600;
 	line-height: 16px;
 
@@ -155,7 +157,8 @@
 
 .btr-nav-hide_notifs .btr-nav-notif,
 .btr-nav-hide_notifs .notification-blue,
-.btr-nav-hide_notifs .foundation-web-badge {
+.btr-nav-hide_notifs .foundation-web-badge,
+.btr-nav-hide_notifs .foundation-web-status-indicator {
 	display: none !important;
 }
 
