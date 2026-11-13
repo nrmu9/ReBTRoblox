@@ -2,6 +2,7 @@ import { settings } from "@/entries/inject/state"
 import { onSet, hijackFunction } from "@/entries/inject/hooks"
 import { reactHook } from "@/entries/inject/react"
 import { contentScript } from "@/entries/inject/messaging"
+import { shareChatRequests } from "@/entries/inject/chatRequests"
 
 // Injected functions for the navbar, its search and robux badge, and the chat.
 
@@ -276,6 +277,9 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 	// conversations and invalidates one when its preview moves on
 	// without its messages following.
 	fixChatMessages: () => {
+		// Before the chat asks for anything, so its first asks are shared too.
+		shareChatRequests()
+
 		const SHELL = ".react-chat-dialog-shell"
 		const ROW = "button.react-chat-row"
 		const seen = new Map<string, string>()
@@ -326,6 +330,37 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 		// asked for again once. What comes back is Roblox's own answer, so a
 		// chat that really is that short is not asked for with every message.
 		const refetched = new Set<string>()
+		const SHORT = 2
+
+		// A chat that turned out to really be that short, by the messages it
+		// held, so other tabs and later pages do not ask again to find out. The
+		// broken history is the newest message alone, which never matches.
+		const SHORT_CHATS = "ReBTRoblox:shortChats"
+
+		const shortChats = (): Record<string, string> => {
+			try {
+				const value = JSON.parse(localStorage.getItem(SHORT_CHATS) ?? "{}")
+				return value && typeof value === "object" ? value : {}
+			} catch {
+				return {}
+			}
+		}
+
+		const rememberShort = (conversationId: string, held: string) => {
+			try {
+				const chats = shortChats()
+				delete chats[conversationId]
+				chats[conversationId] = held
+
+				// The oldest go first, as objects keep their order.
+				const ids = Object.keys(chats)
+				for (const id of ids.slice(0, Math.max(0, ids.length - 100))) {
+					delete chats[id]
+				}
+
+				localStorage.setItem(SHORT_CHATS, JSON.stringify(chats))
+			} catch {}
+		}
 
 		// Every ask of ours comes on top of the page's own, and Roblox turns
 		// away a chat that is asked for too often. One chat is asked for at
@@ -412,10 +447,20 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 
 				const { messages } = data
 
-				if (messages.length >= 20 || data.next_cursor) {
+				if (messages.length > SHORT || data.next_cursor) {
 					// Whole again, so a short history later is worth fixing too.
 					refetched.delete(conversation.id)
-				} else if (!refetched.has(conversation.id) && askAgain(conversation.id, client)) {
+					continue
+				}
+
+				const held = messages.map((message: any) => message?.id).join(",")
+
+				if (refetched.has(conversation.id)) {
+					// Asked again and still this short, so the chat really is.
+					if (query.state.dataUpdatedAt > (askedAt.get(conversation.id) ?? Infinity)) {
+						rememberShort(conversation.id, held)
+					}
+				} else if (shortChats()[conversation.id] !== held && askAgain(conversation.id, client)) {
 					refetched.add(conversation.id)
 				}
 			}

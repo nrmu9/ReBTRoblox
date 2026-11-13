@@ -134,7 +134,7 @@ export const settingsMarkup = () =>
 							label="Fix Missing Messages"
 							path="fixChatMessages"
 							require="!hideChat"
-							desc="Fixes chats that miss their newest messages, or show only the newest one"
+							desc="Fixes chats that miss their newest messages, or show only the newest one, and shares chat loading between tabs so Roblox turns it away less"
 						></toggle>
 						<toggle
 							label="Search Messages"
