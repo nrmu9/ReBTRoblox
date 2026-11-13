@@ -18,6 +18,28 @@ interface Note {
 
 const NOTES: Array<{ version: string; notes: Note[] }> = [
 	{
+		version: "4.6.4",
+		notes: [
+			{
+				title: "Old profile header",
+				text: "Want the old header back too? Turn on Classic Header in the Profile settings.",
+				page: "profile",
+			},
+			{
+				title: "Previous usernames",
+				text: "Old usernames are back on profiles. Hover the clock under someone's description to see them.",
+			},
+			{
+				title: "Chat",
+				text: "Having a bunch of Roblox tabs open shouldn't break chat anymore.",
+			},
+			{
+				title: "Fixes",
+				text: "Friend request and message counts show up in the top bar again.",
+			},
+		],
+	},
+	{
 		version: "4.6.0",
 		notes: [
 			{
