@@ -134,6 +134,81 @@ html .dark-theme.btr-profile .btr-section-content-off {
 			justify-content: center;
 		}
 	}
+
+	/* A small line under the description, as on the old profile. */
+	.btr-name-history {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		width: fit-content;
+		margin: 8px 0 0 12px;
+
+		color: var(--color-content-muted, #bfbfc1);
+		font-size: 12px;
+		line-height: 16px;
+		cursor: default;
+
+		> .icon {
+			display: block;
+			width: 14px;
+			height: 14px;
+		}
+
+		&:hover,
+		&:focus-visible {
+			color: var(--color-content-emphasis, #f7f7f8);
+		}
+	}
+
+	/* Out of the clock: its arrow points at the icon's middle, 7px in, and it
+	   fades and grows from there, like the old site's tooltips. */
+	.btr-name-history-tip {
+		position: absolute;
+		z-index: 30;
+		bottom: calc(100% + 8px);
+		left: -12px;
+
+		width: max-content;
+		max-width: 240px;
+		padding: 8px 12px;
+
+		background: var(--color-surface-100, #191a1f);
+		color: var(--color-content-emphasis, #f7f7f8);
+		border-radius: 8px;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+		font-size: 14px;
+		line-height: 20px;
+		white-space: pre-line;
+		overflow-wrap: anywhere;
+
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transform: scale(0.85);
+		transform-origin: 19px calc(100% + 6px);
+		transition:
+			opacity 0.15s linear,
+			transform 0.15s ease-out,
+			visibility 0.15s linear;
+
+		&::after {
+			content: "";
+			position: absolute;
+			top: 100%;
+			left: 13px;
+			border: 6px solid transparent;
+			border-top-color: var(--color-surface-100, #191a1f);
+		}
+
+		.btr-name-history:hover > &,
+		.btr-name-history:focus-visible > & {
+			opacity: 1;
+			visibility: visible;
+			transform: none;
+		}
+	}
 }
 
 /* Status */

@@ -305,6 +305,14 @@ pageInit.profile = () => {
 									<span class="spinner spinner-default"></span>
 								</div>
 							</div>
+							<div class="btr-name-history" tabindex="0" style="display:none">
+								<span
+									class="icon icon-regular-clock-spin-reverse-dashed"
+									aria-hidden="true"
+								></span>
+								<span class="btr-name-history-label">Previous usernames</span>
+								<span class="btr-name-history-tip" role="tooltip"></span>
+							</div>
 							<div class="btr-profile-stats" style="display:none">
 								<div class="btr-profile-stat">
 									<div class="text-label">Join Date</div>
@@ -444,32 +452,6 @@ pageInit.profile = () => {
 					redirectEvents(avatar, container, true)
 				})
 				.$watch(".user-profile-header", (header: HTMLElement) => {
-					const target = header.$find("> .flex-nowrap > a.radius-circle")
-
-					if (target) {
-						const btn = html` <a
-							aria-disabled="false"
-							class="relative clip group/interactable focus-visible:outline-focus disabled:outline-none cursor-pointer relative flex justify-center items-center radius-circle stroke-none padding-left-medium padding-right-medium height-800 text-label-medium bg-shift-300 content-action-utility"
-							style="text-decoration: none; opacity: 0.5;"
-						>
-							<div
-								role="presentation"
-								class="absolute inset-[0] transition-colors group-hover/interactable:bg-[var(--color-state-hover)] group-active/interactable:bg-[var(--color-state-press)] group-disabled/interactable:bg-none"
-							></div>
-							<span class="text-no-wrap text-truncate-end">More</span>
-						</a>`
-
-						btn.$on("click", () => {
-							profileContainer.$req(".description-content+.more-btn").click()
-						})
-
-						target.parentElement!.append(btn)
-
-						header.$watch(".description-content", () => {
-							btn.style.opacity = ""
-						})
-					}
-
 					header.$watch(".avatar-status", (_status: any) => {
 						const statusDiv = html`<div class="btr-header-status-parent text-body-large"></div>`
 						const cont = _status.parentNode
@@ -637,6 +619,19 @@ pageInit.profile = () => {
 				}
 
 				newCont.$req(".btr-profile-stats").style.display = ""
+
+				// Under the description, its names listed on hover, as on the old
+				// profile. The rest of what Roblox's More dialog had is in About already.
+				const nameHistory = Array.isArray(about?.nameHistory)
+					? about.nameHistory.filter((name: unknown) => typeof name === "string")
+					: []
+
+				if (nameHistory.length) {
+					const history = newCont.$req(".btr-name-history")
+					history.$req(".btr-name-history-tip").textContent = nameHistory.join("\n")
+					history.setAttribute("aria-label", `Previous usernames: ${nameHistory.join(", ")}`)
+					history.style.display = ""
+				}
 
 				if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
 					const stat = newCont.$req(".btr-stats-lastseen-stat")
