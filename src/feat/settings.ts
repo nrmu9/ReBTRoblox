@@ -135,6 +135,7 @@ export const DEFAULT_SETTINGS = {
 	profile: {
 		enabled: { value: true },
 		classicLayout: { value: true },
+		classicHeader: { value: false },
 		embedInventoryEnabled: { value: true },
 		exactCounts: { value: true },
 		lastSeen: { value: true },

@@ -235,6 +235,92 @@ html .dark-theme.btr-profile .btr-section-content-off {
 	}
 }
 
+/* Classic header: a card like About, with the counts as plain links level with
+   the bottom of the avatar. Roblox's rows are flattened into one grid instead
+   of moved, as react owns them. */
+.btr-profile-classic-header .user-profile-header {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-rows: auto auto;
+	grid-template-areas:
+		"avatar name buttons"
+		"avatar counts buttons";
+	column-gap: var(--gap-large);
+	row-gap: var(--gap-medium);
+
+	padding: 20px;
+	background-color: var(--color-surface-300);
+
+	.user-profile-header-info,
+	.user-profile-header-info > :first-child {
+		display: contents;
+	}
+
+	.user-profile-header-details-avatar-container {
+		grid-area: avatar;
+	}
+
+	/* The same distance in from the top and bottom of the avatar. */
+	.user-profile-header-info > :first-child > .flex-col {
+		grid-area: name;
+		align-self: start;
+		margin-top: 12px;
+	}
+
+	/* Roblox nudges it down beside a game being played, which here would hang
+	   out of the card. */
+	.buttons-show-on-desktop {
+		grid-area: buttons;
+		align-self: start;
+		top: 0 !important;
+	}
+
+	/* In the ... menu instead, which leaves the name room. Roblox sizes the
+	   buttons for both, so then they are as wide as the one that is left. */
+	.buttons-show-on-desktop .button-container > button:not(:first-child) {
+		display: none;
+	}
+
+	.buttons-show-on-desktop:has(.button-container > button:nth-child(2)) {
+		width: max-content;
+	}
+
+	.buttons-show-on-mobile {
+		grid-column: 1 / -1;
+	}
+
+	> .flex-nowrap {
+		grid-area: counts;
+		align-self: end;
+		margin-bottom: 12px;
+		flex-wrap: wrap;
+		gap: 4px 24px;
+
+		/* Wrapped onto a second line rather than cut short when narrow. */
+		> a {
+			flex-shrink: 0;
+			height: auto;
+			padding: 0;
+			border-radius: 0;
+			background: none;
+			opacity: 1;
+
+			font-size: 16px;
+			font-weight: 700;
+
+			> div[aria-hidden="true"],
+			> div[role="presentation"] {
+				display: none;
+			}
+
+			/* On the text, as Roblox sets none on the link itself. */
+			&:not([aria-disabled="true"]):hover > span {
+				text-decoration: underline;
+			}
+		}
+	}
+}
+
 /* Classic layout: the avatar in About, no banner */
 
 .btr-profile-classic {

@@ -10,7 +10,8 @@ export const addWatchMenuItem = (userId: number): void => {
 	document.$watchAll(
 		`.foundation-web-menu:has(a[role=menuitem][href="/users/${userId}/inventory"])`,
 		(menu: HTMLElement) => {
-			const template = menu.$find<HTMLElement>("button[role=menuitem]")
+			// One of Roblox's, not an entry the profile page added.
+			const template = menu.$find<HTMLElement>("button[role=menuitem]:not([class*=btr-])")
 			const links = menu.$findAll("a[role=menuitem]")
 			const after = links[links.length - 1]
 

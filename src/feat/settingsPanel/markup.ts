@@ -250,6 +250,12 @@ export const settingsMarkup = () =>
 							desc="Shows the avatar inside About, like the old profile, instead of as a banner across the top"
 						></toggle>
 						<toggle
+							label="Classic Header"
+							path="classicHeader"
+							require="classicLayout"
+							desc="Puts the header on a card like the old profile, with friends and followers as plain links and extra buttons in the ... menu"
+						></toggle>
+						<toggle
 							label="Embed Inventory"
 							path="embedInventoryEnabled"
 							desc="Shows the inventory on the profile"

@@ -121,12 +121,63 @@ const showPictureIf3dFails = (userId: number) => {
 	)
 }
 
+/**
+ * The classic header keeps only the first of Roblox's header buttons beside the
+ * name, and hides the rest, such as Add trusted friend. They stay where react
+ * put them and are offered in the ... menu instead, which clicks them.
+ */
+const foldHeaderButtons = (userId: number) => {
+	// The same menu opens from the mobile buttons, which still show them all.
+	const DESKTOP = ".buttons-show-on-desktop"
+
+	document.$watchAll(
+		`.foundation-web-menu:has(a[role=menuitem][href="/users/${userId}/inventory"])`,
+		(menu: HTMLElement) => {
+			const dialog = menu.closest("[role=dialog]")
+			const trigger = dialog?.id ? document.querySelector(`[aria-controls="${dialog.id}"]`) : null
+			const group = menu.$find("[role=group]")
+			const template = menu.$find<HTMLElement>("button[role=menuitem]:not([class*=btr-])")
+
+			if (!trigger?.closest(DESKTOP) || !group || !template || menu.$find(".btr-folded-menu-item")) {
+				return
+			}
+
+			const buttons = document.$findAll<HTMLButtonElement>(
+				`${DESKTOP} .button-container > button:not(:first-child)`,
+			)
+
+			// Backwards, as each goes in at the top, so they keep their order.
+			for (let index = buttons.length - 1; index >= 0; index--) {
+				const button = buttons[index]
+				const item = template.cloneNode(true) as HTMLElement
+				item.classList.add("btr-folded-menu-item")
+				item.removeAttribute("data-radix-collection-item")
+
+				const title = item.$find(".foundation-web-menu-item-title")
+				if (title) {
+					title.textContent = button.textContent?.trim() ?? ""
+				}
+
+				item.$on("click", () => {
+					button.click()
+					setTimeout(() =>
+						menu.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
+					)
+				})
+
+				group.prepend(item)
+			}
+		},
+	)
+}
+
 pageInit.profile = () => {
 	if (!SETTINGS.get("profile.enabled")) {
 		return
 	}
 
 	const classicLayout = !!SETTINGS.get("profile.classicLayout")
+	const classicHeader = classicLayout && !!SETTINGS.get("profile.classicHeader")
 
 	injectScript.call("profile")
 
@@ -218,10 +269,15 @@ pageInit.profile = () => {
 		document.$watch("body", (body: HTMLElement) => {
 			body.classList.add("btr-profile")
 			body.classList.toggle("btr-profile-classic", classicLayout)
+			body.classList.toggle("btr-profile-classic-header", classicHeader)
 		})
 
 		if (Number.isSafeInteger(userId)) {
 			showPictureIf3dFails(userId)
+
+			if (classicHeader) {
+				foldHeaderButtons(userId)
+			}
 		}
 
 		if (SETTINGS.get("profile.lastSeen") && Number.isSafeInteger(userId)) {
