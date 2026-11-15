@@ -121,6 +121,53 @@ const showPictureIf3dFails = (userId: number) => {
 	)
 }
 
+// Dragging with the right button turns the 3D avatar. The browser opens its
+// menu wherever the button comes back up, which can be well off the avatar,
+// so a right click that started on it never opens one.
+let rightClickOnAvatar = false
+let keepingMenuOff = false
+
+const keepMenuOffAvatar = () => {
+	const AVATAR = ".profile-avatar-left"
+
+	if (keepingMenuOff) {
+		return
+	}
+
+	keepingMenuOff = true
+
+	document.addEventListener(
+		// Pointer, not mouse, as the viewer cancels the pointer event, which stops
+		// the mouse one from following.
+		"pointerdown",
+		(event) => {
+			// In About, the avatar's events are copied to where Roblox put it, and
+			// from here a copy looks like it came from there.
+			if (event.isTrusted) {
+				rightClickOnAvatar =
+					event.button === 2 && !!(event.target as Element | null)?.closest?.(AVATAR)
+			}
+		},
+		true,
+	)
+
+	document.addEventListener(
+		"contextmenu",
+		(event) => {
+			if (!event.isTrusted) {
+				return
+			}
+
+			if (rightClickOnAvatar || (event.target as Element | null)?.closest?.(AVATAR)) {
+				event.preventDefault()
+			}
+
+			rightClickOnAvatar = false
+		},
+		true,
+	)
+}
+
 /**
  * The classic header keeps only the first of Roblox's header buttons beside the
  * name, and hides the rest, such as Add trusted friend. They stay where react
@@ -274,6 +321,7 @@ pageInit.profile = () => {
 
 		if (Number.isSafeInteger(userId)) {
 			showPictureIf3dFails(userId)
+			keepMenuOffAvatar()
 
 			if (classicHeader) {
 				foldHeaderButtons(userId)
