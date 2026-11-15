@@ -3,9 +3,8 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { ready } from "@/core/util"
-import { loadOptionalFeature } from "@/feat/loadFeature"
 import { SETTINGS } from "@/feat/settings"
-import { modifyAngularTemplate } from "@/pages/common"
+import { modifyAngularTemplate, loadPreviewer } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { query, queryAll } from "@/core/query"
 
@@ -112,7 +111,7 @@ pageInit.inventory = () => {
 	}
 
 	if (SETTINGS.get("general.hoverPreview")) {
-		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
+		loadPreviewer().then(({ HoverPreview }) => {
 			HoverPreview.register(".item-card", ".item-card-thumb-container")
 		})
 	}

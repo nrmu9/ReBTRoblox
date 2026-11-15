@@ -4,9 +4,8 @@ import { STORAGE } from "@/core/env"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
-import { loadOptionalFeature } from "@/feat/loadFeature"
 import { SETTINGS } from "@/feat/settings"
-import { loggedInUser } from "@/pages/common"
+import { loggedInUser, loadPreviewer } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
 const OwnerAssetCache = {
@@ -331,7 +330,7 @@ const OwnerAssetCache = {
 
 pageInit.catalog = () => {
 	if (SETTINGS.get("general.hoverPreview")) {
-		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
+		loadPreviewer().then(({ HoverPreview }) => {
 			HoverPreview.register(".catalog-item-container", ".item-card-thumb-container", true)
 		})
 	}

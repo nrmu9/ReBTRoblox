@@ -1,6 +1,5 @@
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
-import { loadOptionalFeature } from "@/feat/loadFeature"
 import { btrLocalStorage } from "@/core/storage"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
 import { SETTINGS } from "@/feat/settings"
@@ -14,6 +13,7 @@ import {
 	modifyAngularTemplate,
 	onPageLoad,
 	onPageReset,
+	loadPreviewer,
 } from "@/pages/common"
 
 // A count Roblox shortened, "13.5M+ Members", split into the number and the
@@ -98,7 +98,7 @@ const showExactMemberCounts = (groupId: number) => {
 
 pageInit.groups = () => {
 	if (SETTINGS.get("general.hoverPreview")) {
-		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
+		loadPreviewer().then(({ HoverPreview }) => {
 			HoverPreview.register(".item-card", ".item-card-thumb-container")
 		})
 	}

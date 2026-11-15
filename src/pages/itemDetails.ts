@@ -2,7 +2,6 @@ import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import type { ItemPreviewer } from "@/rbx/Preview"
 import { pageInit } from "@/core/page"
-import { loadOptionalFeature } from "@/feat/loadFeature"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { clockFormat } from "@/feat/clock"
 import { waitForRobloxResponse } from "@/feat/robloxResponses"
@@ -16,13 +15,14 @@ import {
 	keepText,
 	onPageLoad,
 	onPageReset,
+	loadPreviewer,
 } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
 import { query, queryAll } from "@/core/query"
 
 pageInit.itemdetails = () => {
 	if (SETTINGS.get("general.hoverPreview")) {
-		loadOptionalFeature("previewer").then(({ HoverPreview }) => {
+		loadPreviewer().then(({ HoverPreview }) => {
 			HoverPreview.register(".item-card", ".item-card-thumb-container")
 		})
 	}

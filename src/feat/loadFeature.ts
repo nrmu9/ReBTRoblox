@@ -17,7 +17,7 @@ const loaders = {
 type FeatureName = keyof typeof loaders
 
 /** What the module actually resolves to, so callers get its exports typed. */
-type Feature<K extends FeatureName> = Awaited<ReturnType<(typeof loaders)[K]>>
+export type Feature<K extends FeatureName> = Awaited<ReturnType<(typeof loaders)[K]>>
 
 const styles: Record<string, string[]> = {
 	sourceViewer: ["css/sourceviewer.css"],

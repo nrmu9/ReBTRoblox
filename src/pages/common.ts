@@ -5,7 +5,7 @@ import { backgroundScript, injectScript } from "@/core/messaging"
 import { isId, isKey, isRecord, isText } from "@/core/pageInput"
 import { currentPage } from "@/core/page"
 import { assert, bufferToString, formatFileName, ready } from "@/core/util"
-import { loadOptionalFeature } from "@/feat/loadFeature"
+import { loadOptionalFeature, type Feature } from "@/feat/loadFeature"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { recordPresences } from "@/feat/activity/presence"
@@ -493,8 +493,21 @@ const initAngularTemplates = () => {
 	})
 }
 
+/**
+ * The previewer, for someone signed in. Roblox refuses every asset to anyone
+ * signed out, so it would only show an avatar without the item. For them it
+ * never loads, and Roblox's own picture stays.
+ */
+export const loadPreviewer = async (): Promise<Feature<"previewer">> => {
+	if ((await loggedInUserPromise) <= 0) {
+		return new Promise(() => {})
+	}
+
+	return loadOptionalFeature("previewer")
+}
+
 export const initPreview = async (assetId: number, assetTypeId: number | null, isBundle: boolean) => {
-	if (!SETTINGS.get("itemdetails.itemPreviewer")) {
+	if (!SETTINGS.get("itemdetails.itemPreviewer") || (await loggedInUserPromise) <= 0) {
 		return
 	}
 
@@ -781,6 +794,12 @@ const canDownloadAsset = (assetId: number, assetTypeId: number) =>
 	(canDownloadAssetCache[assetId] =
 		canDownloadAssetCache[assetId] ||
 		(async () => {
+			// Roblox refuses every asset to anyone signed out, so the buttons that
+			// need one would only ever fail.
+			if ((await loggedInUserPromise) <= 0) {
+				return false
+			}
+
 			// NOTE: This assumes you have the marketplace/itemdetails page for the item open at the moment
 			// Marketplace pages for models you don't have access to are hidden, so we dont need to check those
 
