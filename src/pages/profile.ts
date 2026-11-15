@@ -438,7 +438,9 @@ pageInit.profile = () => {
 					const container = friends.parentElement!
 
 					newCont.$find(".placeholder-friends")?.replaceWith(friends)
-					redirectEvents(friends, container)
+					// The card a friend's tile opens on hover is react's pointer enter,
+					// which it only sees from events that bubble up to it.
+					redirectEvents(friends, container, true)
 				})
 				.$watch(".btr-wrapper-Avatar", (avatar: HTMLElement) => {
 					if (!classicLayout) {
