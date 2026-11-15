@@ -14,6 +14,7 @@
 //      requestAnimationFrame never fires.
 
 import { scopeSelector } from "@/core/query"
+import { mustWait, whenHydrated } from "@/core/hydration"
 
 type Handler = (element: Element) => void
 
@@ -51,6 +52,22 @@ let nextId = 0
 const contains = (root: Element | Document, element: Element): boolean =>
 	root === document || root === element || (root as Element).contains(element)
 
+let holding = false
+
+/** Everything held back goes out once react has the page, as a sweep finds it then. */
+const holdUntilHydrated = (): void => {
+	if (holding) {
+		return
+	}
+
+	holding = true
+
+	whenHydrated(() => {
+		holding = false
+		queueMicrotask(flush)
+	})
+}
+
 const deliver = (registration: Registration, element: Element): void => {
 	if (registration.disposed || registration.seen.has(element)) {
 		return
@@ -59,6 +76,13 @@ const deliver = (registration: Registration, element: Element): void => {
 	// The stylesheet is global, so an animation event can arrive for a node
 	// outside a root-scoped watcher.
 	if (!contains(registration.root, element)) {
+		return
+	}
+
+	// On a page react takes over from the server's HTML, nothing in it is
+	// touched before it has. Not marked as seen, so it is found again then.
+	if (mustWait(element)) {
+		holdUntilHydrated()
 		return
 	}
 

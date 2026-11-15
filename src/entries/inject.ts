@@ -97,6 +97,7 @@ const startInject = () => {
 		["profile", "profile.enabled"],
 		["fastsearch", "general.fastSearch"],
 		["fixChatMessages"],
+		["markHydrated"],
 		["navigation", "navigation.enabled"],
 		["voiceStatus"],
 	]

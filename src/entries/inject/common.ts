@@ -7,6 +7,47 @@ import { reactHook } from "@/entries/inject/react"
 // on the responses Roblox fetches anyway.
 
 export const commonFunctions: Record<string, (...args: any[]) => any> = {
+	// Says when react has taken over a page Roblox rendered on the server, which
+	// only the page can see, as react marks each element it takes. The extension
+	// waits for this before changing such a page (see core/hydration).
+	markHydrated: () => {
+		const started = Date.now()
+
+		const taken = (element: Element | null | undefined) =>
+			!!element && Object.keys(element).some((key) => key.startsWith("__reactFiber$"))
+
+		const check = () => {
+			const body = document.body
+
+			// The old shell renders in the browser and never hydrates.
+			if (body?.classList.contains("rbx-body")) {
+				return true
+			}
+
+			const header = document.querySelector("#header")
+			const main = header?.closest("main")
+			const all = main?.getElementsByTagName("*")
+
+			// Taken over once the last of it is. React is not done with it then, and
+			// drops anything it did not render from what it is finishing, so it
+			// gets a moment more.
+			if (taken(header) && all?.length && taken(all[all.length - 1])) {
+				setTimeout(() => document.documentElement.setAttribute("data-btr-hydrated", ""), 300)
+				return true
+			}
+
+			return Date.now() - started > 10e3
+		}
+
+		if (!check()) {
+			const timer = setInterval(() => {
+				if (check()) {
+					clearInterval(timer)
+				}
+			}, 25)
+		}
+	},
+
 	// With bubbles, a copy goes on up to react's listener on the root, which is
 	// what onClick handlers need.
 	redirectEvents: (fromSelector: string, toSelector: string, bubbles = false) => {
