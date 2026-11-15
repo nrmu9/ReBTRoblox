@@ -42,7 +42,8 @@ export const PAGE_INFO: Record<string, any> = {
 		css: ["home.css"],
 	},
 	inventory: {
-		matches: ["^/users/(\\d+)/inventory"],
+		// Your own is at /users/inventory, without the id, where the sidebar goes.
+		matches: ["^/users/(\\d+)/inventory", "^/users/inventory"],
 		css: ["inventory.css"],
 	},
 	itemdetails: {

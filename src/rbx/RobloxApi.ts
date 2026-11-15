@@ -194,6 +194,35 @@ interface XsrfInit extends RequestInit {
 	xsrf?: boolean
 }
 
+export interface RemovalResult {
+	ok: boolean
+	status: number
+	/** Seconds to wait, when the answer was a 429 that said. */
+	retryAfter: number | null
+}
+
+/**
+ * How a removal went. Its answer is often not JSON when it fails, a 429 being
+ * an HTML page, so only whether it worked, the status and how long to wait
+ * are kept.
+ */
+const removalResult = async (res: Response): Promise<RemovalResult> => {
+	const retryAfter = Number(res.headers.get("retry-after"))
+	let refused = false
+
+	// A 200 can still say no, in its answer.
+	try {
+		const json = JSON.parse(await res.text())
+		refused = json?.isValid === false || (Array.isArray(json?.errors) && json.errors.length > 0)
+	} catch {}
+
+	return {
+		ok: res.ok && !refused,
+		status: res.status,
+		retryAfter: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null,
+	}
+}
+
 const xsrfFetch = (url: string, init: XsrfInit = {}) => {
 	init = { ...init }
 
@@ -407,7 +436,7 @@ export const RobloxApi = {
 				method: "DELETE",
 				credentials: "include",
 				xsrf: true,
-			}).then((res) => res.json()),
+			}).then(removalResult),
 	},
 	catalog: {
 		getBundleDetails: cacheResult(10e3, (bundleId: BundleId) =>
@@ -744,12 +773,13 @@ export const RobloxApi = {
 			).then((res) => res.json()),
 	},
 	www: {
+		// What the Creator Store's own Delete from Inventory calls. The old
+		// www.roblox.com/asset/delete-from-inventory answers 404 now.
 		deleteAssetFromInventory: (assetId: AssetId) =>
-			xsrfFetch(`https://www.roblox.com/asset/delete-from-inventory`, {
-				method: "POST",
+			xsrfFetch(`https://inventory.roblox.com/v2/inventory/asset/${assetId}`, {
+				method: "DELETE",
 				credentials: "include",
-				body: toSearchParams({ assetId }),
 				xsrf: true,
-			}).then((res) => res.json()),
+			}).then(removalResult),
 	},
 }

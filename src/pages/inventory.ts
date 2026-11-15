@@ -2,7 +2,7 @@ import { onDomChanged, setImmediate } from "@/core/dom"
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
-import { ready } from "@/core/util"
+import { delay, ready } from "@/core/util"
 import { SETTINGS } from "@/feat/settings"
 import { modifyAngularTemplate, loadPreviewer } from "@/pages/common"
 import { RobloxApi } from "@/rbx/RobloxApi"
@@ -203,68 +203,117 @@ pageInit.inventory = () => {
 					return false
 				}
 			})
-			.$on("click", ".btr-it-remove", () => {
+			.$on("click", ".btr-it-remove", async () => {
 				if (isRemoving) {
 					return
 				}
 
-				const checked = queryAll(".btr-it-box:checked")
+				const checked = queryAll<HTMLInputElement>(".btr-it-box:checked")
 				if (!checked.length) {
 					return
 				}
 
 				isRemoving = true
-				const items: any[] = []
-				for (let i = 0; i < checked.length; i++) {
-					const self: any = checked[i].closest(".item-card")
-					const matches = self
-						.$find(".item-card-link")
-						.href.match(/(?:\/(catalog|library|game-pass|badges)\/|[?&]id=)(\d+)/)
 
-					if (matches && Number.isSafeInteger(+matches[2])) {
+				const button = query<HTMLElement>(".btr-it-remove")
+				const label = button?.textContent ?? "Remove"
+				const items: Array<{
+					card: HTMLElement
+					box: HTMLInputElement
+					isBadge: boolean
+					id: number
+				}> = []
+
+				for (const box of checked) {
+					const card = box.closest<HTMLElement>(".item-card")
+					const matches = card
+						?.$find<HTMLAnchorElement>(".item-card-link")
+						// Creator Store items link to store/asset now.
+						?.href.match(/(?:\/(catalog|library|game-pass|badges|store\/asset)\/|[?&]id=)(\d+)/)
+
+					if (card && matches && Number.isSafeInteger(+matches[2])) {
 						items.push({
-							obj: self,
-							assetType: matches[1].toLowerCase(),
-							assetId: matches[2],
+							card,
+							box,
+							isBadge: matches[1]?.toLowerCase() === "badges",
+							id: +matches[2],
 						})
 					}
 				}
 
-				let itemsLeft = items.length
+				// One at a time, each waiting on its answer, so Roblox is not asked
+				// faster than it allows. A 429 is waited out and tried again. A card
+				// goes only once its item is gone, and whatever happens, the run ends.
+				const removeOne = async (item: (typeof items)[number]) => {
+					try {
+						if (!item.isBadge) {
+							const data = await RobloxApi.economy.getAssetDetails(item.id)
 
-				function removeItem(index: number) {
-					const item = items[index]
-					if (!item) {
-						return
-					}
-
-					const done = () => {
-						item.obj.remove()
-
-						if (--itemsLeft === 0) {
-							isRemoving = false
-
-							injectScript.call("refreshInventory")
+							if (!validAssetTypes.includes(data?.AssetTypeId)) {
+								return "skipped"
+							}
 						}
-					}
 
-					if (item.assetType === "badges") {
-						RobloxApi.badges.deleteBadge(item.assetId).then(done)
-					} else {
-						RobloxApi.economy.getAssetDetails(item.assetId).then((data: any) => {
-							if (validAssetTypes.indexOf(data.AssetTypeId) === -1) {
-								// Not a type the inventory tools handle.
-								return
+						for (let attempt = 0; attempt < 4; attempt++) {
+							const result = item.isBadge
+								? await RobloxApi.badges.deleteBadge(item.id)
+								: await RobloxApi.www.deleteAssetFromInventory(item.id)
+
+							if (result?.ok) {
+								return "removed"
 							}
 
-							RobloxApi.www.deleteAssetFromInventory(item.assetId).then(done)
-						})
+							if (result?.status !== 429) {
+								return "failed"
+							}
+
+							await delay((result.retryAfter ?? 2 ** (attempt + 1)) * 1000)
+						}
+					} catch (err) {
+						console.error("[btr] could not remove", item.id, err)
 					}
 
-					setTimeout(removeItem, 250, index + 1)
+					return "failed"
 				}
 
-				removeItem(0)
+				let removed = 0
+				let failed = 0
+
+				for (const [index, item] of items.entries()) {
+					if (button) {
+						button.textContent = `Removing ${index + 1}/${items.length}`
+					}
+
+					const outcome = await removeOne(item)
+					item.card.classList.toggle("btr-it-failed", outcome === "failed")
+
+					if (outcome === "removed") {
+						item.card.remove()
+						removed++
+						await delay(300)
+					} else if (outcome === "skipped") {
+						// Not a type the inventory tools handle.
+						item.box.checked = false
+					} else {
+						failed++
+					}
+				}
+
+				isRemoving = false
+
+				if (button) {
+					button.textContent = failed ? `Couldn't remove ${failed}` : label
+
+					if (failed) {
+						setTimeout(() => (button.textContent = label), 4000)
+					}
+				}
+
+				updateButtons()
+
+				if (removed) {
+					injectScript.call("refreshInventory")
+				}
 			})
 	}
 }

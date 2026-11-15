@@ -36,3 +36,9 @@ body .page-content {
 .btr-it-checkbox input[type="checkbox"] + label:before {
 	background-color: white;
 }
+
+/* An item Remove could not remove, left checked to try again. */
+.btr-it-failed .item-card-thumb-container {
+	outline: 2px solid var(--color-system-alert, #e5484d);
+	outline-offset: -2px;
+}
