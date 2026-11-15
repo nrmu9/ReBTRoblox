@@ -6,6 +6,7 @@ import { isId, isKey, isRecord, isText } from "@/core/pageInput"
 import { currentPage } from "@/core/page"
 import { assert, bufferToString, formatFileName, ready } from "@/core/util"
 import { loadOptionalFeature, type Feature } from "@/feat/loadFeature"
+import { isNewShell } from "@/core/hydration"
 import { Navigation } from "@/feat/navigation"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { recordPresences } from "@/feat/activity/presence"
@@ -1241,7 +1242,25 @@ pageInit.www = () => {
 		loggedInUserPromise.$resolve(loggedInUser)
 	})
 
-	ready(() => loggedInUserPromise.$resolve(-1))
+	// The new shell has no user-data. Its top bar links to your own profile
+	// instead, by id, and its body says whether you are signed in.
+	document.$watch(`#header a[href^="/users/"][href$="/profile"]`, (link: HTMLAnchorElement) => {
+		const userId = Number(link.getAttribute("href")?.split("/")[2])
+
+		if (isNewShell() && Number.isSafeInteger(userId) && userId > 0) {
+			loggedInUser = userId
+			loggedInUserPromise.$resolve(userId)
+		}
+	})
+
+	ready(() => {
+		if (!isNewShell() || !document.body.classList.contains("logged-in")) {
+			loggedInUserPromise.$resolve(-1)
+		} else {
+			// Signed out after all, if the link never shows.
+			setTimeout(() => loggedInUserPromise.$resolve(-1), 10e3)
+		}
+	})
 
 	watchSettingsMenu(`a[role=menuitem][href*="/my/account"]`, () => {
 		void import("@/feat/activity/panel").then(({ openActivityPanel }) =>

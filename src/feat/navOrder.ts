@@ -10,7 +10,7 @@ import { SETTINGS } from "@/feat/settings"
 export const NAV_LISTS = [
 	{ name: "links", label: "Top bar links", selector: "ul.rbx-navbar" },
 	{ name: "icons", label: "Top bar icons", selector: "ul.navbar-right" },
-	{ name: "sidebar", label: "Sidebar", selector: "#left-navigation-container nav ul" },
+	{ name: "sidebar", label: "Sidebar", selector: ".left-nav nav ul" },
 ] as const
 
 export type NavListName = (typeof NAV_LISTS)[number]["name"]

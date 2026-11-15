@@ -7,6 +7,7 @@ import { SHARED_DATA } from "@/feat/sharedData"
 import { loggedInUser, loggedInUserPromise } from "@/pages/common"
 import { query } from "@/core/query"
 import { initNavOrder } from "@/feat/navOrder"
+import { isNewShell } from "@/core/hydration"
 
 /** What a caller passes to Navigation.register to describe one nav item. */
 interface NavigationElementInfo {
@@ -247,18 +248,13 @@ export const Navigation = {
 			label: "Show Home",
 
 			init() {
-				document
-					.$watch("#header")
-					.$then()
-					.$watch(
-						"ul.rbx-navbar",
-						(navbar: HTMLElement) => {
-							const button = html`<li class=cursor-pointer style="order:-1"><a class="font-header-2 nav-menu-title text-header" href=/home>Home</a></li>`
-							navbar.append(button)
-							this.addNode(button)
-						},
-						{ continuous: true },
-					)
+				// Any header, not the first one found: on a page react takes over
+				// from the server's HTML, it can render the header again.
+				document.$watchAll("#header ul.rbx-navbar", (navbar: HTMLElement) => {
+					const button = html`<li class=cursor-pointer style="order:-1"><a class="font-header-2 nav-menu-title text-header" href=/home>Home</a></li>`
+					navbar.append(button)
+					this.addNode(button)
+				})
 			},
 		})
 
@@ -267,26 +263,18 @@ export const Navigation = {
 			enabled: false,
 
 			init() {
-				document
-					.$watch("#header")
-					.$then()
-					.$watch(
-						"ul.rbx-navbar",
-						(navbar: HTMLElement) => {
-							const robuxBtn =
-								navbar.$find(
-									`.rbx-navbar a[href^="/robux"], .rbx-navbar a[href^="/upgrades/robux"]`,
-								)?.parentNode ||
-								navbar.$find(
-									`#navigation-robux-container, #navigation-robux-mobile-container`,
-								)
+				document.$watchAll("#header ul.rbx-navbar", (navbar: HTMLElement) => {
+					// Its item, which in the new shell is not the link's own parent.
+					const robuxBtn =
+						navbar
+							.$find(`.rbx-navbar a[href^="/robux"], .rbx-navbar a[href^="/upgrades/robux"]`)
+							?.closest(".rbx-navbar > li") ||
+						navbar.$find(`#navigation-robux-container, #navigation-robux-mobile-container`)
 
-							if (robuxBtn) {
-								this.addNode(robuxBtn)
-							}
-						},
-						{ continuous: true },
-					)
+					if (robuxBtn) {
+						this.addNode(robuxBtn)
+					}
+				})
 			},
 		})
 
@@ -352,7 +340,7 @@ export const Navigation = {
 
 		const observeNavSource = (node: HTMLElement, elementName: string): void => {
 			const update = () => Navigation.elements[elementName].updateAll()
-			const root = node.closest("#left-navigation-container") ?? node.parentElement ?? node
+			const root = node.closest(".left-nav") ?? node.parentElement ?? node
 
 			// Each replaced anchor comes through here again, and one observer per
 			// root is all it takes.
@@ -487,8 +475,13 @@ export const Navigation = {
 
 		// Roblox's sidebar links are found by where they point: its items carry
 		// no ids or keys. Hiding the item hides its list entry.
-		const SIDEBAR_ITEM = "#left-navigation-container nav li"
-		const sidebarLink = (path: string) => `${SIDEBAR_ITEM} > a[href*="${path}"]`
+		const SIDEBAR_ITEM = ".left-nav nav li"
+		// Links on this site are absolute in the old shell, and just the path in the
+		// new one, so a link to this site matches either way.
+		const sidebarLink = (path: string) =>
+			path.startsWith("roblox.com/")
+				? `${SIDEBAR_ITEM} > a:is([href*="${path}"], [href="${path.slice(10)}"])`
+				: `${SIDEBAR_ITEM} > a[href*="${path}"]`
 
 		const hideSidebarItem = (name: string, label: string, selector: string, enabled = true) => {
 			Navigation.register(name, {
@@ -693,6 +686,52 @@ export const Navigation = {
 		if (SETTINGS.get("navigation.enabled") && location.host !== "create.roblox.com") {
 			injectScript.call("navigation")
 			initNavOrder()
+
+			// The page script puts the places for our top bar items in through
+			// Roblox's react, which the new shell keeps to itself. There they go in
+			// directly, before the robux, and again whenever react renders the list.
+			document.$watchAll("#header ul.navbar-right", (list: HTMLElement) => {
+				if (!isNewShell()) {
+					return
+				}
+
+				const place = () => {
+					const robux = list.querySelector(":scope > #navbar-robux, :scope > #navbar-settings")
+
+					for (const name of ["friends", "messages"]) {
+						if (
+							list.querySelector(
+								`:scope > #btr-navbar-${name}, :scope > #btr-placeholder-${name}`,
+							)
+						) {
+							continue
+						}
+
+						const placeholder = html`<div style="display:none"></div>`
+						placeholder.id = `btr-placeholder-${name}`
+
+						// Before the robux, with friends before messages.
+						const at =
+							(name === "friends" &&
+								list.querySelector(
+									":scope > #btr-navbar-messages, :scope > #btr-placeholder-messages",
+								)) ||
+							robux
+
+						if (at) {
+							at.before(placeholder)
+						} else {
+							list.append(placeholder)
+						}
+					}
+				}
+
+				place()
+
+				// React can drop what it did not render while it settles, so whatever
+				// goes missing goes back in.
+				new MutationObserver(place).observe(list, { childList: true })
+			})
 		}
 	},
 }
