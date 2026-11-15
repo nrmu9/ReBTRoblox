@@ -267,6 +267,9 @@ body.btr-minimize-chat .react-chat-root.btr-chat-collapsed > section > div:first
 
 	#btr-blogfeed {
 		margin-top: -3px;
+		/* The item it is in has no box of its own, so the place you put it in the
+		   sidebar order is set on the item but has to show on this. */
+		order: inherit;
 
 		.btr-feed {
 			display: block;
