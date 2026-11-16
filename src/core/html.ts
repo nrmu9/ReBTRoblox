@@ -15,23 +15,30 @@ import { assert } from "@/core/util"
  * goes through the same template parsing rules, so table rows and SVG come out
  * as they would in one.
  */
+/**
+ * Joins the literal pieces with a `!btrN!` marker for each value. A line break
+ * inside text reads as a space, as in HTML, whatever the characters around it:
+ * requiring letters on both sides glued "them.Those" together. Breaks next to a
+ * tag still go, as they are only indentation. Trimmed with the markers in
+ * place, so a break between text and a value ("Unlocked", then the date on the
+ * next line) stays a space too.
+ */
+export const markupWithMarkers = (parts: readonly string[]) => {
+	let result = parts[0] ?? ""
+
+	for (let i = 1; i < parts.length; i++) {
+		result += `!btr${i - 1}!` + parts[i]
+	}
+
+	return result.replace(/([^\s>])\n\s*(?=[^\s<])/g, "$1 ").replace(/\n[^\S ]*/g, "")
+}
+
 export const htmltemplate = function (
 	pieces: TemplateStringsArray | string,
 	...args: unknown[]
 ): HTMLTemplateElement {
 	const parts: readonly string[] = typeof pieces === "string" ? [pieces] : pieces
-
-	// A line break inside text reads as a space, as in HTML, whatever the
-	// characters around it: requiring letters on both sides glued "them.Those"
-	// together. Breaks next to a tag still go, as they are only indentation.
-	const trimWhitespace = (s: string) =>
-		s.replace(/([^\s>])\n\s*(?=[^\s<])/g, "$1 ").replace(/\n[^\S ]*/g, "")
-
-	let result = trimWhitespace(parts[0])
-
-	for (let i = 0, len = args.length; i < len; i++) {
-		result += `!btr${i}!` + trimWhitespace(parts[i + 1])
-	}
+	const result = markupWithMarkers(parts)
 
 	// A template in a document of its own ends up in that document's head.
 	const template = new DOMParser()
