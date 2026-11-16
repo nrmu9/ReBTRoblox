@@ -37,6 +37,20 @@ const PACKAGES = [
 // The packages every currency has a local price for ($4.99, $9.99, $19.99, $49.99, $99.99, $199.99).
 const CORE_PACKAGES = [0, 1, 3, 5, 6, 7]
 
+/** What a custom rate's text means: a positive amount, with a dot or a comma. */
+export const parseCustomRate = (text: unknown) => {
+	const amount = Number(
+		String(text ?? "")
+			.trim()
+			.replace(",", "."),
+	)
+	return Number.isFinite(amount) && amount > 0 ? amount : null
+}
+
+/** The custom rate, in cents per 1,000 Robux. */
+const customCash = () =>
+	SETTINGS.loaded ? Math.round((parseCustomRate(SETTINGS.get("general.robuxToCashCustom")) ?? 0) * 100) : 0
+
 // Currencies that were replaced, so an old choice moves to the new one.
 const REPLACED: Record<string, string> = {
 	ang: "xcg",
@@ -257,7 +271,9 @@ export const RobuxToCash = {
 	},
 
 	isEnabled() {
-		return this.getSelectedOption() !== this.Options.none
+		// A Custom rate with no amount yet converts nothing.
+		const option = this.getSelectedOption()
+		return option !== this.Options.none && option.cash > 0
 	},
 
 	getSelectedOption() {
@@ -331,6 +347,18 @@ for (const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 			options.push(option)
 		}
 	}
+
+	// A rate of your own, such as a DevEx rate in your currency: the amount in
+	// general.robuxToCashCustom buys 1,000 Robux. The getter keeps it current
+	// when that setting changes.
+	options.push({
+		name: `${name.toLowerCase()}Custom`,
+		label: "Custom",
+		robux: 1000,
+		get cash() {
+			return customCash()
+		},
+	})
 }
 
 for (const [name, options] of Object.entries(RobuxToCash.OptionLists)) {

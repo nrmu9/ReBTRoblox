@@ -1,6 +1,6 @@
 import { html } from "@/core/html"
 import { formatNumber } from "@/core/util"
-import { RobuxToCash } from "@/feat/robuxToCash"
+import { parseCustomRate, RobuxToCash } from "@/feat/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
 
@@ -29,9 +29,37 @@ export const setupRobuxToCash = (modal: SettingsModalState) => {
 		)
 	}
 
+	const customField = modal.settingsDiv.$req(".btr-robuxToCash-custom")
+	const customInput = customField.$req("input") as HTMLInputElement
+
 	const setRate = () => {
-		SETTINGS.set("general.robuxToUSDRate", rateSelect.value)
+		// Read first: saving the amount below redraws the list, which puts the
+		// picker back on the rate still saved.
+		const value = rateSelect.value
+		const option = RobuxToCash.Options[value]
+
+		// Picking Custom for the first time starts it at the rate that was in use,
+		// so prices don't drop to nothing until an amount is typed.
+		if (option?.label === "Custom" && !parseCustomRate(SETTINGS.get("general.robuxToCashCustom"))) {
+			const previous = RobuxToCash.getSelectedOption()
+
+			if (previous.name !== "none" && previous.label !== "Custom") {
+				const perThousand = (previous.cash * 1000) / previous.robux / 100
+				SETTINGS.set("general.robuxToCashCustom", String(Math.round(perThousand * 100) / 100))
+			}
+		}
+
+		SETTINGS.set("general.robuxToUSDRate", value)
 	}
+
+	customInput.$on("change", () => {
+		const amount = parseCustomRate(customInput.value)
+		customInput.classList.toggle("btr-exp-invalid", !amount && customInput.value.trim() !== "")
+
+		if (amount || customInput.value.trim() === "") {
+			SETTINGS.set("general.robuxToCashCustom", amount ? String(amount) : "")
+		}
+	})
 
 	currencySelect.$on("change", () => {
 		SETTINGS.set(
@@ -61,11 +89,14 @@ export const setupRobuxToCash = (modal: SettingsModalState) => {
 
 			if (option.name === "none") {
 				fullText = "No currency selected"
+			} else if (option.label === "Custom" && !option.cash) {
+				fullText = "Custom"
 			} else {
 				const cash = `${option.currency.symbol}${formatNumber((option.cash / 100).toFixed(option.currency.numFractions))}`
-				const usd = option.currency.usdRate
-					? ` ≈ US$${formatNumber((option.usdCash / 100).toFixed(2))}`
-					: ""
+				const usd =
+					option.usdCash !== undefined
+						? ` ≈ US$${formatNumber((option.usdCash / 100).toFixed(2))}`
+						: ""
 
 				fullText = `${option.label} (${cash}${usd} = R$${formatNumber(option.robux)})`
 			}
@@ -85,8 +116,24 @@ export const setupRobuxToCash = (modal: SettingsModalState) => {
 		}
 
 		rateSelect.disabled = name === "None"
+
+		const custom = RobuxToCash.getSelectedOption().label === "Custom"
+		customField.hidden = !custom
+
+		if (custom) {
+			customField.$req(".btr-robuxToCash-custom-unit").textContent = `${name} for 1,000 Robux`
+			customInput.setAttribute("aria-label", `${name} for 1,000 Robux`)
+			customInput.placeholder = "3.80"
+
+			// Not while it is being typed in.
+			if (document.activeElement !== customInput) {
+				customInput.value = SETTINGS.get("general.robuxToCashCustom")
+				customInput.classList.remove("btr-exp-invalid")
+			}
+		}
 	}
 
 	SETTINGS.onChange("general.robuxToUSDRate", updateRate)
+	SETTINGS.onChange("general.robuxToCashCustom", updateRate)
 	updateRate()
 }

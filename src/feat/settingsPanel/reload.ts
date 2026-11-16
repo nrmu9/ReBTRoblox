@@ -14,6 +14,7 @@ export const setupReloadPrompt = (modal: SettingsModalState) => {
 		"general.theme",
 		"general.enableContextMenus",
 		"general.robuxToUSDRate",
+		"general.robuxToCashCustom",
 		"general.hideSponsored",
 		"navigation.noHamburger",
 		"navigation.elements",

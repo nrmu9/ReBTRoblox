@@ -44,6 +44,8 @@ export const DEFAULT_SETTINGS = {
 		voiceChatStatus: { value: true },
 
 		robuxToUSDRate: { value: "none", hidden: true },
+		// The amount 1,000 Robux is worth on the Custom rate, in the chosen currency
+		robuxToCashCustom: { value: "", hidden: true },
 
 		hoverPreview: { value: true },
 		hoverPreviewMode: { value: "always", validValues: ["always", "never"] },

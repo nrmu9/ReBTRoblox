@@ -75,7 +75,7 @@ export const RobuxToCash = {
 	},
 	isEnabled() {
 		const option = this.getSelectedOption()
-		return !!option && option.name !== "none"
+		return !!option && option.name !== "none" && option.cash > 0
 	},
 	convert(robux: number) {
 		const option = this.getSelectedOption()

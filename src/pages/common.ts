@@ -1308,7 +1308,14 @@ pageInit.www = () => {
 			new MutationObserver(update).observe(bal, { childList: true })
 			update()
 
-			SETTINGS.onChange("general.robuxToUSDRate", update)
+			// A new rate changes the cash for the same balance, so it is redrawn.
+			const redraw = () => {
+				lastText = undefined
+				update()
+			}
+
+			SETTINGS.onChange("general.robuxToUSDRate", redraw)
+			SETTINGS.onChange("general.robuxToCashCustom", redraw)
 		})
 
 	// Init optional features

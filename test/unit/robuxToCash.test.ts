@@ -1,7 +1,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { formatNumber } from "@/core/util"
-import { RobuxToCash } from "@/feat/robuxToCash"
+import { parseCustomRate, RobuxToCash } from "@/feat/robuxToCash"
 
 test("Numbers get thousands separators", () => {
 	assert.equal(formatNumber(446605), "446,605")
@@ -35,4 +35,18 @@ test("Rates saved before the package change move to today's options", () => {
 	assert.equal(RobuxToCash.resolveName("devex"), "devex")
 	assert.equal(RobuxToCash.resolveName("none"), "none")
 	assert.equal(RobuxToCash.resolveName("garbage"), "garbage")
+})
+
+test("Every currency has a Custom rate, read as an amount per 1,000 Robux", () => {
+	assert.equal(RobuxToCash.Options.usdCustom?.robux, 1000)
+	assert.equal(RobuxToCash.Options.plnCustom?.label, "Custom")
+	assert.equal(RobuxToCash.Options.lbpCustom?.usdCash, undefined)
+	assert.equal(RobuxToCash.resolveName("eurCustom"), "eurCustom")
+
+	assert.equal(parseCustomRate("3.80"), 3.8)
+	assert.equal(parseCustomRate(" 15,2 "), 15.2)
+	assert.equal(parseCustomRate("0"), null)
+	assert.equal(parseCustomRate("-1"), null)
+	assert.equal(parseCustomRate("abc"), null)
+	assert.equal(parseCustomRate(""), null)
 })

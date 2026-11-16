@@ -588,6 +588,30 @@ div.btr-setting-text {
 	width: 100%;
 }
 
+/* The amount for the Custom rate, under the currency and rate pickers. */
+.btr-robuxToCash-custom {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	margin: 8px 0 0;
+	font-weight: normal;
+
+	&[hidden] {
+		display: none;
+	}
+
+	.btr-exp-input {
+		width: 120px;
+		font-family: inherit;
+	}
+}
+
+.btr-robuxToCash-custom-unit {
+	color: var(--btr-content-muted);
+	font-size: 14px;
+}
+
 /* Reset, shown only once a setting differs from its default. */
 
 .btr-setting-reset {

@@ -163,6 +163,17 @@ export const settingsMarkup = () =>
 									><select id="btr-robuxToCash-rate" aria-label="Rate"></select
 								></span>
 							</div>
+							<label class="btr-robuxToCash-custom" hidden>
+								<input
+									id="btr-robuxToCash-custom"
+									class="btr-exp-input"
+									type="text"
+									inputmode="decimal"
+									spellcheck="false"
+									autocomplete="off"
+								/>
+								<span class="btr-robuxToCash-custom-unit"></span>
+							</label>
 						</div>
 					</page>
 
