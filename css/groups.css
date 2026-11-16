@@ -1,15 +1,3 @@
-@media (min-width: 992px) {
-	html body.btr-no-hamburger .wrap.has-groups-list-sidebar .groups-list-sidebar {
-		left: 175px;
-	}
-}
-
-@media (min-width: 1688px) {
-	html body #content {
-		margin-left: 327px;
-	}
-}
-
 /* Groups redesign */
 
 .btr-redesign .tab-content {

@@ -174,9 +174,32 @@
 	margin-right: 0;
 }
 
-/* btr-no-hamburger */
+/* btr-no-hamburger (Keep Sidebar Open)
 
-@media (min-width: 1200px) {
+   From 1141px wide Roblox shows its sidebar itself and reserves its width in
+   --left-nav-reserved-width, which the content, the footer and the communities
+   list all follow. Below that it hides the sidebar behind the menu button. This
+   keeps it out and reserves the same width, so nothing ends up under it. */
+
+@media (min-width: 768px) and (max-width: 1140px) {
+	body.btr-no-hamburger.logged-in,
+	body.btr-no-hamburger .logged-in {
+		--left-nav-reserved-width: 289px;
+	}
+
+	.btr-no-hamburger .left-nav {
+		visibility: visible;
+		transform: none;
+	}
+
+	.btr-no-hamburger #header .rbx-nav-collapse {
+		display: none;
+	}
+}
+
+/* Narrower than this, the search box sits 100px from the left, so the header
+   keeps Roblox's small logo there. */
+@media (min-width: 992px) and (max-width: 1140px) {
 	.btr-no-hamburger #header .rbx-navbar-header {
 		max-width: 175px;
 		width: 175px;
@@ -190,27 +213,6 @@
 
 	.btr-no-hamburger #header .icon-logo-r {
 		display: none;
-	}
-}
-
-.btr-no-hamburger #header .rbx-nav-collapse {
-	display: none;
-}
-
-.btr-no-hamburger .rbx-left-col {
-	width: 175px;
-	display: block;
-	visibility: visible;
-}
-
-.btr-no-hamburger .rbx-left-col .rbx-scrollbar {
-	width: 175px;
-}
-
-@media (max-width: 1688px) {
-	body.btr-no-hamburger .container-main,
-	body.btr-no-hamburger .nav-container .nav-content {
-		margin-left: 175px;
 	}
 }
 
