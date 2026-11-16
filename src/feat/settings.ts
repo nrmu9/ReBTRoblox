@@ -70,6 +70,8 @@ export const DEFAULT_SETTINGS = {
 		instantGameHoverAction: { value: false },
 		// JSON list of the Home row topic ids to hide, managed in the Home page
 		hiddenRows: { value: "", hidden: true },
+		// JSON list of the Home row topic ids in the order to show them
+		rowOrder: { value: "", hidden: true },
 		hiddenSections: { value: "", hidden: true },
 		hideDisliked: { value: false },
 		showRecommendationPlayerCount: { value: true },

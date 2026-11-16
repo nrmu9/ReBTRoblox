@@ -87,7 +87,7 @@ const itemName = (key: string, item: HTMLElement) => {
 	)
 }
 
-const gripIcon = () =>
+export const gripIcon = () =>
 	html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
 		<g fill="currentColor">
 			<circle cx="9" cy="6" r="1.6" />
@@ -117,7 +117,7 @@ const eyeIcon = () =>
 	</svg>`
 
 /** An eye that shows or hides something, pressed while it is shown. */
-const eyeButton = (name: string, shown: boolean, onToggle: () => void) => {
+export const eyeButton = (name: string, shown: boolean, onToggle: () => void) => {
 	const button = html<HTMLButtonElement>`<button type="button" class="btr-nav-eye"></button>`
 	button.append(eyeIcon())
 	button.setAttribute("aria-pressed", String(shown))
@@ -181,7 +181,11 @@ const glide = (elements: HTMLElement[], change: () => void) => {
  * also move them one place with the arrow keys. `save` gets the keys in the
  * new order.
  */
-const sortable = (list: HTMLElement, save: (keys: string[]) => void, focusAfter: (key: string) => void) => {
+export const sortable = (
+	list: HTMLElement,
+	save: (keys: string[]) => void,
+	focusAfter: (key: string) => void,
+) => {
 	let dragging: HTMLElement | null = null
 	const keys = () => [...list.children].map((item) => (item as HTMLElement).dataset.key!)
 

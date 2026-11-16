@@ -2,6 +2,7 @@ import { settings } from "@/entries/inject/state"
 import { hijackXHR } from "@/entries/inject/hooks"
 import { contentScript } from "@/entries/inject/messaging"
 import { reactHook } from "@/entries/inject/react"
+import { applyRowOrder, parseRowOrder } from "@/feat/homeOrder"
 
 // Injected functions for Home and the game lists: friends, rows and the game filter.
 
@@ -306,6 +307,12 @@ export const homeFunctions: Record<string, (...args: any[]) => any> = {
 					}
 				}
 
+				const order = parseRowOrder(settings.home?.rowOrder)
+
+				if (order.length) {
+					json.sorts = applyRowOrder(json.sorts, (sort: any) => String(sort.topicId), order)
+				}
+
 				const keep = gameFilter()
 
 				if (keep) {
@@ -349,7 +356,12 @@ export const homeFunctions: Record<string, (...args: any[]) => any> = {
 				)
 			) {
 				request.onResponse.push((json: any) => {
-					if (settings.home.favoritesAtTop && json?.sorts) {
+					// An order set by hand in the settings already says where these go.
+					if (
+						settings.home.favoritesAtTop &&
+						json?.sorts &&
+						!parseRowOrder(settings.home.rowOrder).length
+					) {
 						const favoritesSort = json.sorts.find((x: any) => x.topicId === 100000001)
 						const continueSort = json.sorts.find((x: any) => x.topicId === 100000003)
 
