@@ -290,22 +290,6 @@ export const Navigation = {
 			label: "Show Notifications",
 			selector: "#navbar-stream",
 			enabled: true,
-
-			// Roblox has not moved its own bell to the new icon set yet, so it was
-			// the one item left in the old filled style. It wears the new set's
-			// bell instead, the same way our friends and messages items do.
-			nodeAdded(node: HTMLElement) {
-				node.$watch(
-					".icon-common-notification-bell",
-					(bell: HTMLElement) => {
-						// The old class goes, as it carries the old sprite. The fallback
-						// puts it back if the new icon turns out not to be there.
-						bell.className = navIconClass("bell")
-						checkNavIcon(node, "icon-common-notification-bell")
-					},
-					{ continuous: true },
-				)
-			},
 		})
 
 		const FRIENDS_LINK = `nav a[href*="/users/friends"]`
