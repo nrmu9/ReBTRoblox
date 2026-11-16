@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { trapScroll } from "@/core/dom"
 import { leave } from "@/core/leave"
 import { injectScript } from "@/core/messaging"
 import { RobloxApi } from "@/rbx/RobloxApi"
@@ -286,6 +287,7 @@ const openPanel = (list: Worn[]) => {
 			}
 		}
 
+		trapScroll(panel)
 		panel.$req(".btr-adjust-close").$on("click", close)
 		document.addEventListener("keydown", onKey)
 		document.body.append(panel)

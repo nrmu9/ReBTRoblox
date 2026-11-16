@@ -72,3 +72,54 @@ export const onDomChanged = (callback: () => void): DomListener => {
 	domListeners.push(listener)
 	return listener
 }
+
+// Scrolling inside our popups.
+
+/** Whether `element` can scroll any further by `delta` along one axis. */
+const canScrollBy = (element: HTMLElement, delta: number, vertical: boolean): boolean => {
+	const overflow = getComputedStyle(element)[vertical ? "overflowY" : "overflowX"]
+
+	if (overflow !== "auto" && overflow !== "scroll") {
+		return false
+	}
+
+	const position = vertical ? element.scrollTop : element.scrollLeft
+	const room = vertical
+		? element.scrollHeight - element.clientHeight
+		: element.scrollWidth - element.clientWidth
+
+	return delta < 0 ? position > 0 : position < room - 1
+}
+
+/**
+ * Keeps the mouse wheel inside `root`. A list in it scrolls as usual, but at
+ * its end, or over a part that doesn't scroll, nothing behind `root` moves:
+ * neither the page nor, for a menu inside the settings, the settings.
+ */
+export const trapScroll = (root: HTMLElement): void => {
+	root.addEventListener(
+		"wheel",
+		(ev: WheelEvent) => {
+			// Ctrl and the wheel zoom the page, which is not ours to stop.
+			if (ev.ctrlKey || ev.defaultPrevented) {
+				return
+			}
+
+			const vertical = Math.abs(ev.deltaY) >= Math.abs(ev.deltaX)
+			const delta = vertical ? ev.deltaY : ev.deltaX
+
+			for (let element = ev.target as Element | null; element; element = element.parentElement) {
+				if (element instanceof HTMLElement && canScrollBy(element, delta, vertical)) {
+					return
+				}
+
+				if (element === root) {
+					break
+				}
+			}
+
+			ev.preventDefault()
+		},
+		{ passive: false },
+	)
+}

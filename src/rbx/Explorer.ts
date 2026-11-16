@@ -1,4 +1,5 @@
 import { IS_DEV_MODE } from "@/core/env"
+import { trapScroll } from "@/core/dom"
 import { html } from "@/core/html"
 import { btrLocalStorage } from "@/core/storage"
 import { delay, stringToBuffer } from "@/core/util"
@@ -144,6 +145,7 @@ export const Explorer = (() => {
 				</div>
 				"`)
 
+			trapScroll(element)
 			this.dropdown = this.element.$find(".btr-dropdown-container")
 			this.innerList = this.element.$find(".btr-explorer-inner-list")
 			this.listStatus = this.element.$find(".btr-explorer-list-status")
@@ -331,6 +333,7 @@ export const Explorer = (() => {
 					}
 				}
 
+				trapScroll(this.sourceViewerModal)
 				document.body.append(this.sourceViewerModal)
 				document.body.style.overflow = "hidden"
 

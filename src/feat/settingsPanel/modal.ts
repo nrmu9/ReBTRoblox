@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { trapScroll } from "@/core/dom"
 import { assert } from "@/core/util"
 import { addNavigationEditor } from "@/feat/settingsPanel/navigation"
 import { setupRobuxToCash } from "@/feat/settingsPanel/robuxToCash"
@@ -165,6 +166,7 @@ export const SettingsPanel: SettingsModalState = {
 		}
 
 		this.settingsDiv = settingsMarkup()
+		trapScroll(this.settingsDiv)
 
 		const body: HTMLElement = this.settingsDiv.$req(".btr-settings-body")
 

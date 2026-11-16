@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { trapScroll } from "@/core/dom"
 
 // The frame the activity dialogs share: a title, an action button, tabs with
 // a panel each, and closing by button, Escape or a click outside. One is open
@@ -56,6 +57,8 @@ export const openShell = (options: {
 			<div class="btr-activity-body"></div>
 		</div>
 	</div>`
+
+	trapScroll(root)
 
 	// Matches the page's theme, as the settings panel does.
 	root.classList.toggle("btr-dark-theme", !!document.querySelector(".dark-theme:not(.btr-settings-modal)"))

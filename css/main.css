@@ -1466,6 +1466,31 @@ html
 
 /* The notice that stored activity is nearly full, or full */
 
+/* While the settings or activity panel covers the page, the page stays put, so
+   keys and touch scroll the panel, never what is under it. The gutter keeps
+   the page from shifting as its scrollbar goes. The wheel is kept in by
+   trapScroll, which also covers the popups that don't cover the page. */
+html:has(.btr-settings-modal.btr-settings-open) {
+	overflow: hidden !important;
+	scrollbar-gutter: stable;
+}
+
+/* A list in one of our popups doesn't hand the scroll on when it reaches its
+   end, for touch, which trapScroll doesn't see. Only on the lists themselves:
+   on a box that merely clips, it would stop the wheel reaching the list. */
+.btr-settings-tabs,
+.btr-settings-body,
+.btr-activity-body,
+.btr-chart-tablebox,
+.btr-dropdown-menu,
+.btr-whatsnew-body,
+.btr-adjust-body,
+.btr-explorer-list,
+.btr-properties-container,
+.btr-chat-search-results {
+	overscroll-behavior: contain;
+}
+
 /* Our cards, menus and previewers are controls rather than text, so clicking
    around them or dragging to spin an avatar never selects the words nearby. */
 .btr-toasts,

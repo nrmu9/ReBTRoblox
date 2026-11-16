@@ -1,4 +1,5 @@
 import { STORAGE } from "@/core/env"
+import { trapScroll } from "@/core/dom"
 import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { SETTINGS } from "@/feat/settings"
@@ -183,6 +184,7 @@ const showReleases = (releases: typeof NOTES, onDismiss?: () => void): void => {
 		</div>
 	</div>`
 
+	trapScroll(card)
 	const body = card.$req(".btr-whatsnew-body")
 
 	for (const release of releases) {

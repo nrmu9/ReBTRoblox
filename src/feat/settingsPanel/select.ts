@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { trapScroll } from "@/core/dom"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
 
 // The dropdown that stands in for each select in the panel.
@@ -11,6 +12,7 @@ export const upgradeSelects = (state: SettingsModalState) => {
 	const body: HTMLElement = modal.$req(".btr-settings-body")
 
 	const menu = html`<div class="btr-dropdown-menu" role="listbox" tabindex="-1" hidden></div>`
+	trapScroll(menu)
 	modal.append(menu)
 
 	let owner: HTMLSelectElement | null = null
