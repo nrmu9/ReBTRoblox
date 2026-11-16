@@ -595,6 +595,11 @@ export const settingsMarkup = () =>
 							desc="Lets you pick any body color"
 						></toggle>
 						<toggle
+							label="Adjust Accessories"
+							path="adjustAccessories"
+							desc="Adds an Adjust button that moves, turns and sizes your hats and other accessories"
+						></toggle>
+						<toggle
 							label="Skip R6 Switch Warning"
 							path="ignoreR6Warning"
 							desc="Switches to R6 without asking first"

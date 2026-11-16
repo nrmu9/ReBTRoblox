@@ -3,6 +3,7 @@ import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { SETTINGS } from "@/feat/settings"
 import { RobloxApi } from "@/rbx/RobloxApi"
+import { initAdjustAccessories } from "@/feat/adjustAccessories"
 
 pageInit.avatar = () => {
 	if (!SETTINGS.get("avatar.enabled")) {
@@ -10,6 +11,10 @@ pageInit.avatar = () => {
 	}
 
 	injectScript.call("avatar")
+
+	if (SETTINGS.get("avatar.adjustAccessories")) {
+		initAdjustAccessories()
+	}
 
 	if (SETTINGS.get("avatar.fullRangeBodyColors")) {
 		injectScript.call("fullRangeBodyColors")

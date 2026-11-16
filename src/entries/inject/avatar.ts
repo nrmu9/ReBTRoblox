@@ -64,6 +64,104 @@ export const avatarFunctions: Record<string, (...args: any[]) => any> = {
 			}
 		})
 	},
+	// Adjusting accessories: the editor's own state and save are used, so its
+	// preview, its list and Roblox all agree, and its next save keeps the change.
+	// Both live in React contexts, read here as the editor renders.
+	adjustAccessories: () => {
+		// The types Roblox lets you move, turn and size (avatar-rules accessoryRefinementTypes).
+		const ADJUSTABLE = [8, 42, 43, 44, 45, 46]
+
+		let actions: any
+		let worn: any
+		let lastList: any
+		let refreshThumbnail: any
+		let pending: ReturnType<typeof setTimeout> | undefined
+
+		const adjustable = () =>
+			((worn?.currentlyWornAssetsList ?? []) as any[])
+				.filter((asset) => ADJUSTABLE.includes(asset?.assetType?.id))
+				.map((asset) => ({
+					id: asset.id,
+					name: asset.name,
+					assetTypeId: asset.assetType.id,
+					assetTypeName: asset.assetType.name,
+					meta: asset.meta ?? null,
+				}))
+
+		onSet(window, "React", (React: any) => {
+			hijackFunction(React, "useContext", (target: any, thisArg: any, args: any[]) => {
+				const value = target.apply(thisArg, args)
+
+				if (value && typeof value === "object") {
+					if (typeof value.setWearingAssets === "function") {
+						actions = value
+					} else if (Array.isArray(value.currentlyWornAssetsList)) {
+						worn = value
+
+						// Never during render: tell the panel once the list settles.
+						if (value.currentlyWornAssetsList !== lastList) {
+							lastList = value.currentlyWornAssetsList
+							clearTimeout(pending)
+							pending = setTimeout(() => contentScript.send("adjustWorn", adjustable()), 50)
+						}
+					}
+				}
+
+				return value
+			})
+		})
+
+		reactHook.hijackConstructor(
+			(props: any) => !refreshThumbnail && "forceRefreshThumbnail" in props,
+			(target: any, thisArg: any, args: any[]) => {
+				refreshThumbnail = args[0].forceRefreshThumbnail
+				return target.apply(thisArg, args)
+			},
+		)
+
+		reactHook.inject(".redraw-avatar", (redraw: any) => {
+			redraw.append(
+				reactHook.createElement(
+					"a",
+					{
+						className: "text-link btr-adjust-button",
+						onClick: () => contentScript.send("adjustOpen", adjustable()),
+					},
+					"Adjust",
+				),
+			)
+		})
+
+		contentScript.listen("adjustAsset", (assetId: number, meta: any) => {
+			const list = worn?.currentlyWornAssetsList
+
+			if (!actions || !Array.isArray(list) || !list.some((asset: any) => asset.id === assetId)) {
+				contentScript.send("adjustResult", assetId, false)
+				return
+			}
+
+			// A copy of the changed entry: the editor's own objects stay as they are.
+			const next = list.map((asset: any) =>
+				asset.id === assetId ? Object.assign({}, asset, { meta }) : asset,
+			)
+
+			Promise.resolve(actions.setWearingAssets(next))
+				.then(() => {
+					// The editor puts the old list back when Roblox turns it down.
+					const saved = (worn?.currentlyWornAssetsList ?? []).find(
+						(asset: any) => asset.id === assetId,
+					)
+					const ok = JSON.stringify(saved?.meta) === JSON.stringify(meta)
+
+					if (ok) {
+						refreshThumbnail?.()
+					}
+
+					contentScript.send("adjustResult", assetId, ok)
+				})
+				.catch(() => contentScript.send("adjustResult", assetId, false))
+		})
+	},
 	removeAccessoryLimits: () => {
 		const accessoryAssetTypeIds = [8, 41, 42, 43, 44, 45, 46, 47, 57, 58]
 		const layeredAssetTypeIds = [64, 65, 66, 67, 68, 69, 70, 71, 72]

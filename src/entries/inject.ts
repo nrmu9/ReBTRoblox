@@ -71,6 +71,7 @@ const startInject = () => {
 	const EAGER_HOOKS: string[][] = [
 		["avatar", "avatar.enabled"],
 		["fullRangeBodyColors", "avatar.enabled", "avatar.fullRangeBodyColors"],
+		["adjustAccessories", "avatar.enabled", "avatar.adjustAccessories"],
 		["showOwnedAssets", "catalog.enabled", "catalog.showOwnedAssets"],
 		["initReactRobuxToCash", "general.robuxToUSDRate"],
 		["cacheRobuxAmount", "general.cacheRobuxAmount"],

@@ -96,6 +96,7 @@ export const DEFAULT_SETTINGS = {
 		removeAccessoryLimits: { value: true },
 		removeLayeredLimits: { value: true },
 		fullRangeBodyColors: { value: true },
+		adjustAccessories: { value: true },
 		ignoreR6Warning: { value: false },
 	},
 	catalog: {
