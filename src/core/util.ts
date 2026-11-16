@@ -105,3 +105,7 @@ export const getJson = <T = any>(url: string): Promise<T | null> =>
 	fetch(url, { credentials: "include" })
 		.then((res) => (res.ok ? res.json() : null))
 		.catch(() => null)
+
+/** Adds thousands separators: 1234567.5 becomes 1,234,567.5. */
+export const formatNumber = (num: number | string) =>
+	String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,")

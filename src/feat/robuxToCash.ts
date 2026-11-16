@@ -3,987 +3,213 @@ export interface CurrencyInfo {
 	name?: string
 	usdRate?: number
 	fixed?: boolean
-	robuxRates?: number[][]
-	robuxRatesPremium?: number[][]
-	subscriptionRates?: number[][]
+	// Local price of each package in cents: all of PACKAGES, or the six in CORE_PACKAGES.
+	prices?: number[]
 	numFractions?: number
 }
 
+export interface RateOption {
+	name: string
+	label?: string
+	cash: number
+	robux: number
+	usdCash?: number
+	currency: CurrencyInfo
+}
+
 import { SETTINGS } from "@/feat/settings"
-import { formatNumber } from "@/pages/common"
+import { formatNumber } from "@/core/util"
+
+// Robux in each package, [website, app]. Buying on the website adds a bonus.
+// Roblox Plus has no monthly Robux and the old Premium bonus ended in May 2026,
+// so these are the only two ways to buy.
+const PACKAGES = [
+	[500, 400],
+	[1000, 800],
+	[1500, 1200],
+	[2000, 1700],
+	[3625, 3150],
+	[5250, 4500],
+	[11000, 10000],
+	[24000, 22500],
+]
+
+// The packages every currency has a local price for ($4.99, $9.99, $19.99, $49.99, $99.99, $199.99).
+const CORE_PACKAGES = [0, 1, 3, 5, 6, 7]
+
+// Currencies that were replaced, so an old choice moves to the new one.
+const REPLACED: Record<string, string> = {
+	ang: "xcg",
+	sll: "sle",
+	cuc: "usd",
+	hrk: "eur",
+	bgn: "eur",
+	mxv: "mxn",
+}
 
 export const RobuxToCash = {
 	// cash is in cents
 
-	UpdateDate: "November 17, 2025",
+	UpdateDate: "November 16, 2026",
 
 	Currencies: <Record<string, CurrencyInfo>>{
 		None: { symbol: "" },
 
-		USD: {
-			symbol: "$",
-			robuxRates: [
-				[499, 400],
-				[999, 800],
-				[1999, 1700],
-				[4999, 4500],
-				[9999, 10000],
-				[19999, 22500],
-			],
-			robuxRatesPremium: [
-				[499, 440],
-				[999, 880],
-				[1999, 1870],
-				[4999, 4950],
-				[9999, 11000],
-				[19999, 25000],
-			],
-			subscriptionRates: [
-				[499, 450],
-				[999, 1000],
-				[1999, 2200],
-			],
-		},
-		EUR: {
-			symbol: "€",
-			robuxRates: [
-				[599, 400],
-				[1199, 800],
-				[2399, 1700],
-				[5999, 4500],
-				[11999, 10000],
-				[23999, 22500],
-			],
-			robuxRatesPremium: [
-				[599, 440],
-				[1199, 880],
-				[2399, 1870],
-				[5999, 4950],
-				[11999, 11000],
-				[23999, 25000],
-			],
-			subscriptionRates: [
-				[599, 450],
-				[1199, 1000],
-				[2399, 2200],
-			],
-		},
-		AUD: {
-			symbol: "$",
-			robuxRates: [
-				[849, 400],
-				[1699, 800],
-				[3499, 1700],
-				[9099, 4500],
-				[18499, 10000],
-				[36999, 22500],
-			],
-			robuxRatesPremium: [
-				[849, 440],
-				[1699, 880],
-				[3499, 1870],
-				[9099, 4950],
-				[18499, 11000],
-				[36999, 25000],
-			],
-			subscriptionRates: [
-				[849, 450],
-				[1699, 1000],
-				[3499, 2200],
-			],
-		},
-		GBP: {
-			symbol: "£",
-			robuxRates: [
-				[499, 400],
-				[999, 800],
-				[1999, 1700],
-				[4999, 4500],
-				[9999, 10000],
-				[19999, 22500],
-			],
-			robuxRatesPremium: [
-				[499, 440],
-				[999, 880],
-				[1999, 1870],
-				[4999, 4950],
-				[9999, 11000],
-				[19999, 25000],
-			],
-			subscriptionRates: [
-				[499, 450],
-				[999, 1000],
-				[1999, 2200],
-			],
-		},
-		NZD: {
-			symbol: "$",
-			robuxRates: [
-				[999, 400],
-				[1899, 800],
-				[3899, 1700],
-				[9999, 4500],
-				[19999, 10000],
-				[39999, 22500],
-			],
-			robuxRatesPremium: [
-				[999, 440],
-				[1899, 880],
-				[3899, 1870],
-				[9999, 4950],
-				[19999, 11000],
-				[39999, 25000],
-			],
-			subscriptionRates: [
-				[999, 450],
-				[1899, 1000],
-				[3899, 2200],
-			],
-		},
-		CAD: {
-			symbol: "CA$",
-			robuxRates: [
-				[699, 400],
-				[1399, 800],
-				[2799, 1700],
-				[6999, 4500],
-				[13999, 10000],
-				[27999, 22500],
-			],
-			robuxRatesPremium: [
-				[699, 440],
-				[1399, 880],
-				[2799, 1870],
-				[6999, 4950],
-				[13999, 11000],
-				[27999, 25000],
-			],
-			subscriptionRates: [
-				[699, 450],
-				[1399, 1000],
-				[2799, 2200],
-			],
-		},
-		SEK: {
-			symbol: "kr",
-			robuxRates: [
-				[6500, 400],
-				[12900, 800],
-				[26900, 1700],
-				[69500, 4500],
-				[139500, 10000],
-				[259500, 22500],
-			],
-			robuxRatesPremium: [
-				[6500, 440],
-				[12900, 880],
-				[26900, 1870],
-				[69500, 4950],
-				[139500, 11000],
-				[259500, 25000],
-			],
-			subscriptionRates: [
-				[6500, 450],
-				[12900, 1000],
-				[26900, 2200],
-			],
-		},
-		NOK: {
-			symbol: "kr",
-			robuxRates: [
-				[7000, 400],
-				[14000, 800],
-				[28000, 1700],
-				[70000, 4500],
-				[140000, 10000],
-				[280000, 22500],
-			],
-			robuxRatesPremium: [
-				[7000, 440],
-				[14000, 880],
-				[28000, 1870],
-				[70000, 4950],
-				[140000, 11000],
-				[280000, 25000],
-			],
-			subscriptionRates: [
-				[7000, 450],
-				[14000, 1000],
-				[28000, 2200],
-			],
-		},
-		DKK: {
-			symbol: "kr.",
-			robuxRates: [
-				[4500, 400],
-				[8900, 800],
-				[16900, 1700],
-				[44900, 4500],
-				[89900, 10000],
-				[169900, 22500],
-			],
-			robuxRatesPremium: [
-				[4500, 440],
-				[8900, 880],
-				[16900, 1870],
-				[44900, 4950],
-				[89900, 11000],
-				[169900, 25000],
-			],
-			subscriptionRates: [
-				[4500, 450],
-				[8900, 1000],
-				[16900, 2200],
-			],
-		},
-		PLN: {
-			symbol: "zł",
-			robuxRates: [
-				[2999, 400],
-				[5999, 800],
-				[11999, 1700],
-				[29999, 4500],
-				[59999, 10000],
-				[114999, 22500],
-			],
-			robuxRatesPremium: [
-				[2999, 440],
-				[5999, 880],
-				[11999, 1870],
-				[29999, 4950],
-				[59999, 11000],
-				[114999, 25000],
-			],
-			subscriptionRates: [
-				[2999, 450],
-				[5999, 1000],
-				[11999, 2200],
-			],
-		},
-		CZK: {
-			symbol: "Kč",
-			robuxRates: [
-				[15000, 400],
-				[30000, 800],
-				[60000, 1700],
-				[150000, 4500],
-				[300000, 10000],
-				[600000, 22500],
-			],
-			robuxRatesPremium: [
-				[15000, 440],
-				[30000, 880],
-				[60000, 1870],
-				[150000, 4950],
-				[300000, 11000],
-				[600000, 25000],
-			],
-			subscriptionRates: [
-				[15000, 450],
-				[30000, 1000],
-				[60000, 2200],
-			],
-		},
-		RON: {
-			symbol: "RON",
-			robuxRates: [
-				[2499, 400],
-				[4999, 800],
-				[9999, 1700],
-				[24999, 4500],
-				[49999, 10000],
-				[99999, 22500],
-			],
-			robuxRatesPremium: [
-				[2499, 440],
-				[4999, 880],
-				[9999, 1870],
-				[24999, 4950],
-				[49999, 11000],
-				[99999, 25000],
-			],
-			subscriptionRates: [
-				[2499, 450],
-				[4999, 1000],
-				[9999, 2200],
-			],
-		},
-		HUF: {
-			symbol: "Ft",
-			robuxRates: [
-				[249000, 400],
-				[449000, 800],
-				[949000, 1700],
-				[2399000, 4500],
-				[4799000, 10000],
-				[9499000, 22500],
-			],
-			robuxRatesPremium: [
-				[249000, 440],
-				[449000, 880],
-				[949000, 1870],
-				[2399000, 4950],
-				[4799000, 11000],
-				[9499000, 25000],
-			],
-			subscriptionRates: [
-				[249000, 450],
-				[449000, 1000],
-				[949000, 2200],
-			],
-		},
-		BGN: {
-			symbol: "лв.",
-			robuxRates: [
-				[1099, 400],
-				[2199, 800],
-				[4299, 1700],
-				[10999, 4500],
-				[21999, 10000],
-				[42999, 22500],
-			],
-			robuxRatesPremium: [
-				[1099, 440],
-				[2199, 880],
-				[4299, 1870],
-				[10999, 4950],
-				[21999, 11000],
-				[42999, 25000],
-			],
-			subscriptionRates: [
-				[1099, 450],
-				[2199, 1000],
-				[4299, 2200],
-			],
-		},
-		CHF: {
-			symbol: "CHF",
-			robuxRates: [
-				[500, 400],
-				[1000, 800],
-				[2000, 1700],
-				[4800, 4500],
-				[10000, 10000],
-				[20000, 22500],
-			],
-			robuxRatesPremium: [
-				[500, 440],
-				[1000, 880],
-				[2000, 1870],
-				[4800, 4950],
-				[10000, 11000],
-				[20000, 25000],
-			],
-			subscriptionRates: [
-				[500, 450],
-				[1000, 1000],
-				[2000, 2200],
-			],
-		},
-		RUB: {
-			symbol: "₽",
-			robuxRates: [
-				[53900, 400],
-				[108000, 800],
-				[215000, 1700],
-				[560000, 4500],
-				[1139000, 10000],
-				[2299000, 22500],
-			],
-			robuxRatesPremium: [
-				[53900, 440],
-				[108000, 880],
-				[215000, 1870],
-				[560000, 4950],
-				[1139000, 11000],
-				[2299000, 25000],
-			],
-			subscriptionRates: [
-				[53900, 450],
-				[108000, 1000],
-				[215000, 2200],
-			],
-		},
-		MXN: {
-			symbol: "$",
-			robuxRates: [
-				[12900, 400],
-				[24900, 800],
-				[49900, 1700],
-				[129900, 4500],
-				[249900, 10000],
-				[499900, 22500],
-			],
-			robuxRatesPremium: [
-				[12900, 440],
-				[24900, 880],
-				[49900, 1870],
-				[129900, 4950],
-				[249900, 11000],
-				[499900, 25000],
-			],
-			subscriptionRates: [
-				[12900, 450],
-				[24900, 1000],
-				[49900, 2200],
-			],
-		},
-		CLP: {
-			symbol: "$",
-			robuxRates: [
-				[550000, 400],
-				[1090000, 800],
-				[2190000, 1700],
-				[5490000, 4500],
-				[10990000, 10000],
-				[21990000, 22500],
-			],
-			robuxRatesPremium: [
-				[550000, 440],
-				[1090000, 880],
-				[2190000, 1870],
-				[5490000, 4950],
-				[10990000, 11000],
-				[21990000, 25000],
-			],
-			subscriptionRates: [
-				[550000, 450],
-				[1090000, 1000],
-				[2190000, 2200],
-			],
-		},
-		BRL: {
-			symbol: "R$",
-			robuxRates: [
-				[2990, 400],
-				[5900, 800],
-				[11790, 1700],
-				[29490, 4500],
-				[58990, 10000],
-				[117990, 22500],
-			],
-			robuxRatesPremium: [
-				[2990, 440],
-				[5900, 880],
-				[11790, 1870],
-				[29490, 4950],
-				[58990, 11000],
-				[117990, 25000],
-			],
-			subscriptionRates: [
-				[2990, 450],
-				[5900, 1000],
-				[11790, 2200],
-			],
-		},
-		COP: {
-			symbol: "$",
-			robuxRates: [
-				[2990000, 400],
-				[5990000, 800],
-				[11490000, 1700],
-				[29990000, 4500],
-				[59990000, 10000],
-				[114990000, 22500],
-			],
-			robuxRatesPremium: [
-				[2990000, 440],
-				[5990000, 880],
-				[11490000, 1870],
-				[29990000, 4950],
-				[59990000, 11000],
-				[114990000, 25000],
-			],
-			subscriptionRates: [
-				[2990000, 450],
-				[5990000, 1000],
-				[11490000, 2200],
-			],
-		},
-		PEN: {
-			symbol: "S/",
-			robuxRates: [
-				[1790, 400],
-				[3790, 800],
-				[7490, 1700],
-				[18990, 4500],
-				[37990, 10000],
-				[74990, 22500],
-			],
-			robuxRatesPremium: [
-				[1790, 440],
-				[3790, 880],
-				[7490, 1870],
-				[18990, 4950],
-				[37990, 11000],
-				[74990, 25000],
-			],
-			subscriptionRates: [
-				[1790, 450],
-				[3790, 1000],
-				[7490, 2200],
-			],
-		},
-		INR: {
-			symbol: "₹",
-			robuxRates: [
-				[50000, 400],
-				[100000, 800],
-				[200000, 1700],
-				[500000, 4500],
-				[1000000, 10000],
-				[2000000, 22500],
-			],
-			robuxRatesPremium: [
-				[50000, 440],
-				[100000, 880],
-				[200000, 1870],
-				[500000, 4950],
-				[1000000, 11000],
-				[2000000, 25000],
-			],
-			subscriptionRates: [
-				[50000, 450],
-				[100000, 1000],
-				[200000, 2200],
-			],
-		},
-		THB: {
-			symbol: "฿",
-			robuxRates: [
-				[20000, 400],
-				[40000, 800],
-				[80000, 1700],
-				[200000, 4500],
-				[400000, 10000],
-				[800000, 22500],
-			],
-			robuxRatesPremium: [
-				[20000, 440],
-				[40000, 880],
-				[80000, 1870],
-				[200000, 4950],
-				[400000, 11000],
-				[800000, 25000],
-			],
-			subscriptionRates: [
-				[20000, 450],
-				[40000, 1000],
-				[80000, 2200],
-			],
-		},
-		SGD: {
-			symbol: "$",
-			robuxRates: [
-				[698, 400],
-				[1498, 800],
-				[2898, 1700],
-				[6898, 4500],
-				[14898, 10000],
-				[28898, 22500],
-			],
-			robuxRatesPremium: [
-				[698, 440],
-				[1498, 880],
-				[2898, 1870],
-				[6898, 4950],
-				[14898, 11000],
-				[28898, 25000],
-			],
-			subscriptionRates: [
-				[698, 450],
-				[1498, 1000],
-				[2898, 2200],
-			],
-		},
-		JPY: {
-			symbol: "￥",
-			robuxRates: [
-				[80000, 400],
-				[160000, 800],
-				[320000, 1700],
-				[800000, 4500],
-				[1580000, 10000],
-				[3180000, 22500],
-			],
-			robuxRatesPremium: [
-				[80000, 440],
-				[160000, 880],
-				[320000, 1870],
-				[800000, 4950],
-				[1580000, 11000],
-				[3180000, 25000],
-			],
-			subscriptionRates: [
-				[80000, 450],
-				[160000, 1000],
-				[320000, 2200],
-			],
-		},
-		KRW: {
-			symbol: "₩",
-			robuxRates: [
-				[750000, 400],
-				[1500000, 800],
-				[3000000, 1700],
-				[7900000, 4500],
-				[14900000, 10000],
-				[29900000, 22500],
-			],
-			robuxRatesPremium: [
-				[750000, 440],
-				[1500000, 880],
-				[3000000, 1870],
-				[7900000, 4950],
-				[14900000, 11000],
-				[29900000, 25000],
-			],
-			subscriptionRates: [
-				[750000, 450],
-				[1500000, 1000],
-				[3000000, 2200],
-			],
-		},
-		IDR: {
-			symbol: "Rp",
-			robuxRates: [
-				[9000000, 400],
-				[18000000, 800],
-				[36000000, 1700],
-				[90000000, 4500],
-				[179900000, 10000],
-				[359900000, 22500],
-			],
-			robuxRatesPremium: [
-				[9000000, 440],
-				[18000000, 880],
-				[36000000, 1870],
-				[90000000, 4950],
-				[179900000, 11000],
-				[359900000, 25000],
-			],
-			subscriptionRates: [
-				[9000000, 450],
-				[18000000, 1000],
-				[36000000, 2200],
-			],
-		},
-		PHP: {
-			symbol: "₱",
-			robuxRates: [
-				[26900, 400],
-				[56900, 800],
-				[115000, 1700],
-				[289000, 4500],
-				[570000, 10000],
-				[1149000, 22500],
-			],
-			robuxRatesPremium: [
-				[26900, 440],
-				[56900, 880],
-				[115000, 1870],
-				[289000, 4950],
-				[570000, 11000],
-				[1149000, 25000],
-			],
-			subscriptionRates: [
-				[26900, 450],
-				[56900, 1000],
-				[115000, 2200],
-			],
-		},
-		MYR: {
-			symbol: "RM",
-			robuxRates: [
-				[2390, 400],
-				[4490, 800],
-				[9490, 1700],
-				[23990, 4500],
-				[47990, 10000],
-				[94990, 22500],
-			],
-			robuxRatesPremium: [
-				[2390, 440],
-				[4490, 880],
-				[9490, 1870],
-				[23990, 4950],
-				[47990, 11000],
-				[94990, 25000],
-			],
-			subscriptionRates: [
-				[2390, 450],
-				[4490, 1000],
-				[9490, 2200],
-			],
-		},
-		VND: {
-			symbol: "₫",
-			robuxRates: [
-				[12900000, 400],
-				[24900000, 800],
-				[49900000, 1700],
-				[129900000, 4500],
-				[249900000, 10000],
-				[529900000, 22500],
-			],
-			robuxRatesPremium: [
-				[12900000, 440],
-				[24900000, 880],
-				[49900000, 1870],
-				[129900000, 4950],
-				[249900000, 11000],
-				[529900000, 25000],
-			],
-			subscriptionRates: [
-				[12900000, 450],
-				[24900000, 1000],
-				[49900000, 2200],
-			],
-		},
-		HKD: {
-			symbol: "HK$",
-			robuxRates: [
-				[3800, 400],
-				[7800, 800],
-				[15800, 1700],
-				[39800, 4500],
-				[78800, 10000],
-				[158800, 22500],
-			],
-			robuxRatesPremium: [
-				[3800, 440],
-				[7800, 880],
-				[15800, 1870],
-				[39800, 4950],
-				[78800, 11000],
-				[158800, 25000],
-			],
-			subscriptionRates: [
-				[3800, 450],
-				[7800, 1000],
-				[15800, 2200],
-			],
-		},
-		TWD: {
-			symbol: "$",
-			robuxRates: [
-				[17000, 400],
-				[33000, 800],
-				[67000, 1700],
-				[169000, 4500],
-				[329000, 10000],
-				[659000, 22500],
-			],
-			robuxRatesPremium: [
-				[17000, 440],
-				[33000, 880],
-				[67000, 1870],
-				[169000, 4950],
-				[329000, 11000],
-				[659000, 25000],
-			],
-			subscriptionRates: [
-				[17000, 450],
-				[33000, 1000],
-				[67000, 2200],
-			],
-		},
-		SAR: {
-			symbol: "ر.س.‏",
-			robuxRates: [
-				[2499, 400],
-				[4999, 800],
-				[9999, 1700],
-				[24999, 4500],
-				[49999, 10000],
-				[99900, 22500],
-			],
-			robuxRatesPremium: [
-				[2499, 440],
-				[4999, 880],
-				[9999, 1870],
-				[24999, 4950],
-				[49999, 11000],
-				[99900, 25000],
-			],
-			subscriptionRates: [
-				[2499, 450],
-				[4999, 1000],
-				[9999, 2200],
-			],
-		},
-		AED: {
-			symbol: "د.إ.‏",
-			robuxRates: [
-				[1799, 400],
-				[3699, 800],
-				[7499, 1700],
-				[18499, 4500],
-				[36999, 10000],
-				[74999, 22500],
-			],
-			robuxRatesPremium: [
-				[1799, 440],
-				[3699, 880],
-				[7499, 1870],
-				[18499, 4950],
-				[36999, 11000],
-				[74999, 25000],
-			],
-			subscriptionRates: [
-				[1799, 450],
-				[3699, 1000],
-				[7499, 2200],
-			],
-		},
-		ZAR: {
-			symbol: "R",
-			robuxRates: [
-				[9999, 400],
-				[19999, 800],
-				[39999, 1700],
-				[99999, 4500],
-				[199999, 10000],
-				[399999, 22500],
-			],
-			robuxRatesPremium: [
-				[9999, 440],
-				[19999, 880],
-				[39999, 1870],
-				[99999, 4950],
-				[199999, 11000],
-				[399999, 25000],
-			],
-			subscriptionRates: [
-				[9999, 450],
-				[19999, 1000],
-				[39999, 2200],
-			],
-		},
+		USD: { symbol: "$", prices: [499, 999, 1499, 1999, 3499, 4999, 9999, 19999] },
+		EUR: { symbol: "€", prices: [599, 1199, 2399, 5999, 11999, 23999] },
+		AUD: { symbol: "$", prices: [849, 1699, 3499, 9099, 18499, 36999] },
+		GBP: { symbol: "£", prices: [499, 999, 1999, 4999, 9999, 19999] },
+		NZD: { symbol: "$", prices: [999, 1899, 3899, 9999, 19999, 39999] },
+		CAD: { symbol: "CA$", prices: [699, 1399, 2799, 6999, 13999, 27999] },
+		SEK: { symbol: "kr", prices: [6500, 12900, 26900, 69500, 139500, 259500] },
+		NOK: { symbol: "kr", prices: [7000, 14000, 28000, 70000, 140000, 280000] },
+		DKK: { symbol: "kr.", prices: [4500, 8900, 16900, 44900, 89900, 169900] },
+		PLN: { symbol: "zł", prices: [2999, 5999, 7999, 11999, 19999, 29999, 59999, 114999] },
+		CZK: { symbol: "Kč", prices: [15000, 30000, 60000, 150000, 300000, 600000] },
+		RON: { symbol: "RON", prices: [2499, 4999, 9999, 24999, 49999, 99999] },
+		HUF: { symbol: "Ft", prices: [249000, 449000, 949000, 2399000, 4799000, 9499000] },
+		CHF: { symbol: "CHF", prices: [500, 1000, 2000, 4800, 10000, 20000] },
+		RUB: { symbol: "₽", prices: [53900, 108000, 215000, 560000, 1139000, 2299000] },
+		MXN: { symbol: "$", prices: [12900, 24900, 49900, 129900, 249900, 499900] },
+		CLP: { symbol: "$", prices: [550000, 1090000, 2190000, 5490000, 10990000, 21990000] },
+		BRL: { symbol: "R$", prices: [2990, 5900, 11790, 29490, 58990, 117990] },
+		COP: { symbol: "$", prices: [2990000, 5990000, 11490000, 29990000, 59990000, 114990000] },
+		PEN: { symbol: "S/", prices: [1790, 3790, 7490, 18990, 37990, 74990] },
+		INR: { symbol: "₹", prices: [50000, 100000, 200000, 500000, 1000000, 2000000] },
+		THB: { symbol: "฿", prices: [20000, 40000, 80000, 200000, 400000, 800000] },
+		SGD: { symbol: "$", prices: [698, 1498, 2898, 6898, 14898, 28898] },
+		JPY: { symbol: "￥", prices: [80000, 160000, 320000, 800000, 1580000, 3180000] },
+		KRW: { symbol: "₩", prices: [750000, 1500000, 3000000, 7900000, 14900000, 29900000] },
+		IDR: { symbol: "Rp", prices: [9000000, 18000000, 36000000, 90000000, 179900000, 359900000] },
+		PHP: { symbol: "₱", prices: [26900, 56900, 115000, 289000, 570000, 1149000] },
+		MYR: { symbol: "RM", prices: [2390, 4490, 9490, 23990, 47990, 94990] },
+		VND: { symbol: "₫", prices: [12900000, 24900000, 49900000, 129900000, 249900000, 529900000] },
+		HKD: { symbol: "HK$", prices: [3800, 7800, 15800, 39800, 78800, 158800] },
+		TWD: { symbol: "$", prices: [17000, 33000, 67000, 169000, 329000, 659000] },
+		SAR: { symbol: "ر.س.‏", prices: [2499, 4999, 9999, 24999, 49999, 99900] },
+		AED: { symbol: "د.إ.‏", prices: [1799, 3699, 7499, 18499, 36999, 74999] },
+		ZAR: { symbol: "R", prices: [9999, 19999, 39999, 99999, 199999, 399999] },
 
-		// Currency has a fixed usd exchange rate
+		// Pegged to the US dollar
 
-		ANG: { symbol: "", usdRate: 1.79, fixed: true },
 		AWG: { symbol: "", usdRate: 1.79, fixed: true },
 		BBD: { symbol: "$", usdRate: 2, fixed: true },
 		BHD: { symbol: "", usdRate: 0.376, fixed: true },
 		BMD: { symbol: "$", usdRate: 1, fixed: true },
 		BSD: { symbol: "$", usdRate: 1, fixed: true },
 		BZD: { symbol: "$", usdRate: 2, fixed: true },
-		CUC: { symbol: "", usdRate: 1, fixed: true },
-		DJF: { symbol: "", usdRate: 177.7721, fixed: true },
+		DJF: { symbol: "", usdRate: 177.721, fixed: true },
 		ERN: { symbol: "Nfk ", usdRate: 15, fixed: true },
 		JOD: { symbol: "", usdRate: 0.709, fixed: true },
 		KYD: { symbol: "$", usdRate: 1 / 1.2, fixed: true },
-		LBP: { symbol: "", usdRate: 1507.5, fixed: true },
 		OMR: { symbol: "", usdRate: 0.3845, fixed: true },
 		PAB: { symbol: "", usdRate: 1, fixed: true },
 		QAR: { symbol: "", usdRate: 3.64, fixed: true },
 		SVC: { symbol: "", usdRate: 8.75, fixed: true },
 		XCD: { symbol: "EC$", usdRate: 2.7, fixed: true },
+		XCG: { symbol: "", usdRate: 1.79, fixed: true },
 
-		// Fluctuating exchange rates
+		// Floating exchange rates
 
-		AFN: { symbol: "", usdRate: 66.3022951673 },
-		ALL: { symbol: "", usdRate: 83.1329268275 },
-		AMD: { symbol: "", usdRate: 381.4329179007 },
-		AOA: { symbol: "", usdRate: 921.2940015962 },
-		ARS: { symbol: "", usdRate: 1408.6714882377 },
-		AZN: { symbol: "", usdRate: 1.700000117 },
-		BAM: { symbol: "", usdRate: 1.684842052 },
-		BDT: { symbol: "", usdRate: 122.1953148071 },
-		BIF: { symbol: "FBu ", usdRate: 2949.4341596459 },
-		BND: { symbol: "", usdRate: 1.2993355984 },
-		BOB: { symbol: "", usdRate: 6.9110484391 },
-		BTN: { symbol: "", usdRate: 88.6890019604 },
-		BWP: { symbol: "P ", usdRate: 13.7879298571 },
-		BYN: { symbol: "", usdRate: 3.4100763636 },
-		CDF: { symbol: "", usdRate: 2185.0623477427 },
-		CLF: { symbol: "", usdRate: 0.023591828 },
-		CNY: { symbol: "CN¥", usdRate: 7.0942763473 },
-		CRC: { symbol: "", usdRate: 500.9619996034 },
-		CUP: { symbol: "", usdRate: 23.9848218258 },
-		CVE: { symbol: "", usdRate: 94.9916572863 },
-		DOP: { symbol: "", usdRate: 64.3493751092 },
-		DZD: { symbol: "", usdRate: 129.9014357386 },
-		EGP: { symbol: "", usdRate: 47.0684071592 },
-		ETB: { symbol: "", usdRate: 154.3713103245 },
-		FJD: { symbol: "$", usdRate: 2.2768874125 },
-		FKP: { symbol: "£", usdRate: 0.7600649048 },
-		GEL: { symbol: "", usdRate: 2.7022925714 },
-		GHS: { symbol: "GH₵", usdRate: 10.9742417792 },
-		GIP: { symbol: "£", usdRate: 0.7600649048 },
-		GMD: { symbol: "D ", usdRate: 73.3785410568 },
-		GNF: { symbol: "", usdRate: 8681.9162955151 },
-		GTQ: { symbol: "", usdRate: 7.6615557481 },
-		GYD: { symbol: "$", usdRate: 209.1288983641 },
-		HNL: { symbol: "", usdRate: 26.3044994779 },
-		HRK: { symbol: "", usdRate: 6.4905653562 },
-		HTG: { symbol: "", usdRate: 130.9061970791 },
-		ILS: { symbol: "₪", usdRate: 3.2261289358 },
-		IQD: { symbol: "", usdRate: 1310.0148001471 },
-		IRR: { symbol: "", usdRate: 41978.8777658042 },
-		ISK: { symbol: "", usdRate: 126.975723016 },
-		JMD: { symbol: "$", usdRate: 160.5908774149 },
-		KES: { symbol: "Ksh", usdRate: 129.270325244 },
-		KGS: { symbol: "", usdRate: 87.4693165635 },
-		KHR: { symbol: "", usdRate: 4009.7947834668 },
-		KMF: { symbol: "", usdRate: 423.8036810005 },
-		KPW: { symbol: "", usdRate: 899.9965661966 },
-		KWD: { symbol: "", usdRate: 0.3068846388 },
-		KZT: { symbol: "", usdRate: 524.1782244566 },
-		LAK: { symbol: "", usdRate: 21680.1826134216 },
-		LKR: { symbol: "", usdRate: 306.2579602634 },
-		LRD: { symbol: "$", usdRate: 181.5093479828 },
-		LSL: { symbol: "", usdRate: 17.0887169524 },
-		LYD: { symbol: "", usdRate: 5.4544917453 },
-		MAD: { symbol: "", usdRate: 9.2539821553 },
-		MDL: { symbol: "", usdRate: 16.9049528697 },
-		MGA: { symbol: "Ar ", usdRate: 4474.7546904697 },
-		MKD: { symbol: "", usdRate: 52.971815958 },
-		MMK: { symbol: "", usdRate: 2099.5614408754 },
-		MNT: { symbol: "", usdRate: 3574.9317586274 },
-		MOP: { symbol: "MOP$", usdRate: 8.0050663166 },
-		MUR: { symbol: "Rs ", usdRate: 45.6366751914 },
-		MVR: { symbol: "", usdRate: 15.4423465303 },
-		MWK: { symbol: "MK ", usdRate: 1733.1129098193 },
-		MXV: { symbol: "", usdRate: 2.1375032256 },
-		MZN: { symbol: "", usdRate: 63.8991174613 },
-		NAD: { symbol: "$", usdRate: 17.0887169524 },
-		NGN: { symbol: "₦", usdRate: 1441.2964773498 },
-		NIO: { symbol: "", usdRate: 36.789700177 },
-		NPR: { symbol: "", usdRate: 141.9689198882 },
-		PGK: { symbol: "K ", usdRate: 4.2259335 },
-		PKR: { symbol: "Rs ", usdRate: 282.580397529 },
-		PYG: { symbol: "", usdRate: 7044.8886286535 },
-		RSD: { symbol: "", usdRate: 100.8112225847 },
-		RWF: { symbol: "RF ", usdRate: 1451.7927769773 },
-		SBD: { symbol: "$", usdRate: 8.241637982 },
-		SCR: { symbol: "Rs ", usdRate: 14.1118525894 },
-		SDG: { symbol: "", usdRate: 600.0180611894 },
-		SHP: { symbol: "£", usdRate: 0.7600649048 },
-		SLL: { symbol: "Le ", usdRate: 22680.0372600878 },
-		SOS: { symbol: "", usdRate: 573.9394472719 },
-		SRD: { symbol: "", usdRate: 38.5749065357 },
-		SYP: { symbol: "", usdRate: 11058.3953974042 },
-		SZL: { symbol: "E ", usdRate: 17.0887169524 },
-		TJS: { symbol: "", usdRate: 9.2325715308 },
-		TMT: { symbol: "", usdRate: 3.5077535336 },
-		TND: { symbol: "", usdRate: 2.9319736216 },
-		TOP: { symbol: "T$", usdRate: 2.4082232584 },
-		TRY: { symbol: "", usdRate: 42.3346734083 },
-		TTD: { symbol: "$", usdRate: 6.7792800725 },
-		TZS: { symbol: "TSh ", usdRate: 2436.2225554343 },
-		UAH: { symbol: "", usdRate: 42.0273451897 },
-		UGX: { symbol: "USh ", usdRate: 3569.1698737747 },
-		UYU: { symbol: "", usdRate: 39.7664826036 },
-		UZS: { symbol: "", usdRate: 12034.2696425944 },
-		VES: { symbol: "", usdRate: 236.1309221144 },
-		VUV: { symbol: "VT ", usdRate: 121.9676486284 },
-		WST: { symbol: "WS$", usdRate: 2.8094771274 },
-		XAF: { symbol: "FCFA ", usdRate: 565.0715746674 },
-		YER: { symbol: "", usdRate: 238.4941460994 },
-		ZMW: { symbol: "K ", usdRate: 22.5994644957 },
+		AFN: { symbol: "", usdRate: 65.501863 },
+		ALL: { symbol: "", usdRate: 81.700112 },
+		AMD: { symbol: "", usdRate: 360.56995 },
+		AOA: { symbol: "", usdRate: 925.01665 },
+		ARS: { symbol: "", usdRate: 1547.0336 },
+		AZN: { symbol: "", usdRate: 1.700657 },
+		BAM: { symbol: "", usdRate: 1.771945 },
+		BDT: { symbol: "", usdRate: 124.60136 },
+		BIF: { symbol: "FBu ", usdRate: 3008.5556 },
+		BND: { symbol: "", usdRate: 1.287566 },
+		BOB: { symbol: "", usdRate: 11.803952 },
+		BTN: { symbol: "", usdRate: 94.261675 },
+		BWP: { symbol: "P ", usdRate: 14.366837 },
+		BYN: { symbol: "", usdRate: 2.995771 },
+		CDF: { symbol: "", usdRate: 2254.9459 },
+		CLF: { symbol: "", usdRate: 0.025102 },
+		CNY: { symbol: "CN¥", usdRate: 6.689676 },
+		CRC: { symbol: "", usdRate: 452.75167 },
+		CUP: { symbol: "", usdRate: 24 },
+		CVE: { symbol: "", usdRate: 99.897988 },
+		DOP: { symbol: "", usdRate: 60.950781 },
+		DZD: { symbol: "", usdRate: 136.79254 },
+		EGP: { symbol: "", usdRate: 53.439277 },
+		ETB: { symbol: "", usdRate: 161.27 },
+		FJD: { symbol: "$", usdRate: 2.262812 },
+		FKP: { symbol: "£", usdRate: 0.756391 },
+		GEL: { symbol: "", usdRate: 2.594184 },
+		GHS: { symbol: "GH₵", usdRate: 11.747527 },
+		GIP: { symbol: "£", usdRate: 0.756391 },
+		GMD: { symbol: "D ", usdRate: 74.823996 },
+		GNF: { symbol: "", usdRate: 8854.2011 },
+		GTQ: { symbol: "", usdRate: 7.659179 },
+		GYD: { symbol: "$", usdRate: 209.50618 },
+		HNL: { symbol: "", usdRate: 26.955156 },
+		HTG: { symbol: "", usdRate: 131.08447 },
+		ILS: { symbol: "₪", usdRate: 3.208773 },
+		IQD: { symbol: "", usdRate: 1515.0527 },
+		IRR: { symbol: "", usdRate: 1722457.4 },
+		ISK: { symbol: "", usdRate: 123.42477 },
+		JMD: { symbol: "$", usdRate: 158.95426 },
+		KES: { symbol: "Ksh", usdRate: 129.98554 },
+		KGS: { symbol: "", usdRate: 87.480006 },
+		KHR: { symbol: "", usdRate: 4068.0386 },
+		KMF: { symbol: "", usdRate: 445.7134 },
+		KPW: { symbol: "", usdRate: 899.99657 },
+		KWD: { symbol: "", usdRate: 0.31116 },
+		KZT: { symbol: "", usdRate: 445.06647 },
+		LAK: { symbol: "", usdRate: 22424.493 },
+		LBP: { symbol: "", usdRate: 89500 },
+		LKR: { symbol: "", usdRate: 332.55983 },
+		LRD: { symbol: "$", usdRate: 170.74853 },
+		LSL: { symbol: "", usdRate: 16.919544 },
+		LYD: { symbol: "", usdRate: 6.427677 },
+		MAD: { symbol: "", usdRate: 9.882546 },
+		MDL: { symbol: "", usdRate: 18.126952 },
+		MGA: { symbol: "Ar ", usdRate: 4574.1308 },
+		MKD: { symbol: "", usdRate: 54.865608 },
+		MMK: { symbol: "", usdRate: 2101.7666 },
+		MNT: { symbol: "", usdRate: 3613.0684 },
+		MOP: { symbol: "MOP$", usdRate: 8.081368 },
+		MUR: { symbol: "Rs ", usdRate: 47.560791 },
+		MVR: { symbol: "", usdRate: 15.464456 },
+		MWK: { symbol: "MK ", usdRate: 1745.3482 },
+		MZN: { symbol: "", usdRate: 63.721689 },
+		NAD: { symbol: "$", usdRate: 16.919544 },
+		NGN: { symbol: "₦", usdRate: 1352.0722 },
+		NIO: { symbol: "", usdRate: 36.899171 },
+		NPR: { symbol: "", usdRate: 150.81868 },
+		PGK: { symbol: "K ", usdRate: 4.544846 },
+		PKR: { symbol: "Rs ", usdRate: 276.6624 },
+		PYG: { symbol: "", usdRate: 6204.0182 },
+		RSD: { symbol: "", usdRate: 106.49614 },
+		RWF: { symbol: "RF ", usdRate: 1479.6093 },
+		SBD: { symbol: "$", usdRate: 7.987692 },
+		SCR: { symbol: "Rs ", usdRate: 13.938149 },
+		SDG: { symbol: "", usdRate: 498.09303 },
+		SHP: { symbol: "£", usdRate: 0.756391 },
+		SLE: { symbol: "Le ", usdRate: 23.06523 },
+		SOS: { symbol: "", usdRate: 571.98059 },
+		SRD: { symbol: "", usdRate: 37.725515 },
+		SYP: { symbol: "", usdRate: 121.95534 },
+		SZL: { symbol: "E ", usdRate: 16.919544 },
+		TJS: { symbol: "", usdRate: 9.209008 },
+		TMT: { symbol: "", usdRate: 3.500401 },
+		TND: { symbol: "", usdRate: 3.018899 },
+		TOP: { symbol: "T$", usdRate: 2.398434 },
+		TRY: { symbol: "", usdRate: 50.381173 },
+		TTD: { symbol: "$", usdRate: 6.748321 },
+		TZS: { symbol: "TSh ", usdRate: 2640.8305 },
+		UAH: { symbol: "", usdRate: 45.442934 },
+		UGX: { symbol: "USh ", usdRate: 3997.9217 },
+		UYU: { symbol: "", usdRate: 40.693726 },
+		UZS: { symbol: "", usdRate: 11997.012 },
+		VES: { symbol: "", usdRate: 914.0218 },
+		VUV: { symbol: "VT ", usdRate: 120.36325 },
+		WST: { symbol: "WS$", usdRate: 2.764606 },
+		XAF: { symbol: "FCFA ", usdRate: 594.28454 },
+		YER: { symbol: "", usdRate: 236.7461 },
+		ZMW: { symbol: "K ", usdRate: 20.431723 },
 	},
 
 	OptionLists: {
@@ -992,9 +218,43 @@ export const RobuxToCash = {
 			{ name: "devex", label: "DevEx", cash: 380, robux: 1000 },
 			{ name: "devexUS18", label: "DevEx (US 18+)", cash: 540, robux: 1000 },
 		],
-	},
+	} as Record<string, any[]>,
 
-	Options: {} as Record<string, any>,
+	Options: {} as Record<string, RateOption>,
+
+	// Maps a saved name from before the package change (usdRegular0, usdPremium2,
+	// usdSubscription1, angRegular3, ...) to today's option, or returns it as is.
+	resolveName(name: string) {
+		if (this.Options[name]) {
+			return name
+		}
+
+		const match = name.match(/^([a-z]{3})(Regular|Premium|Subscription|Web|App)(\d+)$/)
+		if (!match) {
+			return name
+		}
+
+		const currency = REPLACED[match[1]] ?? match[1]
+		const kind = match[2]
+		let tier: number | undefined
+
+		if (kind === "Web" || kind === "App") {
+			tier = PACKAGES.findIndex((amounts) => amounts[kind === "Web" ? 0 : 1] === Number(match[3]))
+		} else {
+			tier = CORE_PACKAGES[Number(match[3])]
+		}
+
+		if (tier === undefined || tier < 0) {
+			return name
+		}
+
+		// Regular was the plain app price, Premium and Subscription got more Robux
+		// for the same money, which is what the website gives now.
+		const app = kind === "Regular" || kind === "App"
+		const resolved = `${currency}${app ? "App" : "Web"}${PACKAGES[tier][app ? 1 : 0]}`
+
+		return this.Options[resolved] ? resolved : name
+	},
 
 	isEnabled() {
 		return this.getSelectedOption() !== this.Options.none
@@ -1005,7 +265,7 @@ export const RobuxToCash = {
 			return this.Options.none
 		}
 
-		return this.Options[SETTINGS.get("general.robuxToUSDRate")] || this.Options.none
+		return this.Options[this.resolveName(SETTINGS.get("general.robuxToUSDRate"))] || this.Options.none
 	},
 
 	convertAngular(expr: any) {
@@ -1024,7 +284,7 @@ export const RobuxToCash = {
 	},
 }
 
-for (const [name, currency] of Object.entries(RobuxToCash.Currencies) as [string, any][]) {
+for (const [name, currency] of Object.entries(RobuxToCash.Currencies)) {
 	currency.name = name
 	currency.numFractions = 2
 
@@ -1039,63 +299,41 @@ for (const [name, currency] of Object.entries(RobuxToCash.Currencies) as [string
 	}
 
 	try {
-		currency.numFractions = new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: name,
-		}).resolvedOptions().maximumFractionDigits
+		currency.numFractions =
+			new Intl.NumberFormat("en-US", {
+				style: "currency",
+				currency: name,
+			}).resolvedOptions().maximumFractionDigits ?? 2
 	} catch (ex) {}
 
-	const lists = RobuxToCash.OptionLists as Record<string, any>
-	const options = (lists[name] = lists[name] || [])
-	const refCurrency = currency.usdRate ? RobuxToCash.Currencies.USD : currency
+	const options = (RobuxToCash.OptionLists[name] ??= [])
+	const prices = (currency.usdRate ? RobuxToCash.Currencies.USD : currency).prices!
+	const tiers = prices.length === PACKAGES.length ? PACKAGES.map((_, i) => i) : CORE_PACKAGES
 
-	for (const [index, rate] of Object.entries(refCurrency.robuxRates) as [string, any][]) {
-		const option: Record<string, any> = {
-			name: `${name.toLowerCase()}Regular${index}`,
-			cash: rate[0],
-			robux: rate[1],
+	for (const [label, column] of [
+		["Website", 0],
+		["App", 1],
+	] as const) {
+		for (const [index, tier] of tiers.entries()) {
+			const robux = PACKAGES[tier][column]
+			const option: Record<string, any> = {
+				name: `${name.toLowerCase()}${column === 0 ? "Web" : "App"}${robux}`,
+				label,
+				cash: prices[index],
+				robux,
+			}
+
+			if (currency.usdRate) {
+				option.usdCash = option.cash
+				option.cash *= currency.usdRate
+			}
+
+			options.push(option)
 		}
-
-		if (currency.usdRate) {
-			option.usdCash = option.cash
-			option.cash *= currency.usdRate
-		}
-
-		options.push(option)
-	}
-
-	for (const [index, rate] of Object.entries(refCurrency.robuxRatesPremium) as [string, any][]) {
-		const option: Record<string, any> = {
-			name: `${name.toLowerCase()}Premium${index}`,
-			cash: rate[0],
-			robux: rate[1],
-		}
-
-		if (currency.usdRate) {
-			option.usdCash = option.cash
-			option.cash *= currency.usdRate
-		}
-
-		options.push(option)
-	}
-
-	for (const [index, rate] of Object.entries(refCurrency.subscriptionRates) as [string, any][]) {
-		const option: Record<string, any> = {
-			name: `${name.toLowerCase()}Subscription${index}`,
-			cash: rate[0],
-			robux: rate[1],
-		}
-
-		if (currency.usdRate) {
-			option.usdCash = option.cash
-			option.cash *= currency.usdRate
-		}
-
-		options.push(option)
 	}
 }
 
-for (const [name, options] of Object.entries(RobuxToCash.OptionLists) as [string, any][]) {
+for (const [name, options] of Object.entries(RobuxToCash.OptionLists)) {
 	const currency = RobuxToCash.Currencies[name]
 
 	for (const option of options) {

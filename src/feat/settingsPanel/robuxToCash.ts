@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { formatNumber } from "@/core/util"
 import { RobuxToCash } from "@/feat/robuxToCash"
 import { SETTINGS } from "@/feat/settings"
 import type { SettingsModalState } from "@/feat/settingsPanel/state"
@@ -42,8 +43,15 @@ export const setupRobuxToCash = (modal: SettingsModalState) => {
 	rateSelect.$on("change", setRate)
 
 	const updateRate = () => {
-		const name = RobuxToCash.getSelectedOption().currency.name
+		const current = RobuxToCash.getSelectedOption()
+		const name = current.currency.name!
 		currencySelect.value = name
+
+		// A name saved before the package change resolves to today's option. Save that.
+		if (current.name !== SETTINGS.get("general.robuxToUSDRate") && current.name !== "none") {
+			SETTINGS.set("general.robuxToUSDRate", current.name)
+			return
+		}
 
 		rateSelect.replaceChildren()
 		let selected = false
@@ -54,19 +62,12 @@ export const setupRobuxToCash = (modal: SettingsModalState) => {
 			if (option.name === "none") {
 				fullText = "No currency selected"
 			} else {
-				const display =
-					option.label ??
-					(option.name.includes("Subscription")
-						? "Subscription"
-						: option.name.includes("Premium")
-							? "Premium"
-							: "Regular")
+				const cash = `${option.currency.symbol}${formatNumber((option.cash / 100).toFixed(option.currency.numFractions))}`
+				const usd = option.currency.usdRate
+					? ` ≈ US$${formatNumber((option.usdCash / 100).toFixed(2))}`
+					: ""
 
-				const rateText = option.currency.usdRate
-					? `${option.currency.symbol}${(option.cash / 100).toFixed(option.currency.numFractions)} ≈ US$${(option.usdCash / 100).toFixed(2)} = R$${option.robux}`
-					: `${option.currency.symbol}${(option.cash / 100).toFixed(option.currency.numFractions)} = R$${option.robux}`
-
-				fullText = `${display} (${rateText})`
+				fullText = `${option.label} (${cash}${usd} = R$${formatNumber(option.robux)})`
 			}
 
 			rateSelect.append(html<HTMLOptionElement>`<option value="${option.name}">${fullText}</option>`)

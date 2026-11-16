@@ -4,7 +4,7 @@ import { html } from "@/core/html"
 import { backgroundScript, injectScript } from "@/core/messaging"
 import { isId, isKey, isRecord, isText } from "@/core/pageInput"
 import { currentPage } from "@/core/page"
-import { assert, bufferToString, formatFileName, ready } from "@/core/util"
+import { assert, bufferToString, formatFileName, formatNumber, ready } from "@/core/util"
 import { loadOptionalFeature, type Feature } from "@/feat/loadFeature"
 import { isNewShell } from "@/core/hydration"
 import { Navigation } from "@/feat/navigation"
@@ -76,8 +76,8 @@ export const AccessoryAssetTypeIds = [
 	8, 41, 42, 43, 44, 45, 46, 47, 57, 58, 64, 65, 66, 67, 68, 69, 70, 71, 72,
 ]
 
-export const formatNumber = (num: number | string) =>
-	String(num).replace(/(\d\d*?)(?=(?:\d{3})+(?:\.|$))/gy, "$1,")
+export { formatNumber }
+
 /**
  * Keeps an element showing the text `getText` gives, such as an exact count
  * in place of Roblox's rounded one, written back whenever Roblox renders it
