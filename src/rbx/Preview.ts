@@ -135,6 +135,17 @@ class AvatarPreviewer extends EventEmitter {
 		this.initPlayerTypeFromPlayingAnimation = false
 		this.outfitAccessoriesVisible = true
 
+		// How many of each accessory type an avatar may wear, from Roblox's avatar rules.
+		this.wearingLimits = null as Record<number, number> | null
+		void getAvatarRules()
+			.then((rules) => {
+				this.wearingLimits = Object.fromEntries(
+					(rules?.wearableAssetTypes ?? []).map((x: any) => [x.id, x.maxNumber]),
+				)
+				this.updateOutfitAccessories()
+			})
+			.catch(() => {})
+
 		this.outfitLoaded = false
 		this.shouldLoadOutfit = null
 
@@ -218,11 +229,28 @@ class AvatarPreviewer extends EventEmitter {
 
 	setOutfitAccessoriesVisible(bool: boolean) {
 		this.outfitAccessoriesVisible = !!bool
+		this.updateOutfitAccessories()
+	}
+
+	// Roblox's try-on takes off what the outfit wears in a slot that holds one
+	// (hair, face, neck, back...) to make room for the item, so a previewed hair
+	// shows instead of two overlapping. Hats are left alone: the rules say three,
+	// but avatars wear more than that and showing them all is the point.
+	updateOutfitAccessories() {
+		const previewed = new Set<number>()
+
+		for (const asset of this.previewAssets) {
+			previewed.add(asset.assetTypeId)
+		}
 
 		for (const asset of this.outfitAssets) {
-			if (AccessoryAssetTypeIds.includes(asset.assetTypeId)) {
-				asset.setEnabled(this.outfitAccessoriesVisible)
+			const type = asset.assetTypeId
+			if (!AccessoryAssetTypeIds.includes(type)) {
+				continue
 			}
+
+			const replaced = previewed.has(type) && this.wearingLimits?.[type] === 1
+			asset.setEnabled(this.outfitAccessoriesVisible && !replaced)
 		}
 	}
 
@@ -337,15 +365,11 @@ class AvatarPreviewer extends EventEmitter {
 		}
 
 		this.outfitAssets.add(asset)
-
-		asset.on("update", () => {
-			if (AccessoryAssetTypeIds.includes(asset.assetTypeId)) {
-				asset.setEnabled(this.outfitAccessoriesVisible)
-			}
-		})
+		this.updateOutfitAccessories()
 
 		asset.once("remove", () => {
 			this.outfitAssets.delete(asset)
+			this.updateOutfitAccessories()
 		})
 
 		return asset
@@ -367,8 +391,11 @@ class AvatarPreviewer extends EventEmitter {
 		asset.setPriority(2)
 
 		this.previewAssets.add(asset)
+		this.updateOutfitAccessories()
+
 		asset.once("remove", () => {
 			this.previewAssets.delete(asset)
+			this.updateOutfitAccessories()
 		})
 
 		return asset
