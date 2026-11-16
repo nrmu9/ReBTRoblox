@@ -57,6 +57,26 @@
 
 /* Shell */
 
+/* The settings and activity panels are controls, so dragging a row, a slider
+   or across a chart never paints the labels. What people copy stays
+   selectable: fields, activity entries and names, and error messages. */
+.btr-settings-modal {
+	user-select: none;
+
+	:is(
+		input,
+		textarea,
+		.btr-activity-text,
+		.btr-activity-title,
+		.btr-activity-subtitle,
+		.btr-activity-stat-value,
+		.btr-error-log-message,
+		.btr-error-log-where
+	) {
+		user-select: text;
+	}
+}
+
 .btr-settings-modal {
 	position: fixed;
 	inset: 0;

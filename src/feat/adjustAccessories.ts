@@ -1,4 +1,5 @@
 import { html } from "@/core/html"
+import { leave } from "@/core/leave"
 import { injectScript } from "@/core/messaging"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
@@ -114,7 +115,7 @@ const render = async (list: Worn[]) => {
 				<span class="btr-adjust-name">${asset.name}</span
 				><span class="btr-adjust-type"
 					>${asset.assetTypeName.replace(/([a-z])([A-Z])/g, "$1 $2")}</span
-				>
+				><span class="btr-adjust-chevron" aria-hidden="true"></span>
 			</summary>
 			<div class="btr-adjust-controls"></div>
 			<div class="btr-adjust-foot">
@@ -223,11 +224,20 @@ const openPanel = (list: Worn[]) => {
 			<div class="btr-adjust-body"></div>
 		</div>`
 
-		panel.$req(".btr-adjust-close").$on("click", () => {
-			panel?.remove()
+		const close = () => {
+			leave(panel)
 			panel = null
-		})
+			document.removeEventListener("keydown", onKey)
+		}
 
+		const onKey = (ev: KeyboardEvent) => {
+			if (ev.key === "Escape") {
+				close()
+			}
+		}
+
+		panel.$req(".btr-adjust-close").$on("click", close)
+		document.addEventListener("keydown", onKey)
 		document.body.append(panel)
 	}
 

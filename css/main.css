@@ -1466,6 +1466,18 @@ html
 
 /* The notice that stored activity is nearly full, or full */
 
+/* Our cards, menus and previewers are controls rather than text, so clicking
+   around them or dragging to spin an avatar never selects the words nearby. */
+.btr-toasts,
+.btr-whatsnew,
+.btr-quick-menu,
+.btr-quick-confirm,
+.btr-dropdown-menu,
+.btr-preview-container,
+.btr-preview-container-itempage {
+	user-select: none;
+}
+
 /* ReBTRoblox's notices, stacked in one corner. Above the settings, which
    the What's new card can open. */
 .btr-toasts {

@@ -124,9 +124,13 @@ html body .btr-color-selector input {
 	left: 50%;
 }
 
-/* The Adjust panel: beside the editor, so its preview stays in view. */
+/* The Adjust panel: beside the editor, so its preview stays in view. It is a
+   set of controls, so dragging a slider never selects the labels around it. */
 
 .btr-adjust {
+	--btr-adjust-ease: cubic-bezier(0.2, 0, 0, 1);
+	--btr-adjust-hover: var(--color-state-hover, rgba(127, 127, 127, 0.15));
+
 	position: fixed;
 	z-index: 1060;
 	top: 96px;
@@ -142,6 +146,19 @@ html body .btr-color-selector input {
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 	color: var(--color-content-default, inherit);
 	font-size: 14px;
+	user-select: none;
+	animation: btr-adjust-in 200ms var(--btr-adjust-ease);
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes btr-adjust-in {
+	from {
+		opacity: 0;
+		transform: translateX(12px);
+	}
 }
 
 .btr-adjust-head {
@@ -166,9 +183,10 @@ html body .btr-color-selector input {
 	border-radius: 50%;
 	color: inherit;
 	cursor: pointer;
+	transition: background-color 150ms var(--btr-adjust-ease);
 
 	&:hover {
-		background: var(--color-state-hover, rgba(127, 127, 127, 0.15));
+		background: var(--btr-adjust-hover);
 	}
 }
 
@@ -182,15 +200,50 @@ html body .btr-color-selector input {
 	color: var(--color-content-muted, gray);
 }
 
+/* Sections open and close by sliding, where the browser can animate to auto. */
 .btr-adjust-item {
+	interpolate-size: allow-keywords;
 	border-top: 1px solid var(--color-stroke-default, rgba(127, 127, 127, 0.2));
+
+	&::details-content {
+		height: 0;
+		overflow: clip;
+		opacity: 0;
+		transition:
+			height 220ms var(--btr-adjust-ease),
+			opacity 180ms var(--btr-adjust-ease),
+			content-visibility 220ms allow-discrete;
+	}
+
+	&[open]::details-content {
+		height: auto;
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&::details-content {
+			transition: none;
+		}
+	}
 
 	summary {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		gap: 8px;
-		padding: 10px 8px;
+		margin: 2px 0;
+		padding: 8px;
+		border-radius: 8px;
+		list-style: none;
 		cursor: pointer;
+		transition: background-color 150ms var(--btr-adjust-ease);
+
+		&::-webkit-details-marker {
+			display: none;
+		}
+
+		&:hover {
+			background: var(--btr-adjust-hover);
+		}
 	}
 }
 
@@ -206,6 +259,22 @@ html body .btr-color-selector input {
 	flex: none;
 	color: var(--color-content-muted, gray);
 	font-size: 12px;
+}
+
+/* A chevron that turns to point down while its section is open. */
+.btr-adjust-chevron {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	margin: 0 4px 0 auto;
+	border-right: 2px solid var(--color-content-muted, gray);
+	border-bottom: 2px solid var(--color-content-muted, gray);
+	transform: rotate(-45deg);
+	transition: transform 200ms var(--btr-adjust-ease);
+
+	[open] > summary > & {
+		transform: rotate(45deg);
+	}
 }
 
 .btr-adjust-group {
@@ -233,6 +302,7 @@ html body .btr-color-selector input {
 	input {
 		width: 100%;
 		margin: 0;
+		cursor: pointer;
 	}
 
 	output {
@@ -257,6 +327,7 @@ html body .btr-color-selector input {
 .btr-adjust-status {
 	color: var(--color-content-muted, gray);
 	font-size: 12px;
+	transition: color 150ms var(--btr-adjust-ease);
 
 	&.btr-adjust-failed {
 		color: var(--color-system-alert, #df281f);
@@ -271,4 +342,9 @@ html body .btr-color-selector input {
 	color: inherit;
 	font-size: 13px;
 	cursor: pointer;
+	transition: background-color 150ms var(--btr-adjust-ease);
+
+	&:hover {
+		background: var(--btr-adjust-hover);
+	}
 }
