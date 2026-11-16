@@ -82,6 +82,50 @@ const setStatus = (assetId: number, text: string, failed = false) => {
 let rulesPromise: Promise<Record<string, Bounds>> | null = null
 const getBounds = () => (rulesPromise ??= RobloxApi.avatar.getAvatarRules().then(readBounds))
 
+const EASE = "cubic-bezier(0.2, 0, 0, 1)"
+
+/**
+ * Opens and closes a section by sliding its content, in every browser. CSS can
+ * only animate to height: auto where interpolate-size is supported, which
+ * Firefox isn't. The arrow follows the expanded class, which changes at once.
+ */
+const slideOpen = (item: HTMLDetailsElement) => {
+	const panel = item.$req(".btr-adjust-panel")
+	let running: Animation | null = null
+
+	item.$req("summary").$on("click", (ev: Event) => {
+		ev.preventDefault()
+
+		const opening = !item.classList.contains("btr-adjust-expanded")
+		item.classList.toggle("btr-adjust-expanded", opening)
+
+		if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+			item.open = opening
+			return
+		}
+
+		// From wherever a running slide got to, so a quick second click turns it around.
+		const from = running ? panel.getBoundingClientRect().height : opening ? 0 : panel.offsetHeight
+		running?.cancel()
+		item.open = true
+
+		const to = opening ? panel.scrollHeight : 0
+		const animation = panel.animate(
+			[
+				{ height: `${from}px`, opacity: opening ? 0 : 1 },
+				{ height: `${to}px`, opacity: opening ? 1 : 0 },
+			],
+			{ duration: 220, easing: EASE },
+		)
+
+		running = animation
+		animation.onfinish = () => {
+			running = null
+			item.open = opening
+		}
+	})
+}
+
 const SLIDERS = [
 	{ group: "position", label: "Position", step: 0.01, axes: ["X", "Y", "Z"] },
 	{ group: "rotation", label: "Rotation", step: 1, axes: ["X", "Y", "Z"] },
@@ -96,7 +140,9 @@ const render = async (list: Worn[]) => {
 	const bounds = await getBounds()
 	const body = panel.$req(".btr-adjust-body")
 	const open = new Set(
-		[...body.querySelectorAll<HTMLElement>(".btr-adjust-item[open]")].map((x) => x.dataset.id),
+		[...body.querySelectorAll<HTMLElement>(".btr-adjust-item.btr-adjust-expanded")].map(
+			(x) => x.dataset.id,
+		),
 	)
 	const focused = (document.activeElement as HTMLElement | null)?.dataset?.key
 
@@ -117,15 +163,19 @@ const render = async (list: Worn[]) => {
 					>${asset.assetTypeName.replace(/([a-z])([A-Z])/g, "$1 $2")}</span
 				><span class="btr-adjust-chevron" aria-hidden="true"></span>
 			</summary>
-			<div class="btr-adjust-controls"></div>
-			<div class="btr-adjust-foot">
-				<span class="btr-adjust-status" aria-live="polite"></span>
-				<button type="button" class="btr-adjust-reset">Reset</button>
+			<div class="btr-adjust-panel">
+				<div class="btr-adjust-controls"></div>
+				<div class="btr-adjust-foot">
+					<span class="btr-adjust-status" aria-live="polite"></span>
+					<button type="button" class="btr-adjust-reset">Reset</button>
+				</div>
 			</div>
 		</details>`
 
 		item.dataset.id = String(asset.id)
 		item.open = open.size ? open.has(String(asset.id)) : index === 0
+		item.classList.toggle("btr-adjust-expanded", item.open)
+		slideOpen(item)
 
 		const controls = item.$req(".btr-adjust-controls")
 		const status = item.$req(".btr-adjust-status")

@@ -200,31 +200,9 @@ html body .btr-color-selector input {
 	color: var(--color-content-muted, gray);
 }
 
-/* Sections open and close by sliding, where the browser can animate to auto. */
+/* Sections slide open and shut from the script, which works in every browser. */
 .btr-adjust-item {
-	interpolate-size: allow-keywords;
 	border-top: 1px solid var(--color-stroke-default, rgba(127, 127, 127, 0.2));
-
-	&::details-content {
-		height: 0;
-		overflow: clip;
-		opacity: 0;
-		transition:
-			height 220ms var(--btr-adjust-ease),
-			opacity 180ms var(--btr-adjust-ease),
-			content-visibility 220ms allow-discrete;
-	}
-
-	&[open]::details-content {
-		height: auto;
-		opacity: 1;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		&::details-content {
-			transition: none;
-		}
-	}
 
 	summary {
 		display: flex;
@@ -272,9 +250,13 @@ html body .btr-color-selector input {
 	transform: rotate(-45deg);
 	transition: transform 200ms var(--btr-adjust-ease);
 
-	[open] > summary > & {
+	.btr-adjust-expanded > summary > & {
 		transform: rotate(45deg);
 	}
+}
+
+.btr-adjust-panel {
+	overflow: hidden;
 }
 
 .btr-adjust-group {
