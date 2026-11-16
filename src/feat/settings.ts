@@ -142,6 +142,7 @@ export const DEFAULT_SETTINGS = {
 		classicHeader: { value: false },
 		embedInventoryEnabled: { value: true },
 		exactCounts: { value: true },
+		fullFriends: { value: true },
 		lastSeen: { value: true },
 		liveTracking: { value: true },
 		friendLog: { value: true },

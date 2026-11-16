@@ -279,7 +279,12 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Exact Follower Counts"
 							path="exactCounts"
-							desc="Shows exact follower and following counts"
+							desc="Shows exact friend, follower and following counts"
+						></toggle>
+						<toggle
+							label="Full Friends Warning"
+							path="fullFriends"
+							desc="Marks the friend count in red when someone has 1,000 friends, the most Roblox allows"
 						></toggle>
 					</page>
 

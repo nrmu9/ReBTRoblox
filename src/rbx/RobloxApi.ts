@@ -475,6 +475,12 @@ export const RobloxApi = {
 				credentials: "include",
 			}).then((res) => res.json()),
 
+		getFriendCount: cacheResult(60e3, (userId: UserId) =>
+			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/friends/count`, {
+				credentials: "include",
+			}).then((res) => res.json()),
+		),
+
 		getFollowerCount: cacheResult(60e3, (userId: UserId) =>
 			xsrfFetch(`https://friends.roblox.com/v1/users/${userId}/followers/count`, {
 				credentials: "include",

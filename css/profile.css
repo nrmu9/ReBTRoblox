@@ -935,3 +935,9 @@ body[data-btr-blocked="them"] .user-profile-header .button-container::before {
 	color: var(--color-content-default, inherit);
 	background: color-mix(in srgb, currentColor 10%, transparent);
 }
+
+/* A friend count at Roblox's limit, so a request to them can't be accepted. */
+.user-profile-header a.btr-friends-full,
+.user-profile-header a.btr-friends-full span {
+	color: var(--color-system-alert, #df281f);
+}

@@ -26,10 +26,19 @@ import {
 import { AssetType } from "@/rbx/Constants"
 import { RobloxApi } from "@/rbx/RobloxApi"
 
-// Roblox rounds the follower and following counts once they get big, so a
-// popular profile reads "17M Followers". Friends never needs this, the cap is
-// far below where rounding starts.
-const ROUNDED_COUNT = /^[\d.,]+[KMB]\+?\s+(Followers|Following)$/
+// Roblox rounds the counts once they get big, so a popular profile reads
+// "17M Followers", and a full friends list "1K Friends".
+const ROUNDED_COUNT = /^[\d.,]+[KMB]\+?\s+(Friends|Followers|Following)$/
+
+const COUNT_FIELDS = {
+	Friends: ["friendsCount", "getFriendCount"],
+	Followers: ["followersCount", "getFollowerCount"],
+	Following: ["followingsCount", "getFollowingCount"],
+} as const
+
+// The most friends Roblox allows (en.help.roblox.com, "How to make friends").
+// At that, nobody's request to them can be accepted, nor theirs.
+const FRIEND_LIMIT = 1000
 
 // Writing the exact number leaves text the pattern no longer matches, so a
 // react re-render is what asks for the count again. The counts come from the
@@ -39,20 +48,19 @@ const showExactCounts = (userId: number, getCounts: () => Promise<any>) => {
 		".user-profile-header a span",
 		(span: HTMLElement) => {
 			const update = async () => {
-				const label = ROUNDED_COUNT.exec(span.textContent ?? "")?.[1]
+				const label = ROUNDED_COUNT.exec(span.textContent ?? "")?.[1] as
+					keyof typeof COUNT_FIELDS | undefined
 
 				if (!label) {
 					return
 				}
 
+				const [field, fetchCount] = COUNT_FIELDS[label]
 				const counts = await getCounts()
-				let count = label === "Followers" ? counts?.followersCount : counts?.followingsCount
+				let count = counts?.[field]
 
 				if (!Number.isSafeInteger(count)) {
-					const json = await (label === "Followers"
-						? RobloxApi.friends.getFollowerCount(userId)
-						: RobloxApi.friends.getFollowingCount(userId))
-					count = json?.count
+					count = (await RobloxApi.friends[fetchCount](userId))?.count
 				}
 
 				if (!Number.isSafeInteger(count)) {
@@ -296,6 +304,41 @@ pageInit.profile = () => {
 
 				showExactCounts(userId, () => counts)
 			}
+		})
+	}
+
+	if (SETTINGS.get("profile.fullFriends")) {
+		onPageLoad((userIdString: string) => {
+			void waitForComponent(userIdString, "UserProfileHeader").then(async (json: any) => {
+				const header = json?.components?.UserProfileHeader
+				const count = header?.counts?.friendsCount
+
+				if (!Number.isSafeInteger(count) || count < FRIEND_LIMIT) {
+					return
+				}
+
+				const own = (await loggedInUserPromise) === Number(userIdString)
+				const name = header?.names?.displayName || header?.names?.username || "This user"
+				const title = own
+					? `You have ${formatNumber(FRIEND_LIMIT)} friends, the most Roblox allows, so new friend requests can't be accepted until you remove one`
+					: `${name} has ${formatNumber(FRIEND_LIMIT)} friends, the most Roblox allows, so they can't accept a friend request`
+
+				// Found by where it leads, as its text is in the viewer's language.
+				document.$watch(
+					'.user-profile-header a[href*="#!/friends"]',
+					(link: HTMLElement) => {
+						// Only when they differ: setting even the same value is a change
+						// the watch sees, and it would run again forever.
+						if (!link.classList.contains("btr-friends-full")) {
+							link.classList.add("btr-friends-full")
+						}
+						if (link.title !== title) {
+							link.title = title
+						}
+					},
+					{ continuous: true },
+				)
+			})
 		})
 	}
 
