@@ -88,7 +88,9 @@ export const avatarFunctions: Record<string, (...args: any[]) => any> = {
 					meta: asset.meta ?? null,
 				}))
 
-		onSet(window, "React", (React: any) => {
+		// Through the React hook, not a second trap on window.React: trapping it
+		// here as well stopped Remove Accessory Limits from working (issue 8).
+		reactHook.whenReady((React: any) => {
 			hijackFunction(React, "useContext", (target: any, thisArg: any, args: any[]) => {
 				const value = target.apply(thisArg, args)
 

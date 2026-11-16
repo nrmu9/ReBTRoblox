@@ -11,6 +11,21 @@ export const reactHook: Record<string, any> = {
 	injectedContent: [],
 	globalHijackState: [],
 	renderTarget: null as any,
+	readyCallbacks: [] as ((React: any) => void)[],
+
+	/**
+	 * Runs `fn` with the page's React as soon as it has loaded, or now if it has.
+	 * Hooks that need React itself use this rather than trapping window.React a
+	 * second time, which broke the hooks that trap module definitions, such as
+	 * Remove Accessory Limits.
+	 */
+	whenReady(fn: (React: any) => void) {
+		if (this.React) {
+			fn(this.React)
+		} else {
+			this.readyCallbacks.push(fn)
+		}
+	},
 
 	parseReactStringSelector(selector: string) {
 		if (this.cachedSelectors[selector]) {
@@ -800,6 +815,14 @@ export const reactHook: Record<string, any> = {
 
 		hijackFunction(this.React, "createElement", this.onCreateElement.bind(this))
 		hijackFunction(this.React, "useState", this.onUseState.bind(this))
+
+		for (const fn of this.readyCallbacks.splice(0)) {
+			try {
+				fn(this.React)
+			} catch (ex) {
+				console.error(ex)
+			}
+		}
 
 		const dispatcher =
 			this.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher
