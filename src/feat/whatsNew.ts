@@ -19,6 +19,33 @@ interface Note {
 
 const NOTES: Array<{ version: string; notes: Note[] }> = [
 	{
+		version: "4.7.0",
+		notes: [
+			{
+				title: "Reorder Home",
+				text: "Put Home's rows in whatever order you want.",
+				page: "home",
+			},
+			{
+				title: "Adjust accessories",
+				text: "Accessory adjusting is back. Click Adjust under your avatar in the editor.",
+			},
+			{
+				title: "Robux to cash",
+				text: "Updated for Roblox's new Robux prices, and you can set your own rate now.",
+				page: "general",
+			},
+			{
+				title: "Full friends lists",
+				text: "Friend counts turn red at 1,000, Roblox's limit.",
+			},
+			{
+				title: "Fixes",
+				text: "The messages page, Keep Sidebar Open and inventory removing all work properly again, plus a few smaller fixes.",
+			},
+		],
+	},
+	{
 		version: "4.6.4",
 		notes: [
 			{
