@@ -286,26 +286,45 @@ export const avatarFunctions: Record<string, (...args: any[]) => any> = {
 
 		hijackFunction(Object, "defineProperty", (target: any, thisArg: any, args: any[]) => {
 			const key = args[1]
+			const descriptor = args[2]
 
-			if (
-				(key === LIMIT_KEY || key === LAYERED_KEY || key === TYPE_KEY || key === ADD_KEY) &&
-				typeof args[2]?.get === "function"
-			) {
-				const descriptor = args[2]
-				const readOriginal = descriptor.get
+			const isRulesKey = key === LIMIT_KEY || key === LAYERED_KEY || key === TYPE_KEY || key === ADD_KEY
+
+			// Roblox's new Next.js site is built with Turbopack, which defines an
+			// exported function as a plain value rather than a getter. The old
+			// site's webpack build uses getters for everything.
+			const isValue =
+				isRulesKey &&
+				!!descriptor &&
+				"value" in descriptor &&
+				(key === LAYERED_KEY
+					? typeof descriptor.value === "number"
+					: typeof descriptor.value === "function")
+
+			if (isRulesKey && (typeof descriptor?.get === "function" || isValue)) {
+				const readOriginal = isValue ? () => descriptor.value : descriptor.get
 				let replacement: any
 				let resolved = false
 
-				args[2] = {
-					...descriptor,
-					get() {
-						if (!resolved) {
-							resolved = true
-							replacement = replaceValue(key, readOriginal.call(this))
-						}
+				const read = function (this: any) {
+					if (!resolved) {
+						resolved = true
+						replacement = replaceValue(key, readOriginal.call(this))
+					}
 
-						return replacement
-					},
+					return replacement
+				}
+
+				if (!isValue) {
+					args[2] = { ...descriptor, get: read }
+				} else if (key !== LAYERED_KEY) {
+					// Kept a value, as the module seals the namespace right after.
+					args[2] = { ...descriptor, value: read() }
+				} else {
+					// The layered count becomes a getter, so it reads the settings
+					// once init has delivered them, not at document_start.
+					const { enumerable, configurable } = descriptor
+					args[2] = { enumerable, configurable, get: read }
 				}
 
 				const result = target.apply(thisArg, args)
