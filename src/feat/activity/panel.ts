@@ -21,7 +21,7 @@ const PAGE = 20
 
 /** Names and icons for tracked games, by universe. */
 const gameInfo = async (ids: number[]) => {
-	const info = new Map<number, { name: string; icon?: string | undefined }>()
+	const info = new Map<number, { name: string; icon?: string | undefined; href?: string }>()
 
 	for (let i = 0; i < ids.length; i += 50) {
 		const json = await getJson(
@@ -34,7 +34,11 @@ const gameInfo = async (ids: number[]) => {
 		)
 
 		for (const game of games) {
-			info.set(game.id, { name: game.name, icon: iconOf(game.rootPlaceId) })
+			info.set(game.id, {
+				name: game.name,
+				icon: iconOf(game.rootPlaceId),
+				href: `/games/${game.rootPlaceId}`,
+			})
 		}
 	}
 
@@ -43,7 +47,7 @@ const gameInfo = async (ids: number[]) => {
 
 /** Names and emblems for tracked communities. */
 const groupInfo = async (ids: number[]) => {
-	const info = new Map<number, { name: string; icon?: string | undefined }>()
+	const info = new Map<number, { name: string; icon?: string | undefined; href?: string }>()
 
 	for (let i = 0; i < ids.length; i += 50) {
 		const batch = ids.slice(i, i + 50).join(",")
@@ -58,7 +62,11 @@ const groupInfo = async (ids: number[]) => {
 		)
 
 		for (const group of groups?.data ?? []) {
-			info.set(group.id, { name: group.name, icon: iconOf.get(group.id) })
+			info.set(group.id, {
+				name: group.name,
+				icon: iconOf.get(group.id),
+				href: `/communities/${group.id}`,
+			})
 		}
 	}
 
@@ -136,6 +144,8 @@ const row = (options: {
 	/** Games and communities have square icons, people round faces. */
 	square?: boolean
 	title: string
+	/** Their profile, game or community page, which the name links to. */
+	href?: string | undefined
 	subtitle?: string
 	detail?: string
 	onOpen: () => void
@@ -156,8 +166,16 @@ const row = (options: {
 		img.src = options.image
 	}
 
+	// The row opens their activity, and the name goes to their page.
+	if (options.href) {
+		const link = html`<a class="btr-friendlog-name btr-panel-link" href="${options.href}"></a>`
+		link.textContent = options.title
+		link.title = options.href.startsWith("/users/") ? "Open profile" : "Open page"
+		item.$req(".btr-friendlog-name").replaceWith(link)
+	}
+
 	item.$on("click", (ev: Event) => {
-		if (!(ev.target as Element).closest("button")) {
+		if (!(ev.target as Element).closest("button, a")) {
 			options.onOpen()
 		}
 	})
@@ -232,9 +250,12 @@ const renderRecent = async (panel: HTMLElement, ownUserId: number | null) => {
 					? {
 							name: names.get(owner.id)?.displayName ?? `User ${owner.id}`,
 							icon: faces(owner.id),
+							href: `/users/${owner.id}/profile`,
 						}
 					: ((owner.kind === "game" ? games : groups).get(owner.id) ?? {
 							name: owner.kind === "game" ? "A game" : "A community",
+							icon: undefined,
+							href: undefined,
 						})
 
 			list.append(
@@ -242,6 +263,7 @@ const renderRecent = async (panel: HTMLElement, ownUserId: number | null) => {
 					image: info.icon,
 					square: owner.kind !== "user",
 					title: info.name,
+					href: info.href,
 					subtitle: new Date(event.at).$format(clockFormat()),
 					detail: summarize(event, ownUserId),
 					onOpen: () =>
@@ -249,7 +271,7 @@ const renderRecent = async (panel: HTMLElement, ownUserId: number | null) => {
 							? void openActivity(owner.id, info.name, () => false, {
 									isOwn: owner.id === ownUserId,
 								})
-							: openTracked(owner.kind, owner.id, info.name),
+							: openTracked(owner.kind, owner.id, info.name, info.href),
 				}),
 			)
 		}
@@ -303,6 +325,7 @@ const renderPeople = async (panel: HTMLElement, ownUserId: number | null) => {
 			const item = row({
 				image: faces(id),
 				title: name?.displayName ?? `User ${id}`,
+				href: `/users/${id}/profile`,
 				subtitle: name ? `@${name.name}` : "",
 				detail: checked[i] ? `Checked ${checkedAgo(checked[i]!)}` : "Not checked yet",
 				onOpen: () =>
@@ -361,7 +384,8 @@ const renderTracked = async (panel: HTMLElement, kind: "game" | "group") => {
 				image: info.get(id)?.icon,
 				square: true,
 				title: name,
-				onOpen: () => openTracked(kind, id, name),
+				href: info.get(id)?.href,
+				onOpen: () => openTracked(kind, id, name, info.get(id)?.href),
 			})
 
 			if (onList(kind, id)) {

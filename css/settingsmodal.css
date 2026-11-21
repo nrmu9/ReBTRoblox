@@ -1285,6 +1285,28 @@ div.btr-setting-text {
 	font-size: 14px;
 }
 
+/* Their name, linking to their profile or page */
+.btr-activity-subtitle-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: inherit;
+	text-decoration: none;
+
+	svg {
+		opacity: 0.7;
+	}
+
+	&:hover {
+		color: var(--btr-content-emphasis);
+		text-decoration: underline;
+
+		svg {
+			opacity: 1;
+		}
+	}
+}
+
 .btr-activity-body {
 	flex: 1;
 	min-height: 0;
@@ -2778,6 +2800,15 @@ div.btr-setting-text {
 	&:focus-visible {
 		outline: 2px solid var(--btr-focus, #335fff);
 		outline-offset: -2px;
+	}
+}
+
+/* A row's name goes to the profile or page, the rest of the row to its activity */
+.btr-panel-link {
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
 	}
 }
 

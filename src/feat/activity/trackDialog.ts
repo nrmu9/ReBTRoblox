@@ -297,8 +297,20 @@ const renderLog = async (
 	})
 }
 
+/**
+ * The page a tracked dialog's name links to. A game page needs its place,
+ * which only some openers know, and there is no link on the page itself.
+ */
+const trackedHref = (kind: TrackedKind, id: number, href: string | undefined) => {
+	const path = location.pathname.toLowerCase()
+	if (kind === "group" && /^\/(communities|groups)\/(\d+)(\/|$)/.exec(path)?.[2] === String(id)) {
+		return undefined
+	}
+	return href ?? (kind === "group" ? `/communities/${id}` : undefined)
+}
+
 /** A tracked game's or community's activity, by universe or community id. */
-export const openTracked = (kind: TrackedKind, id: number, name: string): void => {
+export const openTracked = (kind: TrackedKind, id: number, name: string, href?: string): void => {
 	const subject = kind === "game" ? gameSubject(id) : groupSubject(id)
 	const overviewState = { period: "7" }
 	const logState = { group: "all" }
@@ -306,6 +318,7 @@ export const openTracked = (kind: TrackedKind, id: number, name: string): void =
 	const shell = openShell({
 		title: kind === "game" ? "Game activity" : "Community activity",
 		subtitle: name,
+		subtitleHref: trackedHref(kind, id, href),
 		tabs: [
 			["overview", "Overview"],
 			["log", "Log"],

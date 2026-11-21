@@ -22,6 +22,8 @@ let open: { root: HTMLElement; close: () => void } | null = null
 export const openShell = (options: {
 	title: string
 	subtitle: string
+	/** Makes the subtitle a link, to the profile or page it names. */
+	subtitleHref?: string | undefined
 	tabs: ReadonlyArray<readonly [string, string]>
 	/** Called whenever a tab is shown, to fill its panel the first time. */
 	onTab: (name: string, panel: HTMLElement) => void
@@ -34,7 +36,7 @@ export const openShell = (options: {
 			<header class="btr-activity-header">
 				<div>
 					<h2 id="btr-activity-title" class="btr-activity-title">${options.title}</h2>
-					<div class="btr-activity-subtitle">${options.subtitle}</div>
+					<div class="btr-activity-subtitle"></div>
 				</div>
 				<button type="button" class="btr-activity-watch" aria-pressed="false" hidden></button>
 				<button
@@ -59,6 +61,27 @@ export const openShell = (options: {
 	</div>`
 
 	trapScroll(root)
+
+	const subtitle = root.$req(".btr-activity-subtitle")
+	if (options.subtitleHref) {
+		const link = html`<a class="btr-activity-subtitle-link" href="${options.subtitleHref}">
+			<span></span>
+			<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+				<path
+					d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</a>`
+		link.$req("span").textContent = options.subtitle
+		subtitle.append(link)
+	} else {
+		subtitle.textContent = options.subtitle
+	}
 
 	// Matches the page's theme, as the settings panel does.
 	root.classList.toggle("btr-dark-theme", !!document.querySelector(".dark-theme:not(.btr-settings-modal)"))

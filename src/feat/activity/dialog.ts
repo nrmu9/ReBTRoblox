@@ -38,9 +38,14 @@ export const openActivity = async (
 	// What the panels are drawn from, kept current by live changes.
 	let shown: PresenceSegment[] | null = null
 
+	const profilePath = `/users/${userId}/profile`
+
 	const shell = openShell({
 		title: "Activity",
 		subtitle: name,
+		// Not on their profile itself, where the link would only reload it.
+		subtitleHref:
+			/^\/users\/(\d+)(\/|$)/.exec(location.pathname)?.[1] === String(userId) ? undefined : profilePath,
 		tabs: [
 			["activity", "Activity"],
 			["stats", "Stats"],

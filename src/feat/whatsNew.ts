@@ -19,6 +19,19 @@ interface Note {
 
 const NOTES: Array<{ version: string; notes: Note[] }> = [
 	{
+		version: "4.7.3",
+		notes: [
+			{
+				title: "Activity links",
+				text: "Names in Activity now link to the profile, game or community, so they're one click away.",
+			},
+			{
+				title: "Fixes",
+				text: "Newer accessories and layered clothing show in item previews again, the explorer links their meshes and textures, and big counts fit in the Activity filters.",
+			},
+		],
+	},
+	{
 		version: "4.7.0",
 		notes: [
 			{

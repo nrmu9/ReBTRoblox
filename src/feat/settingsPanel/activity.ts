@@ -155,7 +155,7 @@ export const setupStoredActivity = (modal: SettingsModalState) => {
 				<button type="button" class="btr-settings-button">Stop tracking</button>
 			</div>`
 
-			element.$req(".btr-activity-view").$on("click", () => openTracked(kind, id, name))
+			element.$req(".btr-activity-view").$on("click", () => openTracked(kind, id, name, known?.href))
 			element.$req("button:last-child").$on("click", () => setOnList(kind, id, false))
 			return element
 		}
