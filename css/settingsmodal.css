@@ -1753,14 +1753,19 @@ div.btr-setting-text {
 
 /* Friend log */
 
+/* Pills wrap onto another row rather than squeezing, which broke a pill's
+   count onto a second line that its height can't fit. */
 .btr-friendlog-filters {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
 	margin-bottom: 8px;
 }
 
 .btr-friendlog-filter {
+	flex: none;
 	height: 32px;
+	white-space: nowrap;
 	padding: 0 12px;
 	background: var(--btr-standard);
 	border: none;
