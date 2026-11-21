@@ -135,6 +135,45 @@ export interface XmlParserState {
 	[key: string]: any
 }
 
+/**
+ * Roblox now saves asset references as Content values (MeshContent) in place of
+ * the old string properties (MeshId), so newer uploads carry only the Content
+ * one. Each Content property here is also readable under its old names, which
+ * is what the avatar renderer and the download button look up.
+ */
+const ContentLegacyNames: Record<string, string[]> = {
+	MeshContent: ["MeshId"],
+	TextureContent: ["TextureId", "Texture"],
+	ColorMapContent: ["ColorMap"],
+	NormalMapContent: ["NormalMap"],
+	MetalnessMapContent: ["MetalnessMap"],
+	RoughnessMapContent: ["RoughnessMap"],
+	CageMeshContent: ["CageMeshId"],
+	ReferenceMeshContent: ["ReferenceMeshId"],
+	ShirtTemplateContent: ["ShirtTemplate"],
+	PantsTemplateContent: ["PantsTemplate"],
+	AnimationContent: ["AnimationId"],
+	BaseTextureContent: ["BaseTextureId"],
+	OverlayTextureContent: ["OverlayTextureId"],
+	ImageContent: ["Image"],
+}
+
+const LegacyContentName: Record<string, string> = {}
+for (const [contentName, legacyNames] of Object.entries(ContentLegacyNames)) {
+	for (const legacyName of legacyNames) {
+		LegacyContentName[legacyName.toLowerCase()] = contentName
+	}
+}
+
+/** The asset url in a Content value, or "" when it holds none. */
+export const contentUri = (value: any): string => {
+	if (typeof value === "string") {
+		return value
+	}
+
+	return value?.SourceType === 1 && typeof value.Uri === "string" ? value.Uri : ""
+}
+
 export class RBXInstance {
 	// setProperty mirrors properties onto the instance under their real names.
 	// Must lead the class body: a line starting with [ continues the previous one.
@@ -147,6 +186,18 @@ export class RBXInstance {
 		assert(typeof className === "string", "className is not a string")
 
 		this.setProperty("ClassName", className, "string")
+	}
+
+	/** The old name keeps its own value when it has one, else the Content's url. */
+	private syncLegacyName(legacyName: string, contentName: string) {
+		const legacyValue = this.Properties[legacyName]?.value
+		const value = legacyValue || contentUri(this.Properties[contentName]?.value) || legacyValue
+
+		if (value === undefined) {
+			delete this[legacyName]
+		} else {
+			this[legacyName] = value
+		}
 	}
 
 	setProperty(name: string, value: any, type: string | null) {
@@ -166,6 +217,18 @@ export class RBXInstance {
 				delete this[name]
 			}
 		}
+
+		const legacyNames = ContentLegacyNames[name]
+		if (legacyNames) {
+			for (const legacyName of legacyNames) {
+				this.syncLegacyName(legacyName, name)
+			}
+		} else {
+			const contentName = LegacyContentName[name.toLowerCase()]
+			if (contentName && ContentLegacyNames[contentName].includes(name)) {
+				this.syncLegacyName(name, contentName)
+			}
+		}
 	}
 
 	getProperty(name: string, caseInsensitive = false) {
@@ -173,7 +236,17 @@ export class RBXInstance {
 			this.Properties[name] ||
 			(caseInsensitive &&
 				Object.entries(this.Properties).find((x) => x[0].toLowerCase() === name.toLowerCase())?.[1])
-		return property ? property.value : undefined
+
+		const value = property ? property.value : undefined
+
+		if (!value) {
+			const contentName = LegacyContentName[name.toLowerCase()]
+			if (contentName && (caseInsensitive || ContentLegacyNames[contentName].includes(name))) {
+				return contentUri(this.Properties[contentName]?.value) || value
+			}
+		}
+
+		return value
 	}
 
 	findFirstChild(...args: any[]) {
@@ -790,6 +863,8 @@ const RBXBinaryParser = {
 
 					let uriCounter = 0
 					let objectCounter = 0
+					// Referents are stored as differences, as in Instance properties.
+					let objectRef = 0
 
 					for (let i = 0; i < count; i++) {
 						const sourceType = sourceTypes[i]
@@ -800,11 +875,11 @@ const RBXBinaryParser = {
 								Uri: uris[uriCounter++],
 							}
 						} else if (sourceType === 2) {
-							objectCounter += objects[objectCounter++]
+							objectRef += objects[objectCounter++]
 
 							values[i] = {
 								SourceType: sourceType,
-								Object: objectCounter,
+								Object: objectRef,
 							}
 						} else {
 							values[i] = {

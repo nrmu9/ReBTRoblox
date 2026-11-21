@@ -9,6 +9,7 @@ import { ApiDump } from "@/rbx/ApiDump"
 import { AssetCache } from "@/rbx/AssetCache"
 import { BrickColor } from "@/rbx/Constants"
 import { ByteReader } from "@/rbx/Parser/ByteReader"
+import { contentUri } from "@/rbx/Parser/ModelParser"
 
 export const Explorer = (() => {
 	const GroupOrders = ["Appearance", "Data", "Transform", "Pivot", "Behavior", "Collision", "Part"]
@@ -765,13 +766,18 @@ export const Explorer = (() => {
 				}
 
 				for (const [name, prop] of group.Properties) {
-					const value = prop.value
+					let value = prop.value
 					let type = prop.type
 
 					if (name === "LinkedSource" && !value) {
 						continue
 					} else if (name === "BrickColor" && type === "int") {
 						type = "BrickColor"
+					} else if (type === "Content" && contentUri(value)) {
+						// Newer uploads keep MeshContent and TextureContent rather than
+						// MeshId and TextureID, and their urls get the same asset link.
+						type = "string"
+						value = contentUri(value)
 					}
 
 					const nameItem = html`<div class="btr-property-name" title=${name}>${name}</div>`
