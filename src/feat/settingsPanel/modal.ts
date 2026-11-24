@@ -49,8 +49,16 @@ export const SettingsPanel: SettingsModalState = {
 
 				body.appendChild(this.settingsDiv)
 
-				for (const icon of this.settingsDiv.$findAll(".icon")) {
-					icon.classList.toggle("btr-icon-missing", getComputedStyle(icon).maskImage === "none")
+				// Once: the icons don't change. Every style is read before any class
+				// is set, as reading after a change makes the browser work out the
+				// styles of the whole panel again, once per icon.
+				if (!this.iconsChecked) {
+					this.iconsChecked = true
+					const icons: HTMLElement[] = Array.prototype.slice.call(
+						(this.settingsDiv as HTMLElement).querySelectorAll(".icon"),
+					)
+					const missing = icons.map((icon) => getComputedStyle(icon).maskImage === "none")
+					icons.forEach((icon, i) => icon.classList.toggle("btr-icon-missing", missing[i]))
 				}
 
 				// The open class has to land on a later frame than the mount, or the
@@ -166,7 +174,7 @@ export const SettingsPanel: SettingsModalState = {
 		}
 
 		this.settingsDiv = settingsMarkup()
-		trapScroll(this.settingsDiv)
+		trapScroll(this.settingsDiv, { covers: true })
 
 		const body: HTMLElement = this.settingsDiv.$req(".btr-settings-body")
 

@@ -69,7 +69,7 @@ export const openShell = (options: {
 		</div>
 	</div>`
 
-	trapScroll(root)
+	trapScroll(root, { covers: true })
 
 	const subtitle = root.$req(".btr-activity-subtitle")
 	if (options.subtitleHref) {

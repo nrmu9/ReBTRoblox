@@ -98,6 +98,11 @@
 
 	opacity: 0;
 	transition: opacity 100ms linear;
+
+	/* A swipe on the backdrop or a part that doesn't scroll moves nothing. The
+	   lists inside are scroll containers, so they still pan. The wheel and the
+	   keys are kept in by trapScroll. */
+	touch-action: none;
 }
 
 .btr-settings-modal.btr-settings-open {

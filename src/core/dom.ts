@@ -91,12 +91,79 @@ const canScrollBy = (element: HTMLElement, delta: number, vertical: boolean): bo
 	return delta < 0 ? position > 0 : position < room - 1
 }
 
+// Which way each scrolling key moves, down or right being positive.
+const SCROLL_KEYS: Record<string, number> = {
+	ArrowDown: 1,
+	ArrowUp: -1,
+	PageDown: 1,
+	PageUp: -1,
+	End: 1,
+	Home: -1,
+	" ": 1,
+}
+
 /**
  * Keeps the mouse wheel inside `root`. A list in it scrolls as usual, but at
  * its end, or over a part that doesn't scroll, nothing behind `root` moves:
  * neither the page nor, for a menu inside the settings, the settings.
+ *
+ * With `covers`, for a panel over the whole page, the scrolling keys are kept
+ * in too while it shows. The page isn't locked by setting overflow on <html>:
+ * Firefox rebuilds the whole page's layout for that, on every open and close.
  */
-export const trapScroll = (root: HTMLElement): void => {
+export const trapScroll = (root: HTMLElement, options: { covers?: boolean } = {}): void => {
+	if (options.covers) {
+		const onKey = (ev: KeyboardEvent) => {
+			if (!root.isConnected) {
+				document.removeEventListener("keydown", onKey, true)
+				return
+			}
+
+			const direction = SCROLL_KEYS[ev.key]
+
+			if (
+				!direction ||
+				ev.defaultPrevented ||
+				ev.altKey ||
+				ev.ctrlKey ||
+				ev.metaKey ||
+				!root.classList.contains("btr-settings-open") ||
+				getComputedStyle(root).display === "none"
+			) {
+				return
+			}
+
+			const target = ev.target instanceof Element ? ev.target : null
+
+			// Typing, and Space pressing a button, are left alone.
+			if (
+				target?.closest("input, textarea, select, [contenteditable]") ||
+				(ev.key === " " &&
+					target?.closest("button, a, summary, [role=button], [role=switch], [role=tab]"))
+			) {
+				return
+			}
+
+			for (
+				let element = target && root.contains(target) ? target : null;
+				element;
+				element = element.parentElement
+			) {
+				if (element instanceof HTMLElement && canScrollBy(element, direction, true)) {
+					return
+				}
+
+				if (element === root) {
+					break
+				}
+			}
+
+			ev.preventDefault()
+		}
+
+		document.addEventListener("keydown", onKey, true)
+	}
+
 	root.addEventListener(
 		"wheel",
 		(ev: WheelEvent) => {
