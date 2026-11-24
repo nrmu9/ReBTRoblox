@@ -1,3 +1,4 @@
+import { html } from "@/core/html"
 import { injectScript } from "@/core/messaging"
 import { pageInit } from "@/core/page"
 import { btrLocalStorage } from "@/core/storage"
@@ -8,7 +9,6 @@ import { openTracked } from "@/feat/activity/open"
 import { addLeaveButtons } from "@/feat/quickRemove"
 import {
 	formatNumber,
-	keepText,
 	loggedInUserPromise,
 	modifyAngularTemplate,
 	onPageLoad,
@@ -20,17 +20,62 @@ import {
 // words after it, which stay as Roblox wrote them, translated or not.
 const ROUNDED_COUNT = /^([\d.,]+[KMB]?\+?)(\s.*)$/i
 
-// Only a count in that form is rewritten, so anything else Roblox puts there
-// is left alone.
-const showExactCount = (element: HTMLElement, count: unknown) => {
-	if (typeof count !== "number" || !Number.isSafeInteger(count)) {
+// Exact member counts by community id, remembered between visits so a page
+// shows them as soon as Roblox draws its rounded ones, rather than once its
+// data comes in. Fresh answers replace them on every visit.
+const COUNTS_KEY = "memberCounts"
+const memberCounts = new Map<string, number>(
+	Object.entries(btrLocalStorage.getItem<Record<string, number>>(COUNTS_KEY) ?? {}),
+)
+const countUpdaters = new Set<() => void>()
+
+const learnCounts = (entries: Iterable<[string, unknown]>) => {
+	for (const [id, count] of entries) {
+		if (typeof count === "number" && Number.isSafeInteger(count)) {
+			memberCounts.set(id, count)
+		}
+	}
+
+	// Kept small: the last 200 communities seen.
+	const kept = Object.fromEntries([...memberCounts].slice(-200))
+	btrLocalStorage.setItem(COUNTS_KEY, kept, { expires: Date.now() + 30 * 86400e3 })
+
+	for (const update of countUpdaters) {
+		update()
+	}
+}
+
+/**
+ * Keeps an element showing the exact count of a community. Only a count in
+ * Roblox's rounded form, or one already rewritten, is touched, so anything
+ * else Roblox puts there is left alone. One watcher per element, which reads
+ * whatever count is newest.
+ */
+const watchedCounts = new WeakSet<HTMLElement>()
+const showExactCount = (element: HTMLElement, groupId: string) => {
+	if (watchedCounts.has(element)) {
 		return
 	}
 
-	keepText(element, () => {
+	watchedCounts.add(element)
+
+	const apply = () => {
+		const count = memberCounts.get(groupId)
 		const match = ROUNDED_COUNT.exec(element.textContent?.trim() ?? "")
-		return match ? `${formatNumber(count)}${match[2]}` : null
-	})
+
+		if (count === undefined || !match || element.childElementCount !== 0) {
+			return
+		}
+
+		const text = `${formatNumber(count)}${match[2]}`
+		if (element.textContent !== text) {
+			element.textContent = text
+		}
+	}
+
+	new MutationObserver(apply).observe(element, { characterData: true, childList: true, subtree: true })
+	countUpdaters.add(apply)
+	apply()
 }
 
 /**
@@ -40,13 +85,22 @@ const showExactCount = (element: HTMLElement, count: unknown) => {
 const showExactMemberCounts = (groupId: number) => {
 	const url = `https://groups.roblox.com/v1/groups/${groupId}`
 
+	document.$watchAll("button.radius-circle", (button: HTMLElement) => {
+		showExactCount(button, String(groupId))
+	})
+
+	document.$watchAll(".groups-list-item", (item: HTMLAnchorElement) => {
+		const id = item.getAttribute("href")?.match(/\/communities\/(\d+)/)?.[1]
+		const label = item.$find<HTMLElement>(".text-body-medium .text-body-medium, span.text-body-medium")
+
+		if (id && label) {
+			showExactCount(label, id)
+		}
+	})
+
 	waitForRobloxResponse((responseUrl) => responseUrl === url)
 		.then((json) => json ?? fetch(url, { credentials: "include" }).then((res) => res.json()))
-		.then((group) => {
-			document.$watchAll("button.radius-circle", (button: HTMLElement) => {
-				showExactCount(button, group?.memberCount)
-			})
-		})
+		.then((group) => learnCounts([[String(groupId), group?.memberCount]]))
 		.catch(() => {})
 
 	loggedInUserPromise
@@ -76,22 +130,11 @@ const showExactMemberCounts = (groupId: number) => {
 			return json
 		})
 		.then((json) => {
-			const counts = new Map<string, number>()
-
-			for (const entry of json?.data ?? []) {
-				counts.set(String(entry.group?.id), entry.group?.memberCount)
-			}
-
-			document.$watchAll(".groups-list-item", (item: HTMLAnchorElement) => {
-				const id = item.getAttribute("href")?.match(/\/communities\/(\d+)/)?.[1]
-				const label = item.$find<HTMLElement>(
-					".text-body-medium .text-body-medium, span.text-body-medium",
-				)
-
-				if (id && label) {
-					showExactCount(label, counts.get(id))
-				}
-			})
+			learnCounts(
+				(json?.data ?? []).map(
+					(entry: any) => [String(entry.group?.id), entry.group?.memberCount] as [string, unknown],
+				),
+			)
 		})
 		.catch(() => {})
 }
@@ -194,21 +237,12 @@ pageInit.groups = () => {
 		modifyAngularTemplate(["group-base", "group-about"], (baseTemplate, aboutTemplate) => {
 			const tabs = baseTemplate.$req(".rbx-tabs-horizontal")
 
-			// move most things out of about and into the main container
-			const hoist = [
-				aboutTemplate.$find("group-events"),
-				aboutTemplate.$find("#group-announcements"),
-				aboutTemplate.$find(".group-shout"),
-				aboutTemplate.$find("social-links-container"),
-			]
-
-			for (const element of hoist) {
-				if (!element) {
-					continue
-				}
-
-				element.removeAttribute("ng-switch-when")
-				tabs.before(element)
+			// Announcements go above the tabs. Events, the shout and the wall stay
+			// in the About tab where Roblox puts them.
+			const announcements = aboutTemplate.$find("#group-announcements")
+			if (announcements) {
+				announcements.removeAttribute("ng-switch-when")
+				tabs.before(announcements)
 			}
 
 			// toggle games/payouts based on custom tab
@@ -223,20 +257,38 @@ pageInit.groups = () => {
 				payouts.setAttribute("ng-show", `btrCustomTab.name === "payouts"`)
 			}
 
-			// move discovery and group wall below the main container so it's visible in most views
+			// Community posts go below the tabs, on every tab but Posts itself.
 			const discovery = aboutTemplate.$find("group-forums-discovery")
 			if (discovery) {
 				discovery.removeAttribute("ng-switch-when")
 				discovery.setAttribute("ng-show", "layout.activeTab !== groupDetailsConstants.tabs.forums")
 				tabs.parentElement!.append(discovery)
 			}
+		})
 
-			const wall = aboutTemplate.$find("group-wall")
-			if (wall) {
-				wall.removeAttribute("ng-switch-when")
-				wall.setAttribute("ng-show", "layout.activeTab !== groupDetailsConstants.tabs.forums")
-				tabs.parentElement!.append(wall)
+		// Roblox's "more" link under the description, as a pill next to the
+		// member count. The link is found when clicked, as Roblox can draw it
+		// again, and stays in the page so the pill can click it.
+		document.$watchAll(".profile-insights-container", (insights: HTMLElement) => {
+			const header = insights.closest(".group-profile-header")
+			if (!header || insights.$find(".btr-more-pill")) {
+				return
 			}
+
+			const pill = html<HTMLButtonElement>`<button
+				type="button"
+				class="flex items-center bg-surface-300 radius-circle text-caption-medium padding-x-medium padding-y-xsmall cursor-pointer profile-insight-pill-button btr-more-pill"
+			>
+				More
+			</button>`
+
+			pill.$on("click", (ev: Event) => {
+				ev.preventDefault()
+				ev.stopPropagation()
+				header.$find<HTMLElement>(".description-more-btn")?.click()
+			})
+
+			insights.append(pill)
 		})
 
 		modifyAngularTemplate("group-tab", (template) => {

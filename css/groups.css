@@ -71,3 +71,12 @@
 .btr-redesign .group-wall ~ .loading .spinner {
 	height: 72px;
 }
+
+/* The More pill beside the member count stands in for the link under the description. */
+.btr-more-pill {
+	border: none;
+}
+
+.btr-redesign .group-profile-header:has(.btr-more-pill) .description-more-btn {
+	display: none;
+}
