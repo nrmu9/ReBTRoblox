@@ -1,4 +1,4 @@
-import { dateSince } from "@/core/date"
+import { dateSince, looksLikeDate } from "@/core/date"
 import { html } from "@/core/html"
 import { btrLocalStorage } from "@/core/storage"
 import { injectScript } from "@/core/messaging"
@@ -859,12 +859,28 @@ pageInit.gamedetails = () => {
 						return
 					}
 
+					// The dates are told apart by their values, as the labels are in the
+					// viewer's language. Created only shows when signed in, and comes
+					// just before Updated.
+					// Array.prototype.filter rather than a spread: Firefox content
+					// scripts can't iterate page DOM lists.
+					const dateStats = (lead: HTMLElement): HTMLElement[] =>
+						Array.prototype.filter.call(
+							(
+								lead.closest(".game-stat-container,.game-stats-container") ?? container
+							).$findAll(".game-stat .text-lead"),
+							(stat: HTMLElement) => looksLikeDate(stat.textContent ?? ""),
+						)
+
 					container
 						.$watch(".game-stat-container,.game-stats-container")
 						.$then()
 						.$watch(
 							".game-stat .text-lead",
-							(x: any) => x.previousElementSibling?.textContent === "Created",
+							(x: HTMLElement) => {
+								const dates = dateStats(x)
+								return dates.length === 2 && dates[0] === x
+							},
 							(label: any) => {
 								label.title = new Date(data.Created).$format(
 									`M/D/YYYY ${clockFormat(true)} (T)`,
@@ -873,7 +889,7 @@ pageInit.gamedetails = () => {
 						)
 						.$watch(
 							".game-stat .text-lead",
-							(x: any) => x.previousElementSibling?.textContent === "Updated",
+							(x: HTMLElement) => dateStats(x).at(-1) === x,
 							(label: any) => {
 								label.classList.remove("date-time-i18n") // Otherwise roblox rewrites the label
 

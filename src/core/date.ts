@@ -129,3 +129,14 @@ export const dateSince = (date: any, relativeTo?: any, short = false): string =>
 	const s = Math.floor(since)
 	return Math.floor(s) + (short ? " sec" : " second" + (Math.floor(s) === 1 ? "" : "s")) + " ago"
 }
+
+/**
+ * Whether text a page shows reads as a date in any language's format: three
+ * numbers, one of them a 4 digit year. "7/14/2017", "14.07.2017" and
+ * "2017. 7. 14." are, while counts like "29,900,013", "245.298" and "45.4B+"
+ * are not, as their groups are never 4 digits.
+ */
+export const looksLikeDate = (text: string): boolean => {
+	const groups = text.match(/\d+/g)
+	return groups?.length === 3 && groups.some((group) => group.length === 4)
+}
