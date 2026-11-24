@@ -1166,6 +1166,7 @@ export const RBXAvatar = (() => {
 				// Body textures are baked through this renderer, so it has to write
 				// them back in the same space the previewer reads them in.
 				compositeRenderer.outputColorSpace = THREE.LinearSRGBColorSpace
+				compositeRenderer.debug.checkShaderErrors = IS_DEV_MODE
 			}
 		}
 
@@ -2424,6 +2425,12 @@ export const RBXAvatar = (() => {
 				// Scale
 				this.getScaleMod(parent.name, acc.scaleType, parent.rbxScaleType, acc.obj.rbxScaleMod)
 
+				// An adjusted position follows the body's scale but not the
+				// accessory's own adjusted scale, so it is worked out first.
+				const offsetX = (meta?.position?.X ?? 0) * acc.obj.rbxScaleMod.x
+				const offsetY = (meta?.position?.Y ?? 0) * acc.obj.rbxScaleMod.y
+				const offsetZ = (meta?.position?.Z ?? 0) * acc.obj.rbxScaleMod.z
+
 				if (meta?.scale) {
 					acc.obj.rbxScaleMod.x *= meta.scale.X ?? 1
 					acc.obj.rbxScaleMod.y *= meta.scale.Y ?? 1
@@ -2446,11 +2453,9 @@ export const RBXAvatar = (() => {
 					}
 				}
 
-				if (meta?.position) {
-					acc.bakedCFrame.elements[12] += (meta.position.X ?? 0) * acc.obj.rbxScaleMod.x
-					acc.bakedCFrame.elements[13] += (meta.position.Y ?? 0) * acc.obj.rbxScaleMod.y
-					acc.bakedCFrame.elements[14] += (meta.position.Z ?? 0) * acc.obj.rbxScaleMod.z
-				}
+				acc.bakedCFrame.elements[12] += offsetX
+				acc.bakedCFrame.elements[13] += offsetY
+				acc.bakedCFrame.elements[14] += offsetZ
 
 				if (meta?.rotation) {
 					tempVector.setFromMatrixPosition(acc.bakedCFrame)

@@ -21,7 +21,7 @@ export const RBXScene = (() => {
 			this._prevRes = { width: -1, height: -1 }
 			this.cameraControlsEnabled = true
 
-			this.cameraMinZoom = 2
+			this.cameraMinZoom = 1.5
 			this.cameraMaxZoom = 25
 			this.cameraZoom = 10
 			this.cameraSlide = 0
@@ -42,6 +42,9 @@ export const RBXScene = (() => {
 			// sRGB, which washes the avatar out because the colours and textures are
 			// already in the space this previewer expects.
 			renderer.outputColorSpace = THREE.LinearSRGBColorSpace
+			// Checking every shader as it compiles stalls the first frames, so only
+			// development builds do it.
+			renderer.debug.checkShaderErrors = IS_DEV_MODE
 			renderer.setClearAlpha(0)
 			renderer.shadowMap.enabled = true
 			// PCFSoftShadowMap is deprecated: WebGLShadowMap warns and silently swaps
@@ -208,8 +211,8 @@ export const RBXScene = (() => {
 			this.cameraDir.set(0, 0, 1).applyEuler(this.cameraRotation)
 
 			if (this.cameraSlideEnabled) {
-				let minSlide = 2
-				let maxSlide = 5.5
+				let minSlide = 1
+				let maxSlide = 6.5
 
 				if (this.avatar.playerType === "R15" && this.avatar.joints.LowerTorso) {
 					maxSlide =
