@@ -2,27 +2,59 @@ name: Bug report
 description: Something in ReBTRoblox is broken or looks wrong.
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: >-
+        Please check the [open issues](https://github.com/nrmu9/ReBTRoblox/issues)
+        first. Someone may have reported it already.
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you saw, and what you expected instead. Screenshots help.
+      description: What went wrong, and what you expected to happen. Screenshots help.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Item pages and previews
+        - Avatar editor
+        - Profiles
+        - Activity and last seen
+        - Game pages and servers
+        - Home
+        - Chat and messages
+        - Communities
+        - Inventory
+        - Create
+        - Settings
+        - Everywhere, or somewhere else
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: How to make it happen
-      description: The page it happened on and what you did there.
+      description: A link to the page, and what you did there.
       placeholder: |
-        1. Open a game page
+        1. Open https://www.roblox.com/games/920587237
         2. Click ...
+  - type: dropdown
+    id: before
+    attributes:
+      label: Did it work before?
+      options:
+        - Yes, it broke recently
+        - No, it never worked for me
+        - Not sure
   - type: input
     id: version
     attributes:
       label: ReBTRoblox version
-      description: In the settings, next to the ReBTRoblox name at the top.
-      placeholder: "4.5.0"
+      description: It's at the top of the settings, next to the ReBTRoblox name.
+      placeholder: "4.7.3"
     validations:
       required: true
   - type: input
@@ -32,12 +64,20 @@ body:
       placeholder: Firefox 150, Chrome 147, ...
     validations:
       required: true
+  - type: input
+    id: extensions
+    attributes:
+      label: Other Roblox extensions
+      description: >-
+        Extensions like RoPro, RoValra and Roblox+ change the same pages. If you
+        can, turn them off and check if it still happens.
+      placeholder: None, or RoPro, ...
   - type: textarea
     id: errors
     attributes:
       label: Recent errors
       description: >-
-        In the settings, open Experiments and press Report on GitHub or Copy
-        report under Recent Errors, then paste it here. It lists the pages where
-        errors happened, so look it over first.
+        In the settings, go to Experiments. Under Recent Errors, click Copy
+        report and paste it here. It includes the pages where the errors
+        happened, so check it before posting.
       render: text

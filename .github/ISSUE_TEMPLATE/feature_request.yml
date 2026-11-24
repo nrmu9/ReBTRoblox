@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a new feature or a change to an existing one.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like
+      description: What it should do and which page it's on.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: How it would help, or what bothers you about how it works now.
+  - type: dropdown
+    id: origin
+    attributes:
+      label: Was this in BTRoblox?
+      options:
+        - No, it's a new idea
+        - Yes, and it's missing or broken here
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Anything else
+      description: Screenshots, mockups, or other extensions that do something similar.

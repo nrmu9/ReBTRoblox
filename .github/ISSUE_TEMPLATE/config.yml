@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Install ReBTRoblox
+    url: https://github.com/nrmu9/ReBTRoblox#install
+    about: Get it for Firefox or Chrome.
+  - name: Privacy
+    url: https://github.com/nrmu9/ReBTRoblox/blob/main/PRIVACY.md
+    about: ReBTRoblox doesn't collect any data.

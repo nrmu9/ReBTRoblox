@@ -1,0 +1,37 @@
+name: Issue checks
+
+# Points out bug reports filed on an older version than the latest release.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+  issues: write
+
+# Several quick edits only need the last one checked.
+concurrency:
+  group: issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      # The body is written by whoever opened the issue, so it only ever goes
+      # in through the environment.
+      - run: node .github/scripts/checkIssue.js
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
