@@ -13,6 +13,49 @@ if (
 ) {
 	document.documentElement.setAttribute("btr-loaded", "true")
 
+	// The profile shows the inventory page in a sandboxed frame, which that
+	// page's frame buster (an inline top.location = self.location.href) may not
+	// navigate out of, so it threw and logged errors on every profile. It is
+	// turned off before it runs, which has to start here, as main.js loads too
+	// late: the parser hands a script to observers before running it.
+	let frame: Element | null = null
+	try {
+		frame = window.frameElement
+	} catch {}
+
+	if (frame?.id === "btr-injected-inventory") {
+		const disarm = (node: Node) => {
+			const script = node instanceof Text ? node.parentElement : node
+
+			if (
+				script instanceof HTMLScriptElement &&
+				!script.src &&
+				script.textContent?.includes("top.location")
+			) {
+				script.type = "text/plain"
+				return true
+			}
+
+			return false
+		}
+
+		const observer = new MutationObserver((records) => {
+			for (let i = 0; i < records.length; i++) {
+				const added = records[i].addedNodes
+
+				for (let j = 0; j < added.length; j++) {
+					if (disarm(added[j])) {
+						observer.disconnect()
+						return
+					}
+				}
+			}
+		})
+
+		observer.observe(document, { childList: true, subtree: true })
+		document.addEventListener("DOMContentLoaded", () => observer.disconnect(), { once: true })
+	}
+
 	void import(chrome.runtime.getURL("js/main.js")).catch((err) =>
 		console.error("[btr] failed to load main bundle", err),
 	)

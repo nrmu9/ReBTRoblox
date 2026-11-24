@@ -1691,7 +1691,21 @@ pageInit.profile = () => {
 			if (SETTINGS.get("profile.embedInventoryEnabled")) {
 				newCont.$req(".btr-profile-inventory").style.display = ""
 
-				ready(() => {
+				ready(async () => {
+					// A private inventory gets a line saying so, rather than Roblox's
+					// whole "private" page in a frame. If Roblox doesn't answer, the
+					// frame loads as usual and shows whichever it is.
+					if ((await RobloxApi.inventory.canViewInventory(userId)) === false) {
+						newCont
+							.$req(".placeholder-inventory")
+							.replaceWith(
+								html`<div class="section-content-off btr-section-content-off">
+									This inventory is private
+								</div>`,
+							)
+						return
+					}
+
 					// The inventory page frame busts:
 					//   if (top.location != self.location) top.location = self.location.href
 					// which navigates the whole tab to the inventory instead of

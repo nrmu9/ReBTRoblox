@@ -574,6 +574,15 @@ export const RobloxApi = {
 			}).then((res) => res.ok),
 	},
 	inventory: {
+		/** Whether the signed in user may see someone's inventory, or null if Roblox didn't say. */
+		canViewInventory: (userId: UserId): Promise<boolean | null> =>
+			xsrfFetch(`https://inventory.roblox.com/v1/users/${userId}/can-view-inventory`, {
+				credentials: "include",
+			})
+				.then((res) => (res.ok ? res.json() : null))
+				.then((json) => (typeof json?.canView === "boolean" ? json.canView : null))
+				.catch(() => null),
+
 		getUserInventory: (userId: UserId, urlParams?: UrlParams) =>
 			xsrfFetch(
 				`https://inventory.roblox.com/v2/users/${userId}/inventory?${toSearchParams(urlParams).toString()}`,

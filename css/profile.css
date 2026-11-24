@@ -93,6 +93,8 @@ html .dark-theme.btr-profile .btr-section-content-off {
 
 		text-align: justify;
 		white-space: pre-wrap;
+		/* A long link or a run without spaces wraps rather than widening the card. */
+		overflow-wrap: break-word;
 
 		.btr-profile-description-content {
 			max-height: 162px;
