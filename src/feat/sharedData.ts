@@ -39,7 +39,8 @@ export const SHARED_DATA = {
 				addRules: [
 					{
 						action: { type: "redirect", redirect: { url: url.toString() } },
-						condition: { urlFilter: "https://www.roblox.com/?btr_settings" },
+						// Any roblox.com address, as the pages on web. and create. ask their own.
+						condition: { urlFilter: "||roblox.com/?btr_settings|" },
 						id: 9001,
 					},
 				],
@@ -115,7 +116,8 @@ export const SHARED_DATA = {
 
 			if (syncLoadErrorCounter < 3) {
 				const request = new XMLHttpRequest()
-				request.open("HEAD", "https://www.roblox.com/?btr_settings", false)
+				// The page's own address: anywhere else is cross origin and fails.
+				request.open("HEAD", "/?btr_settings", false)
 
 				try {
 					request.send()
