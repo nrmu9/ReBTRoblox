@@ -19,15 +19,41 @@ interface Note {
 
 const NOTES: Array<{ version: string; notes: Note[] }> = [
 	{
+		version: "4.7.4",
+		notes: [
+			{
+				title: "New avatar editor",
+				text: "Roblox is moving some accounts to a new avatar editor. Adjust, Advanced, full range body colors and Skip R6 Warning all work there now.",
+			},
+			{
+				title: "Smoother in Firefox",
+				text: "Opening and closing the settings and Activity no longer stutters.",
+			},
+			{
+				title: "Activity",
+				text: "Closing someone you opened from the panel takes you back to the panel.",
+			},
+			{
+				title: "Communities",
+				text: "Events stay in their usual place, and there's a new More button next to the member count. Exact member counts show right away, without the rounded number flashing first.",
+				page: "groups",
+			},
+			{
+				title: "Fixes",
+				text: "Private inventories show a short note on profiles. Game page dates work in every language. Moved and resized accessories sit right in previews.",
+			},
+		],
+	},
+	{
 		version: "4.7.3",
 		notes: [
 			{
 				title: "Activity links",
-				text: "Names in Activity now link to the profile, game or community, so they're one click away.",
+				text: "Names in Activity now link to their profile, game or community.",
 			},
 			{
 				title: "Fixes",
-				text: "Newer accessories and layered clothing show in item previews again, the explorer links their meshes and textures, and big counts fit in the Activity filters.",
+				text: "Newer accessories and layered clothing show up in item previews again. The explorer links their meshes and textures too. Big numbers fit in the Activity filters now.",
 			},
 		],
 	},
