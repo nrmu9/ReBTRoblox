@@ -320,8 +320,8 @@ pageInit.profile = () => {
 				const own = (await loggedInUserPromise) === Number(userIdString)
 				const name = header?.names?.displayName || header?.names?.username || "This user"
 				const title = own
-					? `You have ${formatNumber(FRIEND_LIMIT)} friends, the most Roblox allows, so new friend requests can't be accepted until you remove one`
-					: `${name} has ${formatNumber(FRIEND_LIMIT)} friends, the most Roblox allows, so they can't accept a friend request`
+					? `You have ${formatNumber(FRIEND_LIMIT)} friends, which is Roblox's limit. Remove a friend to accept new requests`
+					: `${name} has ${formatNumber(FRIEND_LIMIT)} friends, which is Roblox's limit. They can't accept new friend requests`
 
 				// Found by where it leads, as its text is in the viewer's language.
 				document.$watch(

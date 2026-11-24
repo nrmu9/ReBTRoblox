@@ -300,7 +300,7 @@ const renderPeople = async (panel: HTMLElement, ownUserId: number | null) => {
 	if (!ids.length) {
 		panel.replaceChildren(
 			html`<p class="btr-activity-empty">
-				Nobody watched yet. Open someone's last seen on their profile and press Watch.
+				Nobody watched yet. To watch someone, pick Watch activity in the ... menu on their profile.
 			</p>`,
 		)
 		return
@@ -362,7 +362,7 @@ const renderTracked = async (panel: HTMLElement, kind: "game" | "group") => {
 	if (!ids.length) {
 		panel.replaceChildren(
 			html`<p class="btr-activity-empty">
-				${kind === "game" ? "No games tracked yet. Track one from its page." : "No communities tracked yet. Track one from its page."}
+				${kind === "game" ? "No games tracked yet. To track one, pick Track activity in the ... menu on its page." : "No communities tracked yet. To track one, pick Track activity in the ... menu on its page."}
 			</p>`,
 		)
 		return
@@ -415,7 +415,7 @@ interface Progress {
 const setUpCheckAll = (button: HTMLButtonElement, onClose: (fn: () => void) => void) => {
 	button.hidden = false
 	button.textContent = "Check all"
-	button.title = "Checks everyone and everything now, one at a time"
+	button.title = "Check everyone and everything now"
 
 	const show = (progress: Progress | undefined) => {
 		if (progress?.running) {

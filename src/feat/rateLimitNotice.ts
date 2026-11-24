@@ -30,7 +30,8 @@ export const startRateLimitNotice = (): void => {
 
 		if (!note) {
 			note = html`<button type="button" class="btr-rate-limit-note" role="status"></button>`
-			note.title = "ReBTRoblox waits out the rate limit before sending more requests. Click to hide"
+			note.title =
+				"Roblox is limiting requests, so ReBTRoblox is waiting before it sends more. Click to hide"
 			note.$on("click", () => {
 				dismissed = until
 				render()

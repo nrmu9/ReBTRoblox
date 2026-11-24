@@ -60,8 +60,8 @@ export const setupImport = (options: {
 			pending = await readBackup(file)
 			const entries = pending.presence.length + pending.events.length
 			text.textContent = full
-				? `${describeBackup(pending, true)}. Settings are replaced, activity already here is kept.`
-				: `${describeBackup(pending, false)}. Entries already here are skipped.`
+				? `${describeBackup(pending, true)}. Your settings will be replaced. Activity you already have is kept.`
+				: `${describeBackup(pending, false)}. Entries you already have are skipped.`
 			button.textContent = full ? "Restore" : `Add ${count(entries)}`
 			cancel.hidden = false
 		} catch (err) {

@@ -39,8 +39,8 @@ const show = (state: Level | undefined, dismissed: number) => {
 			<span
 				>${
 					state.level >= 2
-						? `It takes ${usage}, so new activity isn't being recorded.`
-						: `It takes ${usage}. Recording stops at the limit.`
+						? `It's using ${usage}. New activity isn't being recorded.`
+						: `It's using ${usage}. Recording stops when it's full.`
 				}</span
 			>
 		</div>

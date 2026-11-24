@@ -342,7 +342,7 @@ export const openTracked = (kind: TrackedKind, id: number, name: string, href?: 
 		const tracked = isTracked(kind, id)
 		action.setAttribute("aria-pressed", String(tracked))
 		action.textContent = tracked ? "Tracking" : "Track"
-		action.title = tracked ? "Stop checking on it" : "Checks on it from the background"
+		action.title = tracked ? "Stop checking on it" : "Keeps checking it in the background"
 	}
 
 	action.hidden = false

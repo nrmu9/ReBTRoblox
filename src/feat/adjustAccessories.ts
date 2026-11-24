@@ -182,7 +182,7 @@ const render = async (list: Worn[]) => {
 		const status = item.$req(".btr-adjust-status")
 
 		if (!limits) {
-			controls.append(html`<p class="btr-adjust-empty">Roblox gives no limits for this type.</p>`)
+			controls.append(html`<p class="btr-adjust-empty">Roblox doesn't limit this type.</p>`)
 		}
 
 		const known = statuses.get(asset.id)

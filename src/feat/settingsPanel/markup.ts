@@ -70,7 +70,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Hide Disliked Games"
 							path="home.hideDisliked"
-							desc="Hides games you disliked from Home, Charts and search. It learns them as you open and vote on games"
+							desc="Hides games you disliked from Home, Charts and search. It picks up your dislikes as you vote on games"
 						></toggle>
 						<toggle
 							label="Fast User Search"
@@ -105,12 +105,12 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Quick Unfriend, Unfollow and Leave"
 							path="quickRemove"
-							desc="Adds a menu to your friends, following and communities lists to remove someone right there. It asks first"
+							desc="Lets you unfriend, unfollow or leave straight from your friends, following and communities lists. It asks first"
 						></toggle>
 						<toggle
 							label="Show What's New"
 							path="whatsNew"
-							desc="After an update, lists what changed. Click the version above to see it again"
+							desc="Shows what changed after an update. Click the version number at the top to see it again"
 						></toggle>
 						<toggle
 							label="Rate Limit Notice"
@@ -134,13 +134,13 @@ export const settingsMarkup = () =>
 							label="Fix Missing Messages"
 							path="fixChatMessages"
 							require="!hideChat"
-							desc="Fixes chats that miss their newest messages, or show only the newest one, and shares chat loading between tabs so Roblox turns it away less"
+							desc="Fixes chats that are missing messages or only show the newest one. Also stops chat from breaking when you have a lot of Roblox tabs open"
 						></toggle>
 						<toggle
 							label="Search Messages"
 							path="chatSearch"
 							require="!hideChat"
-							desc="Adds a search button to each chat, which looks back through its history"
+							desc="Adds a search button to chats that searches the whole conversation"
 						></toggle>
 
 						<heading>Robux to Cash</heading>
@@ -194,12 +194,12 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Activity in Account Menu"
 							path="activityMenu"
-							desc="Adds Activity under BTR Settings in the menu at the top right, to open the activity panel"
+							desc="Adds an Activity button to the gear menu that opens the activity panel"
 						></toggle>
 						<p class="btr-exp-note">
-							The top bar and sidebar of the page you opened this on. Drag an item by its handle
-							to move it, and use its eye to hide it. Anything Roblox adds later stays beside
-							the item it comes after.
+							These are the top bar and sidebar of the current page. Drag an item by its handle
+							to move it, or click the eye to hide it. New items that Roblox adds later stay
+							next to the item before them.
 						</p>
 						<div class="btr-settings-nav-editor"></div>
 					</page>
@@ -258,13 +258,13 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Classic Layout"
 							path="classicLayout"
-							desc="Shows the avatar inside About, like the old profile, instead of as a banner across the top"
+							desc="Puts the avatar back inside About instead of the big banner at the top"
 						></toggle>
 						<toggle
 							label="Classic Header"
 							path="classicHeader"
 							require="classicLayout"
-							desc="Puts the header on a card like the old profile, with friends and followers as plain links and extra buttons in the ... menu"
+							desc="Brings back the old profile header. Extra buttons go in the ... menu"
 						></toggle>
 						<toggle
 							label="Embed Inventory"
@@ -284,7 +284,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Full Friends Warning"
 							path="fullFriends"
-							desc="Marks the friend count in red when someone has 1,000 friends, the most Roblox allows"
+							desc="Turns the friend count red when someone hits Roblox's limit of 1,000 friends"
 						></toggle>
 					</page>
 
@@ -293,13 +293,13 @@ export const settingsMarkup = () =>
 							label="Last Seen Online"
 							path="lastSeen"
 							require="true"
-							desc="Shows when someone was last online and a timeline of what they were doing, as seen by ReBTRoblox on this device"
+							desc="Shows when someone was last online and what they were doing. It's based on what ReBTRoblox has seen on this device"
 						></toggle>
 						<toggle
 							label="Track Friends in the Background"
 							path="liveTracking"
 							require="lastSeen"
-							desc="Records your friends' activity as it happens, even with no Roblox tab open, while the browser runs"
+							desc="Keeps recording your friends' activity while your browser is open, even without a Roblox tab"
 						></toggle>
 						<toggle
 							label="Friend Log"
@@ -321,16 +321,17 @@ export const settingsMarkup = () =>
 
 						<heading>Watched People</heading>
 						<p class="btr-exp-intro">
-							ReBTRoblox checks on these people from the background: where they are, whose
-							friends they add and lose, and changes to their profile. Watch someone from Last
-							Seen Online on their profile.
+							ReBTRoblox checks on these people in the background. It records where they are,
+							friends they add or remove, and changes to their profile. To watch someone, pick
+							Watch activity in the ... menu on their profile.
 						</p>
 						<div class="btr-setting-card btr-activity-watched"></div>
 
 						<heading>Tracked Games and Communities</heading>
 						<p class="btr-exp-intro">
-							Player counts, visits and updates for games, and members, shouts and new games for
-							communities, checked from the background. Track one from its page.
+							ReBTRoblox checks these in the background. For games it records players, visits
+							and updates. For communities it records members, shouts and new games. To track
+							one, pick Track activity in the ... menu on its page.
 						</p>
 						<div class="btr-setting-card btr-activity-tracked"></div>
 
@@ -339,7 +340,7 @@ export const settingsMarkup = () =>
 							label="Storage Limit"
 							path="activityLimit"
 							require="true"
-							desc="Recording stops at this size until you clear some or raise it. Nothing is ever deleted on its own"
+							desc="Recording stops when it reaches this size. Nothing is deleted automatically"
 						>
 							<option value="100">100 MB</option>
 							<option value="250">250 MB</option>
@@ -456,7 +457,7 @@ export const settingsMarkup = () =>
 							label="Your Playtime and Servers"
 							path="yourPlaytime"
 							require="profile.lastSeen"
-							desc="Shows how long you have played a game and the servers you were last in, from your activity history"
+							desc="Shows how long you've played a game and which servers you were in recently"
 						></toggle>
 						<toggle
 							label="Paged Server List"
@@ -477,7 +478,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Server Tools"
 							path="serverTools"
-							desc="Adds a button to join the smallest server, and a region filter when Server Info shows regions"
+							desc="Adds a button to join the smallest server. With Server Info set to Region, you can also filter by region"
 						></toggle>
 						<choice
 							label="Preview Videos"
@@ -549,7 +550,7 @@ export const settingsMarkup = () =>
 							label="Open Automatically"
 							path="itemPreviewerMode"
 							require="itemPreviewer"
-							desc="When the previewer opens by itself"
+							desc="When the previewer opens automatically"
 						>
 							<option value="never">Never</option>
 							<option value="animations">For animations</option>
@@ -597,7 +598,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Adjust Accessories"
 							path="adjustAccessories"
-							desc="Adds an Adjust button that moves, turns and sizes your hats and other accessories"
+							desc="Adds an Adjust button to move, rotate and resize your accessories"
 						></toggle>
 						<toggle
 							label="Skip R6 Switch Warning"
@@ -652,7 +653,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Jump to Page"
 							path="pageJump"
-							desc="Lets you type a page number in the pager to go straight to it"
+							desc="Lets you type a page number to jump to it"
 						></toggle>
 					</page>
 
@@ -706,8 +707,8 @@ export const settingsMarkup = () =>
 								<div class="btr-setting-text">
 									<span class="btr-setting-label btr-error-log-summary">No errors</span>
 									<span class="btr-setting-desc"
-										>What went wrong lately, kept on this device. Reporting copies it and
-										opens a bug report to paste it into</span
+										>Recent errors, saved on this device. Report on GitHub copies them and
+										opens a bug report to paste them into</span
 									>
 								</div>
 								<div class="btr-activity-clear-controls">
@@ -750,9 +751,8 @@ export const settingsMarkup = () =>
 							</button>
 						</div>
 						<p class="btr-exp-intro">
-							Roblox sends some of these for its apps only, so the website never reads them.
-							Those are greyed out, and changing them does nothing here. Most changes apply
-							after a reload.
+							Some of these are only used by Roblox's apps, not the website. Those are greyed
+							out because changing them does nothing here. Most changes apply after you reload.
 						</p>
 						<p class="btr-exp-note"></p>
 						<div id="btr-settings-experiments"></div>
@@ -762,7 +762,7 @@ export const settingsMarkup = () =>
 						<toggle
 							label="Sync Settings"
 							path="syncSettings"
-							desc="Keeps your settings the same on every browser signed in to the same Firefox or Chrome account, and brings them back after a reinstall. Activity stays on this device"
+							desc="Syncs your settings to other browsers signed in to the same Firefox or Chrome account. They also come back after a reinstall. Recorded activity isn't synced"
 						></toggle>
 						<heading>Backups</heading>
 						<div class="btr-setting-card">

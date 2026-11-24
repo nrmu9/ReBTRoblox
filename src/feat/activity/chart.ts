@@ -671,7 +671,9 @@ export const lineChart = (
 
 	if (allPoints.length < (options.step ? 1 : 2)) {
 		plot.replaceWith(
-			html`<p class="btr-chart-empty">Not enough samples yet. One is taken every check.</p>`,
+			html`<p class="btr-chart-empty">
+				Not enough data yet. A sample is saved every time it's checked.
+			</p>`,
 		)
 		figure.$req(".btr-chart-tablebox").remove()
 		return figure
@@ -717,7 +719,7 @@ export const lineChart = (
 		const minimum = options.step ? 1 : 2
 
 		if (points.length < minimum) {
-			plot.replaceChildren(html`<p class="btr-chart-empty">No samples in this stretch.</p>`)
+			plot.replaceChildren(html`<p class="btr-chart-empty">No data for this period.</p>`)
 			return
 		}
 

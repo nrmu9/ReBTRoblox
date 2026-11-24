@@ -59,7 +59,7 @@ export const addHomeRows = (modal: SettingsModalState, { settingsDone }: Rows) =
 		const hidden = getHidden()
 
 		head.$req(".btr-setting-desc").textContent = rows.length
-			? "Drag rows into the order Home shows them. The eye shows or hides one."
+			? "Drag rows to reorder Home. Click the eye to show or hide a row."
 			: "Open Home once and its rows show up here"
 		// Search matches the rows by name through this line.
 		head.dataset.search = `home row hide order move ${rows.map(([, row]) => row.title).join(" ")}`

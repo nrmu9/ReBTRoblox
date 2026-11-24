@@ -1,7 +1,7 @@
 {
 	"name": "ReBTRoblox - Continuing the BTRoblox legacy",
 	"short_name": "ReBTRoblox",
-	"description": "A fork of BTRoblox that continues the original after it was abandoned, fixing the features that had stopped working.",
+	"description": "A fork of BTRoblox that fixes what broke and adds new features.",
 	"author": "nrmu9, AntiBoomz",
 	"icons": {
 		"32": "res/icon_32.png",

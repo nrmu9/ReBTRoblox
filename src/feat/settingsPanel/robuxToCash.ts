@@ -21,7 +21,7 @@ export const setupRobuxToCash = (modal: SettingsModalState) => {
 		.toSorted((a, b) => ((a.name ?? "") < (b.name ?? "") ? -1 : 1))) {
 		currencySelect.append(
 			html<HTMLOptionElement>`<option
-				title="Rates are estimations based on USD-${currency.name} exchange rate on ${RobuxToCash.UpdateDate}"
+				title="Estimated from the USD to ${currency.name} exchange rate on ${RobuxToCash.UpdateDate}"
 				value="${currency.name}"
 			>
 				${currency.name}*

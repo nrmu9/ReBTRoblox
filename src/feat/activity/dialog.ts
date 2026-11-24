@@ -108,7 +108,7 @@ export const openActivity = async (
 			action.textContent = watched ? "Watching" : "Watch"
 			action.title = watched
 				? "Stop checking on them"
-				: "Checks where they are, their friends and their profile from the background"
+				: "Keeps checking their status, friends and profile in the background"
 		}
 
 		action.hidden = false
