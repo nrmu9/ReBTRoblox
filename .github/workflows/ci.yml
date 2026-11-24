@@ -45,6 +45,11 @@ jobs:
         env:
           CHROME_PATH: /usr/bin/google-chrome
 
+      # Firefox runs content scripts behind Xray wrappers, where code that
+      # passes everything above can still throw. A stable firefox is fetched
+      # rather than relying on what the runner image has.
+      - run: npm run test:firefox -- --install
+
       # Packaging builds both targets, so this covers the manifest generation
       # for MV2 and MV3 as well as the bundles.
       - run: npm run package

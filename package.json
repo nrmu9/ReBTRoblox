@@ -27,6 +27,7 @@
 		"dev:chrome": "node dev/build.js --dev --watch --target=chrome --out=dist-chrome",
 		"test:draco": "node dev/draco.js",
 		"test:chrome": "node dev/chrome.js",
+		"test:firefox": "node dev/firefox.js",
 		"test:webstore": "node dev/webstore.test.js",
 		"publish:chrome": "node dev/webstore.js",
 		"publish:chrome:draft": "node dev/webstore.js --no-publish",
