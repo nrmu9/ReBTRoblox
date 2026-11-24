@@ -2,8 +2,9 @@ import { html } from "@/core/html"
 import { trapScroll } from "@/core/dom"
 
 // The frame the activity dialogs share: a title, an action button, tabs with
-// a panel each, and closing by button, Escape or a click outside. One is open
-// at a time.
+// a panel each, and closing by button, Escape or a click outside. A dialog
+// opened from another goes on top of it, and closing it goes back to the one
+// below, on the tab and scroll position it was left at.
 
 export interface Shell {
 	root: HTMLElement
@@ -17,7 +18,16 @@ export interface Shell {
 	onClose: (fn: () => void) => void
 }
 
-let open: { root: HTMLElement; close: () => void } | null = null
+interface Open {
+	root: HTMLElement
+	close: () => void
+}
+
+/** The open dialogs, the one in front last. */
+const stack: Open[] = []
+
+// How long the open and close fades take, from the stylesheet.
+const FADE = 120
 
 export const openShell = (options: {
 	title: string
@@ -28,8 +38,7 @@ export const openShell = (options: {
 	/** Called whenever a tab is shown, to fill its panel the first time. */
 	onTab: (name: string, panel: HTMLElement) => void
 }): Shell => {
-	open?.close()
-
+	const below = stack.at(-1)
 	const opener = document.activeElement as HTMLElement | null
 	const root = html`<div class="btr-settings-modal btr-activity-modal">
 		<div class="btr-activity" role="dialog" aria-modal="true" aria-labelledby="btr-activity-title">
@@ -116,14 +125,19 @@ export const openShell = (options: {
 	const closers: Array<() => void> = []
 
 	const close = () => {
-		if (open?.root !== root) {
+		if (stack.at(-1)?.root !== root) {
 			return
 		}
 
-		open = null
+		stack.pop()
 
 		for (const fn of closers) {
 			fn()
+		}
+
+		// The one below comes back as it was left, under this one fading out.
+		if (below) {
+			below.root.style.display = ""
 		}
 
 		root.classList.remove("btr-settings-open")
@@ -133,7 +147,8 @@ export const openShell = (options: {
 	}
 
 	const onKey = (ev: KeyboardEvent) => {
-		if (ev.key === "Escape") {
+		// Only the dialog in front answers.
+		if (ev.key === "Escape" && stack.at(-1)?.root === root) {
 			ev.stopPropagation()
 			close()
 		}
@@ -147,12 +162,22 @@ export const openShell = (options: {
 		}
 	})
 
-	open = { root, close }
+	stack.push({ root, close })
 	document.body.append(root)
 	root.$req<HTMLElement>(".btr-activity-close").focus()
 
 	// A later frame than the mount, or there is no start to transition from.
 	requestAnimationFrame(() => root.classList.add("btr-settings-open"))
+
+	// The one below stays in the page to come back to, hidden once this one
+	// covers it, as its backdrop would still catch clicks.
+	if (below) {
+		setTimeout(() => {
+			if (stack.at(-1)?.root === root) {
+				below.root.style.display = "none"
+			}
+		}, FADE)
+	}
 
 	return {
 		root,
