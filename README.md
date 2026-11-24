@@ -1,6 +1,6 @@
-<a href="https://addons.mozilla.org/en-US/firefox/addon/rebtroblox/"><img src="https://img.shields.io/badge/Add%20to%20Firefox-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Add to Firefox"></a>
-<a href="https://chromewebstore.google.com/detail/rebtroblox-continuing-the/dplimibgmlomamaljcclnjgcolbijcad"><img src="https://img.shields.io/badge/Add%20to%20Chrome-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Add to Chrome"></a>
-<a href="https://github.com/nrmu9/ReBTRoblox/releases/latest"><img src="https://img.shields.io/badge/Download%20release-57606A?style=for-the-badge&logo=github&logoColor=white" alt="Download the latest release"></a>
+<a href="https://addons.mozilla.org/en-US/firefox/addon/rebtroblox/"><img src="https://img.shields.io/amo/v/rebtroblox?label=Add%20to%20Firefox&logo=firefoxbrowser&logoColor=white&labelColor=FF7139&color=FF7139&style=for-the-badge" alt="Add to Firefox"></a>
+<a href="https://chromewebstore.google.com/detail/rebtroblox-continuing-the/dplimibgmlomamaljcclnjgcolbijcad"><img src="https://img.shields.io/chrome-web-store/v/dplimibgmlomamaljcclnjgcolbijcad?label=Add%20to%20Chrome&logo=googlechrome&logoColor=white&labelColor=4285F4&color=4285F4&style=for-the-badge" alt="Add to Chrome"></a>
+<a href="https://github.com/nrmu9/ReBTRoblox/releases/latest"><img src="https://img.shields.io/github/v/release/nrmu9/ReBTRoblox?label=Download&logo=github&logoColor=white&labelColor=57606A&color=57606A&style=for-the-badge" alt="Download the latest release"></a>
 
 # ReBTRoblox
 
