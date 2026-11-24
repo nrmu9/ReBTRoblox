@@ -229,13 +229,14 @@ if (IS_BACKGROUND_PAGE) {
 			let others = servers.get(session.gameId)
 
 			if (!others) {
-				others = []
-
-				for (const other of await done(presence.index("game").getAll(session.gameId))) {
-					if (other.userId !== userId) {
-						others.push({ other, end: await endOf(presence, other) })
-					}
-				}
+				// All asked for at once, rather than each waiting for the one before.
+				const inServer = (await done(presence.index("game").getAll(session.gameId))).filter(
+					(other: PresenceRecord) => other.userId !== userId,
+				)
+				const ends = await Promise.all(
+					inServer.map((other: PresenceRecord) => endOf(presence, other)),
+				)
+				others = inServer.map((other: PresenceRecord, i: number) => ({ other, end: ends[i] }))
 
 				servers.set(session.gameId, others)
 			}

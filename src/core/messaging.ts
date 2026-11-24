@@ -257,8 +257,12 @@ export const contentScript: any = {
 
 		let final = false
 
+		// A page closed while its answer was being worked out, such as a long
+		// history: there is no one to answer, and posting to the port throws.
+		const connected = () => this.ports.includes(port)
+
 		const respond = (response: any, hasMore?: boolean) => {
-			if (!final && "id" in msg) {
+			if (!final && "id" in msg && connected()) {
 				final = !(hasMore === true)
 
 				port.postMessage({
@@ -270,7 +274,7 @@ export const contentScript: any = {
 		}
 
 		respond.cancel = () => {
-			if (!final && "id" in msg) {
+			if (!final && "id" in msg && connected()) {
 				final = true
 				port.postMessage({ id: msg.id, final, cancel: true })
 			}
