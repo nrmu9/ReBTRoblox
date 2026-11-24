@@ -12,6 +12,10 @@ export const reactHook: Record<string, any> = {
 	globalHijackState: [],
 	renderTarget: null as any,
 	readyCallbacks: [] as ((React: any) => void)[],
+	// Set on Roblox's Next.js pages, whose HTML comes from the server and is
+	// hydrated: React expects the first render to match it exactly.
+	hydrates: false,
+	AfterHydration: null as any,
 
 	/**
 	 * Runs `fn` with the page's React as soon as it has loaded, or now if it has.
@@ -390,11 +394,11 @@ export const reactHook: Record<string, any> = {
 			},
 
 			prepend(elem: any) {
-				this._children().unshift(reactHook.unwrap(elem))
+				this._children().unshift(reactHook.insertable(elem))
 			},
 
 			append(elem: any) {
-				this._children().push(reactHook.unwrap(elem))
+				this._children().push(reactHook.insertable(elem))
 			},
 
 			before(...elems: any[]) {
@@ -404,7 +408,7 @@ export const reactHook: Record<string, any> = {
 				const index = children.indexOf(this[0])
 
 				if (index !== -1) {
-					children.splice(index, 0, ...elems.map(reactHook.unwrap))
+					children.splice(index, 0, ...elems.map((elem) => reactHook.insertable(elem)))
 				}
 			},
 
@@ -415,7 +419,7 @@ export const reactHook: Record<string, any> = {
 				const index = children.indexOf(this[0])
 
 				if (index !== -1) {
-					children.splice(index + 1, 0, ...elems.map(reactHook.unwrap))
+					children.splice(index + 1, 0, ...elems.map((elem) => reactHook.insertable(elem)))
 				}
 			},
 
@@ -426,7 +430,7 @@ export const reactHook: Record<string, any> = {
 				const index = children.indexOf(this[0])
 
 				if (index !== -1) {
-					children.splice(index, 1, ...elems.map(reactHook.unwrap))
+					children.splice(index, 1, ...elems.map((elem) => reactHook.insertable(elem)))
 				}
 
 				this.path = [[], this[0]]
@@ -495,6 +499,37 @@ export const reactHook: Record<string, any> = {
 
 	unwrap(elem: any) {
 		return elem?.btrIsWrapped ? elem[0] : elem
+	},
+
+	/**
+	 * Whether a feature may change a component's props as it renders. Not on a
+	 * hydrated page: React only knows hydration is over per part of the page,
+	 * and a changed prop in a part still hydrating throws the page away (418).
+	 */
+	canChangeProps() {
+		return !this.hydrates
+	},
+
+	/**
+	 * What goes into the tree for an element we add. On hydrated pages it waits
+	 * for the first effect: anything extra in the first render doesn't match the
+	 * server's HTML, and React throws the page away to render it again (error
+	 * 418). Old pages render on the client only, so there it goes in as it is.
+	 */
+	insertable(elem: any) {
+		const element = this.unwrap(elem)
+
+		if (!this.hydrates || element == null || typeof element === "boolean") {
+			return element
+		}
+
+		this.AfterHydration ??= ({ children }: { children: any }) => {
+			const [ready, setReady] = this.React.useState(false)
+			this.React.useEffect(() => setReady(true), [])
+			return ready ? children : null
+		}
+
+		return this.React.createElement(this.AfterHydration, { key: element?.key ?? undefined }, element)
 	},
 
 	wrap(path: any) {
@@ -824,9 +859,17 @@ export const reactHook: Record<string, any> = {
 			}
 		}
 
-		const dispatcher =
-			this.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher
-		let current = dispatcher.current
+		// Where React keeps the hooks dispatcher of the component rendering now.
+		// React 18, on Roblox's old pages, has it at ReactCurrentDispatcher.current.
+		// React 19, on the Next.js ones, moved it to H of a renamed object.
+		const internals19 = this.React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+		const [dispatcher, dispatcherKey] = internals19
+			? [internals19, "H"]
+			: [
+					this.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher,
+					"current",
+				]
+		let current = dispatcher[dispatcherKey]
 
 		Object.defineProperty(Object.prototype, "lanes", {
 			configurable: true,
@@ -873,7 +916,7 @@ export const reactHook: Record<string, any> = {
 			},
 		})
 
-		Object.defineProperty(dispatcher, "current", {
+		Object.defineProperty(dispatcher, dispatcherKey, {
 			enumerable: true,
 			get() {
 				return current
@@ -897,11 +940,117 @@ export const reactHook: Record<string, any> = {
 		return this.React.createElement(...args)
 	},
 
+	onJSX(jsx: any) {
+		hijackFunction(jsx, "jsxs", this.onCreateElement.bind(this))
+		hijackFunction(jsx, "jsx", this.onCreateElement.bind(this))
+	},
+
+	/**
+	 * Roblox's Next.js pages bundle React with Turbopack instead of putting it
+	 * on window. Every chunk pushes [script, id, factory, id, factory, ...] to
+	 * globalThis.TURBOPACK, a plain array until the runtime loads and replaces
+	 * it with its own { push }. Both are caught, and each module factory is
+	 * wrapped so React and its JSX runtime are handed over the moment they run,
+	 * as window.React and window.ReactJSX are on the old pages.
+	 */
+	hookTurbopack() {
+		let foundReact = false
+		let foundJSX = false
+		const wrapped = new WeakSet<object>()
+
+		const check = (exports: any) => {
+			if (!exports || typeof exports !== "object") {
+				return
+			}
+
+			if (
+				!foundReact &&
+				typeof exports.createElement === "function" &&
+				typeof exports.useContext === "function" &&
+				typeof exports.version === "string"
+			) {
+				foundReact = true
+				this.hydrates = true
+				this.onReact(exports)
+			} else if (
+				!foundJSX &&
+				typeof exports.jsx === "function" &&
+				typeof exports.jsxs === "function" &&
+				"Fragment" in exports
+			) {
+				foundJSX = true
+				this.onJSX(exports)
+			}
+		}
+
+		const wrapChunk = (chunk: unknown) => {
+			if (!Array.isArray(chunk) || wrapped.has(chunk)) {
+				return
+			}
+
+			wrapped.add(chunk)
+
+			for (let i = 1; i < chunk.length; i++) {
+				const factory = chunk[i]
+
+				if (typeof factory === "function") {
+					chunk[i] = function (this: unknown, ...args: any[]) {
+						const result = factory.apply(this, args)
+
+						if (!foundReact || !foundJSX) {
+							try {
+								// (context, module, exports): CommonJS modules like React
+								// fill module.exports.
+								check(args[1]?.exports)
+							} catch (ex) {
+								console.error(ex)
+							}
+						}
+
+						return result
+					}
+				}
+			}
+		}
+
+		const wrapPush = (target: any) => {
+			if (!target || typeof target.push !== "function" || wrapped.has(target)) {
+				return
+			}
+
+			wrapped.add(target)
+
+			if (Array.isArray(target)) {
+				target.forEach(wrapChunk)
+			}
+
+			const push = target.push
+			target.push = function (this: unknown, ...chunks: unknown[]) {
+				if (!foundReact || !foundJSX) {
+					chunks.forEach(wrapChunk)
+				}
+
+				return push.apply(this, chunks)
+			}
+		}
+
+		let current = (globalThis as any).TURBOPACK
+		wrapPush(current)
+
+		Object.defineProperty(globalThis, "TURBOPACK", {
+			configurable: true,
+			enumerable: true,
+			get: () => current,
+			set: (value) => {
+				current = value
+				wrapPush(value)
+			},
+		})
+	},
+
 	init() {
 		onSet(window, "React", this.onReact.bind(this))
-		onSet(window, "ReactJSX", (jsx: any) => {
-			hijackFunction(jsx, "jsxs", this.onCreateElement.bind(this))
-			hijackFunction(jsx, "jsx", this.onCreateElement.bind(this))
-		})
+		onSet(window, "ReactJSX", this.onJSX.bind(this))
+		this.hookTurbopack()
 	},
 }

@@ -19,7 +19,9 @@ export const navigationFunctions: Record<string, (...args: any[]) => any> = {
 						if (Number.isSafeInteger(props.robuxAmount)) {
 							localStorage.setItem("ReBTRoblox:cachedRobux", props.robuxAmount)
 						}
-					} else {
+					} else if (reactHook.canChangeProps()) {
+						// Not on Next.js pages: the server sent the loading state, and
+						// showing anything else breaks hydration.
 						const cachedRobux = localStorage.getItem("ReBTRoblox:cachedRobux")
 
 						if (cachedRobux) {
